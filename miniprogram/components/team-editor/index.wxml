@@ -1,8 +1,19 @@
 <view class="team-editor">
-  <block wx:for="{{teams}}" wx:key="teamName">
+  <block wx:for="{{teams}}" wx:key="index">
     <view class="team-row">
-      <text>{{item.teamName}}</text>
-      <text>{{item.maxMembers}}</text>
+      <input
+        value="{{item.teamName}}"
+        data-index="{{index}}"
+        data-field="teamName"
+        bindinput="onTeamFieldInput"
+      />
+      <input
+        type="number"
+        value="{{item.maxMembers}}"
+        data-index="{{index}}"
+        data-field="maxMembers"
+        bindinput="onTeamFieldInput"
+      />
     </view>
   </block>
 </view>

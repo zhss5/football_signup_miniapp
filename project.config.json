@@ -1,0 +1,17 @@
+{
+  "appid": "touristappid",
+  "projectname": "football-signup-miniapp",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": false,
+    "packNpmManually": false,
+    "ignoreUploadUnusedFiles": true,
+    "ignoreDevUnusedFiles": true
+  },
+  "simulatorType": "wechat"
+}

@@ -1,7 +1,30 @@
 <view class="page">
-  <input placeholder="Activity title" data-field="title" />
-  <input placeholder="Address" data-field="addressText" />
-  <switch checked="{{form.requirePhone}}" />
-  <team-editor teams="{{form.teams}}" />
+  <input
+    placeholder="Activity title"
+    data-field="title"
+    value="{{form.title}}"
+    bindinput="onFieldInput"
+  />
+  <input
+    placeholder="Address"
+    data-field="addressText"
+    value="{{form.addressText}}"
+    bindinput="onFieldInput"
+  />
+  <textarea
+    placeholder="Description"
+    data-field="description"
+    value="{{form.description}}"
+    bindinput="onFieldInput"
+  />
+  <input
+    placeholder="Total signup limit"
+    type="number"
+    data-field="signupLimitTotal"
+    value="{{form.signupLimitTotal}}"
+    bindinput="onFieldInput"
+  />
+  <switch checked="{{form.requirePhone}}" bindchange="onRequirePhoneChange" />
+  <team-editor teams="{{form.teams}}" bind:change="onTeamsChange" />
   <button bindtap="onSubmit" loading="{{submitting}}">Publish Activity</button>
 </view>

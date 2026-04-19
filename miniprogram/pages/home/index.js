@@ -23,6 +23,6 @@ Page({
   },
 
   goDetail(event) {
-    wx.navigateTo({ url: `/pages/activity-detail/index?activityId=${event.currentTarget.dataset.id}` });
+    wx.navigateTo({ url: `/pages/activity-detail/index?activityId=${event.detail.id}` });
   }
 });

@@ -24,7 +24,7 @@ Page({
   openSignup(event) {
     this.setData({
       signupVisible: true,
-      pendingTeamId: event.currentTarget.dataset.teamId
+      pendingTeamId: event.detail.teamId
     });
   },
 

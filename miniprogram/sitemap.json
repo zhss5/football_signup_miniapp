@@ -1,0 +1,9 @@
+{
+  "desc": "sitemap for the football signup mini program",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

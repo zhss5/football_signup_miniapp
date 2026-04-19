@@ -8,6 +8,7 @@
   "window": {
     "navigationBarTitleText": "Football Signup"
   },
+  "sitemapLocation": "sitemap.json",
   "tabBar": {
     "list": [
       {
