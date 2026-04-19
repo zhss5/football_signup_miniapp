@@ -1,0 +1,22 @@
+const cloud = require('wx-server-sdk');
+
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+
+async function main(event, context = cloud.getWXContext()) {
+  const db = cloud.database();
+
+  if (event.scope === 'created') {
+    const res = await db.collection('activities').where({ organizerOpenId: context.OPENID }).get();
+    return { items: res.data };
+  }
+
+  if (event.scope === 'joined') {
+    const regRes = await db.collection('registrations').where({ userOpenId: context.OPENID, status: 'joined' }).get();
+    return { items: regRes.data };
+  }
+
+  const res = await db.collection('activities').where({ status: event.status || 'published' }).get();
+  return { items: res.data };
+}
+
+module.exports = { main };

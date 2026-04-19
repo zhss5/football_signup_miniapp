@@ -5,6 +5,9 @@
     "test": "jest --runInBand",
     "copy:cloud-shared": "node scripts/copy-cloud-shared.mjs"
   },
+  "dependencies": {
+    "wx-server-sdk": "^3.0.1"
+  },
   "devDependencies": {
     "jest": "^30.0.0"
   }
