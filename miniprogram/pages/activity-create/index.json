@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "Create Activity",
+  "usingComponents": {
+    "team-editor": "/components/team-editor/index"
+  }
+}

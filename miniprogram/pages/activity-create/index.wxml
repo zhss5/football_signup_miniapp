@@ -1,0 +1,7 @@
+<view class="page">
+  <input placeholder="Activity title" data-field="title" />
+  <input placeholder="Address" data-field="addressText" />
+  <switch checked="{{form.requirePhone}}" />
+  <team-editor teams="{{form.teams}}" />
+  <button bindtap="onSubmit" loading="{{submitting}}">Publish Activity</button>
+</view>

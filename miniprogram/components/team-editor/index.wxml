@@ -1,0 +1,8 @@
+<view class="team-editor">
+  <block wx:for="{{teams}}" wx:key="teamName">
+    <view class="team-row">
+      <text>{{item.teamName}}</text>
+      <text>{{item.maxMembers}}</text>
+    </view>
+  </block>
+</view>
