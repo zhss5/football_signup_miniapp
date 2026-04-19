@@ -14,3 +14,18 @@ test('cancelRegistration returns cancelled status', async () => {
 
   expect(result.status).toBe('cancelled');
 });
+
+test('cancelRegistration keeps historical registration id', async () => {
+  const result = await cancelRegistration.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_a' },
+    {
+      runCancel: async () => ({
+        registrationId: 'activity_1_openid_a',
+        status: 'cancelled'
+      })
+    }
+  );
+
+  expect(result.registrationId).toBe('activity_1_openid_a');
+});
