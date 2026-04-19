@@ -1,0 +1,6 @@
+<view wx:if="{{visible}}" class="sheet">
+  <input placeholder="Signup name" bindinput="onNameInput" />
+  <input wx:if="{{requirePhone}}" placeholder="Phone" bindinput="onPhoneInput" />
+  <button bindtap="submit">Confirm</button>
+  <button bindtap="close">Close</button>
+</view>

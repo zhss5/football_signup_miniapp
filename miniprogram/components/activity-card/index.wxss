@@ -1,0 +1,19 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.title {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.meta,
+.status {
+  color: #6b7280;
+}

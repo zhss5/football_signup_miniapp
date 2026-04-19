@@ -12,7 +12,16 @@ async function main(event, context = cloud.getWXContext()) {
 
   if (event.scope === 'joined') {
     const regRes = await db.collection('registrations').where({ userOpenId: context.OPENID, status: 'joined' }).get();
-    return { items: regRes.data };
+    const activityIds = regRes.data.map(item => item.activityId);
+    if (activityIds.length === 0) {
+      return { items: [] };
+    }
+
+    const activityRes = await db.collection('activities').where({
+      _id: db.command.in(activityIds)
+    }).get();
+
+    return { items: activityRes.data };
   }
 
   const res = await db.collection('activities').where({ status: event.status || 'published' }).get();

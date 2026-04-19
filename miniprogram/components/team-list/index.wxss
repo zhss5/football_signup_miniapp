@@ -1,0 +1,12 @@
+.team-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.team-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}

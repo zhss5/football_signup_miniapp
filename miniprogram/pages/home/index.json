@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "Football Signup",
+  "usingComponents": {
+    "activity-card": "/components/activity-card/index"
+  }
+}

@@ -1,0 +1,9 @@
+<view class="page">
+  <button class="primary-button" bindtap="goCreate">Create Activity</button>
+
+  <view class="list">
+    <block wx:for="{{items}}" wx:key="_id">
+      <activity-card item="{{item}}" bind:tapcard="goDetail" />
+    </block>
+  </view>
+</view>

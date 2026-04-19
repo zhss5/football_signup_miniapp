@@ -1,0 +1,19 @@
+<view class="page" wx:if="{{activity}}">
+  <view class="hero">
+    <text class="title">{{activity.title}}</text>
+    <text class="meta">{{activity.addressText}}</text>
+  </view>
+
+  <team-list teams="{{teams}}" bind:jointap="openSignup" />
+
+  <button wx:if="{{myRegistration && myRegistration.status === 'joined'}}" bindtap="onCancelSignup">
+    Cancel Signup
+  </button>
+
+  <signup-sheet
+    visible="{{signupVisible}}"
+    requirePhone="{{activity.requirePhone}}"
+    bind:submit="submitSignup"
+    bind:close="onCloseSignup"
+  />
+</view>

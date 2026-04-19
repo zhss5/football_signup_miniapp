@@ -1,0 +1,15 @@
+<view class="page">
+  <view class="section">
+    <text class="section-title">Created Activities</text>
+    <block wx:for="{{createdItems}}" wx:key="_id">
+      <activity-card item="{{item}}" />
+    </block>
+  </view>
+
+  <view class="section">
+    <text class="section-title">Joined Activities</text>
+    <block wx:for="{{joinedItems}}" wx:key="_id">
+      <activity-card item="{{item}}" />
+    </block>
+  </view>
+</view>

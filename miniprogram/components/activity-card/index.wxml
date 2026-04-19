@@ -1,0 +1,5 @@
+<view class="card" bindtap="onTap">
+  <text class="title">{{item.title}}</text>
+  <text class="meta">{{item.addressText}}</text>
+  <text class="status">{{item.statusText}}</text>
+</view>

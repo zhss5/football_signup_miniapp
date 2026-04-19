@@ -1,0 +1,11 @@
+<view class="team-list">
+  <block wx:for="{{teams}}" wx:key="_id">
+    <view class="team-card">
+      <view class="team-head">
+        <text>{{item.teamName}}</text>
+        <text>{{item.joinedCount}} / {{item.maxMembers}}</text>
+      </view>
+      <button data-team-id="{{item._id}}" bindtap="onJoinTap">Join</button>
+    </view>
+  </block>
+</view>

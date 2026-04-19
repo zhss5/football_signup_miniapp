@@ -1,0 +1,12 @@
+.page {
+  padding: 24rpx;
+}
+
+.list {
+  margin-top: 24rpx;
+}
+
+.primary-button {
+  background: #15803d;
+  color: #ffffff;
+}

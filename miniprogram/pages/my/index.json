@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "My Activities",
+  "usingComponents": {
+    "activity-card": "/components/activity-card/index"
+  }
+}

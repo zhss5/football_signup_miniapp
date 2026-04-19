@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/activity-create/index",
+    "pages/activity-detail/index",
+    "pages/my/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Football Signup"
+  },
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "Home"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "My"
+      }
+    ]
+  }
+}
