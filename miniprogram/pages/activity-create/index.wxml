@@ -1,0 +1,132 @@
+<view class="page">
+  <view class="field">
+    <text class="label">Activity title</text>
+    <input
+      class="input"
+      placeholder="Activity title"
+      data-field="title"
+      value="{{form.title}}"
+      bindinput="onFieldInput"
+    />
+  </view>
+
+  <view class="field">
+    <text class="label">Activity date</text>
+    <picker mode="date" value="{{form.activityDate}}" data-field="activityDate" bindchange="onPickerChange">
+      <view class="picker-input">{{form.activityDate}}</view>
+    </picker>
+  </view>
+
+  <view class="field">
+    <text class="label">Activity time</text>
+    <view class="picker-grid">
+      <view class="picker-cell">
+        <text class="sub-label">Start time</text>
+        <picker mode="time" value="{{form.startTime}}" data-field="startTime" bindchange="onPickerChange">
+          <view class="picker-input">{{form.startTime}}</view>
+        </picker>
+      </view>
+      <view class="picker-cell">
+        <text class="sub-label">End time</text>
+        <picker mode="time" value="{{form.endTime}}" data-field="endTime" bindchange="onPickerChange">
+          <view class="picker-input">{{form.endTime}}</view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">Signup deadline</text>
+    <view class="picker-grid">
+      <view class="picker-cell">
+        <text class="sub-label">Deadline date</text>
+        <picker mode="date" value="{{form.signupDeadlineDate}}" data-field="signupDeadlineDate" bindchange="onPickerChange">
+          <view class="picker-input">{{form.signupDeadlineDate}}</view>
+        </picker>
+      </view>
+      <view class="picker-cell">
+        <text class="sub-label">Deadline time</text>
+        <picker mode="time" value="{{form.signupDeadlineTime}}" data-field="signupDeadlineTime" bindchange="onPickerChange">
+          <view class="picker-input">{{form.signupDeadlineTime}}</view>
+        </picker>
+      </view>
+    </view>
+    <text class="hint">Signup deadline must be earlier than or equal to the activity start time.</text>
+  </view>
+
+  <view class="field">
+    <text class="label">Invite code</text>
+    <input
+      class="input"
+      placeholder="Optional invite code"
+      data-field="inviteCode"
+      value="{{form.inviteCode}}"
+      bindinput="onFieldInput"
+    />
+  </view>
+
+  <view class="field">
+    <text class="label">Teams</text>
+    <text class="hint">Default to two teams. You can add Team 3 and Team 4 if needed.</text>
+  </view>
+  <team-editor teams="{{form.teams}}" bind:change="onTeamsChange" />
+
+  <view class="field">
+    <text class="label">Total signup limit</text>
+    <input
+      class="input"
+      placeholder="Total signup limit"
+      type="number"
+      data-field="signupLimitTotal"
+      value="{{form.signupLimitTotal}}"
+      bindinput="onFieldInput"
+    />
+    <text class="hint">Named teams: {{namedTeamSlots}} slots</text>
+    <text wx:if="{{benchSlots > 0}}" class="hint">替补: {{benchSlots}} slots</text>
+    <text wx:if="{{overCapacity}}" class="error-text">Total signup limit must cover all named team slots.</text>
+  </view>
+
+  <view class="field">
+    <text class="label">Require phone</text>
+    <switch checked="{{form.requirePhone}}" bindchange="onRequirePhoneChange" />
+  </view>
+
+  <view class="field">
+    <text class="label">Description</text>
+    <textarea
+      class="textarea"
+      placeholder="Description"
+      data-field="description"
+      value="{{form.description}}"
+      bindinput="onFieldInput"
+    />
+  </view>
+
+  <view class="field">
+    <text class="label">Activity image</text>
+    <view class="upload-panel">
+      <view class="image-preview-frame">
+        <image wx:if="{{form.coverImage}}" class="image-preview" src="{{form.coverImage}}" mode="aspectFill" />
+        <view wx:else class="upload-placeholder">+</view>
+      </view>
+      <button class="secondary-button" bindtap="onChooseActivityImage">{{form.coverImage ? 'Replace image' : 'Choose and crop image'}}</button>
+      <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">Remove image</button>
+      <text class="hint">Currently supports {{maxActivityImages}} image. It will be cropped to the shared 2:1 cover frame used on Home and Activity Detail. The data model already reserves imageList for future multi-image support.</text>
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">Location</text>
+    <input
+      class="input"
+      placeholder="Address"
+      data-field="addressText"
+      value="{{form.addressText}}"
+      bindinput="onFieldInput"
+    />
+    <text wx:if="{{form.addressName}}" class="hint">Selected pin: {{form.addressName}}</text>
+    <button class="secondary-button" bindtap="onChooseLocation">Choose on WeChat Map</button>
+  </view>
+
+  <button bindtap="onSubmit" loading="{{submitting}}">Publish Activity</button>
+</view>

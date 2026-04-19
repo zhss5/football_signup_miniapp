@@ -1,0 +1,111 @@
+.page {
+  padding: 24rpx;
+}
+
+.field {
+  margin-bottom: 24rpx;
+}
+
+.label {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #374151;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.sub-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #6b7280;
+  font-size: 22rpx;
+}
+
+.input,
+.textarea,
+.picker-input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.input,
+.picker-input {
+  display: block;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 20rpx;
+}
+
+.textarea {
+  min-height: 180rpx;
+  padding: 20rpx;
+  line-height: 1.5;
+}
+
+.picker-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.picker-cell {
+  flex: 1;
+}
+
+.hint {
+  display: block;
+  margin-top: 12rpx;
+  color: #6b7280;
+  font-size: 24rpx;
+}
+
+.error-text {
+  display: block;
+  margin-top: 12rpx;
+  color: #dc2626;
+  font-size: 24rpx;
+}
+
+.upload-panel {
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.image-preview-frame {
+  position: relative;
+  width: 100%;
+  padding-top: 50%;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.image-preview,
+.upload-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 64rpx;
+}
+
+.secondary-button {
+  margin-top: 16rpx;
+}
+
+.ghost-button {
+  margin-top: 12rpx;
+  background: #f9fafb;
+  color: #374151;
+}

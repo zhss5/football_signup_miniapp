@@ -1,0 +1,33 @@
+.team-row {
+  margin-bottom: 16rpx;
+}
+
+.team-fields {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+
+.team-input {
+  width: 68%;
+  box-sizing: border-box;
+  display: block;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 18rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.team-capacity {
+  width: 28%;
+  text-align: center;
+}
+
+.remove-button {
+  margin-top: 12rpx;
+}
+
+.add-button {
+  margin-top: 8rpx;
+}

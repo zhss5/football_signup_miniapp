@@ -1,0 +1,25 @@
+<view class="team-editor">
+  <block wx:for="{{teams}}" wx:key="index">
+    <view class="team-row">
+      <view class="team-fields">
+        <input
+          class="team-input"
+          value="{{item.teamName}}"
+          data-index="{{index}}"
+          data-field="teamName"
+          bindinput="onTeamFieldInput"
+        />
+        <input
+          class="team-input team-capacity"
+          type="number"
+          value="{{item.maxMembers}}"
+          data-index="{{index}}"
+          data-field="maxMembers"
+          bindinput="onTeamFieldInput"
+        />
+      </view>
+      <button wx:if="{{index >= 2}}" class="remove-button" data-index="{{index}}" bindtap="onRemoveTeam">Remove</button>
+    </view>
+  </block>
+  <button wx:if="{{teams.length < 4}}" class="add-button" bindtap="onAddTeam">Add Team</button>
+</view>

@@ -1,0 +1,10 @@
+<view class="card" bindtap="onTap">
+  <view wx:if="{{item.coverImage}}" class="cover-frame">
+    <image class="cover-image" src="{{item.coverImage}}" mode="aspectFill" />
+  </view>
+  <text class="title">{{item.title}}</text>
+  <text wx:if="{{item.startDisplayText}}" class="meta">Start: {{item.startDisplayText}}</text>
+  <text class="meta">{{item.addressText}}</text>
+  <text class="meta">{{item.capacityText}}</text>
+  <text class="status">{{item.statusText}}</text>
+</view>

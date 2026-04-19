@@ -1,0 +1,48 @@
+.page {
+  padding: 24rpx;
+}
+
+.hero {
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.cover-frame {
+  position: relative;
+  width: 100%;
+  padding-top: 50%;
+  border-radius: 20rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.meta {
+  display: block;
+  margin-top: 12rpx;
+  color: #6b7280;
+}
+
+.location {
+  margin-top: 16rpx;
+}
+
+.location-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+}

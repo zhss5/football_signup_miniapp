@@ -1,0 +1,30 @@
+<view class="page" wx:if="{{activity}}">
+  <view class="hero">
+    <view wx:if="{{activity.coverImage}}" class="cover-frame">
+      <image class="cover-image" src="{{activity.coverImage}}" mode="aspectFill" />
+    </view>
+    <text class="title">{{activity.title}}</text>
+    <view class="location" bindtap="onOpenLocation">
+      <text class="location-name">{{activity.addressName || activity.addressText}}</text>
+      <text class="meta">{{activity.addressText}}</text>
+    </view>
+  </view>
+
+  <team-list teams="{{teams}}" bind:jointap="openSignup" />
+
+  <button wx:if="{{viewer && viewer.canCancelActivity}}" bindtap="onCancelActivity">
+    Cancel Activity
+  </button>
+
+  <button wx:if="{{viewer && viewer.canCancelSignup}}" bindtap="onCancelSignup">
+    Cancel Signup
+  </button>
+
+  <signup-sheet
+    visible="{{signupVisible}}"
+    teamName="{{pendingTeamName}}"
+    requirePhone="{{activity.requirePhone}}"
+    bind:submit="submitSignup"
+    bind:close="onCloseSignup"
+  />
+</view>

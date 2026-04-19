@@ -1,0 +1,49 @@
+.team-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.team-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.member-list {
+  margin-bottom: 16rpx;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.member-avatar-image,
+.member-avatar-fallback {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+}
+
+.member-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.member-name {
+  margin-left: 16rpx;
+}
+
+.empty-members {
+  display: block;
+  margin-bottom: 16rpx;
+  color: #9ca3af;
+}

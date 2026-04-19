@@ -1,0 +1,58 @@
+<view class="page">
+  <view class="tab-row">
+    <block wx:for="{{tabs}}" wx:key="key">
+      <button
+        size="mini"
+        class="tab-chip {{activeTab === item.key ? 'tab-chip-active' : ''}}"
+        data-tab-key="{{item.key}}"
+        bindtap="onTabChange"
+      >
+        {{item.label}}
+      </button>
+    </block>
+  </view>
+
+  <view wx:if="{{activeTab === 'created'}}" class="section">
+    <view class="filter-row">
+      <block wx:for="{{createdFilters}}" wx:key="key">
+        <button
+          size="mini"
+          class="filter-chip {{createdFilter === item.key ? 'filter-chip-active' : ''}}"
+          data-filter-key="{{item.key}}"
+          bindtap="onCreatedFilterTap"
+        >
+          {{item.label}}
+        </button>
+      </block>
+    </view>
+    <block wx:for="{{createdItems}}" wx:key="_id">
+      <view class="activity-item">
+        <activity-card item="{{item}}" bind:tapcard="goDetail" />
+        <view class="action-row">
+          <button
+            wx:if="{{item.canCancelActivity}}"
+            size="mini"
+            data-activity-id="{{item._id}}"
+            catchtap="onCancelActivity"
+          >
+            Cancel Activity
+          </button>
+          <button
+            wx:if="{{item.canDeleteActivity}}"
+            size="mini"
+            data-activity-id="{{item._id}}"
+            catchtap="onDeleteActivity"
+          >
+            Delete
+          </button>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:elif="{{activeTab === 'joined'}}" class="section">
+    <block wx:for="{{joinedItems}}" wx:key="_id">
+      <activity-card item="{{item}}" bind:tapcard="goDetail" />
+    </block>
+  </view>
+</view>

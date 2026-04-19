@@ -2,3 +2,5 @@
 worktrees/
 node_modules/
 miniprogram_npm/
+cloudfunctions/*/_shared/
+project.private.config.json
