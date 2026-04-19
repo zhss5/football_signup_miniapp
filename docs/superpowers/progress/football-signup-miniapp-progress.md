@@ -2,9 +2,9 @@
 
 - Date: 2026-04-19
 - Status: In active MVP iteration
-- Active branch: `codex/football-signup-mvp`
+- Active branch: `main`
 - Main workspace: `D:/workspace/Nautilus`
-- Current implementation workspace: `D:/workspace/Nautilus/.worktrees/football-signup-mvp`
+- Current implementation workspace: `D:/workspace/Nautilus`
 
 ## 1. Current Summary
 
