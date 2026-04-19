@@ -1,0 +1,11 @@
+{
+  "name": "football-signup-miniapp",
+  "private": true,
+  "scripts": {
+    "test": "jest --runInBand",
+    "copy:cloud-shared": "node scripts/copy-cloud-shared.mjs"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0"
+  }
+}
