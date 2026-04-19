@@ -12,8 +12,13 @@ function getActivityDetail(activityId) {
   return call('getActivityDetail', { activityId });
 }
 
+function getActivityStats(activityId) {
+  return call('getActivityStats', { activityId });
+}
+
 module.exports = {
   createActivity,
   listActivities,
-  getActivityDetail
+  getActivityDetail,
+  getActivityStats
 };
