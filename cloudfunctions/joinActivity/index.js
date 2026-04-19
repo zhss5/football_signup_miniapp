@@ -14,7 +14,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const db = cloud.database();
   const registrationId = `${event.activityId}_${context.OPENID}`;
-  const stamp = nowIso();
+  const stamp = nowIso(deps.now);
 
   return db.runTransaction(async transaction => {
     const activityRes = await transaction.collection('activities').doc(event.activityId).get();
@@ -23,6 +23,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     if (activityRes.data.status !== 'published') {
       throw businessError('Activity is not open for signup');
+    }
+
+    const deadline = Date.parse(activityRes.data.signupDeadlineAt || '');
+    if (Number.isFinite(deadline) && Date.parse(stamp) > deadline) {
+      throw businessError('Signup is closed');
     }
 
     if (activityRes.data.joinedCount >= activityRes.data.signupLimitTotal) {

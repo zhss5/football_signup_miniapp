@@ -5,6 +5,13 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 async function main(event, context = cloud.getWXContext()) {
   const db = cloud.database();
 
+  if (event.scope === 'home') {
+    const res = await db.collection('activities').where({
+      status: db.command.in(['published', 'cancelled'])
+    }).get();
+    return { items: res.data };
+  }
+
   if (event.scope === 'created') {
     const res = await db.collection('activities').where({ organizerOpenId: context.OPENID }).get();
     return { items: res.data };
@@ -21,7 +28,9 @@ async function main(event, context = cloud.getWXContext()) {
       _id: db.command.in(activityIds)
     }).get();
 
-    return { items: activityRes.data };
+    return {
+      items: activityRes.data.filter(item => item.status !== 'deleted')
+    };
   }
 
   const res = await db.collection('activities').where({ status: event.status || 'published' }).get();

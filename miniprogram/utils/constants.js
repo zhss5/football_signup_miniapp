@@ -4,11 +4,14 @@ module.exports = {
     PUBLISHED: 'published',
     CLOSED: 'closed',
     FINISHED: 'finished',
-    CANCELLED: 'cancelled'
+    CANCELLED: 'cancelled',
+    DELETED: 'deleted'
   },
   REGISTRATION_STATUS: {
     JOINED: 'joined',
     CANCELLED: 'cancelled'
   },
-  MAX_TEAMS: 4
+  MAX_TEAMS: 4,
+  MAX_ACTIVITY_IMAGES: 1,
+  BENCH_TEAM_NAME: '\u66ff\u8865'
 };

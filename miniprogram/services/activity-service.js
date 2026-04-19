@@ -4,6 +4,14 @@ function createActivity(payload) {
   return call('createActivity', payload);
 }
 
+function cancelActivity(activityId) {
+  return call('cancelActivity', { activityId });
+}
+
+function deleteActivity(activityId) {
+  return call('deleteActivity', { activityId });
+}
+
 function listActivities(params) {
   return call('listActivities', params);
 }
@@ -17,7 +25,9 @@ function getActivityStats(activityId) {
 }
 
 module.exports = {
+  cancelActivity,
   createActivity,
+  deleteActivity,
   listActivities,
   getActivityDetail,
   getActivityStats

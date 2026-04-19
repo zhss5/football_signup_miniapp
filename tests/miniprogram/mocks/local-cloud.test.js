@@ -27,9 +27,11 @@ test('local cloud client can create an activity and list it on home', async () =
     title: 'Saturday 8-10',
     startAt: '2026-04-26T20:00:00.000Z',
     endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
     addressText: 'Half Stone',
     description: '7v7 game',
-    coverImage: '',
+    coverImage: 'wxfile://cover-1.png',
+    imageList: ['wxfile://cover-1.png'],
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
@@ -47,6 +49,8 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(created.activityId).toBeTruthy();
   expect(list.items).toHaveLength(1);
   expect(list.items[0].title).toBe('Saturday 8-10');
+  expect(list.items[0].signupDeadlineAt).toBe('2026-04-26T19:30:00.000Z');
+  expect(list.items[0].imageList).toEqual(['wxfile://cover-1.png']);
 });
 
 test('local cloud client can join and cancel an activity', async () => {
@@ -67,9 +71,11 @@ test('local cloud client can join and cancel an activity', async () => {
     title: 'Saturday 8-10',
     startAt: '2026-04-26T20:00:00.000Z',
     endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
     addressText: 'Half Stone',
     description: '',
     coverImage: '',
+    imageList: [],
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
@@ -97,4 +103,227 @@ test('local cloud client can join and cancel an activity', async () => {
 
   expect(joined.status).toBe('joined');
   expect(cancelled.status).toBe('cancelled');
+});
+
+test('local cloud client blocks switching teams before cancelling and exposes bench members', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    addressName: 'Half Stone Football Park',
+    location: {
+      latitude: 31.2304,
+      longitude: 121.4737
+    },
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 20,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    phone: '',
+    source: 'share'
+  });
+
+  await expect(
+    participantClient.call('joinActivity', {
+      activityId: created.activityId,
+      teamId: detailBefore.teams[1]._id,
+      signupName: 'Alex',
+      phone: '',
+      source: 'share'
+    })
+  ).rejects.toThrow('You already joined this activity');
+
+  const detailAfter = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.teams.map(item => item.teamName)).toEqual(['White', 'Red', '替补']);
+  expect(detailAfter.teams[0].members[0]).toMatchObject({
+    signupName: 'Alex',
+    avatarUrl: ''
+  });
+  expect(detailAfter.myRegistration.teamId).toBe(detailBefore.teams[0]._id);
+  expect(detailAfter.activity.signupDeadlineAt).toBe('2026-04-26T19:30:00.000Z');
+});
+
+test('local cloud client keeps soft-deleted activities in created history but hides them from home', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const cancelled = await ownerClient.call('cancelActivity', {
+    activityId: created.activityId
+  });
+
+  const deleted = await ownerClient.call('deleteActivity', {
+    activityId: created.activityId
+  });
+
+  const createdList = await ownerClient.call('listActivities', {
+    scope: 'created'
+  });
+  const homeList = await ownerClient.call('listActivities', {
+    scope: 'home'
+  });
+
+  expect(cancelled.status).toBe('cancelled');
+  expect(deleted.status).toBe('deleted');
+  expect(createdList.items).toHaveLength(1);
+  expect(createdList.items[0].status).toBe('deleted');
+  expect(homeList.items).toHaveLength(0);
+});
+
+test('local cloud client excludes deleted activities from joined activities and denies deleted detail to non-organizers', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const playerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T21:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  await ownerClient.call('deleteActivity', {
+    activityId: created.activityId
+  });
+
+  const joinedList = await playerClient.call('listActivities', {
+    scope: 'joined'
+  });
+
+  await expect(
+    playerClient.call('getActivityDetail', {
+      activityId: created.activityId
+    })
+  ).rejects.toThrow('Activity not found');
+
+  expect(joinedList.items).toHaveLength(0);
+});
+
+test('local cloud client blocks signup cancellation after deadline', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-26T18:00:00.000Z',
+    openid: 'openid_player'
+  });
+  const lateParticipantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-26T20:30:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T21:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detail.teams[0]._id,
+    signupName: 'Alex',
+    phone: '',
+    source: 'share'
+  });
+
+  await expect(
+    lateParticipantClient.call('cancelRegistration', {
+      activityId: created.activityId
+    })
+  ).rejects.toThrow('Signup can no longer be cancelled');
 });

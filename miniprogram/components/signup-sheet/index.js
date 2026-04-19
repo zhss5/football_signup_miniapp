@@ -4,6 +4,10 @@ Component({
       type: Boolean,
       value: false
     },
+    teamName: {
+      type: String,
+      value: ''
+    },
     requirePhone: {
       type: Boolean,
       value: false

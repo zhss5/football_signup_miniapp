@@ -19,6 +19,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const user = {
     _id: openid,
     preferredName: '',
+    avatarUrl: '',
     roles: ['user'],
     createdAt: stamp,
     lastActiveAt: stamp

@@ -2,11 +2,17 @@
   "pages": [
     "pages/home/index",
     "pages/activity-create/index",
+    "pages/activity-cover-crop/index",
     "pages/activity-detail/index",
     "pages/my/index"
   ],
   "window": {
     "navigationBarTitleText": "Football Signup"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "Used to choose and navigate to football fields."
+    }
   },
   "sitemapLocation": "sitemap.json",
   "tabBar": {

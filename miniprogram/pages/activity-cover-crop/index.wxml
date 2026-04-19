@@ -1,0 +1,50 @@
+<view class="page">
+  <view wx:if="{{ready}}" class="crop-shell">
+    <text class="title">Adjust Cover</text>
+    <text class="hint">The full image stays visible below. The highlighted 2:1 frame is the final cover that will be shown on Home and Activity Detail.</text>
+
+    <view class="image-stage">
+      <image class="stage-image" src="{{imagePath}}" style="{{stageImageStyle}}" mode="scaleToFill" />
+      <block wx:for="{{maskStyles}}" wx:key="index">
+        <view class="stage-mask" style="{{item}}"></view>
+      </block>
+      <view class="selection-frame" style="{{selectionFrameStyle}}">
+        <view class="selection-frame-outline"></view>
+      </view>
+    </view>
+
+    <view class="control">
+      <text class="control-label">Zoom</text>
+      <slider
+        min="{{minZoomPercent}}"
+        max="{{maxZoomPercent}}"
+        value="{{cropModel.zoomPercent}}"
+        show-value
+        bindchange="onZoomChange"
+        bindchanging="onZoomChange"
+      />
+    </view>
+
+    <view wx:if="{{canPanX}}" class="control">
+      <text class="control-label">Horizontal framing</text>
+      <slider value="{{cropModel.panXPercent}}" show-value bindchange="onPanXChange" bindchanging="onPanXChange" />
+    </view>
+
+    <view wx:if="{{canPanY}}" class="control">
+      <text class="control-label">Vertical framing</text>
+      <slider value="{{cropModel.panYPercent}}" show-value bindchange="onPanYChange" bindchanging="onPanYChange" />
+    </view>
+
+    <button bindtap="onConfirm" loading="{{processing}}">Use Cover</button>
+    <button class="secondary-button" bindtap="onCancel" disabled="{{processing}}">Cancel</button>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="loading-state">{{loadError}}</view>
+  <view wx:else class="loading-state">Preparing cropper...</view>
+
+  <canvas
+    canvas-id="coverCropCanvas"
+    class="hidden-canvas"
+    style="width: {{1200}}px; height: {{600}}px;"
+  ></canvas>
+</view>

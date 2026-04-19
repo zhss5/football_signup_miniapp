@@ -1,5 +1,6 @@
-const { getActivityDetail } = require('../../services/activity-service');
+const { getActivityDetail, cancelActivity } = require('../../services/activity-service');
 const { joinActivity, cancelRegistration } = require('../../services/registration-service');
+const { buildTeamListVm } = require('../../utils/formatters');
 
 Page({
   data: {
@@ -7,8 +8,10 @@ Page({
     activity: null,
     teams: [],
     myRegistration: null,
+    viewer: null,
     signupVisible: false,
-    pendingTeamId: ''
+    pendingTeamId: '',
+    pendingTeamName: ''
   },
 
   async onLoad(query) {
@@ -18,13 +21,22 @@ Page({
 
   async reload() {
     const detail = await getActivityDetail(this.data.activityId);
-    this.setData(detail);
+    this.setData({
+      ...detail,
+      teams: buildTeamListVm(detail.teams, detail.myRegistration, detail.activity)
+    });
   },
 
   openSignup(event) {
+    const selectedTeam = this.data.teams.find(team => team._id === event.detail.teamId);
+    if (!selectedTeam || selectedTeam.joinDisabled) {
+      return;
+    }
+
     this.setData({
       signupVisible: true,
-      pendingTeamId: event.detail.teamId
+      pendingTeamId: event.detail.teamId,
+      pendingTeamName: selectedTeam.teamName
     });
   },
 
@@ -40,21 +52,66 @@ Page({
 
     this.setData({
       signupVisible: false,
-      pendingTeamId: ''
+      pendingTeamId: '',
+      pendingTeamName: ''
     });
 
     await this.reload();
   },
 
   async onCancelSignup() {
-    await cancelRegistration(this.data.activityId);
-    await this.reload();
+    try {
+      await cancelRegistration(this.data.activityId);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: error.message, icon: 'none' });
+    }
+  },
+
+  async onCancelActivity() {
+    const confirmed = await new Promise(resolve => {
+      wx.showModal({
+        title: 'Cancel Activity',
+        content: 'This will stop new signups and mark the activity as cancelled.',
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await cancelActivity(this.data.activityId);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: error.message, icon: 'none' });
+    }
+  },
+
+  onOpenLocation() {
+    const activity = this.data.activity;
+    const location = activity && activity.location;
+
+    if (!location || typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
+      wx.showToast({ title: 'Location pin not available', icon: 'none' });
+      return;
+    }
+
+    wx.openLocation({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      name: activity.addressName || activity.addressText,
+      address: activity.addressText,
+      scale: 16
+    });
   },
 
   onCloseSignup() {
     this.setData({
       signupVisible: false,
-      pendingTeamId: ''
+      pendingTeamId: '',
+      pendingTeamName: ''
     });
   },
 

@@ -5,7 +5,17 @@
         <text>{{item.teamName}}</text>
         <text>{{item.joinedCount}} / {{item.maxMembers}}</text>
       </view>
-      <button data-team-id="{{item._id}}" bindtap="onJoinTap">Join</button>
+      <view wx:if="{{item.members.length}}" class="member-list">
+        <block wx:for="{{item.members}}" wx:key="userOpenId" wx:for-item="member">
+          <view class="member-row">
+            <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
+            <view wx:else class="member-avatar-fallback">{{member.avatarText}}</view>
+            <text class="member-name">{{member.signupName}}</text>
+          </view>
+        </block>
+      </view>
+      <text wx:else class="empty-members">No players yet</text>
+      <button data-team-id="{{item._id}}" bindtap="onJoinTap" disabled="{{item.joinDisabled}}">{{item.joinButtonText}}</button>
     </view>
   </block>
 </view>

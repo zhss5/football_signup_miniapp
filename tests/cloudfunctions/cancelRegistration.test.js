@@ -29,3 +29,17 @@ test('cancelRegistration keeps historical registration id', async () => {
 
   expect(result.registrationId).toBe('activity_1_openid_a');
 });
+
+test('cancelRegistration rejects cancellations after signup deadline', async () => {
+  await expect(
+    cancelRegistration.main(
+      { activityId: 'activity_1' },
+      { OPENID: 'openid_a' },
+      {
+        runCancel: async () => {
+          throw new Error('Signup can no longer be cancelled');
+        }
+      }
+    )
+  ).rejects.toThrow('Signup can no longer be cancelled');
+});

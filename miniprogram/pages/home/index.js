@@ -11,7 +11,7 @@ Page({
   async onShow() {
     this.setData({ loading: true });
     await ensureUserProfile();
-    const { items } = await listActivities({ scope: 'home', status: 'published', limit: 20 });
+    const { items } = await listActivities({ scope: 'home', limit: 20 });
     this.setData({
       items: items.map(buildActivityCardVm),
       loading: false

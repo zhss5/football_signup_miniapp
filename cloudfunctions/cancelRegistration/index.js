@@ -11,7 +11,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const db = cloud.database();
   const registrationId = `${event.activityId}_${context.OPENID}`;
-  const stamp = nowIso();
+  const stamp = nowIso(deps.now);
 
   return db.runTransaction(async transaction => {
     const registrationRes = await transaction.collection('registrations').doc(registrationId).get();
@@ -22,6 +22,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     const activityRes = await transaction.collection('activities').doc(event.activityId).get();
     const teamRes = await transaction.collection('activity_teams').doc(registrationRes.data.teamId).get();
+
+    if (activityRes.data.status !== 'published') {
+      throw businessError('Signup can no longer be cancelled');
+    }
+
+    const deadline = Date.parse(activityRes.data.signupDeadlineAt || '');
+    if (Number.isFinite(deadline) && Date.parse(stamp) > deadline) {
+      throw businessError('Signup can no longer be cancelled');
+    }
 
     await transaction.collection('registrations').doc(registrationId).update({
       data: {

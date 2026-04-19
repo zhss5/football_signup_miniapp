@@ -4,3 +4,10 @@
   background: #ffffff;
   border-radius: 24rpx;
 }
+
+.sheet-title {
+  display: block;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
