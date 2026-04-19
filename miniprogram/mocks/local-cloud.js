@@ -1,5 +1,20 @@
 const { validateActivityDraft } = require('../utils/validators');
-const { validateSignupPayload } = require('../../cloudfunctions/_shared/validators');
+
+function validateSignupPayload(payload) {
+  if (!payload.activityId) {
+    throw new Error('activityId is required');
+  }
+
+  if (!payload.teamId) {
+    throw new Error('teamId is required');
+  }
+
+  if (!payload.signupName || !payload.signupName.trim()) {
+    throw new Error('signupName is required');
+  }
+
+  return true;
+}
 
 function createDefaultState() {
   return {
