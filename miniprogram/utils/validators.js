@@ -1,47 +1,74 @@
 const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('./constants');
+const { t: translateText } = require('./i18n');
 
-function parseDate(value, fieldName) {
+function buildValidationError(field, key, translate = null) {
+  const message = translate ? translate(key) : translateText(key, {}, 'en-US');
+  const error = new Error(message);
+  error.field = field;
+  error.key = key;
+  return error;
+}
+
+function parseDate(value, fieldName, field, key, translate) {
   const stamp = Date.parse(value);
 
   if (Number.isNaN(stamp)) {
-    throw new Error(`${fieldName} is required`);
+    throw buildValidationError(field, key, translate);
   }
 
   return stamp;
 }
 
-function validateActivityDraft(draft) {
+function validateActivityDraft(draft, translate = null) {
   if (!draft.title || !draft.title.trim()) {
-    throw new Error('Activity title is required');
+    throw buildValidationError('title', 'errors.activityTitleRequired', translate);
   }
 
   if (!draft.addressText || !draft.addressText.trim()) {
-    throw new Error('Activity address is required');
+    throw buildValidationError('addressText', 'errors.activityAddressRequired', translate);
   }
 
   if (!Array.isArray(draft.teams) || draft.teams.length === 0) {
-    throw new Error('At least one team is required');
+    throw buildValidationError('teams', 'errors.atLeastOneTeamRequired', translate);
   }
 
   if (draft.teams.length > MAX_TEAMS) {
-    throw new Error('Too many teams');
+    throw buildValidationError('teams', 'errors.tooManyTeams', translate);
   }
 
-  const startAt = parseDate(draft.startAt, 'Activity start time');
-  const endAt = parseDate(draft.endAt, 'Activity end time');
-  const signupDeadlineAt = parseDate(draft.signupDeadlineAt, 'Signup deadline');
+  const startAt = parseDate(
+    draft.startAt,
+    'Activity start time',
+    'startAt',
+    'errors.activityStartTimeRequired',
+    translate
+  );
+  const endAt = parseDate(
+    draft.endAt,
+    'Activity end time',
+    'endAt',
+    'errors.activityEndTimeRequired',
+    translate
+  );
+  const signupDeadlineAt = parseDate(
+    draft.signupDeadlineAt,
+    'Signup deadline',
+    'signupDeadlineAt',
+    'errors.signupDeadlineRequired',
+    translate
+  );
 
   if (endAt <= startAt) {
-    throw new Error('Activity end time must be later than start time');
+    throw buildValidationError('endAt', 'errors.activityEndTimeOrder', translate);
   }
 
   if (signupDeadlineAt > startAt) {
-    throw new Error('Signup deadline must be earlier than or equal to activity start time');
+    throw buildValidationError('signupDeadlineAt', 'errors.signupDeadlineOrder', translate);
   }
 
   const totalSignupLimit = Number(draft.signupLimitTotal) || 0;
   if (totalSignupLimit <= 0) {
-    throw new Error('Total signup limit is required');
+    throw buildValidationError('signupLimitTotal', 'errors.totalSignupLimitRequired', translate);
   }
 
   const imageList = Array.isArray(draft.imageList)
@@ -51,24 +78,24 @@ function validateActivityDraft(draft) {
       : [];
 
   if (imageList.length > MAX_ACTIVITY_IMAGES) {
-    throw new Error('Only one activity image is supported right now');
+    throw buildValidationError('imageList', 'errors.onlyOneActivityImage', translate);
   }
 
   const teamSlots = draft.teams.reduce((sum, team) => {
     if (!team.teamName || !team.teamName.trim()) {
-      throw new Error('Team name is required');
+      throw buildValidationError('teams', 'errors.teamNameRequired', translate);
     }
 
     const maxMembers = Number(team.maxMembers) || 0;
     if (maxMembers <= 0) {
-      throw new Error('Team capacity must be greater than 0');
+      throw buildValidationError('teams', 'errors.teamCapacityRequired', translate);
     }
 
     return sum + maxMembers;
   }, 0);
 
   if (totalSignupLimit < teamSlots) {
-    throw new Error('Total signup limit must cover all team slots');
+    throw buildValidationError('signupLimitTotal', 'errors.totalSignupLimitCoverTeams', translate);
   }
 
   return true;

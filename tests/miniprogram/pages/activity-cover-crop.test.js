@@ -25,7 +25,7 @@ describe('activity cover crop flow', () => {
 
     expect(wxml).toContain('image-stage');
     expect(wxml).toContain('selection-frame');
-    expect(wxml).toContain('Horizontal framing');
-    expect(wxml).toContain('Use Cover');
+    expect(wxml).toContain('{{i18n.coverCrop.controls.panX}}');
+    expect(wxml).toContain('{{i18n.coverCrop.actions.confirm}}');
   });
 });

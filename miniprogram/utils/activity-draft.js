@@ -1,6 +1,13 @@
 const { MAX_ACTIVITY_IMAGES } = require('./constants');
 
-function createDefaultActivityForm() {
+function createDefaultActivityForm(options = {}) {
+  const defaultTeams = Array.isArray(options.defaultTeams) && options.defaultTeams.length
+    ? options.defaultTeams
+    : [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ];
+
   return {
     title: '',
     activityDate: '2026-04-26',
@@ -17,10 +24,7 @@ function createDefaultActivityForm() {
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
-    teams: [
-      { teamName: 'White', maxMembers: 6 },
-      { teamName: 'Red', maxMembers: 6 }
-    ]
+    teams: defaultTeams
   };
 }
 

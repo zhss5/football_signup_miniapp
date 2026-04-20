@@ -1,7 +1,7 @@
 <view class="page">
   <view wx:if="{{ready}}" class="crop-shell">
-    <text class="title">Adjust Cover</text>
-    <text class="hint">The full image stays visible below. The highlighted 2:1 frame is the final cover that will be shown on Home and Activity Detail.</text>
+    <text class="title">{{i18n.coverCrop.title}}</text>
+    <text class="hint">{{i18n.coverCrop.hint}}</text>
 
     <view class="image-stage">
       <image class="stage-image" src="{{imagePath}}" style="{{stageImageStyle}}" mode="scaleToFill" />
@@ -14,7 +14,7 @@
     </view>
 
     <view class="control">
-      <text class="control-label">Zoom</text>
+      <text class="control-label">{{i18n.coverCrop.controls.zoom}}</text>
       <slider
         min="{{minZoomPercent}}"
         max="{{maxZoomPercent}}"
@@ -26,21 +26,21 @@
     </view>
 
     <view wx:if="{{canPanX}}" class="control">
-      <text class="control-label">Horizontal framing</text>
+      <text class="control-label">{{i18n.coverCrop.controls.panX}}</text>
       <slider value="{{cropModel.panXPercent}}" show-value bindchange="onPanXChange" bindchanging="onPanXChange" />
     </view>
 
     <view wx:if="{{canPanY}}" class="control">
-      <text class="control-label">Vertical framing</text>
+      <text class="control-label">{{i18n.coverCrop.controls.panY}}</text>
       <slider value="{{cropModel.panYPercent}}" show-value bindchange="onPanYChange" bindchanging="onPanYChange" />
     </view>
 
-    <button bindtap="onConfirm" loading="{{processing}}">Use Cover</button>
-    <button class="secondary-button" bindtap="onCancel" disabled="{{processing}}">Cancel</button>
+    <button bindtap="onConfirm" loading="{{processing}}">{{i18n.coverCrop.actions.confirm}}</button>
+    <button class="secondary-button" bindtap="onCancel" disabled="{{processing}}">{{i18n.coverCrop.actions.cancel}}</button>
   </view>
 
   <view wx:elif="{{loadError}}" class="loading-state">{{loadError}}</view>
-  <view wx:else class="loading-state">Preparing cropper...</view>
+  <view wx:else class="loading-state">{{i18n.coverCrop.loading}}</view>
 
   <canvas
     canvas-id="coverCropCanvas"

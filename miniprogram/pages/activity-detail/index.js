@@ -1,6 +1,43 @@
 const { getActivityDetail, cancelActivity } = require('../../services/activity-service');
-const { joinActivity, cancelRegistration } = require('../../services/registration-service');
+const { cancelRegistration } = require('../../services/registration-service');
 const { buildTeamListVm } = require('../../utils/formatters');
+const {
+  getAppLocale,
+  getMessages,
+  makeTranslator,
+  setPageNavigationTitle,
+  translateErrorMessage
+} = require('../../utils/i18n');
+
+function consumeRefreshFlag(activityId) {
+  if (typeof getApp !== 'function') {
+    return false;
+  }
+
+  const app = getApp();
+  if (!app.globalData) {
+    app.globalData = {};
+  }
+
+  if (!app.globalData.activityDetailRefreshFlags) {
+    app.globalData.activityDetailRefreshFlags = {};
+  }
+
+  if (!app.globalData.activityDetailRefreshFlags[activityId]) {
+    return false;
+  }
+
+  app.globalData.activityDetailRefreshFlags[activityId] = false;
+  return true;
+}
+
+function applyPageI18n(page) {
+  const locale = getAppLocale();
+  const i18n = getMessages(locale);
+  setPageNavigationTitle('nav.activityDetail', locale);
+  page.setData({ locale, i18n });
+  return makeTranslator(locale);
+}
 
 Page({
   data: {
@@ -9,21 +46,52 @@ Page({
     teams: [],
     myRegistration: null,
     viewer: null,
-    signupVisible: false,
-    pendingTeamId: '',
-    pendingTeamName: ''
+    locale: '',
+    i18n: {},
+    shareHintVisible: false,
+    needsReloadOnShow: false
   },
 
   async onLoad(query) {
-    this.setData({ activityId: query.activityId });
+    const shareHintVisible = query.fromPublish === '1';
+
+    this.setData({
+      activityId: query.activityId,
+      shareHintVisible
+    });
+
+    if (shareHintVisible && typeof wx.showShareMenu === 'function') {
+      wx.showShareMenu();
+    }
+
+    applyPageI18n(this);
+    await this.reload();
+  },
+
+  async onShow() {
+    applyPageI18n(this);
+    const shouldReload = this.data.needsReloadOnShow || consumeRefreshFlag(this.data.activityId);
+
+    if (!shouldReload) {
+      return;
+    }
+
+    this.setData({ needsReloadOnShow: false });
     await this.reload();
   },
 
   async reload() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
     const detail = await getActivityDetail(this.data.activityId);
     this.setData({
       ...detail,
-      teams: buildTeamListVm(detail.teams, detail.myRegistration, detail.activity)
+      teams: buildTeamListVm(
+        detail.teams,
+        detail.myRegistration,
+        detail.activity,
+        undefined,
+        translate
+      )
     });
   },
 
@@ -33,46 +101,36 @@ Page({
       return;
     }
 
-    this.setData({
-      signupVisible: true,
-      pendingTeamId: event.detail.teamId,
-      pendingTeamName: selectedTeam.teamName
+    wx.navigateTo({
+      url:
+        `/pages/activity-join/index?activityId=${this.data.activityId}` +
+        `&teamId=${selectedTeam._id}` +
+        `&teamName=${encodeURIComponent(selectedTeam.teamName)}` +
+        `&requirePhone=${this.data.activity && this.data.activity.requirePhone ? '1' : '0'}`,
+      events: {
+        signupSuccess: () => {
+          this.setData({ needsReloadOnShow: true });
+        }
+      }
     });
-  },
-
-  async submitSignup(event) {
-    const detail = event.detail;
-    await joinActivity({
-      activityId: this.data.activityId,
-      teamId: this.data.pendingTeamId,
-      signupName: detail.signupName,
-      phone: detail.phone || '',
-      source: 'share'
-    });
-
-    this.setData({
-      signupVisible: false,
-      pendingTeamId: '',
-      pendingTeamName: ''
-    });
-
-    await this.reload();
   },
 
   async onCancelSignup() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
     try {
       await cancelRegistration(this.data.activityId);
       await this.reload();
     } catch (error) {
-      wx.showToast({ title: error.message, icon: 'none' });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },
 
   async onCancelActivity() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
     const confirmed = await new Promise(resolve => {
       wx.showModal({
-        title: 'Cancel Activity',
-        content: 'This will stop new signups and mark the activity as cancelled.',
+        title: translate('modal.cancelActivity.title'),
+        content: translate('modal.cancelActivity.content'),
         success: result => resolve(Boolean(result.confirm))
       });
     });
@@ -85,7 +143,7 @@ Page({
       await cancelActivity(this.data.activityId);
       await this.reload();
     } catch (error) {
-      wx.showToast({ title: error.message, icon: 'none' });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },
 
@@ -94,7 +152,10 @@ Page({
     const location = activity && activity.location;
 
     if (!location || typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
-      wx.showToast({ title: 'Location pin not available', icon: 'none' });
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('toast.locationPinUnavailable'),
+        icon: 'none'
+      });
       return;
     }
 
@@ -107,18 +168,25 @@ Page({
     });
   },
 
-  onCloseSignup() {
-    this.setData({
-      signupVisible: false,
-      pendingTeamId: '',
-      pendingTeamName: ''
-    });
+  onShareAppMessage() {
+    const activity = this.data.activity || {};
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+
+    return {
+      title: activity.title || translate('nav.home'),
+      imageUrl: activity.coverImage || undefined,
+      path: `/pages/activity-detail/index?activityId=${this.data.activityId}`
+    };
   },
 
-  onShareAppMessage() {
+  onShareTimeline() {
+    const activity = this.data.activity || {};
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+
     return {
-      title: this.data.activity ? this.data.activity.title : 'Football Signup',
-      path: `/pages/activity-detail/index?activityId=${this.data.activityId}`
+      title: activity.title || translate('nav.home'),
+      imageUrl: activity.coverImage || undefined,
+      query: `activityId=${this.data.activityId}`
     };
   }
 });

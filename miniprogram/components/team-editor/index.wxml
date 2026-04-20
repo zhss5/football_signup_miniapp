@@ -18,8 +18,8 @@
           bindinput="onTeamFieldInput"
         />
       </view>
-      <button wx:if="{{index >= 2}}" class="remove-button" data-index="{{index}}" bindtap="onRemoveTeam">Remove</button>
+      <button wx:if="{{index >= 2}}" class="remove-button" data-index="{{index}}" bindtap="onRemoveTeam">{{labels.remove || 'Remove'}}</button>
     </view>
   </block>
-  <button wx:if="{{teams.length < 4}}" class="add-button" bindtap="onAddTeam">Add Team</button>
+  <button wx:if="{{teams.length < 4}}" class="add-button" bindtap="onAddTeam">{{labels.addTeam || 'Add Team'}}</button>
 </view>

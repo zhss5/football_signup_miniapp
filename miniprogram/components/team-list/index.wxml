@@ -14,7 +14,7 @@
           </view>
         </block>
       </view>
-      <text wx:else class="empty-members">No players yet</text>
+      <text wx:else class="empty-members">{{emptyText}}</text>
       <button data-team-id="{{item._id}}" bindtap="onJoinTap" disabled="{{item.joinDisabled}}">{{item.joinButtonText}}</button>
     </view>
   </block>

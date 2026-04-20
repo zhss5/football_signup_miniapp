@@ -1,9 +1,23 @@
 <view class="page">
-  <view class="tab-row">
+  <view class="utility-row">
+    <text class="utility-label">{{i18n.my.languageLabel}}</text>
+    <block wx:for="{{languageOptions}}" wx:key="key">
+      <button
+        size="mini"
+        class="utility-chip {{locale === item.key ? 'utility-chip-active' : ''}}"
+        data-locale="{{item.key}}"
+        bindtap="onLanguageChange"
+      >
+        {{item.label}}
+      </button>
+    </block>
+  </view>
+
+  <view class="primary-tab-shell">
     <block wx:for="{{tabs}}" wx:key="key">
       <button
         size="mini"
-        class="tab-chip {{activeTab === item.key ? 'tab-chip-active' : ''}}"
+        class="primary-tab-chip {{activeTab === item.key ? 'primary-tab-chip-active' : ''}}"
         data-tab-key="{{item.key}}"
         bindtap="onTabChange"
       >
@@ -13,17 +27,20 @@
   </view>
 
   <view wx:if="{{activeTab === 'created'}}" class="section">
-    <view class="filter-row">
-      <block wx:for="{{createdFilters}}" wx:key="key">
-        <button
-          size="mini"
-          class="filter-chip {{createdFilter === item.key ? 'filter-chip-active' : ''}}"
-          data-filter-key="{{item.key}}"
-          bindtap="onCreatedFilterTap"
-        >
-          {{item.label}}
-        </button>
-      </block>
+    <view class="filter-group">
+      <text class="filter-heading">{{filterLabel}}</text>
+      <view class="filter-row">
+        <block wx:for="{{createdFilters}}" wx:key="key">
+          <button
+            size="mini"
+            class="filter-chip {{createdFilter === item.key ? 'filter-chip-active' : ''}}"
+            data-filter-key="{{item.key}}"
+            bindtap="onCreatedFilterTap"
+          >
+            {{item.label}}
+          </button>
+        </block>
+      </view>
     </view>
     <block wx:for="{{createdItems}}" wx:key="_id">
       <view class="activity-item">
@@ -35,7 +52,7 @@
             data-activity-id="{{item._id}}"
             catchtap="onCancelActivity"
           >
-            Cancel Activity
+            {{i18n.activity.actions.cancelActivity}}
           </button>
           <button
             wx:if="{{item.canDeleteActivity}}"
@@ -43,7 +60,7 @@
             data-activity-id="{{item._id}}"
             catchtap="onDeleteActivity"
           >
-            Delete
+            {{i18n.activity.actions.delete}}
           </button>
         </view>
       </view>

@@ -10,21 +10,19 @@
     </view>
   </view>
 
-  <team-list teams="{{teams}}" bind:jointap="openSignup" />
+  <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
+    <text class="share-title">{{shareHintVisible ? i18n.activity.share.publishedTitle : i18n.activity.share.defaultTitle}}</text>
+    <text class="share-copy">{{shareHintVisible ? i18n.activity.share.publishedCopy : i18n.activity.share.defaultCopy}}</text>
+    <button class="share-button" open-type="share">{{i18n.activity.share.action}}</button>
+  </view>
+
+  <team-list teams="{{teams}}" emptyText="{{i18n.activity.teamList.empty}}" bind:jointap="openSignup" />
 
   <button wx:if="{{viewer && viewer.canCancelActivity}}" bindtap="onCancelActivity">
-    Cancel Activity
+    {{i18n.activity.actions.cancelActivity}}
   </button>
 
   <button wx:if="{{viewer && viewer.canCancelSignup}}" bindtap="onCancelSignup">
-    Cancel Signup
+    {{i18n.activity.actions.cancelSignup}}
   </button>
-
-  <signup-sheet
-    visible="{{signupVisible}}"
-    teamName="{{pendingTeamName}}"
-    requirePhone="{{activity.requirePhone}}"
-    bind:submit="submitSignup"
-    bind:close="onCloseSignup"
-  />
 </view>

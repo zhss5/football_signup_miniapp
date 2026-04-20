@@ -38,6 +38,10 @@
   padding: 0 20rpx;
 }
 
+.input-error {
+  border: 2rpx solid #dc2626;
+}
+
 .textarea {
   min-height: 180rpx;
   padding: 20rpx;

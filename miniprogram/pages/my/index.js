@@ -4,37 +4,65 @@ const {
   listActivities
 } = require('../../services/activity-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
+const {
+  buildLanguageOptions,
+  getAppLocale,
+  getMessages,
+  makeTranslator,
+  setPageNavigationTitle,
+  translateErrorMessage
+} = require('../../utils/i18n');
 
 Page({
   data: {
+    locale: '',
+    i18n: {},
+    filterLabel: '',
+    languageOptions: [],
     activeTab: 'created',
-    tabs: [
-      { key: 'created', label: 'Created' },
-      { key: 'joined', label: 'Joined' }
-    ],
+    tabs: [],
     createdFilter: 'all',
-    createdFilters: [
-      { key: 'all', label: 'All' },
-      { key: 'published', label: 'Active' },
-      { key: 'cancelled', label: 'Cancelled' },
-      { key: 'deleted', label: 'Deleted' }
-    ],
+    createdFilters: [],
     createdItemsAll: [],
     createdItems: [],
     joinedItems: []
   },
 
+  applyI18n() {
+    const locale = getAppLocale();
+    const i18n = getMessages(locale);
+    setPageNavigationTitle('nav.myActivities', locale);
+    this.setData({
+      locale,
+      i18n,
+      filterLabel: i18n.my.filterLabel,
+      languageOptions: buildLanguageOptions(locale),
+      tabs: [
+        { key: 'created', label: i18n.my.tabs.created },
+        { key: 'joined', label: i18n.my.tabs.joined }
+      ],
+      createdFilters: [
+        { key: 'all', label: i18n.my.filters.all },
+        { key: 'published', label: i18n.my.filters.published },
+        { key: 'cancelled', label: i18n.my.filters.cancelled },
+        { key: 'deleted', label: i18n.my.filters.deleted }
+      ]
+    });
+    return makeTranslator(locale);
+  },
+
   async onShow() {
+    const translate = this.applyI18n();
     const [created, joined] = await Promise.all([
       listActivities({ scope: 'created', limit: 20 }),
       listActivities({ scope: 'joined', limit: 20 })
     ]);
 
-    const createdItemsAll = created.items.map(buildActivityCardVm);
+    const createdItemsAll = created.items.map(item => buildActivityCardVm(item, undefined, translate));
 
     this.setData({
       createdItemsAll,
-      joinedItems: joined.items.map(buildActivityCardVm)
+      joinedItems: joined.items.map(item => buildActivityCardVm(item, undefined, translate))
     });
     this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
   },
@@ -63,12 +91,19 @@ Page({
     this.applyCreatedFilter(filterKey);
   },
 
+  onLanguageChange(event) {
+    const locale = event.currentTarget.dataset.locale;
+    getApp().setLocale(locale);
+    this.onShow();
+  },
+
   async onCancelActivity(event) {
     const activityId = event.currentTarget.dataset.activityId;
+    const translate = makeTranslator(this.data.locale);
     const confirmed = await new Promise(resolve => {
       wx.showModal({
-        title: 'Cancel Activity',
-        content: 'This will stop new signups and mark the activity as cancelled.',
+        title: translate('modal.cancelActivity.title'),
+        content: translate('modal.cancelActivity.content'),
         success: result => resolve(Boolean(result.confirm))
       });
     });
@@ -81,16 +116,17 @@ Page({
       await cancelActivity(activityId);
       await this.onShow();
     } catch (error) {
-      wx.showToast({ title: error.message, icon: 'none' });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },
 
   async onDeleteActivity(event) {
     const activityId = event.currentTarget.dataset.activityId;
+    const translate = makeTranslator(this.data.locale);
     const confirmed = await new Promise(resolve => {
       wx.showModal({
-        title: 'Delete Activity',
-        content: 'Only empty activities can be deleted. Deleted activities stay in your history.',
+        title: translate('modal.deleteActivity.title'),
+        content: translate('modal.deleteActivity.content'),
         success: result => resolve(Boolean(result.confirm))
       });
     });
@@ -103,7 +139,7 @@ Page({
       await deleteActivity(activityId);
       await this.onShow();
     } catch (error) {
-      wx.showToast({ title: error.message, icon: 'none' });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   }
 });

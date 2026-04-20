@@ -12,6 +12,10 @@ Component({
     teams: {
       type: Array,
       value: []
+    },
+    labels: {
+      type: Object,
+      value: {}
     }
   },
 
@@ -40,11 +44,21 @@ Component({
 
     onAddTeam() {
       if (this.properties.teams.length >= MAX_TEAMS) {
-        wx.showToast({ title: `Up to ${MAX_TEAMS} teams`, icon: 'none' });
+        wx.showToast({
+          title: this.properties.labels.upToTeams || `Up to ${MAX_TEAMS} teams`,
+          icon: 'none'
+        });
         return;
       }
 
-      const teams = [...this.properties.teams, buildDefaultTeam(this.properties.teams.length)];
+      const prefix = this.properties.labels.teamNamePrefix || 'Team';
+      const teams = [
+        ...this.properties.teams,
+        {
+          ...buildDefaultTeam(this.properties.teams.length),
+          teamName: `${prefix} ${this.properties.teams.length + 1}`
+        }
+      ];
       this.emitTeams(teams);
     },
 

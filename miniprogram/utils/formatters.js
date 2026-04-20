@@ -1,4 +1,5 @@
 const DEFAULT_MEMBER_AVATAR_TEXT = '#';
+const { t: translateText } = require('./i18n');
 
 function resolveNow(nowProvider) {
   return typeof nowProvider === 'function' ? nowProvider() : Date.now();
@@ -17,7 +18,11 @@ function formatDateTime(isoValue) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function getActivitySignupState(activity = {}, nowProvider) {
+function defaultTranslate(key, params) {
+  return translateText(key, params, 'en-US');
+}
+
+function getActivitySignupState(activity = {}, nowProvider, translate = defaultTranslate) {
   const now = resolveNow(nowProvider);
   const deadline = Date.parse(activity.signupDeadlineAt || '');
   const isDeleted = activity.status === 'deleted';
@@ -27,36 +32,42 @@ function getActivitySignupState(activity = {}, nowProvider) {
   const isSignupClosed = Number.isFinite(deadline) && now > deadline;
 
   if (isDeleted) {
-    return { statusText: 'Deleted', joinEnabled: false };
+    return { statusText: translate('activity.status.deleted'), joinEnabled: false };
   }
 
   if (isCancelled) {
-    return { statusText: 'Cancelled', joinEnabled: false };
+    return { statusText: translate('activity.status.cancelled'), joinEnabled: false };
   }
 
   if (isFull) {
-    return { statusText: 'Full', joinEnabled: false };
+    return { statusText: translate('activity.status.full'), joinEnabled: false };
   }
 
   if (isPublished && isSignupClosed) {
-    return { statusText: 'Signup Closed', joinEnabled: false };
+    return { statusText: translate('activity.status.signupClosed'), joinEnabled: false };
   }
 
   if (isPublished) {
-    return { statusText: 'Joinable', joinEnabled: true };
+    return { statusText: translate('activity.status.joinable'), joinEnabled: true };
   }
 
-  return { statusText: 'Ended', joinEnabled: false };
+  return { statusText: translate('activity.status.ended'), joinEnabled: false };
 }
 
-function buildActivityCardVm(activity, nowProvider) {
-  const { statusText } = getActivitySignupState(activity, nowProvider);
+function buildActivityCardVm(activity, nowProvider, translate = defaultTranslate) {
+  const { statusText } = getActivitySignupState(activity, nowProvider, translate);
 
   return {
     ...activity,
     statusText,
     startDisplayText: formatDateTime(activity.startAt),
-    capacityText: `Joined ${activity.joinedCount || 0} / ${activity.signupLimitTotal || 0}`,
+    capacityText: translate('activityCard.joinedCapacity', {
+      joined: activity.joinedCount || 0,
+      total: activity.signupLimitTotal || 0
+    }),
+    startPrefixText: translate('activityCard.start', {
+      value: formatDateTime(activity.startAt)
+    }),
     canCancelActivity: activity.status === 'published',
     canDeleteActivity: activity.status !== 'deleted' && Number(activity.joinedCount || 0) === 0
   };
@@ -71,22 +82,30 @@ function buildMemberVm(member) {
   };
 }
 
-function buildTeamListVm(teams = [], myRegistration = null, activity = null, nowProvider) {
+function buildTeamListVm(
+  teams = [],
+  myRegistration = null,
+  activity = null,
+  nowProvider,
+  translate = defaultTranslate
+) {
   const hasJoined = Boolean(myRegistration && myRegistration.status === 'joined');
-  const signupState = getActivitySignupState(activity || {}, nowProvider);
+  const signupState = getActivitySignupState(activity || {}, nowProvider, translate);
 
   return teams.map(team => {
     const isFull = Number(team.joinedCount) >= Number(team.maxMembers);
     let joinDisabled = !signupState.joinEnabled || isFull;
-    let joinButtonText = signupState.joinEnabled ? 'Join' : signupState.statusText;
+    let joinButtonText = signupState.joinEnabled
+      ? translate('activity.status.joinable')
+      : signupState.statusText;
 
     if (isFull) {
-      joinButtonText = 'Full';
+      joinButtonText = translate('activity.status.full');
     }
 
     if (hasJoined) {
       joinDisabled = true;
-      joinButtonText = 'Joined';
+      joinButtonText = translate('activity.status.joined');
     }
 
     return {

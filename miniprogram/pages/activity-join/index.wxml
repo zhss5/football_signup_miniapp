@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="panel">
+    <text class="title">{{joinTitleText}}</text>
+    <text class="hint">{{i18n.activityJoin.hint}}</text>
+
+    <view class="field">
+      <text class="label">{{i18n.activityJoin.signupName}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityJoin.signupNamePlaceholder}}"
+        value="{{signupName}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view wx:if="{{requirePhone}}" class="field">
+      <text class="label">{{i18n.activityJoin.phone}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityJoin.phonePlaceholder}}"
+        type="number"
+        value="{{phone}}"
+        bindinput="onPhoneInput"
+      />
+    </view>
+
+    <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityJoin.confirm}}</button>
+  </view>
+</view>

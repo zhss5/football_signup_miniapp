@@ -6,6 +6,13 @@ const {
   summarizeTeamSlots
 } = require('../../utils/activity-draft');
 const { validateActivityDraft } = require('../../utils/validators');
+const {
+  getAppLocale,
+  getMessages,
+  makeTranslator,
+  setPageNavigationTitle,
+  translateErrorMessage
+} = require('../../utils/i18n');
 
 function getImagePath(result) {
   if (Array.isArray(result.tempFiles) && result.tempFiles[0]) {
@@ -37,28 +44,82 @@ function openCoverCropper(imagePath) {
   });
 }
 
+function getValidationErrors(error) {
+  if (
+    error &&
+    (error.field === 'addressText' ||
+      error.message === 'Activity address is required' ||
+      error.message === '活动地址不能为空')
+  ) {
+    return {
+      addressText: error.message
+    };
+  }
+
+  return {};
+}
+
 Page({
   data: {
     form: createDefaultActivityForm(),
+    locale: '',
+    i18n: {},
     submitting: false,
     maxTeams: MAX_TEAMS,
     maxActivityImages: MAX_ACTIVITY_IMAGES,
     namedTeamSlots: 12,
     benchSlots: 0,
-    overCapacity: false
+    overCapacity: false,
+    validationErrors: {},
+    namedTeamsSlotsText: '',
+    benchSlotsText: '',
+    imageHintText: '',
+    selectedPinText: '',
+    teamEditorLabels: {}
   },
 
   onLoad() {
-    this.syncDerivedState(this.data.form);
+    this.applyI18n(true);
   },
 
-  syncDerivedState(form) {
+  applyI18n(resetForm = false) {
+    const locale = getAppLocale();
+    const i18n = getMessages(locale);
+    const translate = makeTranslator(locale);
+    const defaultTeams = [
+      { teamName: translate('teamEditor.whiteTeam'), maxMembers: 6 },
+      { teamName: translate('teamEditor.redTeam'), maxMembers: 6 }
+    ];
+    const form = resetForm ? createDefaultActivityForm({ defaultTeams }) : this.data.form;
+
+    setPageNavigationTitle('nav.createActivity', locale);
+    this.setData({
+      locale,
+      i18n,
+      imageHintText: translate('activityCreate.imageHint', { count: MAX_ACTIVITY_IMAGES }),
+      teamEditorLabels: {
+        addTeam: i18n.teamEditor.addTeam,
+        remove: i18n.teamEditor.remove,
+        upToTeams: translate('teamEditor.upToTeams', { count: MAX_TEAMS }),
+        teamNamePrefix: i18n.teamEditor.teamNamePrefix
+      }
+    });
+    this.syncDerivedState(form, translate);
+    return translate;
+  },
+
+  syncDerivedState(form, translate = makeTranslator(this.data.locale || getAppLocale())) {
     const { namedTeamSlots, benchSlots, overCapacity } = summarizeTeamSlots(form);
     this.setData({
       form,
       namedTeamSlots,
       benchSlots,
-      overCapacity
+      overCapacity,
+      namedTeamsSlotsText: translate('activityCreate.namedTeamsSlots', { count: namedTeamSlots }),
+      benchSlotsText: translate('activityCreate.benchSlots', { count: benchSlots }),
+      selectedPinText: form.addressName
+        ? translate('activityCreate.selectedPin', { name: form.addressName })
+        : ''
     });
   },
 
@@ -71,6 +132,15 @@ Page({
     };
 
     this.syncDerivedState(form);
+
+    if (this.data.validationErrors[field]) {
+      this.setData({
+        validationErrors: {
+          ...this.data.validationErrors,
+          [field]: ''
+        }
+      });
+    }
   },
 
   onPickerChange(event) {
@@ -125,12 +195,23 @@ Page({
       };
 
       this.syncDerivedState(form);
+      if (this.data.validationErrors.addressText) {
+        this.setData({
+          validationErrors: {
+            ...this.data.validationErrors,
+            addressText: ''
+          }
+        });
+      }
     } catch (error) {
       if (error && error.errMsg && error.errMsg.includes('cancel')) {
         return;
       }
 
-      wx.showToast({ title: 'Unable to choose location', icon: 'none' });
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('toast.chooseLocationFailed'),
+        icon: 'none'
+      });
     }
   },
 
@@ -178,7 +259,10 @@ Page({
         return;
       }
 
-      wx.showToast({ title: 'Unable to choose image', icon: 'none' });
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('toast.chooseImageFailed'),
+        icon: 'none'
+      });
     }
   },
 
@@ -193,15 +277,23 @@ Page({
   },
 
   async onSubmit() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+
     try {
       const payload = buildActivityPayload(this.data.form);
-      validateActivityDraft(payload);
+      this.setData({ validationErrors: {} });
+      validateActivityDraft(payload, translate);
       this.setData({ submitting: true });
       const { activityId } = await createActivity(payload);
-      wx.redirectTo({ url: `/pages/activity-detail/index?activityId=${activityId}` });
-      this.syncDerivedState(createDefaultActivityForm());
+      wx.redirectTo({
+        url: `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
+      });
+      this.applyI18n(true);
     } catch (error) {
-      wx.showToast({ title: error.message, icon: 'none' });
+      this.setData({
+        validationErrors: getValidationErrors(error)
+      });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     } finally {
       this.setData({ submitting: false });
     }

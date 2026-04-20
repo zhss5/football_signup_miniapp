@@ -8,7 +8,10 @@ describe('activity detail actions', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('Cancel Activity');
-    expect(wxml).toContain('Cancel Signup');
+    expect(wxml).toContain('{{i18n.activity.share.action}}');
+    expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
+    expect(wxml).toContain('{{i18n.activity.actions.cancelSignup}}');
+    expect(wxml).toContain('open-type="share"');
+    expect(wxml).not.toContain('<signup-sheet');
   });
 });

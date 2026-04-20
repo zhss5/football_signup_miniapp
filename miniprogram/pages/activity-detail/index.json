@@ -1,7 +1,6 @@
 {
   "navigationBarTitleText": "Activity Detail",
   "usingComponents": {
-    "signup-sheet": "/components/signup-sheet/index",
     "team-list": "/components/team-list/index"
   }
 }

@@ -3,6 +3,10 @@ Component({
     teams: {
       type: Array,
       value: []
+    },
+    emptyText: {
+      type: String,
+      value: 'No players yet'
     }
   },
 

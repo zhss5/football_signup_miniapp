@@ -1,5 +1,5 @@
 <view class="page">
-  <button class="primary-button" bindtap="goCreate">Create Activity</button>
+  <button class="primary-button" bindtap="goCreate">{{i18n.home.createActivity}}</button>
 
   <view class="list">
     <block wx:for="{{items}}" wx:key="_id">

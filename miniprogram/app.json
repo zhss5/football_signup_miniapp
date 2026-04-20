@@ -4,6 +4,7 @@
     "pages/activity-create/index",
     "pages/activity-cover-crop/index",
     "pages/activity-detail/index",
+    "pages/activity-join/index",
     "pages/my/index"
   ],
   "window": {

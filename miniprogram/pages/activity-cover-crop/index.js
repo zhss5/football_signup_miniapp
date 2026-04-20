@@ -8,6 +8,7 @@ const {
   buildStageMetrics,
   buildStageOverlayStyles
 } = require('../../utils/cover-crop');
+const { getAppLocale, getMessages, makeTranslator, setPageNavigationTitle } = require('../../utils/i18n');
 
 Page({
   data: {
@@ -21,12 +22,24 @@ Page({
     cropRect: null,
     canPanX: false,
     canPanY: false,
+    locale: '',
+    i18n: {},
     minZoomPercent: MIN_ZOOM_PERCENT,
     maxZoomPercent: MAX_ZOOM_PERCENT,
     processing: false
   },
 
+  applyI18n() {
+    const locale = getAppLocale();
+    const i18n = getMessages(locale);
+    setPageNavigationTitle('nav.adjustCover', locale);
+    this.setData({ locale, i18n });
+    return makeTranslator(locale);
+  },
+
   onLoad(options = {}) {
+    const translate = this.applyI18n();
+
     try {
       this.stageMetrics = buildStageMetrics(wx.getSystemInfoSync());
     } catch (error) {
@@ -53,7 +66,7 @@ Page({
 
     if (!this.openerEventChannel) {
       this.setData({
-        loadError: 'Unable to load image source.'
+        loadError: translate('toast.loadImageSourceFailed')
       });
     }
   },
@@ -76,9 +89,10 @@ Page({
 
       this.applyCropModel(buildInitialCropModel(imageInfo), imagePath);
     } catch (error) {
-      wx.showToast({ title: 'Unable to open image', icon: 'none' });
+      const translate = makeTranslator(this.data.locale || getAppLocale());
+      wx.showToast({ title: translate('toast.openImageFailed'), icon: 'none' });
       this.setData({
-        loadError: 'Unable to open image.'
+        loadError: translate('toast.openImageFailed')
       });
     }
   },
@@ -147,7 +161,10 @@ Page({
       }
       wx.navigateBack();
     } catch (error) {
-      wx.showToast({ title: 'Unable to crop image', icon: 'none' });
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('toast.cropImageFailed'),
+        icon: 'none'
+      });
     } finally {
       this.setData({ processing: false });
     }

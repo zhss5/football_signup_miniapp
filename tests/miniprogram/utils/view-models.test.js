@@ -3,6 +3,7 @@ const {
   buildActivityCardVm,
   buildTeamListVm
 } = require('../../../miniprogram/utils/formatters');
+const { t } = require('../../../miniprogram/utils/i18n');
 
 test('buildActivityCardVm marks full activities', () => {
   const vm = buildActivityCardVm({
@@ -13,6 +14,22 @@ test('buildActivityCardVm marks full activities', () => {
   });
 
   expect(vm.statusText).toBe('Full');
+});
+
+test('buildActivityCardVm can localize status and capacity text to Chinese', () => {
+  const vm = buildActivityCardVm(
+    {
+      title: 'Saturday 8-10',
+      joinedCount: 3,
+      signupLimitTotal: 12,
+      status: 'published'
+    },
+    undefined,
+    (key, params) => t(key, params, 'zh-CN')
+  );
+
+  expect(vm.statusText).toBe('可报名');
+  expect(vm.capacityText).toBe('已报名 3 / 12');
 });
 
 test('buildActivityCardVm marks activities past signup deadline as closed and exposes start and capacity labels', () => {
@@ -107,5 +124,33 @@ test('buildTeamListVm disables join after signup deadline', () => {
   expect(teams[0]).toMatchObject({
     joinDisabled: true,
     joinButtonText: 'Signup Closed'
+  });
+});
+
+test('buildTeamListVm localizes join button states to Chinese', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_white',
+        teamName: 'White',
+        joinedCount: 0,
+        maxMembers: 6,
+        members: []
+      }
+    ],
+    {
+      teamId: 'team_white',
+      status: 'joined'
+    },
+    {
+      status: 'published'
+    },
+    undefined,
+    (key, params) => t(key, params, 'zh-CN')
+  );
+
+  expect(teams[0]).toMatchObject({
+    joinDisabled: true,
+    joinButtonText: '已报名'
   });
 });
