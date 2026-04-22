@@ -106,4 +106,31 @@ describe('cloud service runtime', () => {
 
     expect(() => cloud.initializeCloudRuntime()).toThrow('Cloud capability is required');
   });
+
+  test('initializes CloudBase when wx exists even if global.wx is unavailable', () => {
+    const init = jest.fn();
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init,
+        callFunction: jest.fn()
+      }
+    };
+
+    global.global = {};
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    expect(cloud.initializeCloudRuntime()).toEqual({
+      mode: 'cloudbase',
+      envId: 'prod-env-123'
+    });
+    expect(init).toHaveBeenCalledTimes(1);
+  });
 });

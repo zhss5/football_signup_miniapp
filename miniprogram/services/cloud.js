@@ -4,6 +4,18 @@ const { buildStorageAdapter, createLocalCloudClient } = require('../mocks/local-
 let localCloudClient = null;
 let cloudRuntime = null;
 
+function getWxRuntime() {
+  if (typeof wx !== 'undefined' && wx) {
+    return wx;
+  }
+
+  if (typeof globalThis !== 'undefined' && globalThis.wx) {
+    return globalThis.wx;
+  }
+
+  return null;
+}
+
 function getLocalCloudClient() {
   if (!localCloudClient) {
     localCloudClient = createLocalCloudClient({
@@ -26,12 +38,14 @@ function initializeCloudRuntime() {
     throw new Error('CLOUD_ENV_ID is required when USE_LOCAL_MOCK is false');
   }
 
-  if (!global.wx || !global.wx.cloud) {
+  const wxRuntime = getWxRuntime();
+
+  if (!wxRuntime || !wxRuntime.cloud) {
     throw new Error('Cloud capability is required');
   }
 
   if (!cloudRuntime) {
-    global.wx.cloud.init({
+    wxRuntime.cloud.init({
       env: CLOUD_ENV_ID,
       traceUser: true
     });
@@ -52,7 +66,9 @@ function call(name, data = {}) {
 
   initializeCloudRuntime();
 
-  return wx.cloud.callFunction({
+  const wxRuntime = getWxRuntime();
+
+  return wxRuntime.cloud.callFunction({
     name,
     data
   }).then(res => res.result);

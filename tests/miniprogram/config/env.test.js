@@ -4,6 +4,8 @@ describe('env config', () => {
   });
 
   test('returns the default repository config when no local override exists', () => {
+    jest.doMock('../../../miniprogram/config/env.local', () => ({}));
+
     const env = require('../../../miniprogram/config/env');
 
     expect(env).toEqual({
@@ -17,7 +19,7 @@ describe('env config', () => {
     jest.doMock('../../../miniprogram/config/env.local', () => ({
       USE_LOCAL_MOCK: false,
       CLOUD_ENV_ID: 'prod-env-123'
-    }), { virtual: true });
+    }));
 
     const env = require('../../../miniprogram/config/env');
 
