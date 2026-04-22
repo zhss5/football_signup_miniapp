@@ -1,7 +1,7 @@
 # Football Signup Mini Program MVP Implementation Plan
 
-- Date: 2026-04-19
-- Status: Updated to match the current implementation snapshot on `codex/football-signup-mvp`
+- Date: 2026-04-22
+- Status: Updated to match the current implementation snapshot on `main`
 
 ## 1. Goal
 
@@ -13,7 +13,9 @@ The current implementation already includes:
 
 - native WeChat mini program project structure
 - local mock mode for WeChat DevTools
+- local-only `env.local.js` override support for real CloudBase wiring
 - CloudBase-style cloud functions
+- one-time CloudBase runtime initialization with explicit env validation
 - `openid`-based user auto-bootstrap
 - activity creation with:
   - activity date
@@ -196,8 +198,8 @@ Important implemented fields:
 Latest verified status:
 
 - command: `npm test -- --runInBand`
-- result: `23` test suites passed
-- result: `54` tests passed
+- result: `29` test suites passed
+- result: `72` tests passed
 
 The current test surface includes:
 
@@ -243,10 +245,16 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 ### Milestone A: Production CloudBase Integration
 
-- switch from local mock to real CloudBase environment
-- deploy cloud functions
-- create collections and indexes
-- validate end-to-end flow in WeChat DevTools and on-device
+- completed in code:
+  - local-only runtime switching via `miniprogram/config/env.local.js`
+  - explicit `CLOUD_ENV_ID` validation
+  - one-time CloudBase runtime initialization
+  - rollout documentation and smoke checklist
+- remaining operational work:
+  - switch one local environment from mock to real CloudBase
+  - deploy cloud functions
+  - create collections and indexes
+  - validate end-to-end flow in WeChat DevTools and on-device
 
 ### Milestone B: Organizer Operations
 
@@ -266,5 +274,5 @@ This document now acts as a living `implementation status + next backlog` plan.
 
 The historical bootstrap plan has been superseded by the current codebase. For the latest behavior, the source of truth is:
 
-- the current implementation on `codex/football-signup-mvp`
+- the current implementation on `main`
 - the design document at `docs/superpowers/specs/football-signup-miniapp-design.md`

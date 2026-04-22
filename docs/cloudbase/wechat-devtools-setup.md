@@ -33,7 +33,7 @@ Current default values:
 1. Open WeChat DevTools
 2. Choose `Import Project`
 3. Select the repository root:
-   `D:/workspace/Nautilus/.worktrees/football-signup-mvp`
+   `D:/workspace/Nautilus`
 4. Keep the default project configuration from `project.config.json`
 5. Open the simulator
 
@@ -74,8 +74,10 @@ Recommended manual checks:
 
 When you are ready to use CloudBase:
 
-1. Replace `touristappid` in `project.config.json` with your real mini program AppID
-2. Update `miniprogram/config/env.js`
+1. Keep the repository default file `miniprogram/config/env.js` unchanged
+2. Copy `miniprogram/config/env.local.js.example` to:
+   - `miniprogram/config/env.local.js`
+3. Update the local override file:
 
 ```javascript
 module.exports = {
@@ -85,21 +87,32 @@ module.exports = {
 };
 ```
 
-3. In WeChat DevTools, enable cloud development for the project
-4. Deploy the cloud functions under `cloudfunctions/`
-5. Create database collections:
+4. Use your real mini program AppID in WeChat DevTools
+   - keep that change local unless you intentionally want to share it with the repository
+5. In WeChat DevTools, enable cloud development for the project
+6. Run the shared helper copy before deploying functions:
+
+```bash
+npm run copy:cloud-shared
+```
+
+7. Deploy the cloud functions under `cloudfunctions/`
+8. Create database collections:
    - `users`
    - `activities`
    - `activity_teams`
    - `registrations`
    - `activity_logs`
-6. Add the indexes from:
+9. Add the indexes from:
    - `docs/cloudbase/indexes.md`
-7. Apply database write restrictions based on:
+10. Apply database write restrictions based on:
    - `docs/cloudbase/security-rules.json`
+11. Run the manual checklist from:
+   - `docs/cloudbase/manual-smoke-checklist.md`
 
 ## Notes
 
 - Local mock mode is only for UI and interaction testing
 - Real multi-user tests should be verified again in CloudBase mode
 - `project.private.config.json` is intentionally ignored so local DevTools preferences stay untracked
+- `miniprogram/config/env.local.js` is intentionally ignored so local CloudBase wiring stays untracked

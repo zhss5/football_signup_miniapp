@@ -1,6 +1,6 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-04-19
+- Date: 2026-04-22
 - Status: In active MVP iteration
 - Active branch: `main`
 - Main workspace: `D:/workspace/Nautilus`
@@ -24,6 +24,8 @@ The project is no longer at the scaffolding stage. The main work now is product 
 
 - native WeChat mini program project created
 - local mock runtime added for DevTools debugging
+- local-only `env.local.js` override support added for real CloudBase wiring
+- CloudBase runtime initialization now validates `CLOUD_ENV_ID` and initializes once per session
 - CloudBase-style service and cloud-function boundaries established
 - Jest-based test suite added
 
@@ -119,8 +121,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `23` test suites passed
-- result: `54` tests passed
+- result: `29` test suites passed
+- result: `72` tests passed
 
 Covered areas include:
 
@@ -145,8 +147,8 @@ The MVP still has known non-blocking gaps:
 
 ### Option A: Production CloudBase Integration
 
-- switch from local mock mode to a real CloudBase environment
-- deploy cloud functions
+- local runtime switch support is now implemented
+- next action is to wire one real environment and deploy cloud functions
 - create collections and indexes
 - validate permissions and end-to-end data writes
 
@@ -166,3 +168,4 @@ The MVP still has known non-blocking gaps:
 
 - Design: `D:/workspace/Nautilus/docs/superpowers/specs/football-signup-miniapp-design.md`
 - Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
+- CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`

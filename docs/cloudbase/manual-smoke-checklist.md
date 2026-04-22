@@ -1,9 +1,35 @@
 # Manual Smoke Checklist
 
-- Confirm the home page loads published activities
-- Confirm activity creation writes both activity and team documents
-- Confirm the activity detail page shows team counts
+## Home and Listing
+
+- Confirm the home page loads published activities from CloudBase
+- Confirm deleted activities do not appear on Home
+- Confirm created and joined lists load correctly on the `My` page
+
+## Activity Creation
+
+- Confirm activity creation writes one `activities` document
+- Confirm activity creation writes the related `activity_teams` documents
+- Confirm map-selected address fields are stored
+- Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
+
+## Signup Flow
+
+- Confirm the activity detail page shows team counts and member names
 - Confirm join flow writes `registrations._id = activityId_openid`
-- Confirm cancel flow changes status to `cancelled`
+- Confirm only one active signup per activity is allowed
+- Confirm signup is blocked after `signupDeadlineAt`
+
+## Cancellation and Organizer Actions
+
+- Confirm participant cancellation works before the deadline
+- Confirm participant cancellation is blocked after the deadline
+- Confirm organizer cancel changes activity status to `cancelled`
+- Confirm organizer soft delete is allowed only when `joinedCount = 0`
+- Confirm deleted activities remain visible to the organizer in Created history only
+
+## Access and Sharing
+
 - Confirm organizer stats reject non-organizer access
 - Confirm the share link opens the correct detail page
+- Confirm a non-organizer cannot see `Cancel Activity`

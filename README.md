@@ -63,6 +63,7 @@ The project supports two modes:
 Current runtime config lives in:
 
 - `miniprogram/config/env.js`
+- optional local-only override: `miniprogram/config/env.local.js`
 
 ## Local Development
 
@@ -94,6 +95,7 @@ Detailed setup instructions:
 
 When moving from local mock mode to a real CloudBase environment, also review:
 
+- [real-cloudbase-rollout.md](docs/cloudbase/real-cloudbase-rollout.md)
 - [indexes.md](docs/cloudbase/indexes.md)
 - [security-rules.json](docs/cloudbase/security-rules.json)
 - [manual-smoke-checklist.md](docs/cloudbase/manual-smoke-checklist.md)
