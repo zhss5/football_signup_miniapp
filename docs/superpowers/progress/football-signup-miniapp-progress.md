@@ -1,6 +1,6 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-04-22
+- Date: 2026-04-26
 - Status: In active MVP iteration
 - Active branch: `main`
 - Main workspace: `D:/workspace/Nautilus`
@@ -17,6 +17,15 @@ The MVP is already runnable in WeChat DevTools in local mock mode and supports t
 5. manage organizer-side activity lifecycle
 
 The project is no longer at the scaffolding stage. The main work now is product refinement, CloudBase production integration, and operator-facing improvements.
+
+The latest CloudBase work has already:
+
+- switched one local machine to real CloudBase runtime mode
+- fixed DevTools-side `wx.cloud` runtime detection
+
+The current remaining blocker is operational, not architectural:
+
+- cloud functions still need to be deployed to the CloudBase environment before the real runtime can complete the startup flow
 
 ## 2. Completed Features
 
@@ -122,7 +131,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `29` test suites passed
-- result: `72` tests passed
+- result: `73` tests passed
 
 Covered areas include:
 
@@ -148,7 +157,8 @@ The MVP still has known non-blocking gaps:
 ### Option A: Production CloudBase Integration
 
 - local runtime switch support is now implemented
-- next action is to wire one real environment and deploy cloud functions
+- one real environment has already been created locally
+- next action is to deploy cloud functions
 - create collections and indexes
 - validate permissions and end-to-end data writes
 
@@ -169,3 +179,4 @@ The MVP still has known non-blocking gaps:
 - Design: `D:/workspace/Nautilus/docs/superpowers/specs/football-signup-miniapp-design.md`
 - Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
+- Handoff: `D:/workspace/Nautilus/docs/superpowers/handoff/football-signup-miniapp-handoff.md`
