@@ -25,4 +25,11 @@ describe('cloud function deployment manifests', () => {
     });
     expect(manifest.dependencies).toHaveProperty('wx-server-sdk');
   });
+
+  test.each(functionNames)('%s imports shared helpers from its deploy package', functionName => {
+    const entryPath = path.join(functionsRoot, functionName, 'index.js');
+    const source = fs.readFileSync(entryPath, 'utf8');
+
+    expect(source).not.toContain("require('../_shared/");
+  });
 });

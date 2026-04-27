@@ -2,6 +2,7 @@
   "name": "football-signup-miniapp",
   "private": true,
   "scripts": {
+    "pretest": "node scripts/copy-cloud-shared.mjs",
     "test": "jest --runInBand",
     "copy:cloud-shared": "node scripts/copy-cloud-shared.mjs"
   },
