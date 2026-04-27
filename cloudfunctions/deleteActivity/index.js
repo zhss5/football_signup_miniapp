@@ -1,12 +1,15 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { businessError } = require('./errors');
 const { COLLECTIONS } = require('./collections');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
   if (deps.runDeleteActivity) {
-    return deps.runDeleteActivity(event, context.OPENID);
+    return deps.runDeleteActivity(event, openid);
   }
 
   const db = deps.db || cloud.database();
@@ -20,7 +23,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('Activity not found');
     }
 
-    if (activity.organizerOpenId !== context.OPENID) {
+    if (activity.organizerOpenId !== openid) {
       throw businessError('Only the organizer can delete this activity');
     }
 

@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
 const { COLLECTIONS } = require('./collections');
@@ -6,8 +7,10 @@ const { COLLECTIONS } = require('./collections');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
   if (deps.runCancelActivity) {
-    return deps.runCancelActivity(event, context.OPENID);
+    return deps.runCancelActivity(event, openid);
   }
 
   const db = deps.db || cloud.database();
@@ -21,7 +24,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('Activity not found');
     }
 
-    if (activity.organizerOpenId !== context.OPENID) {
+    if (activity.organizerOpenId !== openid) {
       throw businessError('Only the organizer can cancel this activity');
     }
 

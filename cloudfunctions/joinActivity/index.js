@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { validateSignupPayload } = require('./validators');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
@@ -7,13 +8,14 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
 
   if (deps.runJoin) {
-    return deps.runJoin(event, context.OPENID);
+    return deps.runJoin(event, openid);
   }
 
   const db = cloud.database();
-  const registrationId = `${event.activityId}_${context.OPENID}`;
+  const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
 
   return db.runTransaction(async transaction => {
@@ -47,7 +49,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         _id: registrationId,
         activityId: event.activityId,
         teamId: event.teamId,
-        userOpenId: context.OPENID,
+        userOpenId: openid,
         status: 'joined',
         signupName: event.signupName.trim(),
         phoneSnapshot: event.phone || '',

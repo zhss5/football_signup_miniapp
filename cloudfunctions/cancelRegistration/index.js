@@ -1,16 +1,19 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
   if (deps.runCancel) {
-    return deps.runCancel(event, context.OPENID);
+    return deps.runCancel(event, openid);
   }
 
   const db = cloud.database();
-  const registrationId = `${event.activityId}_${context.OPENID}`;
+  const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
 
   return db.runTransaction(async transaction => {

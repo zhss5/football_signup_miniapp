@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { nowIso } = require('./time');
 const { validateActivityDraft } = require('./validators');
 
@@ -32,6 +33,7 @@ function buildTeamDrafts(event) {
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
   validateActivityDraft(event);
   const teams = buildTeamDrafts(event);
 
@@ -44,7 +46,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const activityData = {
     title: event.title.trim(),
-    organizerOpenId: context.OPENID,
+    organizerOpenId: openid,
     startAt: event.startAt,
     endAt: event.endAt,
     signupDeadlineAt: event.signupDeadlineAt,

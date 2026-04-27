@@ -1,12 +1,15 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { businessError } = require('./errors');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
   if (deps.loadActivity) {
     const activity = await deps.loadActivity(event.activityId);
-    if (activity.organizerOpenId !== context.OPENID) {
+    if (activity.organizerOpenId !== openid) {
       throw businessError('Not allowed to view activity stats');
     }
 
@@ -16,7 +19,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = cloud.database();
   const activityRes = await db.collection('activities').doc(event.activityId).get();
 
-  if (activityRes.data.organizerOpenId !== context.OPENID) {
+  if (activityRes.data.organizerOpenId !== openid) {
     throw businessError('Not allowed to view activity stats');
   }
 

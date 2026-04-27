@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
@@ -6,8 +7,10 @@ const { nowIso } = require('./time');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
   if (deps.loadActivityDetail) {
-    return deps.loadActivityDetail(event.activityId, context.OPENID);
+    return deps.loadActivityDetail(event.activityId, openid);
   }
 
   const db = deps.db || cloud.database();
@@ -18,7 +21,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('Activity not found');
   }
 
-  if (activity.data.status === 'deleted' && activity.data.organizerOpenId !== context.OPENID) {
+  if (activity.data.status === 'deleted' && activity.data.organizerOpenId !== openid) {
     throw businessError('Activity not found');
   }
 
@@ -30,7 +33,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .collection(COLLECTIONS.REGISTRATIONS)
     .where({ activityId: event.activityId, status: 'joined' })
     .get();
-  const registrationId = `${event.activityId}_${context.OPENID}`;
+  const registrationId = `${event.activityId}_${openid}`;
   const myRegistration = await db
     .collection(COLLECTIONS.REGISTRATIONS)
     .doc(registrationId)
@@ -86,11 +89,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       })),
     myRegistration: myRegistration.data,
     viewer: {
-      isOrganizer: activity.data.organizerOpenId === context.OPENID,
+      isOrganizer: activity.data.organizerOpenId === openid,
       canCancelActivity:
-        activity.data.organizerOpenId === context.OPENID && activity.data.status === 'published',
+        activity.data.organizerOpenId === openid && activity.data.status === 'published',
       canDeleteActivity:
-        activity.data.organizerOpenId === context.OPENID && Number(activity.data.joinedCount) === 0,
+        activity.data.organizerOpenId === openid && Number(activity.data.joinedCount) === 0,
       canCancelSignup
     }
   };

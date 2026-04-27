@@ -1,9 +1,11 @@
 const cloud = require('wx-server-sdk');
+const { resolveOpenId } = require('./auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-async function main(event, context = cloud.getWXContext()) {
+async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = cloud.database();
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
 
   if (event.scope === 'home') {
     const res = await db.collection('activities').where({
@@ -13,12 +15,12 @@ async function main(event, context = cloud.getWXContext()) {
   }
 
   if (event.scope === 'created') {
-    const res = await db.collection('activities').where({ organizerOpenId: context.OPENID }).get();
+    const res = await db.collection('activities').where({ organizerOpenId: openid }).get();
     return { items: res.data };
   }
 
   if (event.scope === 'joined') {
-    const regRes = await db.collection('registrations').where({ userOpenId: context.OPENID, status: 'joined' }).get();
+    const regRes = await db.collection('registrations').where({ userOpenId: openid, status: 'joined' }).get();
     const activityIds = regRes.data.map(item => item.activityId);
     if (activityIds.length === 0) {
       return { items: [] };
