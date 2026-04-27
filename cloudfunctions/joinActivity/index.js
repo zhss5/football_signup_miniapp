@@ -46,7 +46,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     await transaction.collection('registrations').doc(registrationId).set({
       data: {
-        _id: registrationId,
         activityId: event.activityId,
         teamId: event.teamId,
         userOpenId: openid,

@@ -17,8 +17,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     return { user: { ...current.data, lastActiveAt: stamp } };
   }
 
-  const user = {
-    _id: openid,
+  const userData = {
     preferredName: '',
     avatarUrl: '',
     roles: ['user'],
@@ -26,8 +25,13 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     lastActiveAt: stamp
   };
 
-  await userRef.set({ data: user });
-  return { user };
+  await userRef.set({ data: userData });
+  return {
+    user: {
+      _id: openid,
+      ...userData
+    }
+  };
 }
 
 module.exports = { main };
