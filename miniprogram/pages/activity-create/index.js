@@ -1,4 +1,5 @@
 const { createActivity } = require('../../services/activity-service');
+const { uploadFile } = require('../../services/cloud');
 const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('../../utils/constants');
 const {
   buildActivityPayload,
@@ -57,6 +58,41 @@ function getValidationErrors(error) {
   }
 
   return {};
+}
+
+function getCoverFileExtension(filePath) {
+  const cleanPath = String(filePath || '').split('?')[0];
+  const match = cleanPath.match(/\.(jpe?g|png|webp)$/i);
+
+  if (!match) {
+    return '.jpg';
+  }
+
+  return `.${match[1].toLowerCase().replace('jpeg', 'jpg')}`;
+}
+
+function buildCoverCloudPath(filePath) {
+  const extension = getCoverFileExtension(filePath);
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  return `activity-covers/${Date.now()}-${suffix}${extension}`;
+}
+
+async function uploadActivityCover(payload) {
+  const coverImage =
+    payload.coverImage || (Array.isArray(payload.imageList) ? payload.imageList[0] : '');
+
+  if (!coverImage) {
+    return payload;
+  }
+
+  const fileId = await uploadFile(coverImage, buildCoverCloudPath(coverImage));
+
+  return {
+    ...payload,
+    coverImage: fileId,
+    imageList: [fileId]
+  };
 }
 
 Page({
@@ -284,7 +320,8 @@ Page({
       this.setData({ validationErrors: {} });
       validateActivityDraft(payload, translate);
       this.setData({ submitting: true });
-      const { activityId } = await createActivity(payload);
+      const uploadedPayload = await uploadActivityCover(payload);
+      const { activityId } = await createActivity(uploadedPayload);
       wx.redirectTo({
         url: `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
       });

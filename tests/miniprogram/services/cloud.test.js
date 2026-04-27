@@ -93,6 +93,52 @@ describe('cloud service runtime', () => {
     expect(init).toHaveBeenCalledTimes(1);
   });
 
+  test('uploads files to CloudBase storage and returns the file id', async () => {
+    const init = jest.fn();
+    const uploadFile = jest.fn().mockResolvedValue({
+      fileID: 'cloud://prod-env-123/activity-covers/cover.jpg'
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init,
+        callFunction: jest.fn(),
+        uploadFile
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.uploadFile('wxfile://tmp_cover.jpg', 'activity-covers/cover.jpg')
+    ).resolves.toBe('cloud://prod-env-123/activity-covers/cover.jpg');
+
+    expect(uploadFile).toHaveBeenCalledWith({
+      cloudPath: 'activity-covers/cover.jpg',
+      filePath: 'wxfile://tmp_cover.jpg'
+    });
+  });
+
+  test('keeps local mock file paths unchanged', async () => {
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: true,
+      CLOUD_ENV_ID: '',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(cloud.uploadFile('wxfile://tmp_cover.jpg')).resolves.toBe(
+      'wxfile://tmp_cover.jpg'
+    );
+  });
+
   test('throws a clear error when WeChat cloud capability is unavailable in CloudBase mode', () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       USE_LOCAL_MOCK: false,

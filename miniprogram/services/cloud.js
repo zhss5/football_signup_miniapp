@@ -74,7 +74,25 @@ function call(name, data = {}) {
   }).then(res => res.result);
 }
 
+function uploadFile(filePath, cloudPath) {
+  if (!filePath || filePath.startsWith('cloud://') || USE_LOCAL_MOCK) {
+    return Promise.resolve(filePath || '');
+  }
+
+  initializeCloudRuntime();
+
+  const wxRuntime = getWxRuntime();
+
+  return wxRuntime.cloud
+    .uploadFile({
+      cloudPath,
+      filePath
+    })
+    .then(res => res.fileID);
+}
+
 module.exports = {
   call,
-  initializeCloudRuntime
+  initializeCloudRuntime,
+  uploadFile
 };

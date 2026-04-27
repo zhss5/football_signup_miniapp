@@ -2,6 +2,10 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
   createActivity: jest.fn()
 }));
 
+jest.mock('../../../miniprogram/services/cloud', () => ({
+  uploadFile: jest.fn(filePath => Promise.resolve(filePath))
+}));
+
 jest.mock('../../../miniprogram/utils/activity-draft', () => ({
   buildActivityPayload: jest.fn(form => form),
   createDefaultActivityForm: jest.fn(() => ({
@@ -26,6 +30,7 @@ jest.mock('../../../miniprogram/utils/constants', () => ({
 describe('activity create submit flow', () => {
   let pageConfig;
   let createActivity;
+  let uploadFile;
   let validateActivityDraft;
 
   beforeEach(() => {
@@ -41,6 +46,7 @@ describe('activity create submit flow', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/activity-create/index');
     ({ createActivity } = require('../../../miniprogram/services/activity-service'));
+    ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ validateActivityDraft } = require('../../../miniprogram/utils/validators'));
   });
 
@@ -67,6 +73,41 @@ describe('activity create submit flow', () => {
     expect(global.wx.redirectTo).toHaveBeenCalledWith({
       url: '/pages/activity-detail/index?activityId=activity_123&fromPublish=1'
     });
+  });
+
+  test('onSubmit uploads a selected cover before creating the activity', async () => {
+    uploadFile.mockResolvedValue('cloud://prod-env-123/activity-covers/cover.jpg');
+    createActivity.mockResolvedValue({ activityId: 'activity_123' });
+
+    const ctx = {
+      data: {
+        form: {
+          title: 'Thursday Match',
+          coverImage: 'wxfile://tmp_cover.jpg',
+          imageList: ['wxfile://tmp_cover.jpg']
+        }
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(uploadFile).toHaveBeenCalledWith(
+      'wxfile://tmp_cover.jpg',
+      expect.stringMatching(/^activity-covers\/.+\.jpg$/)
+    );
+    expect(createActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+        imageList: ['cloud://prod-env-123/activity-covers/cover.jpg']
+      })
+    );
   });
 
   test('onSubmit highlights the location input when address validation fails', async () => {
