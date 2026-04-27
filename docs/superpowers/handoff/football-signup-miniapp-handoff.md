@@ -1,124 +1,186 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-04-26
+- Date: 2026-04-27
 - Branch: `main`
 - Workspace: `D:/workspace/Nautilus`
+- Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 
 ## 1. Current State
 
-The repository is on `main` and is already pushed to `origin/main` through commit `fb869d4`.
+The repository is on `main`.
+
+`origin/main` is up to date through:
+
+- `5587bf0` `Bootstrap CloudBase collections on startup`
+
+The local branch is ahead of `origin/main` with documentation-only updates, including:
+
+- `3f1b00a` `Update CloudBase rollout documentation`
+- this handoff refresh
 
 The codebase supports:
 
 - local mock mode in WeChat DevTools
 - real CloudBase runtime switching via local-only `env.local.js`
-- dedicated join page flow
+- cloud function packages with per-function `package.json`
+- shared cloud helper copying through `npm run copy:cloud-shared`
+- cover image upload to CloudBase storage with persistent `fileID`
+- automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
+- dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
-- cover crop flow
 
-## 2. Current Blocker
+## 2. CloudBase Deployment Status
 
-The mini program is no longer blocked on `wx.cloud` detection.
-
-That runtime issue was fixed in:
-
-- `fb869d4` `fix: detect CloudBase runtime in DevTools`
-
-The current CloudBase-side blocker is:
-
-- `FunctionName parameter could not be found`
-
-This means the mini program can now reach CloudBase, but the cloud functions have not been deployed to the target environment yet.
-
-The first failing function call is:
+All deployable cloud functions were deployed successfully to the configured CloudBase environment:
 
 - `ensureUserProfile`
+- `listActivities`
+- `getActivityDetail`
+- `createActivity`
+- `joinActivity`
+- `cancelRegistration`
+- `cancelActivity`
+- `deleteActivity`
+- `getActivityStats`
 
-## 3. Local-Only State
+The last code deployment that changed runtime behavior was:
 
-These files are intentionally local-only and should not be committed unless there is a deliberate decision to share them:
+- `5587bf0` `Bootstrap CloudBase collections on startup`
 
-- `D:/workspace/Nautilus/project.config.json`
-- `D:/workspace/Nautilus/miniprogram/config/env.local.js`
+`ensureUserProfile` was redeployed after that change and reported:
 
-The current workstation already has:
+- `success: true`
+- `filesCount: 8`
+- runtime status: `Active`
 
-- a real mini program AppID configured in local DevTools
-- a real CloudBase environment created
-- `env.local.js` switched to `USE_LOCAL_MOCK: false`
+The current CloudBase environment ID is intentionally not recorded in this handoff. It should stay in local configuration only.
 
-The local override file is ignored by git and should be recreated from:
+## 3. Issues Fixed During Rollout
 
-- `D:/workspace/Nautilus/miniprogram/config/env.local.js.example`
+The following CloudBase rollout issues were fixed:
 
-## 4. CloudBase Status
+- Missing cloud functions caused `FunctionName parameter could not be found`.
+- Shared helper imports failed because each cloud function package is uploaded independently.
+- CloudBase deployment with nested `_shared` folders caused packaging problems, so shared helpers are now copied flat into each function package.
+- `context.OPENID` was empty in some real CloudBase calls, so functions now resolve openid from the wx cloud context fallback.
+- CloudBase rejected writes that included `_id` inside `doc(id).set({ data })`; `_id` is now used only as the document id.
+- Cover images are uploaded to CloudBase storage before activity creation, so shared activity cards do not depend on temporary local file paths.
+- Missing database collections are now bootstrapped by `ensureUserProfile`.
 
-CloudBase has already been enabled for the mini program.
+## 4. Current Watch Item
 
-The next operational step is to deploy cloud functions from:
+The latest visible client-side issue was:
 
-- `D:/workspace/Nautilus/cloudfunctions`
+- `Error: timeout`
 
-Before deployment, the shared helper copy command has already been introduced and should be run whenever cloud functions are prepared for upload:
+Most likely cause:
 
-```bash
-npm run copy:cloud-shared
-```
+- first real-cloud launch may spend more than the default 3 seconds creating database collections from `ensureUserProfile`
 
-The `_shared` folder is not an independent cloud function. It is copied into each deployable function directory.
+Recommended actions:
 
-## 5. Next Steps
-
-The next session should continue in this order:
-
-1. Deploy `ensureUserProfile` from WeChat DevTools using cloud-side dependency installation
-2. Recompile and confirm the error moves to the next undeployed function
-3. Deploy the remaining functions:
-   - `listActivities`
-   - `getActivityDetail`
-   - `createActivity`
-   - `joinActivity`
-   - `cancelRegistration`
-   - `cancelActivity`
-   - `deleteActivity`
-   - `getActivityStats`
-4. Create collections:
+1. Recompile once and retry, because the first call may already have created some collections.
+2. In CloudBase function settings, increase `ensureUserProfile` timeout from `3` seconds to `20-60` seconds.
+3. Alternatively, create these collections manually in the CloudBase console:
    - `users`
    - `activities`
    - `activity_teams`
    - `registrations`
    - `activity_logs`
-5. Create indexes from:
-   - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
-6. Run the smoke checklist:
-   - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
 
-## 6. Verification Snapshot
+## 5. Local-Only State
+
+The following local state should not be committed unless there is a deliberate decision:
+
+- `D:/workspace/Nautilus/project.config.json`
+- `D:/workspace/Nautilus/miniprogram/config/env.local.js`
+
+Current git status includes:
+
+- `project.config.json` modified locally and intentionally uncommitted
+
+The local override file is ignored by git and should be recreated from:
+
+- `D:/workspace/Nautilus/miniprogram/config/env.local.js.example`
+
+## 6. Deployment Commands
+
+Before deploying cloud functions, always run:
+
+```bash
+npm run copy:cloud-shared
+```
+
+Deploy all cloud functions from PowerShell:
+
+```powershell
+$devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
+& $devtoolsCli cloud functions deploy `
+  --env 'your-cloud-env-id' `
+  --project 'D:\workspace\Nautilus' `
+  --remote-npm-install `
+  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --lang zh
+```
+
+Check one function:
+
+```powershell
+$devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
+& $devtoolsCli cloud functions info `
+  --env 'your-cloud-env-id' `
+  --project 'D:\workspace\Nautilus' `
+  --names ensureUserProfile `
+  --lang zh
+```
+
+## 7. Verification Snapshot
 
 Latest verified command:
 
 ```bash
-npm test -- --runInBand
+npm test
 ```
 
 Latest result:
 
-- `29` test suites passed
-- `73` tests passed
+- `31` test suites passed
+- `108` tests passed
 
-## 7. Key Files To Read First
+The latest documentation-only updates are not test-relevant, but `git diff --check` passed for this handoff file.
+
+## 8. Next Steps
+
+Continue in this order:
+
+1. Increase `ensureUserProfile` timeout in CloudBase if first launch still reports `Error: timeout`.
+2. Confirm all five database collections exist.
+3. Apply indexes from:
+   - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
+4. Apply database rules from:
+   - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
+5. Run the smoke checklist on DevTools and a real device:
+   - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
+6. Push the local documentation commits if they should be shared:
+   - `git push origin main`
+
+## 9. Key Files To Read First
 
 For the next session, these files are the fastest orientation points:
 
+- `D:/workspace/Nautilus/README.md`
 - `D:/workspace/Nautilus/miniprogram/services/cloud.js`
 - `D:/workspace/Nautilus/miniprogram/config/env.js`
+- `D:/workspace/Nautilus/cloudfunctions/ensureUserProfile/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/_shared/database.js`
+- `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
 - `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
-- `D:/workspace/Nautilus/docs/superpowers/progress/football-signup-miniapp-progress.md`
 
-## 8. Important Notes
+## 10. Important Notes
 
-- `project.config.json` is still modified locally and intentionally uncommitted
-- the repository remote is up to date as of this handoff
-- the next work is operational CloudBase deployment, not product feature design
+- Do not commit real CloudBase environment IDs, AppSecret values, tokens, or local `env.local.js` contents.
+- The documented deployment commands use placeholders such as `your-cloud-env-id`.
+- `project.config.json` is still modified locally and intentionally uncommitted.
+- The repo's committed docs do not contain known secrets or tokens as of this handoff.
