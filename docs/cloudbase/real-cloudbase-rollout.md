@@ -45,15 +45,21 @@ The runtime now enforces:
 
 ## Cloud Function Deployment
 
-Before deploying cloud functions, copy the shared helper folder into every function directory:
+Each cloud function directory is deployed as an independent package. Keep these packaging rules in mind:
+
+- Every cloud function directory must include its own `package.json` so CloudBase remote npm install can install `wx-server-sdk`.
+- Shared server helpers live in `cloudfunctions/_shared/`, but CloudBase does not upload that folder as a global dependency for every function.
+- Before deployment, copy the shared helpers into every function directory:
 
 ```bash
 npm run copy:cloud-shared
 ```
 
+The copy script removes stale per-function `_shared` folders and writes the shared helper files flat into each function package. The generated per-function helper files are ignored by git.
+
 Then deploy all cloud functions under `cloudfunctions/`.
 
-Recommended deployment order:
+Recommended function set:
 
 1. `ensureUserProfile`
 2. `listActivities`
@@ -65,15 +71,31 @@ Recommended deployment order:
 8. `deleteActivity`
 9. `getActivityStats`
 
+Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
+
+```powershell
+$devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
+& $devtoolsCli cloud functions deploy `
+  --env 'your-cloud-env-id' `
+  --project 'D:\workspace\Nautilus' `
+  --remote-npm-install `
+  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --lang zh
+```
+
+The deployment output should show `success: true` for each function.
+
 ## Database Setup
 
-Create these collections:
+The runtime expects these collections:
 
 - `users`
 - `activities`
 - `activity_teams`
 - `registrations`
 - `activity_logs`
+
+`ensureUserProfile` attempts to create the collections during the first real CloudBase startup. For a predictable rollout, you may also create them manually in the CloudBase console before smoke testing.
 
 Create indexes from:
 
@@ -95,12 +117,13 @@ After deployment, run these checks in DevTools and on a real device:
    - map location
    - cover image
 3. Confirm both `activities` and `activity_teams` documents are created
-4. Open the activity detail page and confirm the roster loads
-5. Join a team from a second account
-6. Confirm `registrations._id = activityId_openid`
-7. Cancel the signup before the deadline
-8. Confirm organizer cancel and soft delete rules still hold
-9. Confirm a deleted activity disappears from Home and Joined, but remains in Created
+4. Confirm the activity cover image is stored as a CloudBase `fileID`, not a temporary local path
+5. Open the activity detail page and confirm the roster loads
+6. Join a team from a second account
+7. Confirm `registrations._id = activityId_openid`
+8. Cancel the signup before the deadline
+9. Confirm organizer cancel and soft delete rules still hold
+10. Confirm a deleted activity disappears from Home and Joined, but remains in Created
 
 ## Failure Modes To Check First
 
@@ -111,6 +134,11 @@ If CloudBase mode fails, check these items first:
 - the DevTools project is using the intended AppID
 - cloud functions were deployed after `npm run copy:cloud-shared`
 - the target environment contains the required collections and indexes
+- `FunctionName parameter could not be found`: deploy the missing cloud function.
+- `Cannot find module './collections'`: shared helper files were not copied into the function package; run `npm run copy:cloud-shared`, then redeploy.
+- `document.set:fail ... cannot update _id`: the cloud function is writing `_id` inside `doc(id).set({ data })`; redeploy the latest cloud functions.
+- `database collection not exists`: create the missing collection manually or let `ensureUserProfile` bootstrap the required collections.
+- `Error: timeout` during first launch: the first collection bootstrap may exceed the default 3-second function timeout. Increase `ensureUserProfile` to 20-60 seconds in CloudBase function settings, or create the collections manually and retry.
 
 ## Related Docs
 

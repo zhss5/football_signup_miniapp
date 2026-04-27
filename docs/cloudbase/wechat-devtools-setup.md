@@ -42,7 +42,7 @@ The project includes:
 - `project.config.json`
 - `miniprogramRoot = miniprogram/`
 - `cloudfunctionRoot = cloudfunctions/`
-- `appid = touristappid`
+- the AppID configured in `project.config.json`
 
 This is enough to open the project without wiring a real AppID on day one.
 
@@ -96,13 +96,31 @@ module.exports = {
 npm run copy:cloud-shared
 ```
 
-7. Deploy the cloud functions under `cloudfunctions/`
-8. Create database collections:
+The copy step is required because CloudBase packages each cloud function directory independently. Shared server helpers from `cloudfunctions/_shared/` must exist inside each uploaded function directory.
+
+7. Deploy the cloud functions under `cloudfunctions/`.
+
+   In WeChat DevTools, right-click each cloud function folder and deploy it, or use the CLI for a one-shot deployment:
+
+```powershell
+$devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
+& $devtoolsCli cloud functions deploy `
+  --env 'your-cloud-env-id' `
+  --project 'D:\workspace\Nautilus' `
+  --remote-npm-install `
+  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --lang zh
+```
+
+8. Confirm database collections exist:
    - `users`
    - `activities`
    - `activity_teams`
    - `registrations`
    - `activity_logs`
+
+   `ensureUserProfile` attempts to create these collections on the first real CloudBase launch. You can still create them manually in the CloudBase console if you prefer a fully prepared environment before testing.
+
 9. Add the indexes from:
    - `docs/cloudbase/indexes.md`
 10. Apply database write restrictions based on:
@@ -110,9 +128,18 @@ npm run copy:cloud-shared
 11. Run the manual checklist from:
    - `docs/cloudbase/manual-smoke-checklist.md`
 
+## CloudBase Troubleshooting
+
+- `FunctionName parameter could not be found`: deploy the missing cloud function.
+- `Cannot find module './collections'` or another shared helper: run `npm run copy:cloud-shared`, then redeploy the affected cloud function.
+- `database collection not exists`: create the required collection manually, or redeploy `ensureUserProfile` and let it bootstrap the collections.
+- `document.set:fail ... invalid parameters ... _id`: do not include `_id` in the `data` object passed to `doc(id).set({ data })`.
+- `Error: timeout` on first real-cloud launch: increase the `ensureUserProfile` cloud function timeout from the default 3 seconds to 20-60 seconds, or manually create the collections and retry.
+
 ## Notes
 
 - Local mock mode is only for UI and interaction testing
 - Real multi-user tests should be verified again in CloudBase mode
 - `project.private.config.json` is intentionally ignored so local DevTools preferences stay untracked
 - `miniprogram/config/env.local.js` is intentionally ignored so local CloudBase wiring stays untracked
+- Each cloud function directory has its own `package.json` for CloudBase remote npm install.

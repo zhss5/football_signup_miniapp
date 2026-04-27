@@ -17,6 +17,7 @@ The project is built for a fast MVP launch first, while keeping room for future 
 - Cancel or soft-delete activities as the organizer
 - View created and joined activities from the `My` page
 - Run the app in local mock mode inside WeChat DevTools without a real CloudBase environment
+- Run against a real CloudBase environment through deployed cloud functions
 
 ## Tech Stack
 
@@ -101,6 +102,13 @@ When moving from local mock mode to a real CloudBase environment, also review:
 - [manual-smoke-checklist.md](docs/cloudbase/manual-smoke-checklist.md)
 - [seed-sample.json](docs/cloudbase/seed-sample.json)
 
+CloudBase deployment reminders:
+
+- Each cloud function directory has its own `package.json` because remote dependency installation reads dependencies from the uploaded function package.
+- Run `npm run copy:cloud-shared` before deploying cloud functions. CloudBase uploads each function directory independently, so shared helper files must be present inside each function package.
+- The cover image upload flow stores CloudBase `fileID` values instead of temporary local file paths.
+- `ensureUserProfile` bootstraps the required database collections on first real-cloud startup. If the first launch times out, increase that cloud function timeout in CloudBase or create the collections manually, then retry.
+
 ## Project Documents
 
 - Design: [football-signup-miniapp-design.md](docs/superpowers/specs/football-signup-miniapp-design.md)
@@ -118,10 +126,12 @@ The repository already contains a runnable MVP implementation in local mock mode
 - soft delete
 - `My` page tabs and created-history filters
 - cover-image crop flow
+- CloudBase deployment packaging and real-cloud function wiring
 
 ## Next Recommended Work
 
-- connect the project to a real CloudBase environment
+- complete the production CloudBase smoke pass on a real device
+- apply and verify production database indexes and security rules
 - add organizer-side player reassignment and bench promotion
 - replace slider-based crop controls with gesture-based interaction
 - prepare payment-related data and flows
