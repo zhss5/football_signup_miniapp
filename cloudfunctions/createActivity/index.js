@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk');
-const { nowIso } = require('./_shared/time');
-const { validateActivityDraft } = require('./_shared/validators');
+const { nowIso } = require('./time');
+const { validateActivityDraft } = require('./validators');
 
 const BENCH_TEAM_NAME = '\u66ff\u8865';
 

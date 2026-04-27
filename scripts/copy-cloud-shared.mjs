@@ -17,5 +17,12 @@ for (const name of fs.readdirSync(functionsDir)) {
 
   const targetShared = path.join(targetDir, '_shared');
   fs.rmSync(targetShared, { recursive: true, force: true });
-  fs.cpSync(sharedDir, targetShared, { recursive: true });
+
+  for (const fileName of fs.readdirSync(sharedDir)) {
+    const sourceFile = path.join(sharedDir, fileName);
+
+    if (fs.statSync(sourceFile).isFile()) {
+      fs.copyFileSync(sourceFile, path.join(targetDir, fileName));
+    }
+  }
 }

@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk');
-const { businessError } = require('./_shared/errors');
-const { nowIso } = require('./_shared/time');
+const { businessError } = require('./errors');
+const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 

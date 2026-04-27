@@ -3,5 +3,9 @@ worktrees/
 node_modules/
 miniprogram_npm/
 cloudfunctions/*/_shared/
+cloudfunctions/*/collections.js
+cloudfunctions/*/errors.js
+cloudfunctions/*/time.js
+cloudfunctions/*/validators.js
 project.private.config.json
 miniprogram/config/env.local.js

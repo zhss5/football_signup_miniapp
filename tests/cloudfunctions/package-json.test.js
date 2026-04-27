@@ -31,5 +31,16 @@ describe('cloud function deployment manifests', () => {
     const source = fs.readFileSync(entryPath, 'utf8');
 
     expect(source).not.toContain("require('../_shared/");
+    expect(source).not.toContain("require('./_shared/");
+  });
+
+  test.each(functionNames)('%s keeps generated shared helpers flat for CLI deploy', functionName => {
+    const functionDir = path.join(functionsRoot, functionName);
+
+    expect(fs.existsSync(path.join(functionDir, '_shared'))).toBe(false);
+
+    for (const fileName of ['collections.js', 'errors.js', 'time.js', 'validators.js']) {
+      expect(fs.existsSync(path.join(functionDir, fileName))).toBe(true);
+    }
   });
 });

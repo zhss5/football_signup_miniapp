@@ -1,7 +1,7 @@
 const cloud = require('wx-server-sdk');
-const { validateSignupPayload } = require('./_shared/validators');
-const { businessError } = require('./_shared/errors');
-const { nowIso } = require('./_shared/time');
+const { validateSignupPayload } = require('./validators');
+const { businessError } = require('./errors');
+const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
