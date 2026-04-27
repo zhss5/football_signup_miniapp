@@ -5,9 +5,11 @@ miniprogram_npm/
 cloudfunctions/*/_shared/
 cloudfunctions/*/collections.js
 cloudfunctions/*/auth.js
+cloudfunctions/*/database.js
 cloudfunctions/*/errors.js
 cloudfunctions/*/time.js
 cloudfunctions/*/validators.js
 !cloudfunctions/_shared/auth.js
+!cloudfunctions/_shared/database.js
 project.private.config.json
 miniprogram/config/env.local.js
