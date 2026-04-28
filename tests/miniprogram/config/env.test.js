@@ -11,7 +11,8 @@ describe('env config', () => {
     expect(env).toEqual({
       USE_LOCAL_MOCK: true,
       CLOUD_ENV_ID: '',
-      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+      ENABLE_CLOUD_DIAGNOSTICS: false
     });
   });
 
@@ -26,7 +27,8 @@ describe('env config', () => {
     expect(env).toEqual({
       USE_LOCAL_MOCK: false,
       CLOUD_ENV_ID: 'prod-env-123',
-      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+      ENABLE_CLOUD_DIAGNOSTICS: false
     });
   });
 });

@@ -1,4 +1,9 @@
-const { USE_LOCAL_MOCK, LOCAL_STORAGE_KEY, CLOUD_ENV_ID } = require('../config/env');
+const {
+  USE_LOCAL_MOCK,
+  LOCAL_STORAGE_KEY,
+  CLOUD_ENV_ID,
+  ENABLE_CLOUD_DIAGNOSTICS
+} = require('../config/env');
 const { buildStorageAdapter, createLocalCloudClient } = require('../mocks/local-cloud');
 
 let localCloudClient = null;
@@ -27,6 +32,39 @@ function getLocalCloudClient() {
   return localCloudClient;
 }
 
+function getNowMs() {
+  if (
+    typeof performance !== 'undefined' &&
+    performance &&
+    typeof performance.now === 'function'
+  ) {
+    return performance.now();
+  }
+
+  return Date.now();
+}
+
+function summarizeError(error) {
+  if (!error) {
+    return {};
+  }
+
+  return {
+    message: error.message,
+    errMsg: error.errMsg,
+    errCode: error.errCode,
+    code: error.code
+  };
+}
+
+function logCloudDiagnostic(event, details) {
+  if (!ENABLE_CLOUD_DIAGNOSTICS || typeof console === 'undefined' || !console.info) {
+    return;
+  }
+
+  console.info(`[cloud] ${event}`, details || {});
+}
+
 function initializeCloudRuntime() {
   if (USE_LOCAL_MOCK) {
     return {
@@ -45,10 +83,22 @@ function initializeCloudRuntime() {
   }
 
   if (!cloudRuntime) {
-    wxRuntime.cloud.init({
-      env: CLOUD_ENV_ID,
-      traceUser: false
-    });
+    logCloudDiagnostic('init:start', { envId: CLOUD_ENV_ID });
+
+    try {
+      wxRuntime.cloud.init({
+        env: CLOUD_ENV_ID,
+        traceUser: false
+      });
+    } catch (error) {
+      logCloudDiagnostic('init:failure', {
+        envId: CLOUD_ENV_ID,
+        error: summarizeError(error)
+      });
+      throw error;
+    }
+
+    logCloudDiagnostic('init:success', { envId: CLOUD_ENV_ID });
 
     cloudRuntime = {
       mode: 'cloudbase',
@@ -67,11 +117,38 @@ function call(name, data = {}) {
   initializeCloudRuntime();
 
   const wxRuntime = getWxRuntime();
+  const startedAt = getNowMs();
+  logCloudDiagnostic('call:start', { name });
 
-  return wxRuntime.cloud.callFunction({
-    name,
-    data
-  }).then(res => res.result);
+  try {
+    return wxRuntime.cloud.callFunction({
+      name,
+      data
+    }).then(
+      res => {
+        logCloudDiagnostic('call:success', {
+          name,
+          elapsedMs: Math.round(getNowMs() - startedAt)
+        });
+        return res.result;
+      },
+      error => {
+        logCloudDiagnostic('call:failure', {
+          name,
+          elapsedMs: Math.round(getNowMs() - startedAt),
+          error: summarizeError(error)
+        });
+        throw error;
+      }
+    );
+  } catch (error) {
+    logCloudDiagnostic('call:failure', {
+      name,
+      elapsedMs: Math.round(getNowMs() - startedAt),
+      error: summarizeError(error)
+    });
+    throw error;
+  }
 }
 
 function uploadFile(filePath, cloudPath) {

@@ -1,7 +1,8 @@
 const defaults = {
   USE_LOCAL_MOCK: true,
   CLOUD_ENV_ID: '',
-  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+  ENABLE_CLOUD_DIAGNOSTICS: false
 };
 
 let localOverrides = {};

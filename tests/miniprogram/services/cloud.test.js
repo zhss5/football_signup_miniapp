@@ -1,7 +1,13 @@
 describe('cloud service runtime', () => {
   beforeEach(() => {
     jest.resetModules();
-    delete global.wx;
+    delete globalThis.wx;
+    globalThis.global = globalThis;
+  });
+
+  afterEach(() => {
+    globalThis.global = globalThis;
+    jest.restoreAllMocks();
   });
 
   test('uses the local mock client when local mock mode is enabled', async () => {
@@ -178,5 +184,44 @@ describe('cloud service runtime', () => {
       envId: 'prod-env-123'
     });
     expect(init).toHaveBeenCalledTimes(1);
+  });
+
+  test('logs cloud call diagnostics when enabled', async () => {
+    const info = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const callFunction = jest.fn().mockResolvedValue({
+      result: {
+        items: []
+      }
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+      ENABLE_CLOUD_DIAGNOSTICS: true
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(cloud.call('listActivities', { scope: 'home' })).resolves.toEqual({
+      items: []
+    });
+
+    expect(info).toHaveBeenCalledWith('[cloud] init:start', { envId: 'prod-env-123' });
+    expect(info).toHaveBeenCalledWith('[cloud] init:success', { envId: 'prod-env-123' });
+    expect(info).toHaveBeenCalledWith('[cloud] call:start', { name: 'listActivities' });
+    expect(info).toHaveBeenCalledWith(
+      '[cloud] call:success',
+      expect.objectContaining({ name: 'listActivities', elapsedMs: expect.any(Number) })
+    );
+
+    info.mockRestore();
   });
 });
