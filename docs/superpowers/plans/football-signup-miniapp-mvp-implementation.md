@@ -33,6 +33,7 @@ The current implementation already includes:
   - start time
   - joined count vs total capacity
   - `Joinable / Full / Signup Closed / Cancelled / Deleted` state model
+  - highlighted joinable status and muted unavailable status
 - activity detail with:
   - cover hero
   - team member list
@@ -205,7 +206,7 @@ Latest verified status:
 
 - command: `npm test`
 - result: `36` test suites passed
-- result: `127` tests passed
+- result: `129` tests passed
 
 The current test surface includes:
 
@@ -228,6 +229,11 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add empty states and richer status badges
 - improve detail page organizer action grouping
 - polish share copy and share card metadata
+- add participant notification subscriptions:
+  - request subscription after successful signup
+  - let organizers manually notify subscribed active participants
+  - support activity proceeding and activity cancellation notices
+  - defer automatic reminders until manual sending and send logs are stable
 
 ### 8.2 Media Improvements
 
@@ -282,7 +288,16 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - promote bench players
 - expose organizer stats more clearly
 
-### Milestone B2: Signup Profile Completion
+### Milestone B2: Participant Notifications
+
+- configure WeChat subscription message template IDs in local/secure config
+- implement signup-time subscription request
+- add organizer-only manual notification action on Activity Detail
+- add a cloud function to send to active subscribed registrations
+- record notification send logs and duplicate-prevention state
+- keep automatic pre-activity reminders as a later enhancement
+
+### Milestone B3: Signup Profile Completion
 
 - prefill Join page signup names from `users.preferredName`
 - let users actively choose a WeChat-assisted nickname and avatar without blocking signup

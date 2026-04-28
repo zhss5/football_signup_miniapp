@@ -9,11 +9,9 @@
 
 The repository is on `main`.
 
-`origin/main` is up to date through:
+`origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-- `1c892b3` `Validate activity detail sharing`
-
-The local branch has local role-gated activity creation updates.
+Recent local commits include role-gated activity creation, dynamic default activity dates, and highlighted activity signup status.
 
 The codebase supports:
 
@@ -26,6 +24,7 @@ The codebase supports:
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
 - copyable user ID on My page for manual CloudBase role grants
+- highlighted activity signup status on activity cards
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -67,18 +66,18 @@ The following CloudBase rollout issues were fixed:
 - Cover images are uploaded to CloudBase storage before activity creation, so shared activity cards do not depend on temporary local file paths.
 - Missing database collections are now bootstrapped by `ensureUserProfile`.
 
-## 4. Current Watch Item
+## 4. Current Watch Items
 
 The latest visible client-side issues were:
 
-- `Error: timeout`
 - sharing blocked on real devices because the mini program account is not verified
 
-Most likely timeout cause:
+Resolved/mitigated:
 
-- first real-cloud launch may spend more than the default 3 seconds creating database collections from `ensureUserProfile`
+- the role-gated `createActivity` flow has been reported working in CloudBase after deployment
+- local mock testing confirmed `organizer` can create activities and `user` cannot
 
-Recommended actions:
+If startup timeout appears again, recommended actions:
 
 1. Recompile once and retry, because the first call may already have created some collections.
 2. In CloudBase function settings, increase `ensureUserProfile` timeout from `3` seconds to `20-60` seconds.
@@ -154,25 +153,26 @@ npm test
 Latest result:
 
 - `36` test suites passed
-- `127` tests passed
+- `129` tests passed
 
-The latest verification includes the role-gated create flow across mini program pages, local mock behavior, and `createActivity` cloud function authorization.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, and `createActivity` cloud function authorization.
 
 ## 8. Next Steps
 
 Continue in this order:
 
-1. Deploy the updated `createActivity` cloud function after pulling the latest role-gate changes.
-2. Confirm all five database collections exist.
-3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Apply indexes from:
+1. Confirm all five database collections exist.
+2. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
+3. Apply indexes from:
    - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
-5. Apply database rules from:
+4. Apply database rules from:
    - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
-6. Run the smoke checklist on DevTools and a real device:
+5. Run the smoke checklist on DevTools and a real device:
    - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
-7. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
-8. Add experience members and distribute the experience-version QR code for temporary tester access.
+6. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
+7. Add experience members and distribute the experience-version QR code for temporary tester access.
+8. Implement participant notification subscriptions and organizer-triggered notifications using:
+   - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 9. Push local commits if they should be shared:
    - `git push origin main`
 
@@ -191,6 +191,7 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
 - `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
+- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 
 ## 10. Important Notes
 

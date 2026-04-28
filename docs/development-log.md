@@ -123,6 +123,32 @@ Related:
 - `miniprogram/pages/my/index.js`
 - `miniprogram/utils/roles.js`
 
+## 2026-04-28 - Subscription Notification Direction
+
+The project documented the notification direction for activity reminders and cancellation notices.
+
+Decision:
+
+- notification subscriptions require code; WeChat provides the subscription-message capability but does not automatically subscribe users or send activity messages
+- first implementation should request subscription after a successful signup
+- first sender flow should be organizer-triggered from Activity Detail, not fully automatic
+- recipients should be active registrations that have granted the relevant subscription permission
+- prefer one generic activity-notification template if the WeChat template library supports the needed fields
+- if a generic template is unavailable, use separate templates for activity reminders and cancellation notices
+- automatic pre-activity reminders should be deferred until manual sending, send-result tracking, and duplicate prevention are stable
+
+Why it mattered:
+
+- reduced the risk of sending an incorrect "activity will proceed" message when weather, venue, or attendance has changed
+- kept the first notification feature testable on real devices
+- made the WeChat template and subscription-permission constraints explicit before implementation
+
+Related:
+
+- `docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- `docs/superpowers/progress/football-signup-miniapp-progress.md`
+- `docs/superpowers/handoff/football-signup-miniapp-handoff.md`
+
 ## 2026-04-28 - Administration Roadmap
 
 The project documented that a full admin backend should be deferred.

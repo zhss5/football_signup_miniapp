@@ -22,10 +22,9 @@ The latest CloudBase work has already:
 
 - switched one local machine to real CloudBase runtime mode
 - fixed DevTools-side `wx.cloud` runtime detection
+- validated the role-gated `createActivity` flow in CloudBase after deployment
 
-The current remaining blocker is operational, not architectural:
-
-- cloud functions still need to be deployed to the CloudBase environment before the real runtime can complete the startup flow
+The current focus is shifting from CloudBase bring-up to product refinement and participant communication.
 
 ## 2. Completed Features
 
@@ -142,7 +141,7 @@ Latest verified test result:
 
 - command: `npm test`
 - result: `36` test suites passed
-- result: `127` tests passed
+- result: `129` tests passed
 
 Covered areas include:
 
@@ -163,6 +162,7 @@ The MVP still has known non-blocking gaps:
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
 - organizer-driven team reassignment and bench promotion are not implemented yet
+- participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
 
@@ -183,6 +183,16 @@ The MVP still has known non-blocking gaps:
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
+
+### Option B2: Participant Notifications
+
+- add WeChat subscription request after successful signup
+- prefer one generic activity-notification template if the WeChat template library supports it
+- use separate reminder and cancellation templates only if a generic template is unavailable
+- add organizer-triggered `Notify participants` actions before automatic reminders
+- send only to active registrations that accepted the relevant subscription
+- log per-recipient send results and prevent duplicate sends for the same notification type
+- defer automatic pre-activity reminders until manual sending is stable
 
 ### Option C: Media and UX Polish
 
