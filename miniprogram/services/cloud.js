@@ -96,7 +96,7 @@ function initializeCloudRuntime() {
     try {
       wxRuntime.cloud.init({
         env: CLOUD_ENV_ID,
-        traceUser: false
+        traceUser: true
       });
     } catch (error) {
       logCloudDiagnostic('init:failure', {
