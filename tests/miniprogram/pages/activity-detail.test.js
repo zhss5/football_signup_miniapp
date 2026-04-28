@@ -110,7 +110,7 @@ describe('activity detail page', () => {
     expect(app.globalData.activityDetailRefreshFlags.activity_123).toBe(false);
   });
 
-  test('onLoad keeps the post-publish share hint visible after redirecting from create activity', async () => {
+  test('onLoad keeps the post-publish share hint visible and enables share menus after redirecting from create activity', async () => {
     getActivityDetail.mockResolvedValue({
       activity: {
         _id: 'activity_123',
@@ -145,6 +145,46 @@ describe('activity detail page', () => {
 
     expect(ctx.data.activityId).toBe('activity_123');
     expect(ctx.data.shareHintVisible).toBe(true);
-    expect(global.wx.showShareMenu).toHaveBeenCalled();
+    expect(global.wx.showShareMenu).toHaveBeenCalledWith({
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
+  });
+
+  test('onShareAppMessage shares the current activity detail page', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        activity: {
+          title: 'Thursday Match',
+          coverImage: 'cloud://cover-image'
+        },
+        locale: 'en'
+      }
+    };
+
+    expect(pageConfig.onShareAppMessage.call(ctx)).toEqual({
+      title: 'Thursday Match',
+      imageUrl: 'cloud://cover-image',
+      path: '/pages/activity-detail/index?activityId=activity_123'
+    });
+  });
+
+  test('onShareTimeline shares the current activity id in the timeline query', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        activity: {
+          title: 'Thursday Match',
+          coverImage: 'cloud://cover-image'
+        },
+        locale: 'en'
+      }
+    };
+
+    expect(pageConfig.onShareTimeline.call(ctx)).toEqual({
+      title: 'Thursday Match',
+      imageUrl: 'cloud://cover-image',
+      query: 'activityId=activity_123'
+    });
   });
 });

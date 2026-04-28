@@ -61,7 +61,9 @@ Page({
     });
 
     if (shareHintVisible && typeof wx.showShareMenu === 'function') {
-      wx.showShareMenu();
+      wx.showShareMenu({
+        menus: ['shareAppMessage', 'shareTimeline']
+      });
     }
 
     applyPageI18n(this);
