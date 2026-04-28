@@ -166,6 +166,30 @@ Related:
 - `docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - commit `dfa218a`
 
+## 2026-04-28 - WeChat Verification Blocks Real-Device Sharing
+
+Real-device testing showed that activity sharing is blocked while the mini program account is not verified.
+
+Decision:
+
+- WeChat verification can be started during development; it does not require the code to be complete.
+- Verification is separate from filing/record registration, CloudBase deployment, code upload, code review, and public release.
+- Adding experience members is useful for temporary tester access to an experience version, but it does not bypass verification-only platform restrictions such as sharing.
+- The current platform flow for this account showed a verification fee of RMB 30; the final fee should still be confirmed on the WeChat Official Accounts Platform payment page before paying.
+
+Why it mattered:
+
+- explained why in-app sharing fails even when the code path is present
+- set the temporary testing path as experience members plus experience-version QR code
+- prevented future debugging from treating this as an application bug
+
+Related:
+
+- `docs/cloudbase/wechat-devtools-setup.md`
+- `docs/cloudbase/real-cloudbase-rollout.md`
+- `docs/superpowers/handoff/football-signup-miniapp-handoff.md`
+- commits `dddf625` and `53f629f`
+
 ## 2026-04-28 - CloudBase Collection Bootstrap ResourceExist Error
 
 During real-device CloudBase startup, `ensureUserProfile` failed while bootstrapping collections.
