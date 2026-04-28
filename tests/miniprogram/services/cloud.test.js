@@ -45,7 +45,7 @@ describe('cloud service runtime', () => {
     expect(() => cloud.initializeCloudRuntime()).toThrow('CLOUD_ENV_ID is required when USE_LOCAL_MOCK is false');
   });
 
-  test('initializes CloudBase once and calls cloud functions with the configured env id', async () => {
+  test('initializes CloudBase once without startup user tracing and calls cloud functions with the configured env id', async () => {
     const init = jest.fn();
     const callFunction = jest.fn().mockResolvedValue({
       result: {
@@ -80,7 +80,7 @@ describe('cloud service runtime', () => {
     expect(init).toHaveBeenCalledTimes(1);
     expect(init).toHaveBeenCalledWith({
       env: 'prod-env-123',
-      traceUser: true
+      traceUser: false
     });
     expect(callFunction).toHaveBeenCalledWith({
       name: 'createActivity',

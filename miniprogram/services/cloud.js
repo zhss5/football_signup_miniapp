@@ -47,7 +47,7 @@ function initializeCloudRuntime() {
   if (!cloudRuntime) {
     wxRuntime.cloud.init({
       env: CLOUD_ENV_ID,
-      traceUser: true
+      traceUser: false
     });
 
     cloudRuntime = {
