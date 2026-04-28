@@ -224,4 +224,43 @@ describe('cloud service runtime', () => {
 
     info.mockRestore();
   });
+
+  test('logs cloud call failure diagnostics with readable error text', async () => {
+    const info = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const callFunction = jest.fn().mockRejectedValue(
+      new Error('cloud.callFunction:fail Error: errCode: -501001 resource system error | errMsg: Environment not found')
+    );
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+      ENABLE_CLOUD_DIAGNOSTICS: true
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(cloud.call('listActivities', { scope: 'home' })).rejects.toThrow(
+      'Environment not found'
+    );
+
+    expect(info).toHaveBeenCalledWith(
+      '[cloud] call:failure',
+      expect.objectContaining({
+        name: 'listActivities',
+        elapsedMs: expect.any(Number),
+        errorText:
+          'cloud.callFunction:fail Error: errCode: -501001 resource system error | errMsg: Environment not found'
+      })
+    );
+
+    info.mockRestore();
+  });
 });

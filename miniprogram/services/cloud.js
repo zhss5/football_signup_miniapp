@@ -57,6 +57,14 @@ function summarizeError(error) {
   };
 }
 
+function formatErrorText(error) {
+  if (!error) {
+    return '';
+  }
+
+  return error.message || error.errMsg || String(error);
+}
+
 function logCloudDiagnostic(event, details) {
   if (!ENABLE_CLOUD_DIAGNOSTICS || typeof console === 'undefined' || !console.info) {
     return;
@@ -136,6 +144,7 @@ function call(name, data = {}) {
         logCloudDiagnostic('call:failure', {
           name,
           elapsedMs: Math.round(getNowMs() - startedAt),
+          errorText: formatErrorText(error),
           error: summarizeError(error)
         });
         throw error;
@@ -145,6 +154,7 @@ function call(name, data = {}) {
     logCloudDiagnostic('call:failure', {
       name,
       elapsedMs: Math.round(getNowMs() - startedAt),
+      errorText: formatErrorText(error),
       error: summarizeError(error)
     });
     throw error;
