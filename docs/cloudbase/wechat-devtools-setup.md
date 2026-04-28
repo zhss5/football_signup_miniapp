@@ -135,6 +135,7 @@ WeChat verification is an account-level process in the WeChat Official Accounts 
 Keep these platform rules in mind:
 
 - Verification is separate from CloudBase deployment, code upload, code review, and filing/record registration.
+- The current platform flow for this account showed a verification fee of RMB 30; always confirm the final fee on the WeChat Official Accounts Platform payment page.
 - Some real-device capabilities, including sharing, may be blocked until WeChat verification is complete.
 - Adding experience members lets selected users open the uploaded experience version, but it does not bypass verification-only restrictions.
 

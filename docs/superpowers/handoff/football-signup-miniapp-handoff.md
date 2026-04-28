@@ -91,6 +91,7 @@ WeChat verification note:
 
 - Verification can be completed during development; it does not require the code to be finished.
 - Verification is separate from CloudBase deployment, code review, public release, and filing/record registration.
+- The current platform flow for this account showed a verification fee of RMB 30; confirm the final fee on the WeChat Official Accounts Platform payment page before paying.
 - Adding experience members allows selected users to open an experience version, but it does not bypass verification-only restrictions such as real-device sharing.
 - Before verification is complete, use the experience-version QR code for tester access instead of relying on in-app sharing.
 

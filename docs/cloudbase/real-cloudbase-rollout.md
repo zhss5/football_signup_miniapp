@@ -15,6 +15,7 @@ Before switching the runtime:
 5. Check WeChat account-level readiness:
    - WeChat verification can be completed while development is still in progress.
    - Verification is separate from code review and CloudBase deployment.
+   - The current platform flow for this account showed a verification fee of RMB 30; always confirm the final fee on the WeChat Official Accounts Platform payment page.
    - Unverified mini programs may be blocked from using share features on real devices.
    - Experience members can test an uploaded experience version, but they do not bypass verification-only platform restrictions.
    - Filing/record registration is separate from WeChat verification and should be checked before public release.
