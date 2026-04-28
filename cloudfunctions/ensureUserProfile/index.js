@@ -27,13 +27,50 @@ function ensureCollectionsOnce(db, deps) {
   return collectionBootstrapPromise;
 }
 
+function isCollectionNotExistsError(error) {
+  const text = [
+    error && error.errMsg,
+    error && error.message,
+    error && error.errCode,
+    error && error.code
+  ]
+    .filter(value => value !== undefined && value !== null)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    text.includes('not exist') ||
+    text.includes('not exists') ||
+    text.includes('collection_not_exist') ||
+    text.includes('database_collection_not_exist') ||
+    text.includes('不存在')
+  );
+}
+
+async function readCurrentUser(userRef) {
+  try {
+    return await userRef.get();
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return { data: null, missingCollection: true };
+    }
+
+    return { data: null };
+  }
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
-  await ensureCollectionsOnce(db, deps);
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
   const stamp = nowIso(deps.now);
-  const userRef = db.collection(COLLECTIONS.USERS).doc(openid);
-  const current = await userRef.get().catch(() => ({ data: null }));
+  let userRef = db.collection(COLLECTIONS.USERS).doc(openid);
+  let current = await readCurrentUser(userRef);
+
+  if (current.missingCollection) {
+    await ensureCollectionsOnce(db, deps);
+    userRef = db.collection(COLLECTIONS.USERS).doc(openid);
+    current = await readCurrentUser(userRef);
+  }
 
   if (current.data) {
     await userRef.update({ data: { lastActiveAt: stamp } });

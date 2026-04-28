@@ -1,5 +1,4 @@
 const ensureUserProfile = require('../../cloudfunctions/ensureUserProfile/index');
-const { COLLECTIONS } = require('../../cloudfunctions/_shared/collections');
 
 test('ensureUserProfile creates user with openid primary key', async () => {
   const set = jest.fn().mockResolvedValue({});
@@ -27,18 +26,48 @@ test('ensureUserProfile creates user with openid primary key', async () => {
   });
 });
 
-test('ensureUserProfile bootstraps CloudBase collections before reading the user', async () => {
-  const operations = [];
-  const createCollection = jest.fn(async name => {
-    operations.push(`create:${name}`);
-  });
+test('ensureUserProfile does not bootstrap collections when users collection exists', async () => {
+  const createCollection = jest.fn();
   const fakeDb = {
     createCollection,
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        get: jest.fn().mockResolvedValue({
+          data: {
+            _id: 'openid_a',
+            roles: ['user'],
+            lastActiveAt: '2026-04-19T09:00:00.000Z'
+          }
+        }),
+        update: jest.fn().mockResolvedValue({})
+      }))
+    }))
+  };
+
+  await ensureUserProfile.main(
+    {},
+    { OPENID: 'openid_a' },
+    { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+  );
+
+  expect(createCollection).not.toHaveBeenCalled();
+});
+
+test('ensureUserProfile bootstraps CloudBase collections only after users collection is missing', async () => {
+  const operations = [];
+  const ensureCloudCollections = jest.fn(async () => {
+    operations.push('bootstrap');
+  });
+  const get = jest
+    .fn()
+    .mockRejectedValueOnce({ errMsg: 'database collection not exists' })
+    .mockResolvedValueOnce({ data: null });
+  const fakeDb = {
     collection: jest.fn(() => {
       operations.push('collection:users');
       return {
         doc: jest.fn(() => ({
-          get: jest.fn().mockResolvedValue({ data: null }),
+          get,
           set: jest.fn().mockResolvedValue({})
         }))
       };
@@ -48,14 +77,12 @@ test('ensureUserProfile bootstraps CloudBase collections before reading the user
   await ensureUserProfile.main(
     {},
     { OPENID: 'openid_a' },
-    { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+    { db: fakeDb, now: '2026-04-19T10:00:00.000Z', ensureCloudCollections }
   );
 
-  const collectionNames = Object.values(COLLECTIONS);
-  expect(createCollection.mock.calls.map(([name]) => name)).toEqual(collectionNames);
-  expect(operations.indexOf('create:activity_logs')).toBeLessThan(
-    operations.indexOf('collection:users')
-  );
+  expect(operations[0]).toBe('collection:users');
+  expect(operations.indexOf('bootstrap')).toBeGreaterThan(0);
+  expect(get).toHaveBeenCalledTimes(2);
 });
 
 test('ensureUserProfile falls back to wx cloud context for openid', async () => {

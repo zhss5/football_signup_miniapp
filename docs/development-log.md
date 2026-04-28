@@ -192,3 +192,32 @@ Related:
 
 - `cloudfunctions/_shared/database.js`
 - `tests/cloudfunctions/database.test.js`
+
+## 2026-04-28 - CloudBase Startup Timeout From Collection Bootstrap
+
+During real-device testing, the app could load but DevTools still reported `Error: timeout`.
+
+Problem:
+
+- `ensureUserProfile` ran collection bootstrap before every normal user profile read on a cold cloud function instance.
+- Bootstrap calls `createCollection` for all required collections.
+- Even when collections already exist, those calls can consume enough time to hit the default cloud function timeout.
+
+Fix:
+
+- changed `ensureUserProfile` to read the `users` collection first on the normal path
+- collection bootstrap now runs only if the `users` collection is actually missing
+- after bootstrap, `ensureUserProfile` retries the user read/create flow
+- added regression tests for both paths:
+  - no bootstrap when `users` already exists
+  - bootstrap and retry only when `users` is missing
+
+Why it mattered:
+
+- normal app launches should avoid slow administrative collection checks
+- collection bootstrap remains available for first-time environments without penalizing every cold start
+
+Related:
+
+- `cloudfunctions/ensureUserProfile/index.js`
+- `tests/cloudfunctions/ensureUserProfile.test.js`
