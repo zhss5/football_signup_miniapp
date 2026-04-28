@@ -12,6 +12,12 @@ Before switching the runtime:
 2. Confirm Cloud Development is enabled for that mini program
 3. Confirm you know the target CloudBase environment ID
 4. Confirm local mock flows already work in WeChat DevTools
+5. Check WeChat account-level readiness:
+   - WeChat verification can be completed while development is still in progress.
+   - Verification is separate from code review and CloudBase deployment.
+   - Unverified mini programs may be blocked from using share features on real devices.
+   - Experience members can test an uploaded experience version, but they do not bypass verification-only platform restrictions.
+   - Filing/record registration is separate from WeChat verification and should be checked before public release.
 
 ## Local Configuration Switch
 
@@ -124,6 +130,10 @@ After deployment, run these checks in DevTools and on a real device:
 8. Cancel the signup before the deadline
 9. Confirm organizer cancel and soft delete rules still hold
 10. Confirm a deleted activity disappears from Home and Joined, but remains in Created
+11. Confirm sharing behavior:
+   - If WeChat verification is complete, verify activity sharing on a real device.
+   - If verification is not complete, expect WeChat to block sharing with a platform message.
+   - For temporary testing, add testers as experience members and share the experience-version QR code instead of relying on in-app sharing.
 
 ## Failure Modes To Check First
 
@@ -139,6 +149,7 @@ If CloudBase mode fails, check these items first:
 - `document.set:fail ... cannot update _id`: the cloud function is writing `_id` inside `doc(id).set({ data })`; redeploy the latest cloud functions.
 - `database collection not exists`: create the missing collection manually or let `ensureUserProfile` bootstrap the required collections.
 - `Error: timeout` during first launch: the first collection bootstrap may exceed the default 3-second function timeout. Increase `ensureUserProfile` to 20-60 seconds in CloudBase function settings, or create the collections manually and retry.
+- Sharing is blocked with an unverified-account message: complete WeChat verification in the WeChat Official Accounts Platform. Adding experience members only grants access to the experience version; it does not replace verification.
 
 ## Related Docs
 

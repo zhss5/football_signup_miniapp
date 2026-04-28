@@ -11,12 +11,9 @@ The repository is on `main`.
 
 `origin/main` is up to date through:
 
-- `5587bf0` `Bootstrap CloudBase collections on startup`
+- `1c892b3` `Validate activity detail sharing`
 
-The local branch is ahead of `origin/main` with documentation-only updates, including:
-
-- `3f1b00a` `Update CloudBase rollout documentation`
-- this handoff refresh
+The local branch has local documentation updates for WeChat verification notes.
 
 The codebase supports:
 
@@ -70,11 +67,12 @@ The following CloudBase rollout issues were fixed:
 
 ## 4. Current Watch Item
 
-The latest visible client-side issue was:
+The latest visible client-side issues were:
 
 - `Error: timeout`
+- sharing blocked on real devices because the mini program account is not verified
 
-Most likely cause:
+Most likely timeout cause:
 
 - first real-cloud launch may spend more than the default 3 seconds creating database collections from `ensureUserProfile`
 
@@ -88,6 +86,13 @@ Recommended actions:
    - `activity_teams`
    - `registrations`
    - `activity_logs`
+
+WeChat verification note:
+
+- Verification can be completed during development; it does not require the code to be finished.
+- Verification is separate from CloudBase deployment, code review, public release, and filing/record registration.
+- Adding experience members allows selected users to open an experience version, but it does not bypass verification-only restrictions such as real-device sharing.
+- Before verification is complete, use the experience-version QR code for tester access instead of relying on in-app sharing.
 
 ## 5. Local-Only State
 
@@ -162,7 +167,9 @@ Continue in this order:
    - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
 5. Run the smoke checklist on DevTools and a real device:
    - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
-6. Push the local documentation commits if they should be shared:
+6. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
+7. Add experience members and distribute the experience-version QR code for temporary tester access.
+8. Push the local documentation commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First

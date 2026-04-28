@@ -128,6 +128,24 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 11. Run the manual checklist from:
    - `docs/cloudbase/manual-smoke-checklist.md`
 
+## WeChat Verification And Test Access
+
+WeChat verification is an account-level process in the WeChat Official Accounts Platform. It does not require the mini program code to be complete, and it can be started during development.
+
+Keep these platform rules in mind:
+
+- Verification is separate from CloudBase deployment, code upload, code review, and filing/record registration.
+- Some real-device capabilities, including sharing, may be blocked until WeChat verification is complete.
+- Adding experience members lets selected users open the uploaded experience version, but it does not bypass verification-only restrictions.
+
+Temporary testing flow before verification:
+
+1. Add testers in the WeChat Official Accounts Platform under member or experience-member management.
+2. Upload a build from WeChat DevTools.
+3. In version management, set the uploaded build as the experience version.
+4. Share the experience-version QR code with the added experience members.
+5. Use this QR-code flow for testing until verification unlocks normal sharing.
+
 ## CloudBase Troubleshooting
 
 - `FunctionName parameter could not be found`: deploy the missing cloud function.
@@ -135,6 +153,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 - `database collection not exists`: create the required collection manually, or redeploy `ensureUserProfile` and let it bootstrap the collections.
 - `document.set:fail ... invalid parameters ... _id`: do not include `_id` in the `data` object passed to `doc(id).set({ data })`.
 - `Error: timeout` on first real-cloud launch: increase the `ensureUserProfile` cloud function timeout from the default 3 seconds to 20-60 seconds, or manually create the collections and retry.
+- Sharing is blocked because the mini program is unverified: complete WeChat verification, or use experience-version QR codes for temporary tester access.
 
 ## Notes
 
