@@ -16,6 +16,13 @@ test('isCollectionAlreadyExistsError does not swallow missing collection errors'
   ).toBe(true);
   expect(
     isCollectionAlreadyExistsError({
+      errCode: -501001,
+      errMsg:
+        'createCollection:fail -501001 resource system error. [ResourceUnavailable.ResourceExist] Table exist.'
+    })
+  ).toBe(true);
+  expect(
+    isCollectionAlreadyExistsError({
       errMsg: '集合已存在'
     })
   ).toBe(true);

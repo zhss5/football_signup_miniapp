@@ -18,6 +18,9 @@ function isCollectionAlreadyExistsError(error) {
   return (
     text.includes('already exist') ||
     text.includes('already exists') ||
+    text.includes('resourceexist') ||
+    text.includes('resource exist') ||
+    text.includes('table exist') ||
     text.includes('is exist') ||
     text.includes('is existed') ||
     text.includes('has exist') ||

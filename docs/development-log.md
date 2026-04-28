@@ -165,3 +165,30 @@ Related:
 - `docs/superpowers/specs/football-signup-miniapp-design.md`
 - `docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - commit `dfa218a`
+
+## 2026-04-28 - CloudBase Collection Bootstrap ResourceExist Error
+
+During real-device CloudBase startup, `ensureUserProfile` failed while bootstrapping collections.
+
+Problem:
+
+- `ensureUserProfile` calls `db.createCollection` for required collections.
+- Existing collections should be treated as a successful no-op.
+- CloudBase returned `ResourceUnavailable.ResourceExist` and `Table exist.`
+- The existing detector only recognized `already exist` and Chinese `已存在` variants, so it rethrew the error.
+
+Fix:
+
+- updated `isCollectionAlreadyExistsError` to recognize `ResourceExist`, `resource exist`, and `table exist`
+- added a regression test for the real CloudBase error shape
+- copied shared cloud helpers into function packages again with `npm run copy:cloud-shared`
+
+Why it mattered:
+
+- real-cloud startup must be idempotent when collections already exist
+- first launch and repeated launches should not fail just because collection bootstrap has already run
+
+Related:
+
+- `cloudfunctions/_shared/database.js`
+- `tests/cloudfunctions/database.test.js`
