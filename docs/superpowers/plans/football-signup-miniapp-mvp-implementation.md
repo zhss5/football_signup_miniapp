@@ -229,6 +229,11 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add empty states and richer status badges
 - improve detail page organizer action grouping
 - polish share copy and share card metadata
+- add organizer activity editing:
+  - allow the original organizer or `admin` to edit supported fields
+  - preserve existing registrations and activity IDs
+  - reject capacity reductions below existing joined counts
+  - record edits in `activity_logs`
 - add participant notification subscriptions:
   - request subscription after successful signup
   - let organizers manually notify subscribed active participants
@@ -284,11 +289,22 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - use manual CloudBase role grants for early organizer authorization
 - add admin-only organizer authorization management only if needed
+- add activity editing for organizers and admins
 - move players between teams
 - promote bench players
 - expose organizer stats more clearly
 
-### Milestone B2: Participant Notifications
+### Milestone B2: Activity Editing
+
+- reuse Create Activity in edit mode where practical
+- add an `updateActivity` cloud function
+- allow only the original organizer or `admin`
+- keep existing registrations attached to the same activity
+- enforce capacity constraints against joined counts
+- write `activity_logs` entries for edits
+- defer player movement and registration migration to later organizer operations
+
+### Milestone B3: Participant Notifications
 
 - configure WeChat subscription message template IDs in local/secure config
 - implement signup-time subscription request
@@ -297,7 +313,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - record notification send logs and duplicate-prevention state
 - keep automatic pre-activity reminders as a later enhancement
 
-### Milestone B3: Signup Profile Completion
+### Milestone B4: Signup Profile Completion
 
 - prefill Join page signup names from `users.preferredName`
 - let users actively choose a WeChat-assisted nickname and avatar without blocking signup

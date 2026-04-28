@@ -149,6 +149,34 @@ Related:
 - `docs/superpowers/progress/football-signup-miniapp-progress.md`
 - `docs/superpowers/handoff/football-signup-miniapp-handoff.md`
 
+## 2026-04-28 - Organizer Activity Editing Direction
+
+The project documented the next organizer workflow: editing an existing activity without rebuilding it from scratch.
+
+Decision:
+
+- organizers should be able to modify activities they created
+- `admin` users should also be allowed to edit activities
+- regular users must not see or execute edit actions
+- first version should reuse the Create Activity page in edit mode where practical
+- first version editable fields are title, activity time, signup deadline, location, description, cover image, and total capacity
+- existing registrations must be preserved; editing must not recreate the activity
+- when users have already joined, capacity cannot be reduced below the joined count
+- record edits in `activity_logs`
+- do not include complex team reassignment, registration migration, or broad admin tooling in the first version
+
+Why it mattered:
+
+- organizers need a way to fix real-world mistakes such as time, venue, image, or capacity changes
+- deleting and recreating an activity would lose signups and break shared links
+- the edit workflow closes a core organizer operations gap while keeping the first version bounded
+
+Related:
+
+- `docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- `docs/superpowers/progress/football-signup-miniapp-progress.md`
+- `docs/superpowers/handoff/football-signup-miniapp-handoff.md`
+
 ## 2026-04-28 - Administration Roadmap
 
 The project documented that a full admin backend should be deferred.

@@ -11,7 +11,7 @@ The repository is on `main`.
 
 `origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-Recent local commits include role-gated activity creation, dynamic default activity dates, and highlighted activity signup status.
+Recent local commits include role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, and activity editing roadmap documentation.
 
 The codebase supports:
 
@@ -171,9 +171,11 @@ Continue in this order:
    - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
 6. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
 7. Add experience members and distribute the experience-version QR code for temporary tester access.
-8. Implement participant notification subscriptions and organizer-triggered notifications using:
+8. Implement organizer activity editing using:
+   - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+9. Implement participant notification subscriptions and organizer-triggered notifications using:
    - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-9. Push local commits if they should be shared:
+10. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First
@@ -191,6 +193,7 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
 - `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
+- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
 - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 
 ## 10. Important Notes

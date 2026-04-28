@@ -161,6 +161,7 @@ The MVP still has known non-blocking gaps:
 - a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
+- organizer activity editing is not implemented yet; first version should let the creator or `admin` update title, time, deadline, location, description, cover image, and total capacity without recreating the activity
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
@@ -180,6 +181,9 @@ The MVP still has known non-blocking gaps:
 
 - use the My page copyable user ID to grant `organizer` roles manually in CloudBase
 - add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
+- add activity editing for the original organizer or `admin`
+- preserve existing registrations and shared links when editing
+- prevent capacity reductions below existing joined counts
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
@@ -209,6 +213,8 @@ The MVP still has known non-blocking gaps:
 ## 7. Related Documents
 
 - Design: `D:/workspace/Nautilus/docs/superpowers/specs/football-signup-miniapp-design.md`
+- Activity editing design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- Notification design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 - Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - Handoff: `D:/workspace/Nautilus/docs/superpowers/handoff/football-signup-miniapp-handoff.md`
