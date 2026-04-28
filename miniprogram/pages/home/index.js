@@ -24,10 +24,16 @@ Page({
     return makeTranslator(locale);
   },
 
+  syncUserProfileInBackground() {
+    return Promise.resolve()
+      .then(() => ensureUserProfile())
+      .catch(() => undefined);
+  },
+
   async onShow() {
     const translate = this.applyI18n();
     this.setData({ loading: true });
-    await ensureUserProfile();
+    this.syncUserProfileInBackground();
     const { items } = await listActivities({ scope: 'home', limit: 20 });
     this.setData({
       items: items.map(item => buildActivityCardVm(item, undefined, translate)),
