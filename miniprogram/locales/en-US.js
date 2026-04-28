@@ -145,6 +145,7 @@ module.exports = {
     openImageFailed: 'Unable to open image',
     cropImageFailed: 'Unable to crop image',
     loadImageSourceFailed: 'Unable to load image source.',
+    loadActivitiesFailed: 'Unable to load activities',
     locationPinUnavailable: 'Location pin not available'
   },
   errors: {

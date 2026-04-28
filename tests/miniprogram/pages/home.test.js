@@ -31,7 +31,8 @@ describe('home page', () => {
       pageConfig = config;
     });
     global.wx = {
-      navigateTo: jest.fn()
+      navigateTo: jest.fn(),
+      showToast: jest.fn()
     };
 
     jest.resetModules();
@@ -75,5 +76,33 @@ describe('home page', () => {
         title: 'Thursday Match'
       }
     ]);
+  });
+
+  test('handles activity list timeout without rejecting the page lifecycle', async () => {
+    listActivities.mockRejectedValue(new Error('timeout'));
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        items: [],
+        loading: false
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
+
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(ctx.data.loading).toBe(false);
+    expect(ctx.data.items).toEqual([]);
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'toast.loadActivitiesFailed',
+      icon: 'none'
+    });
   });
 });

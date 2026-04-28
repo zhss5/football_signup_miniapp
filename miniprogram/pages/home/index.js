@@ -26,11 +26,23 @@ Page({
   async onShow() {
     const translate = this.applyI18n();
     this.setData({ loading: true });
-    const { items } = await listActivities({ scope: 'home', limit: 20 });
-    this.setData({
-      items: items.map(item => buildActivityCardVm(item, undefined, translate)),
-      loading: false
-    });
+
+    try {
+      const { items } = await listActivities({ scope: 'home', limit: 20 });
+      this.setData({
+        items: items.map(item => buildActivityCardVm(item, undefined, translate)),
+        loading: false
+      });
+    } catch (error) {
+      this.setData({ loading: false });
+
+      if (typeof wx !== 'undefined' && typeof wx.showToast === 'function') {
+        wx.showToast({
+          title: translate('toast.loadActivitiesFailed'),
+          icon: 'none'
+        });
+      }
+    }
   },
 
   goCreate() {

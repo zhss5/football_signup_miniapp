@@ -145,6 +145,7 @@ module.exports = {
     openImageFailed: '无法打开图片',
     cropImageFailed: '无法裁剪图片',
     loadImageSourceFailed: '无法加载图片来源。',
+    loadActivitiesFailed: '无法加载活动列表',
     locationPinUnavailable: '没有可用的地图定位'
   },
   errors: {
