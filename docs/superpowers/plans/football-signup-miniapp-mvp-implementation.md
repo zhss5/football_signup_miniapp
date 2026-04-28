@@ -218,6 +218,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add organizer-driven team reassignment or bench promotion
 - add role-based activity creation permission so only `organizer` or `admin` users can create activities, while regular users can only join or cancel their own signup
 - add minimal admin capability for granting `organizer` roles before public launch; the first version can be manual CloudBase role editing or an admin-only authorization page
+- add Join page profile prefill and completion: load `users.preferredName/avatarUrl`, let users actively choose a WeChat-assisted nickname/avatar, save profile defaults, and keep `registrations.signupName` editable per activity
+- add a simple user identification aid for manual organizer grants, such as showing or copying the current user's `openid` or profile marker on the My page
 - add restore flow for soft-deleted activities
 - add empty states and richer status badges
 - improve detail page organizer action grouping
@@ -227,10 +229,12 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - replace slider-only cropper with direct drag and pinch gestures
 - upload cover images to real CloudBase storage in production mode
+- upload selected user avatars to CloudBase storage in real-cloud mode and save the resulting file ID to `users.avatarUrl`
 - add multi-image activity galleries while preserving the existing cover slot
 
 ### 8.3 Backend and Production Hardening
 
+- keep CloudBase document database as the default primary store for the MVP; defer SQL until reporting, payments, complex joins, or operations tooling require it
 - finalize CloudBase security rules
 - finalize manual indexes
 - validate real CloudBase deployment and permissions
@@ -270,9 +274,17 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - enforce role-based activity creation
 - provide minimal organizer authorization management
+- add user identification support for manual organizer grants
 - move players between teams
 - promote bench players
 - expose organizer stats more clearly
+
+### Milestone B2: Signup Profile Completion
+
+- prefill Join page signup names from `users.preferredName`
+- let users actively choose a WeChat-assisted nickname and avatar without blocking signup
+- upload selected avatars to CloudBase storage in real-cloud mode
+- store reusable profile defaults on `users`, while keeping activity-specific roster names on `registrations.signupName`
 
 ### Milestone C: Monetization Readiness
 

@@ -151,6 +151,8 @@ The MVP still has known non-blocking gaps:
 - role-based activity creation permission is not implemented yet; before public launch, only `organizer` or `admin` users should be able to create activities, while regular users should only join or cancel their own signup
 - minimal admin capability is not implemented yet; before public launch, provide a simple way to grant `organizer` roles, either by manually editing `users.roles` in CloudBase or by adding an admin-only authorization page
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
+- signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
+- admin user identification is still manual; until a real admin console exists, consider showing/copying the current user's `openid` or profile name so organizers can be granted access without relying only on `lastActiveAt`
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
@@ -169,6 +171,7 @@ The MVP still has known non-blocking gaps:
 
 - add the pre-launch permission gate for activity creation
 - add a minimal admin path to grant organizer access
+- improve admin user identification before manual role grants, for example by exposing a copyable user ID/profile marker on the My page
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
@@ -176,6 +179,7 @@ The MVP still has known non-blocking gaps:
 ### Option C: Media and UX Polish
 
 - replace slider-based cropping with gesture-based dragging and zooming
+- add optional Join page nickname/avatar selection and prefill from the user profile
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality
 

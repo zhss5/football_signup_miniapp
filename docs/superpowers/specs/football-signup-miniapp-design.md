@@ -188,10 +188,26 @@ The MVP does not rely on WeChat nickname as the signup display name.
 Design decision:
 
 - `signupName` is entered manually during signup
-- the user profile may update `preferredName` to the latest signup name
+- the signup page may prefill `signupName` from `users.preferredName`
+- users may still edit `signupName` per activity so the roster can use the name teammates recognize
+- the user profile may update `preferredName` from the user's chosen nickname or latest signup name
 - roster display prioritizes the activity-specific `signupName`
 
-### 5.5 Phone Number Rules
+### 5.5 Profile Nickname and Avatar Rules
+
+The app must not assume it can silently read a user's WeChat nickname or avatar.
+
+Design decision:
+
+- the first signup flow can offer a lightweight profile area
+- nickname is collected through user input, preferably with `input type="nickname"` as a WeChat-assisted shortcut
+- avatar is collected only after the user taps an avatar picker, preferably `button open-type="chooseAvatar"`
+- avatar selection is optional and must not block signup
+- selected avatars should upload to CloudBase storage in real-cloud mode and save the resulting file ID to `users.avatarUrl`
+- subsequent signup flows should prefill from `users.preferredName` and `users.avatarUrl`
+- `registrations.signupName` remains the activity-specific roster name, while `users.preferredName` and `users.avatarUrl` are reusable profile defaults
+
+### 5.6 Phone Number Rules
 
 The MVP does not require phone number collection by default, but organizers can enable it per activity.
 
@@ -309,9 +325,9 @@ Purpose: store the user master profile
 Key fields:
 
 - `_id`: `openid`
-- `preferredName`
+- `preferredName`: reusable signup/profile display name
 - `wechatNickname`: reserved
-- `avatarUrl`: reserved
+- `avatarUrl`: user-selected avatar file ID or empty
 - `phone`: optional
 - `roles`
 - `createdAt`
@@ -333,8 +349,8 @@ Key fields:
 - `addressName`
 - `location`
 - `description`
-- `coverImage`
-- `imageList`
+- `coverImage`: CloudBase file ID in real-cloud mode, local temporary path in local mock mode
+- `imageList`: future-ready image list; currently stores the same single cover image
 - `signupLimitTotal`
 - `joinedCount`
 - `requirePhone`
@@ -431,6 +447,7 @@ The MVP still reserves room for:
 - richer analytics and dashboards
 - multi-organization admin
 - multi-image activity galleries
+- optional signup profile completion and user-facing identity display for admin authorization
 - gesture-based image cropping
 
 ## 12. MVP Summary
@@ -440,6 +457,7 @@ The current MVP decisions are:
 - use `native WeChat mini program + WeChat CloudBase`
 - create user profiles automatically with `openid`
 - use manual `signupName` entry
+- allow optional user-selected nickname/avatar profile defaults for signup prefill
 - collect phone number only when configured per activity
 - enforce one active signup per user per activity
 - enforce signup deadline for both joining and cancellation
