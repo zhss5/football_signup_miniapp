@@ -149,6 +149,8 @@ The MVP still has known non-blocking gaps:
 - cover crop interaction currently uses sliders rather than direct drag/pinch gestures
 - CloudBase production deployment and real environment validation are still pending
 - role-based activity creation permission is not implemented yet; before public launch, only `organizer` or `admin` users should be able to create activities, while regular users should only join or cancel their own signup
+- minimal admin capability is not implemented yet; before public launch, provide a simple way to grant `organizer` roles, either by manually editing `users.roles` in CloudBase or by adding an admin-only authorization page
+- a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
@@ -165,6 +167,8 @@ The MVP still has known non-blocking gaps:
 
 ### Option B: Organizer Operations
 
+- add the pre-launch permission gate for activity creation
+- add a minimal admin path to grant organizer access
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
@@ -174,6 +178,11 @@ The MVP still has known non-blocking gaps:
 - replace slider-based cropping with gesture-based dragging and zooming
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality
+
+### Option D: Full Operations Backend
+
+- defer a full backend/admin console until there is real operational demand
+- future scope should include activity management, user and organizer management, signup data review, activity revocation, exports, and payment/refund operations
 
 ## 7. Related Documents
 

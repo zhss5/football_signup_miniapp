@@ -217,6 +217,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - add organizer-driven team reassignment or bench promotion
 - add role-based activity creation permission so only `organizer` or `admin` users can create activities, while regular users can only join or cancel their own signup
+- add minimal admin capability for granting `organizer` roles before public launch; the first version can be manual CloudBase role editing or an admin-only authorization page
 - add restore flow for soft-deleted activities
 - add empty states and richer status badges
 - improve detail page organizer action grouping
@@ -240,7 +241,15 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - WeChat Pay and order records
 - analytics dashboards
 - multi-organization admin
+- full operations backend for activity management, user and organizer management, signup data review, activity revocation, exports, and payment/refund operations
 - export and reporting features
+
+### 8.5 Administration Roadmap
+
+- keep the current MVP without a full backend/admin console
+- before public launch, enforce role-based activity creation in cloud functions and hide the create entry for regular users
+- before public launch, define a minimal way to grant organizer access
+- after real operational demand appears, build a full backend/admin console instead of expanding ad hoc mini program controls
 
 ## 9. Suggested Next Milestones
 
@@ -259,6 +268,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 ### Milestone B: Organizer Operations
 
+- enforce role-based activity creation
+- provide minimal organizer authorization management
 - move players between teams
 - promote bench players
 - expose organizer stats more clearly
@@ -268,6 +279,11 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add payment-related collections
 - define fee rules and refund policy fields
 - connect payment state to registrations
+
+### Milestone D: Operations Backend
+
+- build only after activity volume or payment/refund workflows require dedicated operations tooling
+- include activity moderation, user/organizer management, signup review, exports, and payment/refund operations
 
 ## 10. Planning Note
 
