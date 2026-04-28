@@ -148,6 +148,7 @@ The MVP still has known non-blocking gaps:
 
 - cover crop interaction currently uses sliders rather than direct drag/pinch gestures
 - CloudBase production deployment and real environment validation are still pending
+- role-based activity creation permission is not implemented yet; before public launch, only `organizer` or `admin` users should be able to create activities, while regular users should only join or cancel their own signup
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment

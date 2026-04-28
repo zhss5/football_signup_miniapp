@@ -216,6 +216,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 ### 8.1 Product Refinements
 
 - add organizer-driven team reassignment or bench promotion
+- add role-based activity creation permission so only `organizer` or `admin` users can create activities, while regular users can only join or cancel their own signup
 - add restore flow for soft-deleted activities
 - add empty states and richer status badges
 - improve detail page organizer action grouping
