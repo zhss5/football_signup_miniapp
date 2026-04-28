@@ -1,15 +1,62 @@
 const createActivity = require('../../cloudfunctions/createActivity/index');
 
+function createFakeDbWithUserRoles(roles, writes = []) {
+  return {
+    collection: jest.fn(name => {
+      if (name === 'users') {
+        return {
+          doc: jest.fn(() => ({
+            get: jest.fn().mockResolvedValue({
+              data: {
+                _id: 'openid_a',
+                roles
+              }
+            })
+          }))
+        };
+      }
+
+      return {
+        add: jest.fn(async ({ data }) => {
+          writes.push({ name, data });
+          return { _id: name === 'activities' ? 'activity_1' : `${name}_${writes.length}` };
+        })
+      };
+    })
+  };
+}
+
+test('createActivity rejects regular users before writing activity data', async () => {
+  const writes = [];
+  const fakeDb = createFakeDbWithUserRoles(['user'], writes);
+
+  await expect(
+    createActivity.main(
+      {
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        signupLimitTotal: 12,
+        requirePhone: false,
+        imageList: [],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      },
+      { OPENID: 'openid_a' },
+      { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Only organizers can create activities');
+
+  expect(writes).toEqual([]);
+});
+
 test('createActivity stores activity and teams', async () => {
   const writes = [];
-  const fakeDb = {
-    collection: jest.fn(name => ({
-      add: jest.fn(async ({ data }) => {
-        writes.push({ name, data });
-        return { _id: name === 'activities' ? 'activity_1' : `${name}_${writes.length}` };
-      })
-    }))
-  };
+  const fakeDb = createFakeDbWithUserRoles(['user', 'organizer'], writes);
 
   const result = await createActivity.main(
     {
@@ -36,14 +83,7 @@ test('createActivity stores activity and teams', async () => {
 
 test('createActivity stores map location, deadline, image list, and auto generates a bench team', async () => {
   const writes = [];
-  const fakeDb = {
-    collection: jest.fn(name => ({
-      add: jest.fn(async ({ data }) => {
-        writes.push({ name, data });
-        return { _id: name === 'activities' ? 'activity_2' : `${name}_${writes.length}` };
-      })
-    }))
-  };
+  const fakeDb = createFakeDbWithUserRoles(['admin'], writes);
 
   await createActivity.main(
     {

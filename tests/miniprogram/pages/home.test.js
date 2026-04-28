@@ -41,7 +41,12 @@ describe('home page', () => {
     ({ listActivities } = require('../../../miniprogram/services/activity-service'));
   });
 
-  test('loads activities without syncing the user profile on startup', async () => {
+  test('loads activities while refreshing create permission from the user profile', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user', 'organizer']
+      }
+    });
     listActivities.mockResolvedValue({
       items: [
         {
@@ -55,7 +60,8 @@ describe('home page', () => {
       ...pageConfig,
       data: {
         items: [],
-        loading: false
+        loading: false,
+        canCreateActivity: false
       },
       setData(update) {
         this.data = {
@@ -67,9 +73,10 @@ describe('home page', () => {
 
     await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
 
-    expect(ensureUserProfile).not.toHaveBeenCalled();
+    expect(ensureUserProfile).toHaveBeenCalled();
     expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
     expect(ctx.data.loading).toBe(false);
+    expect(ctx.data.canCreateActivity).toBe(true);
     expect(ctx.data.items).toEqual([
       {
         id: 'activity_123',
@@ -79,13 +86,19 @@ describe('home page', () => {
   });
 
   test('handles activity list timeout without rejecting the page lifecycle', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user']
+      }
+    });
     listActivities.mockRejectedValue(new Error('timeout'));
 
     const ctx = {
       ...pageConfig,
       data: {
         items: [],
-        loading: false
+        loading: false,
+        canCreateActivity: false
       },
       setData(update) {
         this.data = {
@@ -104,5 +117,33 @@ describe('home page', () => {
       title: 'toast.loadActivitiesFailed',
       icon: 'none'
     });
+  });
+
+  test('keeps the home page usable when create permission refresh fails', async () => {
+    ensureUserProfile.mockRejectedValue(new Error('timeout'));
+    listActivities.mockResolvedValue({
+      items: []
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        items: [],
+        loading: false,
+        canCreateActivity: true
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
+
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(ctx.data.loading).toBe(false);
+    expect(ctx.data.canCreateActivity).toBe(false);
   });
 });

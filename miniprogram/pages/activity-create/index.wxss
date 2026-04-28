@@ -6,6 +6,19 @@
   margin-bottom: 24rpx;
 }
 
+.authorization-panel {
+  padding: 32rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+}
+
+.authorization-title {
+  display: block;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
 .label {
   display: block;
   margin-bottom: 12rpx;

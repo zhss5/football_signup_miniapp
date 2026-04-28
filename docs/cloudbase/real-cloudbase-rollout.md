@@ -104,6 +104,13 @@ The runtime expects these collections:
 
 `ensureUserProfile` attempts to create the collections during the first real CloudBase startup. For a predictable rollout, you may also create them manually in the CloudBase console before smoke testing.
 
+Organizer access is controlled by `users.roles`:
+
+- regular users keep `roles: ['user']`
+- activity creators need `organizer` or `admin`
+- for early operation, grant access manually in CloudBase by editing the target user document to include `organizer`
+- the My page shows a copyable user ID so operators can identify the right `users` document
+
 Create indexes from:
 
 - `docs/cloudbase/indexes.md`

@@ -3,6 +3,7 @@ const {
   deleteActivity,
   listActivities
 } = require('../../services/activity-service');
+const { ensureUserProfile } = require('../../services/user-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
   buildLanguageOptions,
@@ -12,6 +13,7 @@ const {
   setPageNavigationTitle,
   translateErrorMessage
 } = require('../../utils/i18n');
+const { formatRoles } = require('../../utils/roles');
 
 Page({
   data: {
@@ -25,7 +27,9 @@ Page({
     createdFilters: [],
     createdItemsAll: [],
     createdItems: [],
-    joinedItems: []
+    joinedItems: [],
+    userOpenId: '',
+    userRoleText: ''
   },
 
   applyI18n() {
@@ -53,6 +57,7 @@ Page({
 
   async onShow() {
     const translate = this.applyI18n();
+    const profilePromise = this.refreshUserProfile();
     const [created, joined] = await Promise.all([
       listActivities({ scope: 'created', limit: 20 }),
       listActivities({ scope: 'joined', limit: 20 })
@@ -65,6 +70,38 @@ Page({
       joinedItems: joined.items.map(item => buildActivityCardVm(item, undefined, translate))
     });
     this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
+    await profilePromise;
+  },
+
+  async refreshUserProfile() {
+    try {
+      const { user } = await ensureUserProfile();
+      this.setData({
+        userOpenId: user && user._id ? user._id : '',
+        userRoleText: formatRoles(user)
+      });
+    } catch (error) {
+      this.setData({
+        userOpenId: '',
+        userRoleText: ''
+      });
+    }
+  },
+
+  onCopyUserId() {
+    if (!this.data.userOpenId) {
+      return;
+    }
+
+    wx.setClipboardData({
+      data: this.data.userOpenId,
+      success: () => {
+        wx.showToast({
+          title: this.data.i18n.my.copyUserIdSuccess,
+          icon: 'none'
+        });
+      }
+    });
   },
 
   applyCreatedFilter(filterKey, items = this.data.createdItemsAll) {

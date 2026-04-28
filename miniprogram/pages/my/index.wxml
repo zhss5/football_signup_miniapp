@@ -13,6 +13,15 @@
     </block>
   </view>
 
+  <view wx:if="{{userOpenId}}" class="identity-card">
+    <text class="identity-label">{{i18n.my.userIdLabel}}</text>
+    <view class="identity-row">
+      <text class="identity-value">{{userOpenId}}</text>
+      <button size="mini" class="utility-chip" bindtap="onCopyUserId">{{i18n.my.copyUserId}}</button>
+    </view>
+    <text class="identity-role">{{i18n.my.roleLabel}} {{userRoleText}}</text>
+  </view>
+
   <view class="primary-tab-shell">
     <block wx:for="{{tabs}}" wx:key="key">
       <button

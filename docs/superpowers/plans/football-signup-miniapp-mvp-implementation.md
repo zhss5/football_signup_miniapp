@@ -44,6 +44,11 @@ The current implementation already includes:
   - top tabs: `Created / Joined`
   - created history filters: `All / Active / Cancelled / Deleted`
   - soft-deleted activities still visible to the organizer
+  - copyable current user ID and role summary for manual organizer grants
+- role-based activity creation:
+  - Home hides Create Activity for regular users
+  - Create Activity blocks regular users on page load and submit
+  - `createActivity` rejects non-`organizer` and non-`admin` users before writing data
 - cloud functions for:
   - `ensureUserProfile`
   - `listActivities`
@@ -116,6 +121,7 @@ The current implementation already includes:
 
 ### 4.3 Organizer Actions
 
+- only `organizer` or `admin` users can create activities
 - organizers can cancel published activities
 - organizers can soft-delete only empty activities
 - deleted activities disappear from Home and Joined history
@@ -197,9 +203,9 @@ Important implemented fields:
 
 Latest verified status:
 
-- command: `npm test -- --runInBand`
-- result: `29` test suites passed
-- result: `72` tests passed
+- command: `npm test`
+- result: `36` test suites passed
+- result: `127` tests passed
 
 The current test surface includes:
 
@@ -216,10 +222,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 ### 8.1 Product Refinements
 
 - add organizer-driven team reassignment or bench promotion
-- add role-based activity creation permission so only `organizer` or `admin` users can create activities, while regular users can only join or cancel their own signup
-- add minimal admin capability for granting `organizer` roles before public launch; the first version can be manual CloudBase role editing or an admin-only authorization page
+- keep early organizer grants as manual CloudBase edits to `users.roles`; add an admin-only authorization page only if manual edits become painful
 - add Join page profile prefill and completion: load `users.preferredName/avatarUrl`, let users actively choose a WeChat-assisted nickname/avatar, save profile defaults, and keep `registrations.signupName` editable per activity
-- add a simple user identification aid for manual organizer grants, such as showing or copying the current user's `openid` or profile marker on the My page
 - add restore flow for soft-deleted activities
 - add empty states and richer status badges
 - improve detail page organizer action grouping
@@ -251,8 +255,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 ### 8.5 Administration Roadmap
 
 - keep the current MVP without a full backend/admin console
-- before public launch, enforce role-based activity creation in cloud functions and hide the create entry for regular users
-- before public launch, define a minimal way to grant organizer access
+- role-based activity creation is enforced in cloud functions and hidden from regular users in the UI
+- current minimal organizer access management is manual CloudBase editing of `users.roles`, supported by the copyable user ID on My page
 - after real operational demand appears, build a full backend/admin console instead of expanding ad hoc mini program controls
 
 ## 9. Suggested Next Milestones
@@ -272,9 +276,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 ### Milestone B: Organizer Operations
 
-- enforce role-based activity creation
-- provide minimal organizer authorization management
-- add user identification support for manual organizer grants
+- use manual CloudBase role grants for early organizer authorization
+- add admin-only organizer authorization management only if needed
 - move players between teams
 - promote bench players
 - expose organizer stats more clearly

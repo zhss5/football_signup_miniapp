@@ -52,8 +52,38 @@ function detectSystemLocale(explicitLanguage) {
   return DEFAULT_LOCALE;
 }
 
+function mergeMessages(fallback, messages) {
+  const keys = new Set([
+    ...Object.keys(fallback || {}),
+    ...Object.keys(messages || {})
+  ]);
+
+  return Array.from(keys).reduce((acc, key) => {
+    const fallbackValue = fallback ? fallback[key] : undefined;
+    const messageValue = messages ? messages[key] : undefined;
+
+    if (
+      fallbackValue &&
+      typeof fallbackValue === 'object' &&
+      !Array.isArray(fallbackValue)
+    ) {
+      acc[key] = mergeMessages(fallbackValue, messageValue || {});
+      return acc;
+    }
+
+    acc[key] = messageValue === undefined ? fallbackValue : messageValue;
+    return acc;
+  }, {});
+}
+
 function getMessages(locale = DEFAULT_LOCALE) {
-  return SUPPORTED_LOCALES[normalizeLocale(locale)] || enUS;
+  const messages = SUPPORTED_LOCALES[normalizeLocale(locale)] || enUS;
+
+  if (messages === enUS) {
+    return enUS;
+  }
+
+  return mergeMessages(enUS, messages);
 }
 
 function interpolate(template, params = {}) {
@@ -234,7 +264,8 @@ function translateErrorMessage(error, translate) {
     'Signup can no longer be cancelled': 'errors.signupCannotBeCancelled',
     'Only the organizer can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',
-    'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty'
+    'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty',
+    'Only organizers can create activities': 'errors.createActivityNotAllowed'
   };
 
   const message = error && error.message ? error.message : '';

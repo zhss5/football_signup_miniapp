@@ -6,6 +6,10 @@ jest.mock('../../../miniprogram/services/cloud', () => ({
   uploadFile: jest.fn(filePath => Promise.resolve(filePath))
 }));
 
+jest.mock('../../../miniprogram/services/user-service', () => ({
+  ensureUserProfile: jest.fn()
+}));
+
 jest.mock('../../../miniprogram/utils/activity-draft', () => ({
   buildActivityPayload: jest.fn(form => form),
   createDefaultActivityForm: jest.fn(() => ({
@@ -30,6 +34,7 @@ jest.mock('../../../miniprogram/utils/constants', () => ({
 describe('activity create submit flow', () => {
   let pageConfig;
   let createActivity;
+  let ensureUserProfile;
   let uploadFile;
   let validateActivityDraft;
 
@@ -46,8 +51,63 @@ describe('activity create submit flow', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/activity-create/index');
     ({ createActivity } = require('../../../miniprogram/services/activity-service'));
+    ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ validateActivityDraft } = require('../../../miniprogram/utils/validators'));
+  });
+
+  test('onLoad marks the create page unavailable for regular users', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user']
+      }
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onLoad.call(ctx);
+
+    expect(ensureUserProfile).toHaveBeenCalled();
+    expect(ctx.data.authorizationChecked).toBe(true);
+    expect(ctx.data.canCreateActivity).toBe(false);
+  });
+
+  test('onSubmit blocks users without create permission', async () => {
+    const ctx = {
+      data: {
+        form: {
+          title: 'Thursday Match'
+        },
+        canCreateActivity: false,
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(createActivity).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Only organizers can create activities',
+      icon: 'none'
+    });
   });
 
   test('onSubmit redirects to detail with the post-publish share flag', async () => {
@@ -57,7 +117,8 @@ describe('activity create submit flow', () => {
       data: {
         form: {
           title: 'Thursday Match'
-        }
+        },
+        canCreateActivity: true
       },
       setData(update) {
         this.data = {
@@ -85,7 +146,8 @@ describe('activity create submit flow', () => {
           title: 'Thursday Match',
           coverImage: 'wxfile://tmp_cover.jpg',
           imageList: ['wxfile://tmp_cover.jpg']
-        }
+        },
+        canCreateActivity: true
       },
       setData(update) {
         this.data = {
@@ -120,7 +182,8 @@ describe('activity create submit flow', () => {
         form: {
           title: 'Thursday Match'
         },
-        validationErrors: {}
+        validationErrors: {},
+        canCreateActivity: true
       },
       setData(update) {
         this.data = {

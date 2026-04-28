@@ -7,9 +7,11 @@ cloudfunctions/*/collections.js
 cloudfunctions/*/auth.js
 cloudfunctions/*/database.js
 cloudfunctions/*/errors.js
+cloudfunctions/*/roles.js
 cloudfunctions/*/time.js
 cloudfunctions/*/validators.js
 !cloudfunctions/_shared/auth.js
 !cloudfunctions/_shared/database.js
+!cloudfunctions/_shared/roles.js
 project.private.config.json
 miniprogram/config/env.local.js

@@ -53,6 +53,35 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].imageList).toEqual(['wxfile://cover-1.png']);
 });
 
+test('local cloud client blocks regular users from creating activities when roles are restricted', async () => {
+  const client = createLocalCloudClient({
+    storage: createMemoryStorage(),
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_regular',
+    defaultRoles: ['user']
+  });
+
+  await expect(
+    client.call('createActivity', {
+      title: 'Saturday 8-10',
+      startAt: '2026-04-26T20:00:00.000Z',
+      endAt: '2026-04-26T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+      addressText: 'Half Stone',
+      description: '7v7 game',
+      coverImage: '',
+      imageList: [],
+      signupLimitTotal: 12,
+      requirePhone: false,
+      inviteCode: '',
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
+    })
+  ).rejects.toThrow('Only organizers can create activities');
+});
+
 test('local cloud client can join and cancel an activity', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

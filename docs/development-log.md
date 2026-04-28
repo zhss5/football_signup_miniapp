@@ -95,6 +95,34 @@ Related:
 - `docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - commit `2b56ffa`
 
+## 2026-04-28 - Role-Based Activity Creation Implemented
+
+The organizer permission loop was implemented for activity creation.
+
+Delivered behavior:
+
+- only users with `organizer` or `admin` in `users.roles` can create activities in real CloudBase mode
+- the Home page hides the Create Activity entry for regular users
+- the Create Activity page checks permission again and blocks direct navigation for regular users
+- the `createActivity` cloud function enforces the same rule before writing activity data
+- the My page shows a copyable current user ID and readable role summary to support manual CloudBase role grants
+- local mock mode defaults to an organizer-capable test user, while tests can opt into `defaultRoles: ['user']` to verify the restricted path
+
+Why it mattered:
+
+- closed the main pre-launch permission gap without building a full admin backend
+- kept early organizer authorization operationally simple through manual `users.roles` edits
+- protected the backend from clients bypassing hidden UI controls
+
+Related:
+
+- `cloudfunctions/createActivity/index.js`
+- `cloudfunctions/_shared/roles.js`
+- `miniprogram/pages/home/index.js`
+- `miniprogram/pages/activity-create/index.js`
+- `miniprogram/pages/my/index.js`
+- `miniprogram/utils/roles.js`
+
 ## 2026-04-28 - Administration Roadmap
 
 The project documented that a full admin backend should be deferred.

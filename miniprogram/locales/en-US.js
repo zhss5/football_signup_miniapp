@@ -77,6 +77,9 @@ module.exports = {
     replaceImage: 'Replace image',
     chooseAndCropImage: 'Choose and crop image',
     removeImage: 'Remove image',
+    permissionChecking: 'Checking create permission...',
+    noCreatePermissionTitle: 'Create permission required',
+    noCreatePermissionHint: 'Ask an admin to add the organizer role to your user before creating activities.',
     location: 'Location',
     addressPlaceholder: 'Address',
     selectedPin: 'Selected pin: {{name}}',
@@ -119,7 +122,11 @@ module.exports = {
       cancelled: 'Cancelled',
       deleted: 'Deleted'
     },
-    languageLabel: 'Language'
+    languageLabel: 'Language',
+    userIdLabel: 'User ID',
+    copyUserId: 'Copy ID',
+    copyUserIdSuccess: 'User ID copied',
+    roleLabel: 'Roles:'
   },
   teamEditor: {
     addTeam: 'Add Team',
@@ -176,6 +183,8 @@ module.exports = {
     signupCannotBeCancelled: 'Signup can no longer be cancelled',
     organizerCancelOnly: 'Only the organizer can cancel this activity',
     organizerDeleteOnly: 'Only the organizer can delete this activity',
-    deleteOnlyEmpty: 'Only activities without joined players can be deleted'
+    deleteOnlyEmpty: 'Only activities without joined players can be deleted',
+    createActivityNotAllowed: 'Only organizers can create activities',
+    createPermissionCheckFailed: 'Unable to check create permission'
   }
 };

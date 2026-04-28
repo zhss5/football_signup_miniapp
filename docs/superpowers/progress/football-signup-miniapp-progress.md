@@ -1,6 +1,6 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-04-26
+- Date: 2026-04-28
 - Status: In active MVP iteration
 - Active branch: `main`
 - Main workspace: `D:/workspace/Nautilus`
@@ -112,6 +112,16 @@ The current remaining blocker is operational, not architectural:
   - `Cancelled`
   - `Deleted`
 - deleted activities remain visible only to the organizer in Created history
+- current user ID can be copied from My page to support manual organizer role grants
+- My page shows a readable role summary
+
+### 2.10 Organizer Permission Gate
+
+- only `organizer` or `admin` users can create activities
+- Home hides the Create Activity entry for regular users
+- Create Activity checks permission on page load and before submit
+- `createActivity` cloud function enforces role permission before writing activity data
+- early operation can grant organizer access by manually editing `users.roles` in CloudBase
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -124,14 +134,15 @@ The current implementation differs from the original early MVP assumptions in th
 - activity creation includes WeChat map selection
 - the team model includes an auto-generated bench team
 - cover images use a dedicated `2:1` crop flow
+- activity creation is now role-gated instead of open to every user
 
 ## 4. Verification Status
 
 Latest verified test result:
 
-- command: `npm test -- --runInBand`
-- result: `29` test suites passed
-- result: `73` tests passed
+- command: `npm test`
+- result: `36` test suites passed
+- result: `127` tests passed
 
 Covered areas include:
 
@@ -147,12 +158,10 @@ Covered areas include:
 The MVP still has known non-blocking gaps:
 
 - cover crop interaction currently uses sliders rather than direct drag/pinch gestures
-- CloudBase production deployment and real environment validation are still pending
-- role-based activity creation permission is not implemented yet; before public launch, only `organizer` or `admin` users should be able to create activities, while regular users should only join or cancel their own signup
-- minimal admin capability is not implemented yet; before public launch, provide a simple way to grant `organizer` roles, either by manually editing `users.roles` in CloudBase or by adding an admin-only authorization page
+- production role grants still require manual CloudBase edits to `users.roles`
+- a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
-- admin user identification is still manual; until a real admin console exists, consider showing/copying the current user's `openid` or profile name so organizers can be granted access without relying only on `lastActiveAt`
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
@@ -169,9 +178,8 @@ The MVP still has known non-blocking gaps:
 
 ### Option B: Organizer Operations
 
-- add the pre-launch permission gate for activity creation
-- add a minimal admin path to grant organizer access
-- improve admin user identification before manual role grants, for example by exposing a copyable user ID/profile marker on the My page
+- use the My page copyable user ID to grant `organizer` roles manually in CloudBase
+- add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page

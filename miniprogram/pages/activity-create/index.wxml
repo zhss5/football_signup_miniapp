@@ -1,4 +1,14 @@
 <view class="page">
+  <view wx:if="{{!authorizationChecked}}" class="authorization-panel">
+    <text class="authorization-title">{{i18n.activityCreate.permissionChecking}}</text>
+  </view>
+
+  <view wx:elif="{{!canCreateActivity}}" class="authorization-panel">
+    <text class="authorization-title">{{i18n.activityCreate.noCreatePermissionTitle}}</text>
+    <text class="hint">{{i18n.activityCreate.noCreatePermissionHint}}</text>
+  </view>
+
+  <block wx:else>
   <view class="field">
     <text class="label">{{i18n.activityCreate.title}}</text>
     <input
@@ -130,4 +140,5 @@
   </view>
 
   <button bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityCreate.publish}}</button>
+  </block>
 </view>

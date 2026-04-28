@@ -1,4 +1,5 @@
 const { listActivities } = require('../../services/activity-service');
+const { ensureUserProfile } = require('../../services/user-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
   getAppLocale,
@@ -6,11 +7,13 @@ const {
   makeTranslator,
   setPageNavigationTitle
 } = require('../../utils/i18n');
+const { canCreateActivity } = require('../../utils/roles');
 
 Page({
   data: {
     items: [],
     loading: false,
+    canCreateActivity: false,
     locale: '',
     i18n: {}
   },
@@ -26,6 +29,7 @@ Page({
   async onShow() {
     const translate = this.applyI18n();
     this.setData({ loading: true });
+    const permissionPromise = this.refreshViewerPermissions();
 
     try {
       const { items } = await listActivities({ scope: 'home', limit: 20 });
@@ -43,9 +47,32 @@ Page({
         });
       }
     }
+
+    await permissionPromise;
+  },
+
+  async refreshViewerPermissions() {
+    try {
+      const { user } = await ensureUserProfile();
+      this.setData({
+        canCreateActivity: canCreateActivity(user)
+      });
+    } catch (error) {
+      this.setData({
+        canCreateActivity: false
+      });
+    }
   },
 
   goCreate() {
+    if (!this.data.canCreateActivity) {
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('errors.createActivityNotAllowed'),
+        icon: 'none'
+      });
+      return;
+    }
+
     wx.navigateTo({ url: '/pages/activity-create/index' });
   },
 

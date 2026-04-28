@@ -1,5 +1,8 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
+const { COLLECTIONS } = require('./collections');
+const { businessError } = require('./errors');
+const { canCreateActivity } = require('./roles');
 const { nowIso } = require('./time');
 const { validateActivityDraft } = require('./validators');
 
@@ -31,9 +34,28 @@ function buildTeamDrafts(event) {
   return regularTeams;
 }
 
+async function getCurrentUser(db, openid) {
+  const result = await db
+    .collection(COLLECTIONS.USERS)
+    .doc(openid)
+    .get()
+    .catch(() => ({ data: null }));
+
+  return result.data || null;
+}
+
+async function assertCanCreateActivity(db, openid) {
+  const user = await getCurrentUser(db, openid);
+
+  if (!canCreateActivity(user)) {
+    throw businessError('Only organizers can create activities');
+  }
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  await assertCanCreateActivity(db, openid);
   validateActivityDraft(event);
   const teams = buildTeamDrafts(event);
 

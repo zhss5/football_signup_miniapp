@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-04-27
+- Date: 2026-04-28
 - Branch: `main`
 - Workspace: `D:/workspace/Nautilus`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -13,7 +13,7 @@ The repository is on `main`.
 
 - `1c892b3` `Validate activity detail sharing`
 
-The local branch has local documentation updates for WeChat verification notes.
+The local branch has local role-gated activity creation updates.
 
 The codebase supports:
 
@@ -24,6 +24,8 @@ The codebase supports:
 - cover image upload to CloudBase storage with persistent `fileID`
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
+- role-gated activity creation for `organizer` and `admin` users
+- copyable user ID on My page for manual CloudBase role grants
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -151,26 +153,27 @@ npm test
 
 Latest result:
 
-- `31` test suites passed
-- `108` tests passed
+- `36` test suites passed
+- `127` tests passed
 
-The latest documentation-only updates are not test-relevant, but `git diff --check` passed for this handoff file.
+The latest verification includes the role-gated create flow across mini program pages, local mock behavior, and `createActivity` cloud function authorization.
 
 ## 8. Next Steps
 
 Continue in this order:
 
-1. Increase `ensureUserProfile` timeout in CloudBase if first launch still reports `Error: timeout`.
+1. Deploy the updated `createActivity` cloud function after pulling the latest role-gate changes.
 2. Confirm all five database collections exist.
-3. Apply indexes from:
+3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
+4. Apply indexes from:
    - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
-4. Apply database rules from:
+5. Apply database rules from:
    - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
-5. Run the smoke checklist on DevTools and a real device:
+6. Run the smoke checklist on DevTools and a real device:
    - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
-6. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
-7. Add experience members and distribute the experience-version QR code for temporary tester access.
-8. Push the local documentation commits if they should be shared:
+7. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
+8. Add experience members and distribute the experience-version QR code for temporary tester access.
+9. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First
@@ -181,7 +184,10 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspace/Nautilus/miniprogram/services/cloud.js`
 - `D:/workspace/Nautilus/miniprogram/config/env.js`
 - `D:/workspace/Nautilus/cloudfunctions/ensureUserProfile/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/createActivity/index.js`
 - `D:/workspace/Nautilus/cloudfunctions/_shared/database.js`
+- `D:/workspace/Nautilus/cloudfunctions/_shared/roles.js`
+- `D:/workspace/Nautilus/miniprogram/utils/roles.js`
 - `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
 - `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`

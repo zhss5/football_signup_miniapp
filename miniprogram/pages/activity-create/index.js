@@ -1,5 +1,6 @@
 const { createActivity } = require('../../services/activity-service');
 const { uploadFile } = require('../../services/cloud');
+const { ensureUserProfile } = require('../../services/user-service');
 const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('../../utils/constants');
 const {
   buildActivityPayload,
@@ -14,6 +15,7 @@ const {
   setPageNavigationTitle,
   translateErrorMessage
 } = require('../../utils/i18n');
+const { canCreateActivity } = require('../../utils/roles');
 
 function getImagePath(result) {
   if (Array.isArray(result.tempFiles) && result.tempFiles[0]) {
@@ -111,11 +113,14 @@ Page({
     benchSlotsText: '',
     imageHintText: '',
     selectedPinText: '',
+    authorizationChecked: false,
+    canCreateActivity: false,
     teamEditorLabels: {}
   },
 
-  onLoad() {
-    this.applyI18n(true);
+  async onLoad() {
+    const translate = this.applyI18n(true);
+    await this.refreshCreatePermission(translate);
   },
 
   applyI18n(resetForm = false) {
@@ -142,6 +147,25 @@ Page({
     });
     this.syncDerivedState(form, translate);
     return translate;
+  },
+
+  async refreshCreatePermission(translate = makeTranslator(this.data.locale || getAppLocale())) {
+    try {
+      const { user } = await ensureUserProfile();
+      this.setData({
+        authorizationChecked: true,
+        canCreateActivity: canCreateActivity(user)
+      });
+    } catch (error) {
+      this.setData({
+        authorizationChecked: true,
+        canCreateActivity: false
+      });
+      wx.showToast({
+        title: translate('errors.createPermissionCheckFailed'),
+        icon: 'none'
+      });
+    }
   },
 
   syncDerivedState(form, translate = makeTranslator(this.data.locale || getAppLocale())) {
@@ -314,6 +338,14 @@ Page({
 
   async onSubmit() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
+
+    if (!this.data.canCreateActivity) {
+      wx.showToast({
+        title: translate('errors.createActivityNotAllowed'),
+        icon: 'none'
+      });
+      return;
+    }
 
     try {
       const payload = buildActivityPayload(this.data.form);

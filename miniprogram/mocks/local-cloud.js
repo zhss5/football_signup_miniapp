@@ -1,4 +1,5 @@
 const { BENCH_TEAM_NAME } = require('../utils/constants');
+const { canCreateActivity } = require('../utils/roles');
 const { validateActivityDraft } = require('../utils/validators');
 
 function validateSignupPayload(payload) {
@@ -55,6 +56,9 @@ function createLocalCloudClient(options = {}) {
   const storage = options.storage;
   const storageKey = options.storageKey || 'football-signup-local-cloud-v1';
   const now = options.now || (() => new Date().toISOString());
+  const defaultRoles = Array.isArray(options.defaultRoles)
+    ? options.defaultRoles.slice()
+    : ['user', 'organizer'];
   const getOpenId = options.openid
     ? () => options.openid
     : () => {
@@ -83,6 +87,25 @@ function createLocalCloudClient(options = {}) {
     return id;
   }
 
+  function buildDefaultUser(openid, stamp) {
+    return {
+      _id: openid,
+      preferredName: '',
+      avatarUrl: '',
+      roles: defaultRoles.slice(),
+      createdAt: stamp,
+      lastActiveAt: stamp
+    };
+  }
+
+  function ensureUserInState(state, openid, stamp) {
+    if (!state.users[openid]) {
+      state.users[openid] = buildDefaultUser(openid, stamp);
+    }
+
+    return state.users[openid];
+  }
+
   function ensureUserProfile() {
     const state = readState();
     const openid = getOpenId();
@@ -95,14 +118,7 @@ function createLocalCloudClient(options = {}) {
       return { user: clone(current) };
     }
 
-    const user = {
-      _id: openid,
-      preferredName: '',
-      avatarUrl: '',
-      roles: ['user'],
-      createdAt: stamp,
-      lastActiveAt: stamp
-    };
+    const user = buildDefaultUser(openid, stamp);
 
     state.users[openid] = user;
     writeState(state);
@@ -114,6 +130,12 @@ function createLocalCloudClient(options = {}) {
     const state = readState();
     const stamp = now();
     const openid = getOpenId();
+    const user = ensureUserInState(state, openid, stamp);
+
+    if (!canCreateActivity(user)) {
+      throw new Error('Only organizers can create activities');
+    }
+
     const activityId = nextId(state, 'activity');
     const regularTeams = payload.teams.map((team, index) => ({
       teamName: team.teamName.trim(),
@@ -318,19 +340,9 @@ function listActivities(payload) {
       throw new Error('You already joined this activity');
     }
 
-    if (!state.users[openid]) {
-      state.users[openid] = {
-        _id: openid,
-        preferredName: '',
-        avatarUrl: '',
-        roles: ['user'],
-        createdAt: stamp,
-        lastActiveAt: stamp
-      };
-    }
-
-    state.users[openid].preferredName = payload.signupName.trim();
-    state.users[openid].lastActiveAt = stamp;
+    const user = ensureUserInState(state, openid, stamp);
+    user.preferredName = payload.signupName.trim();
+    user.lastActiveAt = stamp;
 
     state.registrations[registrationId] = {
       _id: registrationId,
