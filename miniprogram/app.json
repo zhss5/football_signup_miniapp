@@ -12,7 +12,7 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "Used to choose and navigate to football fields."
+      "desc": "用于选择活动地点"
     }
   },
   "sitemapLocation": "sitemap.json",
