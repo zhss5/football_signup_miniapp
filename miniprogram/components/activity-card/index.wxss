@@ -29,7 +29,20 @@
   font-weight: 700;
 }
 
-.meta,
+.meta {
+  color: #6b7280;
+}
+
 .status {
   color: #6b7280;
+  font-weight: 500;
+}
+
+.status-joinable {
+  color: #168a45;
+  font-weight: 700;
+}
+
+.status-disabled {
+  color: #9ca3af;
 }

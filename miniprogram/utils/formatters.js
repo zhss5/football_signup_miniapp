@@ -55,11 +55,12 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 }
 
 function buildActivityCardVm(activity, nowProvider, translate = defaultTranslate) {
-  const { statusText } = getActivitySignupState(activity, nowProvider, translate);
+  const { statusText, joinEnabled } = getActivitySignupState(activity, nowProvider, translate);
 
   return {
     ...activity,
     statusText,
+    statusTone: joinEnabled ? 'joinable' : 'disabled',
     startDisplayText: formatDateTime(activity.startAt),
     capacityText: translate('activityCard.joinedCapacity', {
       joined: activity.joinedCount || 0,

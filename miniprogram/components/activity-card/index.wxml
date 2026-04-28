@@ -6,5 +6,5 @@
   <text wx:if="{{item.startDisplayText}}" class="meta">{{item.startPrefixText}}</text>
   <text class="meta">{{item.addressText}}</text>
   <text class="meta">{{item.capacityText}}</text>
-  <text class="status">{{item.statusText}}</text>
+  <text class="status status-{{item.statusTone}}">{{item.statusText}}</text>
 </view>

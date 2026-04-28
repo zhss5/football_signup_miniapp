@@ -16,6 +16,24 @@ test('buildActivityCardVm marks full activities', () => {
   expect(vm.statusText).toBe('Full');
 });
 
+test('buildActivityCardVm exposes a highlighted tone for joinable status and gray tone for disabled status', () => {
+  const joinableVm = buildActivityCardVm({
+    title: 'Saturday 8-10',
+    joinedCount: 3,
+    signupLimitTotal: 12,
+    status: 'published'
+  });
+  const fullVm = buildActivityCardVm({
+    title: 'Saturday 8-10',
+    joinedCount: 12,
+    signupLimitTotal: 12,
+    status: 'published'
+  });
+
+  expect(joinableVm.statusTone).toBe('joinable');
+  expect(fullVm.statusTone).toBe('disabled');
+});
+
 test('buildActivityCardVm can localize status and capacity text to Chinese', () => {
   const vm = buildActivityCardVm(
     {
