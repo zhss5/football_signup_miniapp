@@ -1,4 +1,3 @@
-const { ensureUserProfile } = require('../../services/user-service');
 const { listActivities } = require('../../services/activity-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
@@ -24,16 +23,9 @@ Page({
     return makeTranslator(locale);
   },
 
-  syncUserProfileInBackground() {
-    return Promise.resolve()
-      .then(() => ensureUserProfile())
-      .catch(() => undefined);
-  },
-
   async onShow() {
     const translate = this.applyI18n();
     this.setData({ loading: true });
-    this.syncUserProfileInBackground();
     const { items } = await listActivities({ scope: 'home', limit: 20 });
     this.setData({
       items: items.map(item => buildActivityCardVm(item, undefined, translate)),

@@ -40,8 +40,7 @@ describe('home page', () => {
     ({ listActivities } = require('../../../miniprogram/services/activity-service'));
   });
 
-  test('loads activities even when background user profile sync times out', async () => {
-    ensureUserProfile.mockRejectedValue(new Error('timeout'));
+  test('loads activities without syncing the user profile on startup', async () => {
     listActivities.mockResolvedValue({
       items: [
         {
@@ -67,7 +66,7 @@ describe('home page', () => {
 
     await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
 
-    expect(ensureUserProfile).toHaveBeenCalled();
+    expect(ensureUserProfile).not.toHaveBeenCalled();
     expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
     expect(ctx.data.loading).toBe(false);
     expect(ctx.data.items).toEqual([
