@@ -3,6 +3,15 @@ const {
   createDefaultActivityForm
 } = require('../../../miniprogram/utils/activity-draft');
 
+test('createDefaultActivityForm defaults activity and signup deadline dates to tomorrow', () => {
+  const form = createDefaultActivityForm({
+    now: () => new Date('2026-04-28T10:00:00+08:00')
+  });
+
+  expect(form.activityDate).toBe('2026-04-29');
+  expect(form.signupDeadlineDate).toBe('2026-04-29');
+});
+
 test('buildActivityPayload composes activity times and keeps a single uploaded image list', () => {
   const payload = buildActivityPayload({
     ...createDefaultActivityForm(),

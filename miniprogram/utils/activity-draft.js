@@ -1,5 +1,24 @@
 const { MAX_ACTIVITY_IMAGES } = require('./constants');
 
+function resolveNow(nowOption) {
+  return typeof nowOption === 'function' ? nowOption() : new Date();
+}
+
+function formatDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getTomorrowDateInputValue(nowOption) {
+  const tomorrow = new Date(resolveNow(nowOption).getTime());
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return formatDateInputValue(tomorrow);
+}
+
 function createDefaultActivityForm(options = {}) {
   const defaultTeams = Array.isArray(options.defaultTeams) && options.defaultTeams.length
     ? options.defaultTeams
@@ -7,13 +26,14 @@ function createDefaultActivityForm(options = {}) {
         { teamName: 'White', maxMembers: 6 },
         { teamName: 'Red', maxMembers: 6 }
       ];
+  const defaultDate = getTomorrowDateInputValue(options.now);
 
   return {
     title: '',
-    activityDate: '2026-04-26',
+    activityDate: defaultDate,
     startTime: '20:00',
     endTime: '22:00',
-    signupDeadlineDate: '2026-04-26',
+    signupDeadlineDate: defaultDate,
     signupDeadlineTime: '20:00',
     addressText: '',
     addressName: '',
