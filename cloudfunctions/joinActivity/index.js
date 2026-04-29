@@ -6,6 +6,50 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+function normalizeText(value) {
+  return String(value || '').trim();
+}
+
+function normalizeSource(value) {
+  return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+async function syncUserProfile(transaction, openid, profile, stamp) {
+  const userRef = transaction.collection('users').doc(openid);
+  const userRes = await userRef.get().catch(() => ({ data: null }));
+  const data = {
+    preferredName: profile.signupName,
+    phoneNumber: profile.phone,
+    phoneSource: profile.phoneSource,
+    profileSource: profile.profileSource,
+    lastActiveAt: stamp,
+    updatedAt: stamp
+  };
+
+  if (profile.avatarUrl) {
+    data.avatarUrl = profile.avatarUrl;
+  }
+
+  if (userRes.data) {
+    await userRef.update({ data });
+    return;
+  }
+
+  await userRef.set({
+    data: {
+      preferredName: profile.signupName,
+      avatarUrl: profile.avatarUrl || '',
+      phoneNumber: profile.phone,
+      phoneSource: profile.phoneSource,
+      profileSource: profile.profileSource,
+      roles: ['user'],
+      createdAt: stamp,
+      lastActiveAt: stamp,
+      updatedAt: stamp
+    }
+  });
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
@@ -17,6 +61,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = cloud.database();
   const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
+  const signupName = normalizeText(event.signupName);
+  const phone = normalizeText(event.phone);
+  const phoneSource = normalizeSource(event.phoneSource);
+  const avatarUrl = normalizeText(event.avatarUrl);
+  const profileSource = avatarUrl ? normalizeSource(event.profileSource) : 'manual';
 
   return db.runTransaction(async transaction => {
     const activityRes = await transaction.collection('activities').doc(event.activityId).get();
@@ -44,14 +93,30 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('You already joined this activity');
     }
 
+    await syncUserProfile(
+      transaction,
+      openid,
+      {
+        signupName,
+        phone,
+        phoneSource,
+        avatarUrl,
+        profileSource
+      },
+      stamp
+    );
+
     await transaction.collection('registrations').doc(registrationId).set({
       data: {
         activityId: event.activityId,
         teamId: event.teamId,
         userOpenId: openid,
         status: 'joined',
-        signupName: event.signupName.trim(),
-        phoneSnapshot: event.phone || '',
+        signupName,
+        phoneSnapshot: phone,
+        phoneSource,
+        avatarUrl,
+        profileSource,
         source: event.source || 'direct',
         joinedAt: stamp,
         updatedAt: stamp

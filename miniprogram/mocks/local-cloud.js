@@ -15,7 +15,15 @@ function validateSignupPayload(payload) {
     throw new Error('signupName is required');
   }
 
+  if (!payload.phone || !String(payload.phone).trim()) {
+    throw new Error('Phone is required');
+  }
+
   return true;
+}
+
+function normalizeSource(value) {
+  return value === 'wechat' ? 'wechat' : 'manual';
 }
 
 function createDefaultState() {
@@ -444,6 +452,11 @@ function createLocalCloudClient(options = {}) {
     const team = state.teams[payload.teamId];
     const registrationId = `${payload.activityId}_${openid}`;
     const current = state.registrations[registrationId];
+    const signupName = payload.signupName.trim();
+    const phone = String(payload.phone || '').trim();
+    const phoneSource = normalizeSource(payload.phoneSource);
+    const avatarUrl = String(payload.avatarUrl || '').trim();
+    const profileSource = avatarUrl ? normalizeSource(payload.profileSource) : 'manual';
 
     if (!activity || activity.status !== 'published') {
       throw new Error('Activity is not open for signup');
@@ -471,8 +484,15 @@ function createLocalCloudClient(options = {}) {
     }
 
     const user = ensureUserInState(state, openid, stamp);
-    user.preferredName = payload.signupName.trim();
+    user.preferredName = signupName;
+    if (avatarUrl) {
+      user.avatarUrl = avatarUrl;
+    }
+    user.phoneNumber = phone;
+    user.phoneSource = phoneSource;
+    user.profileSource = profileSource;
     user.lastActiveAt = stamp;
+    user.updatedAt = stamp;
 
     state.registrations[registrationId] = {
       _id: registrationId,
@@ -480,8 +500,11 @@ function createLocalCloudClient(options = {}) {
       teamId: payload.teamId,
       userOpenId: openid,
       status: 'joined',
-      signupName: payload.signupName.trim(),
-      phoneSnapshot: payload.phone || '',
+      signupName,
+      phoneSnapshot: phone,
+      phoneSource,
+      avatarUrl,
+      profileSource,
       source: payload.source || 'direct',
       joinedAt: stamp,
       cancelledAt: current ? current.cancelledAt || '' : '',
@@ -497,6 +520,20 @@ function createLocalCloudClient(options = {}) {
       registrationId,
       teamId: payload.teamId,
       status: 'joined'
+    };
+  }
+
+  function resolvePhoneNumber(payload) {
+    if (!payload.code) {
+      throw new Error('Phone authorization code is required');
+    }
+
+    const phoneNumber = String(payload.phoneNumber || '13800000000').trim();
+    return {
+      phoneNumber,
+      purePhoneNumber: phoneNumber,
+      countryCode: '86',
+      phoneSource: 'wechat'
     };
   }
 
@@ -625,6 +662,7 @@ function createLocalCloudClient(options = {}) {
     listActivities,
     getActivityDetail,
     joinActivity,
+    resolvePhoneNumber,
     cancelRegistration,
     cancelActivity,
     deleteActivity,

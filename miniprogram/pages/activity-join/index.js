@@ -1,4 +1,5 @@
-const { joinActivity } = require('../../services/registration-service');
+const { joinActivity, resolvePhoneNumber } = require('../../services/registration-service');
+const { uploadFile } = require('../../services/cloud');
 const {
   getAppLocale,
   getMessages,
@@ -36,6 +37,15 @@ function applyPageI18n(page, teamName) {
   return makeTranslator(locale);
 }
 
+function normalizePhoneSource(phone, authorizedPhone) {
+  return phone && authorizedPhone && phone === authorizedPhone ? 'wechat' : 'manual';
+}
+
+function buildAvatarCloudPath() {
+  const suffix = Math.random().toString(36).slice(2, 10) || 'avatar';
+  return `user-avatars/${Date.now()}-${suffix}.jpg`;
+}
+
 Page({
   data: {
     activityId: '',
@@ -47,6 +57,12 @@ Page({
     joinTitleText: '',
     signupName: '',
     phone: '',
+    authorizedPhone: '',
+    phoneSource: 'manual',
+    avatarUrl: '',
+    avatarTempFilePath: '',
+    profileSource: 'manual',
+    phoneAuthorizing: false,
     submitting: false
   },
 
@@ -72,9 +88,63 @@ Page({
     });
   },
 
-  onPhoneInput(event) {
+  onChooseAvatar(event) {
+    const avatarUrl = event && event.detail ? event.detail.avatarUrl : '';
+
+    if (!avatarUrl) {
+      return;
+    }
+
     this.setData({
-      phone: event.detail.value
+      avatarUrl,
+      avatarTempFilePath: avatarUrl,
+      profileSource: 'wechat'
+    });
+  },
+
+  async onGetPhoneNumber(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = (event && event.detail) || {};
+    const errMsg = detail.errMsg || '';
+
+    if (errMsg && !errMsg.includes(':ok')) {
+      wx.showToast({ title: translate('activityJoin.phoneAuthSkipped'), icon: 'none' });
+      return;
+    }
+
+    if (!detail.code) {
+      wx.showToast({ title: translate('activityJoin.phoneAuthFailed'), icon: 'none' });
+      return;
+    }
+
+    this.setData({ phoneAuthorizing: true });
+
+    try {
+      const result = await resolvePhoneNumber(detail.code);
+      const phone = String((result && result.phoneNumber) || '').trim();
+
+      if (!phone) {
+        throw new Error('Phone authorization failed');
+      }
+
+      this.setData({
+        phone,
+        authorizedPhone: phone,
+        phoneSource: 'wechat'
+      });
+    } catch (error) {
+      wx.showToast({ title: translate('activityJoin.phoneAuthFailed'), icon: 'none' });
+    } finally {
+      this.setData({ phoneAuthorizing: false });
+    }
+  },
+
+  onPhoneInput(event) {
+    const phone = event.detail.value;
+
+    this.setData({
+      phone,
+      phoneSource: normalizePhoneSource(phone, this.data.authorizedPhone)
     });
   },
 
@@ -88,7 +158,7 @@ Page({
       return;
     }
 
-    if (this.data.requirePhone && !phone) {
+    if (!phone) {
       wx.showToast({ title: translate('errors.phoneRequired'), icon: 'none' });
       return;
     }
@@ -96,11 +166,20 @@ Page({
     this.setData({ submitting: true });
 
     try {
+      let avatarUrl = this.data.avatarUrl || '';
+
+      if (this.data.avatarTempFilePath) {
+        avatarUrl = await uploadFile(this.data.avatarTempFilePath, buildAvatarCloudPath());
+      }
+
       await joinActivity({
         activityId: this.data.activityId,
         teamId: this.data.teamId,
         signupName,
         phone,
+        phoneSource: normalizePhoneSource(phone, this.data.authorizedPhone),
+        avatarUrl,
+        profileSource: avatarUrl && this.data.profileSource === 'wechat' ? 'wechat' : 'manual',
         source: 'share'
       });
 

@@ -3,25 +3,46 @@
     <text class="title">{{joinTitleText}}</text>
     <text class="hint">{{i18n.activityJoin.hint}}</text>
 
+    <view class="profile-row">
+      <button class="avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{avatarUrl}}" class="avatar-image" src="{{avatarUrl}}" mode="aspectFill" />
+        <text wx:else class="avatar-placeholder">{{i18n.activityJoin.avatarPlaceholder}}</text>
+      </button>
+      <view class="profile-copy">
+        <text class="label">{{i18n.activityJoin.avatar}}</text>
+        <text class="hint small-hint">{{i18n.activityJoin.avatarHint}}</text>
+      </view>
+    </view>
+
     <view class="field">
       <text class="label">{{i18n.activityJoin.signupName}}</text>
       <input
         class="input"
+        type="nickname"
         placeholder="{{i18n.activityJoin.signupNamePlaceholder}}"
         value="{{signupName}}"
         bindinput="onNameInput"
       />
     </view>
 
-    <view wx:if="{{requirePhone}}" class="field">
+    <view class="field">
       <text class="label">{{i18n.activityJoin.phone}}</text>
-      <input
-        class="input"
-        placeholder="{{i18n.activityJoin.phonePlaceholder}}"
-        type="number"
-        value="{{phone}}"
-        bindinput="onPhoneInput"
-      />
+      <view class="phone-row">
+        <input
+          class="input phone-input"
+          placeholder="{{i18n.activityJoin.phonePlaceholder}}"
+          type="number"
+          value="{{phone}}"
+          bindinput="onPhoneInput"
+        />
+        <button
+          class="phone-auth-button"
+          open-type="getPhoneNumber"
+          bindgetphonenumber="onGetPhoneNumber"
+          loading="{{phoneAuthorizing}}"
+        >{{i18n.activityJoin.useWeChatPhone}}</button>
+      </view>
+      <text class="hint small-hint">{{i18n.activityJoin.phoneHint}}</text>
     </view>
 
     <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityJoin.confirm}}</button>
