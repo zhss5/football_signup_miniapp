@@ -18,8 +18,21 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('wx:if="{{locationMapVisible}}"');
     expect(wxml).toContain('markers="{{locationMapMarkers}}"');
     expect(wxml).toContain('bindmarkertap="onOpenLocation"');
-    expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation" />');
+    expect(wxml).toContain('<cover-view wx:if="{{locationMapVisible}}" class="location-map-wrap">');
+    expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>');
     expect(wxml).toContain('bindtap="onOpenLocation"');
     expect(wxml).not.toContain('<signup-sheet');
+  });
+
+  test('constrains the native map preview so it cannot widen the detail page', () => {
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxss).toContain('box-sizing: border-box');
+    expect(wxss).toContain('overflow-x: hidden');
+    expect(wxss).toContain('.location-row');
+    expect(wxss).toContain('max-width: 100%');
   });
 });
