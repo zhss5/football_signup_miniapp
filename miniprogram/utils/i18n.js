@@ -262,6 +262,7 @@ function translateErrorMessage(error, translate) {
     'You already joined this activity': 'errors.alreadyJoined',
     'No active registration to cancel': 'errors.noActiveRegistration',
     'Signup can no longer be cancelled': 'errors.signupCannotBeCancelled',
+    'Only the organizer or an admin can remove registrations': 'errors.removeRegistrationNotAllowed',
     'Only the organizer can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',
     'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty',

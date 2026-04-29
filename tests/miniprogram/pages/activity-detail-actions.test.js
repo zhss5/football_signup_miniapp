@@ -12,6 +12,8 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.actions.edit}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelSignup}}');
+    expect(wxml).toContain('canManageRegistrations="{{viewer && viewer.canManageRegistrations}}"');
+    expect(wxml).toContain('bind:removemember="onRemoveRegistration"');
     expect(wxml).toContain('open-type="share"');
     expect(wxml).toContain('wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}"');
     expect(wxml).toContain('<map');

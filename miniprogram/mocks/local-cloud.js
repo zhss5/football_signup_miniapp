@@ -439,6 +439,7 @@ function createLocalCloudClient(options = {}) {
       viewer: {
         isOrganizer: activity.organizerOpenId === openid,
         canEditActivity: canEditActivity(activity, viewerUser, openid),
+        canManageRegistrations: canEditActivity(activity, viewerUser, openid),
         canCancelActivity: activity.organizerOpenId === openid && activity.status === 'published',
         canDeleteActivity: activity.organizerOpenId === openid && Number(activity.joinedCount) === 0,
         canCancelSignup
@@ -577,6 +578,62 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function removeRegistration(payload) {
+    if (!payload.activityId) {
+      throw new Error('activityId is required');
+    }
+
+    if (!payload.userOpenId) {
+      throw new Error('userOpenId is required');
+    }
+
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const activity = state.activities[payload.activityId];
+    const actor = state.users[openid] || buildDefaultUser(openid, stamp);
+
+    if (!activity || activity.status === 'deleted') {
+      throw new Error('Activity not found');
+    }
+
+    if (!canEditActivity(activity, actor, openid)) {
+      throw new Error('Only the organizer or an admin can remove registrations');
+    }
+
+    const registrationId = `${payload.activityId}_${payload.userOpenId}`;
+    const current = state.registrations[registrationId];
+
+    if (!current || current.status !== 'joined') {
+      throw new Error('No active registration to remove');
+    }
+
+    const team = state.teams[current.teamId];
+
+    current.status = 'cancelled';
+    current.cancelledAt = stamp;
+    current.removedByOpenId = openid;
+    current.removedAt = stamp;
+    current.updatedAt = stamp;
+
+    activity.joinedCount = Math.max(Number(activity.joinedCount || 0) - 1, 0);
+    activity.updatedAt = stamp;
+
+    if (team) {
+      team.joinedCount = Math.max(Number(team.joinedCount || 0) - 1, 0);
+    }
+
+    writeState(state);
+    return {
+      registrationId,
+      activityId: payload.activityId,
+      userOpenId: payload.userOpenId,
+      teamId: current.teamId,
+      status: 'cancelled',
+      removed: true
+    };
+  }
+
   function cancelActivity(payload) {
     const state = readState();
     const openid = getOpenId();
@@ -667,6 +724,7 @@ function createLocalCloudClient(options = {}) {
     joinActivity,
     resolvePhoneNumber,
     cancelRegistration,
+    removeRegistration,
     cancelActivity,
     deleteActivity,
     getActivityStats

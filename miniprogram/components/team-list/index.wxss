@@ -39,7 +39,16 @@
 }
 
 .member-name {
+  flex: 1;
+  min-width: 0;
   margin-left: 16rpx;
+}
+
+.member-remove-button {
+  flex: 0 0 auto;
+  margin-left: 16rpx;
+  color: #dc2626;
+  background: #fef2f2;
 }
 
 .empty-members {

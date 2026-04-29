@@ -45,6 +45,7 @@ module.exports = {
       edit: 'Edit',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
+      removeMember: 'Remove',
       delete: 'Delete'
     },
     teamList: {
@@ -154,6 +155,11 @@ module.exports = {
     deleteActivity: {
       title: 'Delete Activity',
       content: 'Only empty activities can be deleted. Deleted activities stay in your history.'
+    },
+    removeRegistration: {
+      title: 'Remove member',
+      content: 'Remove {{name}} from this activity?',
+      defaultName: 'this member'
     }
   },
   toast: {
@@ -191,6 +197,7 @@ module.exports = {
     alreadyJoined: 'You already joined this activity',
     noActiveRegistration: 'No active registration to cancel',
     signupCannotBeCancelled: 'Signup can no longer be cancelled',
+    removeRegistrationNotAllowed: 'Only the organizer or an admin can remove registrations',
     organizerCancelOnly: 'Only the organizer can cancel this activity',
     organizerDeleteOnly: 'Only the organizer can delete this activity',
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',

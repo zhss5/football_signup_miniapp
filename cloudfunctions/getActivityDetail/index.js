@@ -92,6 +92,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       return acc;
     }, {});
 
+  const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
+
   return {
     activity: activity.data,
     teams: teamsRes.data
@@ -104,7 +106,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     myRegistration: myRegistration.data,
     viewer: {
       isOrganizer: activity.data.organizerOpenId === openid,
-      canEditActivity: canEditActivity(activity.data, viewerUser, openid),
+      canEditActivity: canManageRegistrations,
+      canManageRegistrations,
       canCancelActivity:
         activity.data.organizerOpenId === openid && activity.data.status === 'published',
       canDeleteActivity:

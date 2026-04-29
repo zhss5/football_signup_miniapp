@@ -396,6 +396,147 @@ test('local cloud client uses registration avatar when user profile avatar is un
   });
 });
 
+test('local cloud client lets organizers remove a member and lets the member rejoin', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const teamId = detailBefore.teams[0]._id;
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId,
+    signupName: 'Alex',
+    phone: '13800000000',
+    source: 'share'
+  });
+
+  await expect(
+    ownerClient.call('removeRegistration', {
+      activityId: created.activityId,
+      userOpenId: 'openid_player'
+    })
+  ).resolves.toMatchObject({
+    status: 'cancelled',
+    removed: true
+  });
+
+  const detailAfterRemove = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfterRemove.activity.joinedCount).toBe(0);
+  expect(detailAfterRemove.teams[0].joinedCount).toBe(0);
+  expect(detailAfterRemove.teams[0].members).toHaveLength(0);
+
+  await expect(
+    participantClient.call('joinActivity', {
+      activityId: created.activityId,
+      teamId,
+      signupName: 'Alex again',
+      phone: '13800000000',
+      source: 'share'
+    })
+  ).resolves.toMatchObject({
+    status: 'joined'
+  });
+
+  const detailAfterRejoin = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfterRejoin.activity.joinedCount).toBe(1);
+  expect(detailAfterRejoin.teams[0].members[0]).toMatchObject({
+    signupName: 'Alex again'
+  });
+});
+
+test('local cloud client blocks regular users from removing members', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+  const otherClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T12:00:00.000Z',
+    openid: 'openid_other',
+    defaultRoles: ['user']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    phone: '13800000000',
+    source: 'share'
+  });
+
+  await expect(
+    otherClient.call('removeRegistration', {
+      activityId: created.activityId,
+      userOpenId: 'openid_player'
+    })
+  ).rejects.toThrow('Only the organizer or an admin can remove registrations');
+});
+
 test('local cloud client blocks switching teams before cancelling and exposes bench members', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

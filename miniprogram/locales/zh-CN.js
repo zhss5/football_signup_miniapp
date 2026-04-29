@@ -46,6 +46,7 @@ module.exports = {
       edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
+      removeMember: '移除',
       delete: '删除'
     },
     teamList: {
@@ -147,6 +148,11 @@ module.exports = {
     deleteActivity: {
       title: '删除活动',
       content: '只有无人报名的活动才可以删除，删除后活动仍会保留在你的历史记录中。'
+    },
+    removeRegistration: {
+      title: '移除成员',
+      content: '确认将 {{name}} 从本活动中移除？',
+      defaultName: '该成员'
     }
   },
   toast: {
@@ -184,6 +190,7 @@ module.exports = {
     alreadyJoined: '你已报名该活动',
     noActiveRegistration: '当前没有可取消的报名',
     signupCannotBeCancelled: '当前已不能退出报名',
+    removeRegistrationNotAllowed: '只有组织者或管理员可以移除报名成员',
     organizerCancelOnly: '只有组织者可以取消活动',
     organizerDeleteOnly: '只有组织者可以删除活动',
     deleteOnlyEmpty: '只有无人报名的活动才可以删除'

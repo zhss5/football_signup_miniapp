@@ -7,6 +7,14 @@ Component({
     emptyText: {
       type: String,
       value: 'No players yet'
+    },
+    removeMemberText: {
+      type: String,
+      value: 'Remove'
+    },
+    canManageRegistrations: {
+      type: Boolean,
+      value: false
     }
   },
 
@@ -21,6 +29,15 @@ Component({
 
       this.triggerEvent('jointap', {
         teamId
+      });
+    },
+
+    onRemoveMemberTap(event) {
+      const dataset = event.currentTarget.dataset;
+
+      this.triggerEvent('removemember', {
+        userOpenId: dataset.userOpenId,
+        signupName: dataset.signupName
       });
     }
   }

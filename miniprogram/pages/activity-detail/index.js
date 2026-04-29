@@ -1,5 +1,5 @@
 const { getActivityDetail, cancelActivity } = require('../../services/activity-service');
-const { cancelRegistration } = require('../../services/registration-service');
+const { cancelRegistration, removeRegistration } = require('../../services/registration-service');
 const { buildTeamListVm } = require('../../utils/formatters');
 const {
   getAppLocale,
@@ -160,6 +160,36 @@ Page({
     const translate = makeTranslator(this.data.locale || getAppLocale());
     try {
       await cancelRegistration(this.data.activityId);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onRemoveRegistration(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = event.detail || {};
+
+    if (!detail.userOpenId) {
+      return;
+    }
+
+    const confirmed = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.removeRegistration.title'),
+        content: translate('modal.removeRegistration.content', {
+          name: detail.signupName || translate('modal.removeRegistration.defaultName')
+        }),
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await removeRegistration(this.data.activityId, detail.userOpenId);
       await this.reload();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });

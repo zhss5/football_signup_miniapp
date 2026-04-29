@@ -4,7 +4,8 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/registration-service', () => ({
-  cancelRegistration: jest.fn()
+  cancelRegistration: jest.fn(),
+  removeRegistration: jest.fn()
 }));
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
@@ -14,6 +15,7 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
+  let removeRegistration;
 
   beforeEach(() => {
     pageConfig = null;
@@ -22,12 +24,14 @@ describe('activity detail page', () => {
     });
     global.wx = {
       showToast: jest.fn(),
+      showModal: jest.fn(),
       showShareMenu: jest.fn()
     };
 
     jest.resetModules();
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
+    ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
   });
 
   test('openSignup stores the selected team name so the sheet can show which team is being joined', () => {
@@ -199,6 +203,46 @@ describe('activity detail page', () => {
     ]);
   });
 
+  test('reload passes registration management permission into the team list view model', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        status: 'published'
+      },
+      teams: [
+        {
+          _id: 'team_white',
+          teamName: 'White',
+          joinedCount: 1,
+          maxMembers: 6,
+          members: []
+        }
+      ],
+      myRegistration: null,
+      viewer: {
+        canManageRegistrations: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.viewer.canManageRegistrations).toBe(true);
+  });
+
   test('reload hides the map preview when the activity has no coordinates', async () => {
     getActivityDetail.mockResolvedValue({
       activity: {
@@ -248,6 +292,39 @@ describe('activity detail page', () => {
     expect(global.wx.navigateTo).toHaveBeenCalledWith({
       url: '/pages/activity-create/index?mode=edit&activityId=activity_123'
     });
+  });
+
+  test('onRemoveRegistration confirms removal, calls the service, and reloads detail', async () => {
+    removeRegistration.mockResolvedValue({
+      status: 'cancelled'
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onRemoveRegistration.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex'
+      }
+    });
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Remove member',
+        content: 'Remove Alex from this activity?'
+      })
+    );
+    expect(removeRegistration).toHaveBeenCalledWith('activity_123', 'openid_player');
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('onShareAppMessage shares the current activity detail page', () => {

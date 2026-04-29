@@ -11,6 +11,14 @@
             <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
             <view wx:else class="member-avatar-fallback">{{member.avatarText}}</view>
             <text class="member-name">{{member.signupName}}</text>
+            <button
+              wx:if="{{canManageRegistrations}}"
+              class="member-remove-button"
+              size="mini"
+              data-user-open-id="{{member.userOpenId}}"
+              data-signup-name="{{member.signupName}}"
+              catchtap="onRemoveMemberTap"
+            >{{removeMemberText}}</button>
           </view>
         </block>
       </view>
