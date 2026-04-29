@@ -225,6 +225,12 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add organizer-driven team reassignment or bench promotion
 - keep early organizer grants as manual CloudBase edits to `users.roles`; add an admin-only authorization page only if manual edits become painful
 - add Join page profile prefill and completion: load `users.preferredName/avatarUrl`, let users actively choose a WeChat-assisted nickname/avatar, save profile defaults, and keep `registrations.signupName` editable per activity
+- remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
+- add activity/signup insurance-link support
+- add participant preferred playing position selection; priority `P2`
+- allow organizers to sign up participants on their behalf
+- allow organizers to copy all active participant names in one action
+- change activity creation defaults so one team is the minimum supported setup instead of always starting from two teams
 - add restore flow for soft-deleted activities
 - add empty states and richer status badges
 - improve detail page organizer action grouping
@@ -272,13 +278,17 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - analytics dashboards
 - multi-organization admin
 - full operations backend for activity management, user and organizer management, signup data review, activity revocation, exports, and payment/refund operations
-- export and reporting features
+- export and reporting features:
+  - participant roster export
+  - attendance-rate calculation
+  - activity-fee calculation
 
 ### 8.5 Administration Roadmap
 
 - keep the current MVP without a full backend/admin console
 - role-based activity creation is enforced in cloud functions and hidden from regular users in the UI
 - current minimal organizer access management is manual CloudBase editing of `users.roles`, supported by the copyable user ID on My page
+- when the operations backend begins, start with participant export, attendance rate, and activity fee calculation before broader analytics
 - after real operational demand appears, build a full backend/admin console instead of expanding ad hoc mini program controls
 
 ## 9. Suggested Next Milestones
@@ -301,6 +311,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - use manual CloudBase role grants for early organizer authorization
 - add admin-only organizer authorization management only if needed
 - add activity editing for organizers and admins
+- add organizer proxy signup for participants
+- add organizer one-tap copy of active participant names
 - move players between teams
 - promote bench players
 - expose organizer stats more clearly
@@ -339,8 +351,16 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - prefill Join page signup names from `users.preferredName`
 - let users actively choose a WeChat-assisted nickname and avatar without blocking signup
+- remove participant phone-number collection from the signup flow
+- add preferred playing position selection as priority `P2`
 - upload selected avatars to CloudBase storage in real-cloud mode
 - store reusable profile defaults on `users`, while keeping activity-specific roster names on `registrations.signupName`
+
+### Milestone B5: Signup Flow Refinements
+
+- add an insurance link to the activity/signup experience
+- support one-team activity setup as the minimum default
+- keep two-team setup available as a common football default, but do not force it for every activity
 
 ### Milestone C: Monetization Readiness
 
@@ -352,6 +372,10 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - build only after activity volume or payment/refund workflows require dedicated operations tooling
 - include activity moderation, user/organizer management, signup review, exports, and payment/refund operations
+- first operations reports:
+  - export participant rosters
+  - calculate attendance rate
+  - calculate activity fees
 
 ## 10. Planning Note
 

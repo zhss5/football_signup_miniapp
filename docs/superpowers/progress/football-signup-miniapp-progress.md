@@ -146,6 +146,7 @@ The current implementation differs from the original early MVP assumptions in th
 - cover images use a dedicated `2:1` crop flow
 - activity creation is now role-gated instead of open to every user
 - published activities can now be edited in place instead of recreated for routine corrections
+- the current signup model still includes optional participant phone collection, but the newer backlog calls for removing phone from the participant signup flow
 
 ## 4. Verification Status
 
@@ -179,6 +180,12 @@ The MVP still has known non-blocking gaps:
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
 - historical activity cover images do not have generated list thumbnails yet; large CloudBase originals can make Home loading slow on real devices
+- insurance-link support is not implemented yet
+- participant preferred playing position selection is not implemented yet; priority `P2`
+- organizer proxy signup for participants is not implemented yet
+- organizer one-tap copy of all active participant names is not implemented yet
+- the default team setup still starts from two teams; the future requirement is to allow a one-team minimum
+- operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
 ## 6. Recommended Next Steps
 
@@ -195,6 +202,8 @@ The MVP still has known non-blocking gaps:
 - use the My page copyable user ID to grant `organizer` roles manually in CloudBase
 - add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
 - validate activity editing on a real device after deploying `updateActivity`
+- let organizers sign up participants on their behalf
+- let organizers copy active participant names in one action
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
@@ -224,6 +233,10 @@ The MVP still has known non-blocking gaps:
   - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if original files remain too large
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
+- remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
+- add activity/signup insurance-link display
+- add preferred playing position selection as a `P2` participant profile/signup refinement
+- allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality
 
@@ -231,6 +244,7 @@ The MVP still has known non-blocking gaps:
 
 - defer a full backend/admin console until there is real operational demand
 - future scope should include activity management, user and organizer management, signup data review, activity revocation, exports, and payment/refund operations
+- first reporting needs are participant roster export, attendance-rate calculation, and activity-fee calculation
 
 ## 7. Related Documents
 

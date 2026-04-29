@@ -523,3 +523,29 @@ Why it matters:
 Follow-up:
 
 - after the list thumbnail path is stable, evaluate whether Activity Detail also needs a medium-size display image instead of always loading the original `coverImage`
+
+## 2026-04-29 - Future Product Backlog Captured
+
+Additional post-MVP requirements were captured for the mini program and the future operations backend.
+
+Mini program backlog:
+
+- improve image loading performance for large activity cover images
+- remove participant phone-number collection from the signup flow unless a later activity-specific need reappears
+- add an insurance link that can be shown from the relevant activity/signup flow
+- let participants choose their preferred playing position; priority `P2`
+- let organizers sign up participants on their behalf
+- let organizers copy all active participant names in one action
+- change the default activity team setup so the minimum is one team instead of always two teams
+
+Operations/admin backlog:
+
+- export participant rosters
+- calculate attendance rate
+- calculate activity fees
+
+Notes:
+
+- image-loading performance is already partially covered by the planned `coverThumbImage` backfill
+- removing phone collection must be reconciled with existing optional phone fields and any old activities that still require phone numbers
+- the operations/admin backlog should remain deferred until the mini program core flow and CloudBase data model are stable enough to support reporting reliably

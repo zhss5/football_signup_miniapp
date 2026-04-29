@@ -11,7 +11,7 @@ The repository is on `main`.
 
 `origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, the first organizer/admin activity editing implementation, and initial cover loading optimization notes.
+Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, the first organizer/admin activity editing implementation, initial cover loading optimization notes, and a captured post-MVP backlog.
 
 The codebase supports:
 
@@ -74,6 +74,7 @@ The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 - uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; the next media-performance task is a batch `coverThumbImage` backfill for list cards.
+- the current signup flow still supports optional participant phone collection, but the newer product backlog calls for removing phone from participant signup.
 
 Resolved/mitigated:
 
@@ -192,7 +193,18 @@ Continue in this order:
    - provide an admin-only dry-run-capable cloud function
    - process persistent CloudBase `fileID` covers only
    - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if needed
-12. Push local commits if they should be shared:
+12. Plan the next mini program backlog items:
+   - remove participant phone-number collection from signup
+   - add an activity/signup insurance link
+   - add preferred playing position selection as priority `P2`
+   - let organizers sign up participants on their behalf
+   - let organizers copy all active participant names in one action
+   - allow a one-team minimum in activity setup instead of always defaulting to two teams
+13. Keep the future operations/backend backlog visible but deferred:
+   - export participant rosters
+   - calculate attendance rate
+   - calculate activity fees
+14. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First
