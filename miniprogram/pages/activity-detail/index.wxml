@@ -9,19 +9,22 @@
         <text class="location-name">{{activity.addressName || activity.addressText}}</text>
         <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
       </view>
-      <map
-        wx:if="{{locationMapVisible}}"
-        class="location-map"
-        latitude="{{activity.location.latitude}}"
-        longitude="{{activity.location.longitude}}"
-        markers="{{locationMapMarkers}}"
-        scale="15"
-        enable-scroll="{{false}}"
-        enable-zoom="{{false}}"
-        enable-rotate="{{false}}"
-        show-location="{{false}}"
-        bindtap="onOpenLocation"
-      />
+      <view wx:if="{{locationMapVisible}}" class="location-map-wrap">
+        <map
+          class="location-map"
+          latitude="{{activity.location.latitude}}"
+          longitude="{{activity.location.longitude}}"
+          markers="{{locationMapMarkers}}"
+          scale="15"
+          enable-scroll="{{false}}"
+          enable-zoom="{{false}}"
+          enable-rotate="{{false}}"
+          show-location="{{false}}"
+          bindmarkertap="onOpenLocation"
+          bindtap="onOpenLocation"
+        />
+        <cover-view class="location-map-hitarea" bindtap="onOpenLocation" />
+      </view>
     </view>
   </view>
 

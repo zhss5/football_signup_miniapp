@@ -17,6 +17,8 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('<map');
     expect(wxml).toContain('wx:if="{{locationMapVisible}}"');
     expect(wxml).toContain('markers="{{locationMapMarkers}}"');
+    expect(wxml).toContain('bindmarkertap="onOpenLocation"');
+    expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation" />');
     expect(wxml).toContain('bindtap="onOpenLocation"');
     expect(wxml).not.toContain('<signup-sheet');
   });

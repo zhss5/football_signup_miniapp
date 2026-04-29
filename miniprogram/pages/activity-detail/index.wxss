@@ -90,10 +90,24 @@
   word-break: break-word;
 }
 
-.location-map {
+.location-map-wrap {
+  position: relative;
   flex: 0 0 168rpx;
   width: 168rpx;
   height: 112rpx;
   border-radius: 12rpx;
   overflow: hidden;
+}
+
+.location-map {
+  width: 100%;
+  height: 100%;
+}
+
+.location-map-hitarea {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 168rpx;
+  height: 112rpx;
 }
