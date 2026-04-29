@@ -236,7 +236,11 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
   - record edits in `activity_logs`
 - add participant notification subscriptions:
   - request subscription after successful signup
+  - implement subscription opt-in before notification sending
   - let organizers manually notify subscribed active participants
+  - represent proceeding confirmation with `confirmStatus: pending/confirmed`
+  - keep confirmed activities joinable until deadline, capacity, cancellation, or deletion closes signup
+  - show confirmed state in-app to late joiners without backfilling the already-sent proceeding notification in the first version
   - support activity proceeding and activity cancellation notices
   - defer automatic reminders until manual sending and send logs are stable
 
@@ -308,8 +312,10 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 - configure WeChat subscription message template IDs in local/secure config
 - implement signup-time subscription request
-- add organizer-only manual notification action on Activity Detail
+- add organizer-only `Confirm activity will proceed` action on Activity Detail
 - add a cloud function to send to active subscribed registrations
+- add `confirmStatus`, `confirmedAt`, and `confirmedByOpenId` activity metadata
+- keep proceeding confirmation separate from signup closure
 - record notification send logs and duplicate-prevention state
 - keep automatic pre-activity reminders as a later enhancement
 

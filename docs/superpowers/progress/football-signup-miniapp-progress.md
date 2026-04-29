@@ -200,10 +200,15 @@ The MVP still has known non-blocking gaps:
 
 ### Option B2: Participant Notifications
 
-- add WeChat subscription request after successful signup
+- implement WeChat subscription request after successful signup before notification sending
 - prefer one generic activity-notification template if the WeChat template library supports it
 - use separate reminder and cancellation templates only if a generic template is unavailable
-- add organizer-triggered `Notify participants` actions before automatic reminders
+- add organizer-triggered `Confirm activity will proceed` before automatic reminders
+- store confirmation as `confirmStatus: pending/confirmed` while keeping `status: published/cancelled/deleted`
+- keep confirmed activities joinable until normal signup rules close them
+- show an in-app confirmed state to participants who join after confirmation
+- do not backfill the already-sent proceeding notification to late joiners in the first version
+- send cancellation notices when an organizer cancels an activity and closes signup
 - send only to active registrations that accepted the relevant subscription
 - log per-recipient send results and prevent duplicate sends for the same notification type
 - defer automatic pre-activity reminders until manual sending is stable

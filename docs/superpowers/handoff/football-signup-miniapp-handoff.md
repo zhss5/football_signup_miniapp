@@ -179,8 +179,12 @@ Continue in this order:
 7. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
 9. Validate organizer/admin activity editing after CloudBase deployment.
-10. Implement participant notification subscriptions and organizer-triggered notifications using:
+10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+   - first version keeps `status: published/cancelled/deleted`
+   - first version adds `confirmStatus: pending/confirmed`
+   - confirming an activity will proceed does not close signup
+   - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
 11. Push local commits if they should be shared:
    - `git push origin main`
 

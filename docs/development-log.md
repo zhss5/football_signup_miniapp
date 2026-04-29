@@ -470,3 +470,31 @@ Related:
 - `miniprogram/components/team-list/index.wxml`
 - `miniprogram/pages/activity-detail/index.js`
 - commit `20166dd`
+
+## 2026-04-29 - Notification V1 Scope Clarified
+
+The first notification implementation scope was clarified before coding.
+
+Decision:
+
+- implement subscription opt-in before implementing organizer notification sending
+- keep the existing activity lifecycle status as `published/cancelled/deleted`
+- add confirmation metadata instead of replacing `published`:
+  - `confirmStatus: pending/confirmed`
+  - `confirmedAt`
+  - `confirmedByOpenId`
+- confirming that an activity will proceed does not close signup
+- confirmed activities remain joinable until normal signup rules close them: deadline, capacity, cancellation, or deletion
+- participants who join after the proceeding notification do not receive that already-sent proceeding notification in the first version
+- late joiners should see an in-app confirmed state and can still subscribe for later cancellation notices
+- cancelling an activity closes signup and should offer/send cancellation notifications to active subscribed registrations
+
+Why it mattered:
+
+- separates notification consent from notification sending
+- avoids accidental signup closure when the organizer only wants to say the activity will proceed
+- keeps the first version simple by deferring automatic backfill notifications for late joiners
+
+Related:
+
+- `docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
