@@ -1,5 +1,6 @@
 const {
   COVER_OUTPUT_HEIGHT,
+  COVER_OUTPUT_QUALITY,
   COVER_OUTPUT_WIDTH,
   MAX_ZOOM_PERCENT,
   MIN_ZOOM_PERCENT,
@@ -202,7 +203,7 @@ Page({
             destWidth: COVER_OUTPUT_WIDTH,
             destHeight: COVER_OUTPUT_HEIGHT,
             fileType: 'jpg',
-            quality: 0.92,
+            quality: COVER_OUTPUT_QUALITY,
             success: ({ tempFilePath }) => resolve(tempFilePath),
             fail: reject
           },

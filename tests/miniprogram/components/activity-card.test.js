@@ -11,6 +11,27 @@ describe('activity card component', () => {
     expect(wxml).toContain('{{item.coverImage}}');
   });
 
+  test('lazy loads cover images and falls back when loading fails', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
+      'utf8'
+    );
+    const js = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.js'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('lazy-load="{{true}}"');
+    expect(wxml).toContain('binderror="onCoverError"');
+    expect(wxml).toContain('coverLoadFailed');
+    expect(js).toContain('onCoverError');
+    expect(wxss).toContain('.cover-placeholder');
+  });
+
   test('renders the activity start time and joined versus total capacity text', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),

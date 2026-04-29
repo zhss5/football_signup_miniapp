@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { COVER_OUTPUT_QUALITY } = require('../../../miniprogram/utils/cover-crop');
 
 function readFile(relativePath) {
   return fs.readFileSync(path.join(__dirname, '../../../', relativePath), 'utf8');
@@ -27,5 +28,13 @@ describe('activity cover crop flow', () => {
     expect(wxml).toContain('selection-frame');
     expect(wxml).toContain('{{i18n.coverCrop.controls.panX}}');
     expect(wxml).toContain('{{i18n.coverCrop.actions.confirm}}');
+  });
+
+  test('exports a compressed jpeg before uploading the activity cover', () => {
+    const pageJs = readFile('miniprogram/pages/activity-cover-crop/index.js');
+
+    expect(COVER_OUTPUT_QUALITY).toBeLessThanOrEqual(0.8);
+    expect(pageJs).toContain('quality: COVER_OUTPUT_QUALITY');
+    expect(pageJs).toContain("fileType: 'jpg'");
   });
 });

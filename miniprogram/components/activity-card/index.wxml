@@ -1,6 +1,14 @@
 <view class="card {{embedded ? 'card-embedded' : ''}}" bindtap="onTap">
   <view wx:if="{{item.coverImage}}" class="cover-frame">
-    <image class="cover-image" src="{{item.coverImage}}" mode="aspectFill" />
+    <image
+      wx:if="{{!coverLoadFailed}}"
+      class="cover-image"
+      src="{{item.coverImage}}"
+      mode="aspectFill"
+      lazy-load="{{true}}"
+      binderror="onCoverError"
+    />
+    <view wx:else class="cover-placeholder"></view>
   </view>
   <text class="title">{{item.title}}</text>
   <text wx:if="{{item.startDisplayText}}" class="meta">{{item.startPrefixText}}</text>
