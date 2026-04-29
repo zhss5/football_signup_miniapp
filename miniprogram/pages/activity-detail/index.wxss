@@ -70,12 +70,30 @@
   color: #6b7280;
 }
 
-.location {
+.location-row {
   margin-top: 16rpx;
+  display: flex;
+  gap: 16rpx;
+  align-items: stretch;
+}
+
+.location {
+  flex: 1;
+  min-width: 0;
+  padding: 4rpx 0;
 }
 
 .location-name {
   display: block;
   font-size: 28rpx;
   font-weight: 600;
+  word-break: break-word;
+}
+
+.location-map {
+  flex: 0 0 168rpx;
+  width: 168rpx;
+  height: 112rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
 }

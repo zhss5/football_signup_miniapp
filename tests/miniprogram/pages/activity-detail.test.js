@@ -150,6 +150,90 @@ describe('activity detail page', () => {
     });
   });
 
+  test('reload builds a map marker when the activity has a selected location', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        addressName: 'Pitch Gate',
+        addressText: '123 Field Road',
+        location: {
+          latitude: 31.2,
+          longitude: 121.4
+        },
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.locationMapVisible).toBe(true);
+    expect(ctx.data.locationMapMarkers).toEqual([
+      expect.objectContaining({
+        id: 1,
+        latitude: 31.2,
+        longitude: 121.4,
+        title: 'Pitch Gate',
+        iconPath: '/assets/location-pin.png',
+        width: 28,
+        height: 32
+      })
+    ]);
+  });
+
+  test('reload hides the map preview when the activity has no coordinates', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        addressText: '123 Field Road',
+        location: null,
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.locationMapVisible).toBe(false);
+    expect(ctx.data.locationMapMarkers).toEqual([]);
+  });
+
   test('openEditActivity navigates to the create page in edit mode for the current activity', () => {
     const ctx = {
       data: {

@@ -4,9 +4,24 @@
       <image class="cover-image" src="{{activity.coverImage}}" mode="aspectFill" />
     </view>
     <text class="title">{{activity.title}}</text>
-    <view class="location" bindtap="onOpenLocation">
-      <text class="location-name">{{activity.addressName || activity.addressText}}</text>
-      <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
+    <view class="location-row">
+      <view class="location" bindtap="onOpenLocation">
+        <text class="location-name">{{activity.addressName || activity.addressText}}</text>
+        <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
+      </view>
+      <map
+        wx:if="{{locationMapVisible}}"
+        class="location-map"
+        latitude="{{activity.location.latitude}}"
+        longitude="{{activity.location.longitude}}"
+        markers="{{locationMapMarkers}}"
+        scale="15"
+        enable-scroll="{{false}}"
+        enable-zoom="{{false}}"
+        enable-rotate="{{false}}"
+        show-location="{{false}}"
+        bindtap="onOpenLocation"
+      />
     </view>
   </view>
 

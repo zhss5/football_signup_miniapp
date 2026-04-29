@@ -14,6 +14,10 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.actions.cancelSignup}}');
     expect(wxml).toContain('open-type="share"');
     expect(wxml).toContain('wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}"');
+    expect(wxml).toContain('<map');
+    expect(wxml).toContain('wx:if="{{locationMapVisible}}"');
+    expect(wxml).toContain('markers="{{locationMapMarkers}}"');
+    expect(wxml).toContain('bindtap="onOpenLocation"');
     expect(wxml).not.toContain('<signup-sheet');
   });
 });

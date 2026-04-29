@@ -39,6 +39,36 @@ function applyPageI18n(page) {
   return makeTranslator(locale);
 }
 
+function buildLocationMapState(activity = {}) {
+  const location = activity.location;
+  const hasCoordinates =
+    location &&
+    typeof location.latitude === 'number' &&
+    typeof location.longitude === 'number';
+
+  if (!hasCoordinates) {
+    return {
+      locationMapVisible: false,
+      locationMapMarkers: []
+    };
+  }
+
+  return {
+    locationMapVisible: true,
+    locationMapMarkers: [
+      {
+        id: 1,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        title: activity.addressName || activity.addressText || '',
+        iconPath: '/assets/location-pin.png',
+        width: 28,
+        height: 32
+      }
+    ]
+  };
+}
+
 Page({
   data: {
     activityId: '',
@@ -49,7 +79,9 @@ Page({
     locale: '',
     i18n: {},
     shareHintVisible: false,
-    needsReloadOnShow: false
+    needsReloadOnShow: false,
+    locationMapVisible: false,
+    locationMapMarkers: []
   },
 
   async onLoad(query) {
@@ -87,6 +119,7 @@ Page({
     const detail = await getActivityDetail(this.data.activityId);
     this.setData({
       ...detail,
+      ...buildLocationMapState(detail.activity),
       teams: buildTeamListVm(
         detail.teams,
         detail.myRegistration,
