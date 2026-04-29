@@ -252,6 +252,11 @@ Page({
       [field]: field === 'signupLimitTotal' ? Number(value) || 0 : value
     };
 
+    if (field === 'addressText') {
+      form.addressName = '';
+      form.location = null;
+    }
+
     this.syncDerivedState(form);
 
     if (this.data.validationErrors[field]) {

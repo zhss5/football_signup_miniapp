@@ -44,7 +44,25 @@ function buildValidationDraft(event, regularTeams) {
   };
 }
 
-function buildActivityUpdateData(event, stamp) {
+function resolveAddressName(event, activity, addressText) {
+  const addressName = String(event.addressName || '').trim();
+  const previousAddressName = String(activity.addressName || '').trim();
+  const previousAddressText = String(activity.addressText || '').trim();
+  const addressTextChanged = addressText !== previousAddressText;
+  const staleAddressName =
+    addressTextChanged &&
+    addressName &&
+    addressName === previousAddressName &&
+    !event.location;
+
+  if (staleAddressName) {
+    return addressText;
+  }
+
+  return addressName || addressText;
+}
+
+function buildActivityUpdateData(event, activity, stamp) {
   const imageList = normalizeImageList(event);
   const title = String(event.title || '').trim();
   const addressText = String(event.addressText || '').trim();
@@ -55,7 +73,7 @@ function buildActivityUpdateData(event, stamp) {
     endAt: event.endAt,
     signupDeadlineAt: event.signupDeadlineAt,
     addressText,
-    addressName: event.addressName || addressText,
+    addressName: resolveAddressName(event, activity, addressText),
     location: event.location || null,
     description: event.description || '',
     coverImage: imageList[0] || event.coverImage || '',
@@ -145,7 +163,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .get();
   const teams = teamsResult.data || [];
   const regularTeams = getRegularTeams(teams);
-  const updateData = buildActivityUpdateData(event, nowIso(deps.now));
+  const updateData = buildActivityUpdateData(event, activity, nowIso(deps.now));
 
   if (Number(updateData.signupLimitTotal) < Number(activity.joinedCount || 0)) {
     throw businessError('Total signup limit cannot be lower than joined players');

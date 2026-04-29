@@ -203,6 +203,61 @@ test('updateActivity lets an admin edit another organizer activity', async () =>
   expect(db.state.activities.activity_1.title).toBe('Admin Updated Match');
 });
 
+test('updateActivity does not keep a stale addressName when only addressText changes', async () => {
+  const db = createFakeDb({
+    activity: {
+      addressText: '老地方',
+      addressName: '老地方',
+      location: {
+        latitude: 31.2,
+        longitude: 121.4
+      }
+    }
+  });
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      addressText: '老地方123',
+      addressName: '老地方',
+      location: null
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1).toMatchObject({
+    addressText: '老地方123',
+    addressName: '老地方123',
+    location: null
+  });
+});
+
+test('updateActivity preserves an explicitly changed map pin name', async () => {
+  const db = createFakeDb();
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      addressText: '上海市新地址',
+      addressName: '新球场',
+      location: {
+        latitude: 31.3,
+        longitude: 121.5
+      }
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1).toMatchObject({
+    addressText: '上海市新地址',
+    addressName: '新球场',
+    location: {
+      latitude: 31.3,
+      longitude: 121.5
+    }
+  });
+});
+
 test('updateActivity rejects regular users and non-owner organizers', async () => {
   await expect(
     updateActivity.main(

@@ -13,6 +13,7 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelSignup}}');
     expect(wxml).toContain('open-type="share"');
+    expect(wxml).toContain('wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}"');
     expect(wxml).not.toContain('<signup-sheet');
   });
 });

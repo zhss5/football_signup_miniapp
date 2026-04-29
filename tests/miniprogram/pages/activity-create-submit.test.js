@@ -224,6 +224,48 @@ describe('activity create submit flow', () => {
     });
   });
 
+  test('manual address edits clear stale map pin metadata', () => {
+    const ctx = {
+      data: {
+        form: {
+          addressText: 'Old address',
+          addressName: 'Old field',
+          location: {
+            latitude: 31.2,
+            longitude: 121.4
+          }
+        },
+        validationErrors: {},
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+
+    pageConfig.onFieldInput.call(ctx, {
+      currentTarget: {
+        dataset: {
+          field: 'addressText'
+        }
+      },
+      detail: {
+        value: 'Old address 123'
+      }
+    });
+
+    expect(ctx.data.form).toMatchObject({
+      addressText: 'Old address 123',
+      addressName: '',
+      location: null
+    });
+    expect(ctx.data.selectedPinText).toBe('');
+  });
+
   test('onSubmit uploads a selected cover before creating the activity', async () => {
     uploadFile.mockResolvedValue('cloud://prod-env-123/activity-covers/cover.jpg');
     createActivity.mockResolvedValue({ activityId: 'activity_123' });

@@ -6,7 +6,7 @@
     <text class="title">{{activity.title}}</text>
     <view class="location" bindtap="onOpenLocation">
       <text class="location-name">{{activity.addressName || activity.addressText}}</text>
-      <text class="meta">{{activity.addressText}}</text>
+      <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
     </view>
   </view>
 

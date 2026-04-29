@@ -303,6 +303,14 @@ function createLocalCloudClient(options = {}) {
         : [];
     const title = String(payload.title || '').trim();
     const addressText = String(payload.addressText || '').trim();
+    const addressName = String(payload.addressName || '').trim();
+    const previousAddressName = String(activity.addressName || '').trim();
+    const previousAddressText = String(activity.addressText || '').trim();
+    const staleAddressName =
+      addressText !== previousAddressText &&
+      addressName &&
+      addressName === previousAddressName &&
+      !payload.location;
 
     Object.assign(activity, {
       title,
@@ -310,7 +318,7 @@ function createLocalCloudClient(options = {}) {
       endAt: payload.endAt,
       signupDeadlineAt: payload.signupDeadlineAt,
       addressText,
-      addressName: payload.addressName || addressText,
+      addressName: staleAddressName ? addressText : addressName || addressText,
       location: payload.location || null,
       description: payload.description || '',
       coverImage: imageList[0] || payload.coverImage || '',
