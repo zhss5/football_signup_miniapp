@@ -87,7 +87,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       acc[registration.teamId].push({
         userOpenId: registration.userOpenId,
         signupName: registration.signupName,
-        avatarUrl: user.avatarUrl || ''
+        avatarUrl: registration.avatarUrl || user.avatarUrl || ''
       });
       return acc;
     }, {});

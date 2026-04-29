@@ -135,6 +135,102 @@ test('getActivityDetail groups joined members under each team', async () => {
   expect(result.myRegistration.teamId).toBe('team_white');
 });
 
+test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {
+  const activity = {
+    _id: 'activity_1',
+    title: 'Saturday 8-10',
+    addressText: 'Half Stone'
+  };
+  const teams = [
+    {
+      _id: 'team_white',
+      activityId: 'activity_1',
+      teamName: 'White',
+      sort: 0,
+      maxMembers: 6,
+      joinedCount: 1
+    }
+  ];
+  const registrations = [
+    {
+      _id: 'activity_1_openid_a',
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      userOpenId: 'openid_a',
+      status: 'joined',
+      signupName: 'Alex',
+      avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
+      joinedAt: '2026-04-19T10:00:00.000Z'
+    }
+  ];
+
+  const fakeDb = {
+    command: {
+      in(values) {
+        return { values };
+      }
+    },
+    collection(name) {
+      return {
+        doc(id) {
+          return {
+            async get() {
+              if (name === 'activities') {
+                return { data: activity };
+              }
+
+              if (name === 'registrations') {
+                const registration = registrations.find(item => item._id === id);
+                if (registration) {
+                  return { data: registration };
+                }
+
+                throw new Error('not found');
+              }
+
+              throw new Error(`Unsupported doc lookup for ${name}`);
+            }
+          };
+        },
+        where(query) {
+          return {
+            async get() {
+              if (name === 'activity_teams') {
+                return { data: teams.filter(item => item.activityId === query.activityId) };
+              }
+
+              if (name === 'registrations') {
+                return {
+                  data: registrations.filter(
+                    item => item.activityId === query.activityId && item.status === query.status
+                  )
+                };
+              }
+
+              if (name === 'users') {
+                return { data: [] };
+              }
+
+              throw new Error(`Unsupported query for ${name}`);
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const result = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_a' },
+    { db: fakeDb }
+  );
+
+  expect(result.teams[0].members[0]).toMatchObject({
+    signupName: 'Alex',
+    avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg'
+  });
+});
+
 test('getActivityDetail returns viewer permissions for organizer and signup cancellation', async () => {
   const activity = {
     _id: 'activity_1',

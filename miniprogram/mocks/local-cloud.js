@@ -412,7 +412,10 @@ function createLocalCloudClient(options = {}) {
           .map(item => ({
             userOpenId: item.userOpenId,
             signupName: item.signupName,
-            avatarUrl: (state.users[item.userOpenId] && state.users[item.userOpenId].avatarUrl) || ''
+            avatarUrl:
+              item.avatarUrl ||
+              (state.users[item.userOpenId] && state.users[item.userOpenId].avatarUrl) ||
+              ''
           }));
 
         return {
