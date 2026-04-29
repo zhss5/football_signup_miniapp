@@ -21,12 +21,19 @@ describe('my activities page', () => {
     expect(wxml).toContain('onLanguageChange');
     expect(wxml).toContain('primary-tab-shell');
     expect(wxml).toContain('filter-heading');
+    expect(wxml).toContain('created-activity-card');
+    expect(wxml).toContain('activity-action-footer');
+    expect(wxml.indexOf('activity-action-footer')).toBeGreaterThan(
+      wxml.indexOf('created-activity-card')
+    );
     expect(js).toContain("activeTab: 'created'");
     expect(js).toContain("languageOptions:");
     expect(js).toContain("locale:");
     expect(js).toContain('filterLabel');
     expect(wxss).toContain('.primary-tab-shell');
     expect(wxss).toContain('.filter-group');
+    expect(wxss).toContain('.created-activity-card');
+    expect(wxss).toContain('.activity-action-footer');
     expect(wxml).not.toContain('<text class="section-title">Joined Activities</text>');
   });
 });

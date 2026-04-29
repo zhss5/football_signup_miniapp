@@ -8,6 +8,11 @@
   margin-bottom: 16rpx;
 }
 
+.card-embedded {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
 .cover-frame {
   position: relative;
   width: 100%;

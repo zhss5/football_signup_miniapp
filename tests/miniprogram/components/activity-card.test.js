@@ -20,4 +20,23 @@ describe('activity card component', () => {
     expect(wxml).toContain('{{item.startDisplayText}}');
     expect(wxml).toContain('{{item.capacityText}}');
   });
+
+  test('supports embedded rendering when a parent card owns the outer frame', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
+      'utf8'
+    );
+    const js = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.js'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxss'),
+      'utf8'
+    );
+
+    expect(js).toContain('embedded');
+    expect(wxml).toContain("{{embedded ? 'card-embedded' : ''}}");
+    expect(wxss).toContain('.card-embedded');
+  });
 });

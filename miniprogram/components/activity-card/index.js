@@ -3,6 +3,10 @@ Component({
     item: {
       type: Object,
       value: null
+    },
+    embedded: {
+      type: Boolean,
+      value: false
     }
   },
 

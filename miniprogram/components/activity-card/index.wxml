@@ -1,4 +1,4 @@
-<view class="card" bindtap="onTap">
+<view class="card {{embedded ? 'card-embedded' : ''}}" bindtap="onTap">
   <view wx:if="{{item.coverImage}}" class="cover-frame">
     <image class="cover-image" src="{{item.coverImage}}" mode="aspectFill" />
   </view>
