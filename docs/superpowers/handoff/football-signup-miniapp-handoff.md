@@ -72,10 +72,11 @@ The following CloudBase rollout issues were fixed:
 
 The latest visible client-side issues were:
 
-- sharing blocked on real devices because the mini program account is not verified
+- WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 
 Resolved/mitigated:
 
+- WeChat verification has been completed, so real-device sharing should be validated through an uploaded experience version and experience members.
 - the role-gated `createActivity` flow has been reported working in CloudBase after deployment
 - local mock testing confirmed `organizer` can create activities and `user` cannot
 - local automated tests cover organizer/admin `updateActivity`, edit-mode form loading, and capacity safeguards

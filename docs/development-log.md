@@ -287,6 +287,28 @@ Related:
 - `miniprogram/pages/activity-detail/index.js`
 - `tests/cloudfunctions/updateActivity.test.js`
 
+## 2026-04-29 - DevTools Simulator Map Preview Flicker
+
+Real-device testing confirmed the Activity Detail map preview behaves correctly, but the WeChat DevTools simulator can flicker when opening Activity Detail.
+
+Decision:
+
+- Treat this as a WeChat DevTools simulator issue related to the native `map` component.
+- Do not block release or real-device smoke testing on this simulator-only flicker.
+- Revisit only if the same flicker appears on real devices or begins blocking local debugging.
+
+Why it mattered:
+
+- prevents repeated debugging of a simulator-only rendering artifact
+- keeps validation focused on real-device behavior for native mini program components
+- documents why no further layout workaround is planned after the map preview was constrained
+
+Related:
+
+- `miniprogram/pages/activity-detail/index.wxml`
+- `miniprogram/pages/activity-detail/index.wxss`
+- commits `d527855`, `77476bc`, and `e2d09dc`
+
 ## 2026-04-28 - WeChat Verification Blocks Real-Device Sharing
 
 Real-device testing showed that activity sharing is blocked while the mini program account is not verified.
