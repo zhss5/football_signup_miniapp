@@ -25,7 +25,7 @@ The latest CloudBase work has already:
 - validated the role-gated `createActivity` flow in CloudBase after deployment
 - added `updateActivity` for organizer/admin edits; deploy this function before real-device edit testing
 
-The current focus is shifting from CloudBase bring-up to real-device validation, participant communication, and operations polish.
+The current focus is shifting from CloudBase bring-up to real-device validation, media performance, participant communication, and operations polish.
 
 ## 2. Completed Features
 
@@ -178,6 +178,7 @@ The MVP still has known non-blocking gaps:
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
+- historical activity cover images do not have generated list thumbnails yet; large CloudBase originals can make Home loading slow on real devices
 
 ## 6. Recommended Next Steps
 
@@ -215,6 +216,12 @@ The MVP still has known non-blocking gaps:
 
 ### Option C: Media and UX Polish
 
+- implement batch cover-thumbnail generation for historical activity covers:
+  - add `coverThumbImage` to activity documents
+  - make activity cards prefer `coverThumbImage` and fall back to `coverImage`
+  - provide an admin-only dry-run-capable cloud function that skips already-generated thumbnails by default
+  - process persistent CloudBase `fileID` covers only
+  - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if original files remain too large
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
 - polish empty states and activity status presentation

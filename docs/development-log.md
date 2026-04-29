@@ -498,3 +498,28 @@ Why it mattered:
 Related:
 
 - `docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+
+## 2026-04-29 - Cover Thumbnail Backfill Requirement
+
+Large historical cover images in CloudBase storage can make the Home activity list feel slow, especially in uploaded preview builds and on real devices.
+
+Decision:
+
+- implement a batch thumbnail-generation step for existing activity cover images before optimizing the Activity Detail original image
+- store generated list thumbnails on activity documents as `coverThumbImage`
+- make Home/activity cards prefer `coverThumbImage` and fall back to `coverImage` when no thumbnail exists
+- keep Activity Detail rendering `coverImage` in the first pass so the detail hero still has the best available image
+- add an admin-only maintenance cloud function for batch generation
+- support a dry-run mode before writing database changes
+- skip activities that already have `coverThumbImage` unless an explicit force option is used
+- only process persistent CloudBase `fileID` cover images; temporary local paths should be ignored
+
+Why it matters:
+
+- protects list performance for existing uploaded covers without requiring organizers to re-upload images
+- keeps the data model backward-compatible because older activities can continue to use `coverImage`
+- separates list-thumbnail optimization from a later detail-page image strategy
+
+Follow-up:
+
+- after the list thumbnail path is stable, evaluate whether Activity Detail also needs a medium-size display image instead of always loading the original `coverImage`

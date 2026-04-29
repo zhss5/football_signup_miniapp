@@ -11,7 +11,7 @@ The repository is on `main`.
 
 `origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, and the first organizer/admin activity editing implementation.
+Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, the first organizer/admin activity editing implementation, and initial cover loading optimization notes.
 
 The codebase supports:
 
@@ -73,6 +73,7 @@ The following CloudBase rollout issues were fixed:
 The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
+- uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; the next media-performance task is a batch `coverThumbImage` backfill for list cards.
 
 Resolved/mitigated:
 
@@ -185,7 +186,13 @@ Continue in this order:
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. Push local commits if they should be shared:
+11. Implement batch cover-thumbnail generation for historical activity covers:
+   - write thumbnails to `activities.coverThumbImage`
+   - make activity cards prefer `coverThumbImage` and fall back to `coverImage`
+   - provide an admin-only dry-run-capable cloud function
+   - process persistent CloudBase `fileID` covers only
+   - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if needed
+12. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First

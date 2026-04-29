@@ -246,6 +246,13 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 ### 8.2 Media Improvements
 
+- implement batch cover-thumbnail generation for historical activity covers:
+  - store generated list thumbnails as `activities.coverThumbImage`
+  - make Home/activity cards prefer `coverThumbImage` and fall back to `coverImage`
+  - add an admin-only maintenance cloud function with dry-run support
+  - skip activities that already have thumbnails unless forced
+  - process persistent CloudBase `fileID` covers only
+  - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if originals remain too large
 - replace slider-only cropper with direct drag and pinch gestures
 - upload cover images to real CloudBase storage in production mode
 - upload selected user avatars to CloudBase storage in real-cloud mode and save the resulting file ID to `users.avatarUrl`
@@ -307,6 +314,15 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - enforce capacity constraints against joined counts
 - write `activity_logs` entries for edits
 - defer player movement and registration migration to later organizer operations
+
+### Milestone B2.5: Cover Thumbnail Backfill
+
+- add `coverThumbImage` to activity records as the list-card image source
+- make activity cards prefer thumbnails and fall back to `coverImage`
+- add an admin-only batch generation cloud function with dry-run support
+- skip records with existing thumbnails by default
+- limit processing to persistent CloudBase `fileID` covers
+- keep detail-page originals unchanged until list performance is stable
 
 ### Milestone B3: Participant Notifications
 
