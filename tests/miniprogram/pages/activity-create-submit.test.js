@@ -46,16 +46,22 @@ describe('activity create submit flow', () => {
   let ensureUserProfile;
   let uploadFile;
   let validateActivityDraft;
+  let app;
 
   beforeEach(() => {
     pageConfig = null;
+    app = {
+      globalData: {}
+    };
     global.Page = jest.fn(config => {
       pageConfig = config;
     });
     global.wx = {
+      navigateBack: jest.fn(),
       redirectTo: jest.fn(),
       showToast: jest.fn()
     };
+    global.getApp = jest.fn(() => app);
 
     jest.resetModules();
     require('../../../miniprogram/pages/activity-create/index');
@@ -219,9 +225,11 @@ describe('activity create submit flow', () => {
       })
     );
     expect(createActivity).not.toHaveBeenCalled();
-    expect(global.wx.redirectTo).toHaveBeenCalledWith({
-      url: '/pages/activity-detail/index?activityId=activity_123'
+    expect(app.globalData.activityDetailRefreshFlags).toMatchObject({
+      activity_123: true
     });
+    expect(global.wx.navigateBack).toHaveBeenCalledWith({ delta: 1 });
+    expect(global.wx.redirectTo).not.toHaveBeenCalled();
   });
 
   test('manual address edits clear stale map pin metadata', () => {

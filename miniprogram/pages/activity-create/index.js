@@ -106,6 +106,36 @@ async function uploadActivityCover(payload) {
   };
 }
 
+function markActivityDetailForRefresh(activityId) {
+  if (typeof getApp !== 'function') {
+    return;
+  }
+
+  const app = getApp();
+  if (!app.globalData) {
+    app.globalData = {};
+  }
+
+  if (!app.globalData.activityDetailRefreshFlags) {
+    app.globalData.activityDetailRefreshFlags = {};
+  }
+
+  app.globalData.activityDetailRefreshFlags[activityId] = true;
+}
+
+function returnToEditedActivityDetail(activityId) {
+  markActivityDetailForRefresh(activityId);
+
+  if (typeof wx.navigateBack === 'function') {
+    wx.navigateBack({ delta: 1 });
+    return;
+  }
+
+  wx.redirectTo({
+    url: `/pages/activity-detail/index?activityId=${activityId}`
+  });
+}
+
 Page({
   data: {
     form: createDefaultActivityForm(),
@@ -430,10 +460,13 @@ Page({
             activityId: this.data.editActivityId
           })
         : await createActivity(uploadedPayload);
+      if (this.data.isEditMode) {
+        returnToEditedActivityDetail(activityId);
+        return;
+      }
+
       wx.redirectTo({
-        url: this.data.isEditMode
-          ? `/pages/activity-detail/index?activityId=${activityId}`
-          : `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
+        url: `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
       });
       if (!this.data.isEditMode) {
         this.applyI18n(true);
