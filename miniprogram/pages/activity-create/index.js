@@ -1,8 +1,13 @@
-const { createActivity } = require('../../services/activity-service');
+const {
+  createActivity,
+  getActivityDetail,
+  updateActivity
+} = require('../../services/activity-service');
 const { uploadFile } = require('../../services/cloud');
 const { ensureUserProfile } = require('../../services/user-service');
 const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('../../utils/constants');
 const {
+  buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
   summarizeTeamSlots
@@ -88,6 +93,10 @@ async function uploadActivityCover(payload) {
     return payload;
   }
 
+  if (/^(cloud|https?):\/\//.test(coverImage)) {
+    return payload;
+  }
+
   const fileId = await uploadFile(coverImage, buildCoverCloudPath(coverImage));
 
   return {
@@ -115,11 +124,27 @@ Page({
     selectedPinText: '',
     authorizationChecked: false,
     canCreateActivity: false,
+    canEditActivity: false,
+    canSubmitActivity: false,
+    isEditMode: false,
+    editActivityId: '',
     teamEditorLabels: {}
   },
 
-  async onLoad() {
-    const translate = this.applyI18n(true);
+  async onLoad(query = {}) {
+    const isEditMode = query.mode === 'edit';
+    this.setData({
+      isEditMode,
+      editActivityId: query.activityId || ''
+    });
+
+    const translate = this.applyI18n(!isEditMode);
+
+    if (isEditMode) {
+      await this.loadActivityForEdit(query.activityId, translate);
+      return;
+    }
+
     await this.refreshCreatePermission(translate);
   },
 
@@ -133,7 +158,7 @@ Page({
     ];
     const form = resetForm ? createDefaultActivityForm({ defaultTeams }) : this.data.form;
 
-    setPageNavigationTitle('nav.createActivity', locale);
+    setPageNavigationTitle(this.data.isEditMode ? 'nav.editActivity' : 'nav.createActivity', locale);
     this.setData({
       locale,
       i18n,
@@ -152,17 +177,53 @@ Page({
   async refreshCreatePermission(translate = makeTranslator(this.data.locale || getAppLocale())) {
     try {
       const { user } = await ensureUserProfile();
+      const allowed = canCreateActivity(user);
       this.setData({
         authorizationChecked: true,
-        canCreateActivity: canCreateActivity(user)
+        canCreateActivity: allowed,
+        canSubmitActivity: allowed
       });
     } catch (error) {
       this.setData({
         authorizationChecked: true,
-        canCreateActivity: false
+        canCreateActivity: false,
+        canSubmitActivity: false
       });
       wx.showToast({
         title: translate('errors.createPermissionCheckFailed'),
+        icon: 'none'
+      });
+    }
+  },
+
+  async loadActivityForEdit(activityId, translate = makeTranslator(this.data.locale || getAppLocale())) {
+    try {
+      const detail = await getActivityDetail(activityId);
+      const allowed = Boolean(detail.viewer && detail.viewer.canEditActivity);
+
+      this.setData({
+        authorizationChecked: true,
+        canEditActivity: allowed,
+        canSubmitActivity: allowed
+      });
+
+      if (!allowed) {
+        wx.showToast({
+          title: translate('errors.editActivityNotAllowed'),
+          icon: 'none'
+        });
+        return;
+      }
+
+      this.syncDerivedState(buildActivityEditForm(detail.activity, detail.teams), translate);
+    } catch (error) {
+      this.setData({
+        authorizationChecked: true,
+        canEditActivity: false,
+        canSubmitActivity: false
+      });
+      wx.showToast({
+        title: translateErrorMessage(error, translate),
         icon: 'none'
       });
     }
@@ -339,9 +400,14 @@ Page({
   async onSubmit() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
 
-    if (!this.data.canCreateActivity) {
+    const canSubmit = this.data.canSubmitActivity ||
+      (!this.data.isEditMode && this.data.canCreateActivity);
+
+    if (!canSubmit) {
       wx.showToast({
-        title: translate('errors.createActivityNotAllowed'),
+        title: translate(this.data.isEditMode
+          ? 'errors.editActivityNotAllowed'
+          : 'errors.createActivityNotAllowed'),
         icon: 'none'
       });
       return;
@@ -353,11 +419,20 @@ Page({
       validateActivityDraft(payload, translate);
       this.setData({ submitting: true });
       const uploadedPayload = await uploadActivityCover(payload);
-      const { activityId } = await createActivity(uploadedPayload);
+      const { activityId } = this.data.isEditMode
+        ? await updateActivity({
+            ...uploadedPayload,
+            activityId: this.data.editActivityId
+          })
+        : await createActivity(uploadedPayload);
       wx.redirectTo({
-        url: `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
+        url: this.data.isEditMode
+          ? `/pages/activity-detail/index?activityId=${activityId}`
+          : `/pages/activity-detail/index?activityId=${activityId}&fromPublish=1`
       });
-      this.applyI18n(true);
+      if (!this.data.isEditMode) {
+        this.applyI18n(true);
+      }
     } catch (error) {
       this.setData({
         validationErrors: getValidationErrors(error)

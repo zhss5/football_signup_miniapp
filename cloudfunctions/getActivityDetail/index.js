@@ -2,9 +2,20 @@ const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
+const { canEditActivity } = require('./roles');
 const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+
+async function getCurrentUser(db, openid) {
+  const result = await db
+    .collection(COLLECTIONS.USERS)
+    .doc(openid)
+    .get()
+    .catch(() => ({ data: null }));
+
+  return result.data || null;
+}
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
@@ -24,6 +35,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   if (activity.data.status === 'deleted' && activity.data.organizerOpenId !== openid) {
     throw businessError('Activity not found');
   }
+
+  const viewerUser = await getCurrentUser(db, openid);
 
   const teamsRes = await db
     .collection(COLLECTIONS.ACTIVITY_TEAMS)
@@ -82,6 +95,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   return {
     activity: activity.data,
     teams: teamsRes.data
+      .filter(team => team.status !== 'inactive')
       .sort((left, right) => left.sort - right.sort)
       .map(team => ({
         ...team,
@@ -90,6 +104,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     myRegistration: myRegistration.data,
     viewer: {
       isOrganizer: activity.data.organizerOpenId === openid,
+      canEditActivity: canEditActivity(activity.data, viewerUser, openid),
       canCancelActivity:
         activity.data.organizerOpenId === openid && activity.data.status === 'published',
       canDeleteActivity:

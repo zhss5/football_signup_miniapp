@@ -265,7 +265,8 @@ function translateErrorMessage(error, translate) {
     'Only the organizer can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',
     'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty',
-    'Only organizers can create activities': 'errors.createActivityNotAllowed'
+    'Only organizers can create activities': 'errors.createActivityNotAllowed',
+    'Only the organizer or an admin can edit this activity': 'errors.editActivityNotAllowed'
   };
 
   const message = error && error.message ? error.message : '';

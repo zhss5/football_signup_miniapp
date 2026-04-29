@@ -84,7 +84,7 @@ npm test -- --runInBand
 
 1. Open WeChat DevTools
 2. Import the repository root:
-   `D:/workspace/Nautilus`
+   `D:/workspaces/football_signup_miniapp`
 3. Keep the default mini program settings
 4. Start in local mock mode
 

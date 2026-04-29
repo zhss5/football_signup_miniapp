@@ -12,6 +12,15 @@ function formatDateInputValue(date) {
   return `${year}-${month}-${day}`;
 }
 
+function formatTimeInputValue(date) {
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function parseDateInput(isoValue) {
+  const date = new Date(isoValue);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function getTomorrowDateInputValue(nowOption) {
   const tomorrow = new Date(resolveNow(nowOption).getTime());
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -91,7 +100,44 @@ function buildActivityPayload(form) {
   };
 }
 
+function buildActivityEditForm(activity = {}, teams = []) {
+  const startAt = parseDateInput(activity.startAt);
+  const endAt = parseDateInput(activity.endAt);
+  const signupDeadlineAt = parseDateInput(activity.signupDeadlineAt);
+  const imageList = Array.isArray(activity.imageList)
+    ? activity.imageList.filter(Boolean).slice(0, MAX_ACTIVITY_IMAGES)
+    : activity.coverImage
+      ? [activity.coverImage]
+      : [];
+  const editableTeams = teams
+    .filter(team => team.status !== 'inactive' && team.teamType !== 'bench')
+    .map(team => ({
+      teamName: team.teamName,
+      maxMembers: Number(team.maxMembers) || 0
+    }));
+
+  return {
+    title: activity.title || '',
+    activityDate: startAt ? formatDateInputValue(startAt) : '',
+    startTime: startAt ? formatTimeInputValue(startAt) : '',
+    endTime: endAt ? formatTimeInputValue(endAt) : '',
+    signupDeadlineDate: signupDeadlineAt ? formatDateInputValue(signupDeadlineAt) : '',
+    signupDeadlineTime: signupDeadlineAt ? formatTimeInputValue(signupDeadlineAt) : '',
+    addressText: activity.addressText || '',
+    addressName: activity.addressName || activity.addressText || '',
+    location: activity.location || null,
+    description: activity.description || '',
+    coverImage: imageList[0] || activity.coverImage || '',
+    imageList,
+    signupLimitTotal: Number(activity.signupLimitTotal) || 0,
+    requirePhone: Boolean(activity.requirePhone),
+    inviteCode: activity.inviteCode || '',
+    teams: editableTeams
+  };
+}
+
 module.exports = {
+  buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
   summarizeTeamSlots

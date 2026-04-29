@@ -248,6 +248,45 @@ Related:
 - `docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
 - commit `dfa218a`
 
+## 2026-04-29 - Organizer Activity Editing MVP
+
+The first organizer activity editing flow was implemented.
+
+Change:
+
+- added the `updateActivity` cloud function
+- added organizer/admin edit permission checks shared by client and cloud code
+- reused `pages/activity-create` in edit mode
+- added an Activity Detail `Edit` action for viewers with edit permission
+- preserved existing activity IDs, registrations, organizer ownership, joined counts, and created timestamps during edits
+- enforced capacity safety so total capacity cannot drop below joined players or existing regular team slots
+- wrote `activity_logs` entries for activity updates
+- extended local mock mode to mirror update permissions and capacity rules
+
+Why it mattered:
+
+- organizers can now correct routine mistakes without deleting and recreating an activity
+- existing shared links and participant registrations stay valid after edits
+- the backend, local mock, and UI now all enforce the same edit boundary
+
+Verification:
+
+- `node scripts/copy-cloud-shared.mjs`
+- `node node_modules/jest/bin/jest.js --runInBand`
+- result: `37` test suites passed, `144` tests passed
+
+Follow-up:
+
+- deploy `updateActivity` to CloudBase before real-device edit testing
+- verify edit mode with an organizer/admin account on a real device
+
+Related:
+
+- `cloudfunctions/updateActivity/index.js`
+- `miniprogram/pages/activity-create/index.js`
+- `miniprogram/pages/activity-detail/index.js`
+- `tests/cloudfunctions/updateActivity.test.js`
+
 ## 2026-04-28 - WeChat Verification Blocks Real-Device Sharing
 
 Real-device testing showed that activity sharing is blocked while the mini program account is not verified.

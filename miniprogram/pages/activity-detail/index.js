@@ -117,6 +117,12 @@ Page({
     });
   },
 
+  openEditActivity() {
+    wx.navigateTo({
+      url: `/pages/activity-create/index?mode=edit&activityId=${this.data.activityId}`
+    });
+  },
+
   async onCancelSignup() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     try {

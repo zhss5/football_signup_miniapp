@@ -15,6 +15,16 @@ function canCreateActivity(user) {
   return roles.includes('organizer') || roles.includes('admin');
 }
 
+function canEditActivity(activity, user, openid) {
+  const roles = getRoles(user);
+
+  if (roles.includes('admin')) {
+    return true;
+  }
+
+  return Boolean(activity && activity.organizerOpenId && activity.organizerOpenId === openid);
+}
+
 function formatRoles(user) {
   const roles = getRoles(user);
   return roles.length ? roles.join(', ') : 'user';
@@ -22,6 +32,7 @@ function formatRoles(user) {
 
 module.exports = {
   canCreateActivity,
+  canEditActivity,
   formatRoles,
   getRoles
 };

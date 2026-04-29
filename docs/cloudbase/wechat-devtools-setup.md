@@ -33,7 +33,7 @@ Current default values:
 1. Open WeChat DevTools
 2. Choose `Import Project`
 3. Select the repository root:
-   `D:/workspace/Nautilus`
+   `D:/workspaces/football_signup_miniapp`
 4. Keep the default project configuration from `project.config.json`
 5. Open the simulator
 
@@ -106,9 +106,9 @@ The copy step is required because CloudBase packages each cloud function directo
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions deploy `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspace\Nautilus' `
+  --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

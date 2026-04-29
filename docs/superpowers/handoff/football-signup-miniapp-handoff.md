@@ -1,8 +1,8 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-04-28
+- Date: 2026-04-29
 - Branch: `main`
-- Workspace: `D:/workspace/Nautilus`
+- Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 
 ## 1. Current State
@@ -11,7 +11,7 @@ The repository is on `main`.
 
 `origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-Recent local commits include role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, and activity editing roadmap documentation.
+Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, and the first organizer/admin activity editing implementation.
 
 The codebase supports:
 
@@ -23,6 +23,7 @@ The codebase supports:
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
+- organizer/admin activity editing through the `updateActivity` cloud function
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - dedicated activity creation, detail, signup, and `My` page flows
@@ -36,6 +37,7 @@ All deployable cloud functions were deployed successfully to the configured Clou
 - `listActivities`
 - `getActivityDetail`
 - `createActivity`
+- `updateActivity`
 - `joinActivity`
 - `cancelRegistration`
 - `cancelActivity`
@@ -76,6 +78,7 @@ Resolved/mitigated:
 
 - the role-gated `createActivity` flow has been reported working in CloudBase after deployment
 - local mock testing confirmed `organizer` can create activities and `user` cannot
+- local automated tests cover organizer/admin `updateActivity`, edit-mode form loading, and capacity safeguards
 
 If startup timeout appears again, recommended actions:
 
@@ -100,16 +103,18 @@ WeChat verification note:
 
 The following local state should not be committed unless there is a deliberate decision:
 
-- `D:/workspace/Nautilus/project.config.json`
-- `D:/workspace/Nautilus/miniprogram/config/env.local.js`
+- `D:/workspaces/football_signup_miniapp/project.config.json`
+- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.local.js`
 
 Current git status includes:
 
 - `project.config.json` modified locally and intentionally uncommitted
+- `miniprogram/config/env.local.js.example` deleted locally and intentionally uncommitted
+- `miniprogram/config/env.local.js.cloud` untracked locally and intentionally uncommitted
 
 The local override file is ignored by git and should be recreated from:
 
-- `D:/workspace/Nautilus/miniprogram/config/env.local.js.example`
+- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.local.js.example`
 
 ## 6. Deployment Commands
 
@@ -125,9 +130,9 @@ Deploy all cloud functions from PowerShell:
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions deploy `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspace\Nautilus' `
+  --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -137,8 +142,8 @@ Check one function:
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions info `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspace\Nautilus' `
-  --names ensureUserProfile `
+  --project 'D:\workspaces\football_signup_miniapp' `
+  --names updateActivity `
   --lang zh
 ```
 
@@ -152,10 +157,10 @@ npm test
 
 Latest result:
 
-- `36` test suites passed
-- `129` tests passed
+- `37` test suites passed
+- `144` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, and `createActivity` cloud function authorization.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, and `updateActivity` organizer/admin editing behavior.
 
 ## 8. Next Steps
 
@@ -163,38 +168,42 @@ Continue in this order:
 
 1. Confirm all five database collections exist.
 2. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-3. Apply indexes from:
-   - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
-4. Apply database rules from:
-   - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
-5. Run the smoke checklist on DevTools and a real device:
-   - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
-6. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
-7. Add experience members and distribute the experience-version QR code for temporary tester access.
-8. Implement organizer activity editing using:
-   - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
-9. Implement participant notification subscriptions and organizer-triggered notifications using:
-   - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-10. Push local commits if they should be shared:
+3. Run `npm run copy:cloud-shared`, then deploy the new `updateActivity` cloud function.
+4. Apply indexes from:
+   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
+5. Apply database rules from:
+   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/security-rules.json`
+6. Run the smoke checklist on DevTools and a real device:
+   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
+7. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
+8. Add experience members and distribute the experience-version QR code for temporary tester access.
+9. Validate organizer/admin activity editing after CloudBase deployment.
+10. Implement participant notification subscriptions and organizer-triggered notifications using:
+   - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+11. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First
 
 For the next session, these files are the fastest orientation points:
 
-- `D:/workspace/Nautilus/README.md`
-- `D:/workspace/Nautilus/miniprogram/services/cloud.js`
-- `D:/workspace/Nautilus/miniprogram/config/env.js`
-- `D:/workspace/Nautilus/cloudfunctions/ensureUserProfile/index.js`
-- `D:/workspace/Nautilus/cloudfunctions/createActivity/index.js`
-- `D:/workspace/Nautilus/cloudfunctions/_shared/database.js`
-- `D:/workspace/Nautilus/cloudfunctions/_shared/roles.js`
-- `D:/workspace/Nautilus/miniprogram/utils/roles.js`
-- `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
-- `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
-- `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
-- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
-- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- `D:/workspaces/football_signup_miniapp/README.md`
+- `D:/workspaces/football_signup_miniapp/miniprogram/services/cloud.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/services/activity-service.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-create/index.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-detail/index.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/ensureUserProfile/index.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/createActivity/index.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/updateActivity/index.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/database.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/roles.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/utils/roles.js`
+- `D:/workspaces/football_signup_miniapp/scripts/copy-cloud-shared.mjs`
+- `D:/workspaces/football_signup_miniapp/docs/cloudbase/real-cloudbase-rollout.md`
+- `D:/workspaces/football_signup_miniapp/docs/cloudbase/wechat-devtools-setup.md`
+- `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 
 ## 10. Important Notes
 

@@ -4,6 +4,10 @@ function createActivity(payload) {
   return call('createActivity', payload);
 }
 
+function updateActivity(payload) {
+  return call('updateActivity', payload);
+}
+
 function cancelActivity(activityId) {
   return call('cancelActivity', { activityId });
 }
@@ -30,5 +34,6 @@ module.exports = {
   deleteActivity,
   listActivities,
   getActivityDetail,
-  getActivityStats
+  getActivityStats,
+  updateActivity
 };

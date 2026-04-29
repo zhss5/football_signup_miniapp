@@ -82,6 +82,146 @@ test('local cloud client blocks regular users from creating activities when role
   ).rejects.toThrow('Only organizers can create activities');
 });
 
+test('local cloud client lets an organizer update an activity without changing registrations', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    phone: '',
+    source: 'share'
+  });
+
+  await ownerClient.call('updateActivity', {
+    activityId: created.activityId,
+    title: 'Updated Saturday',
+    startAt: '2026-04-27T20:00:00.000Z',
+    endAt: '2026-04-27T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+    addressText: 'New Field',
+    description: 'Updated notes',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 16,
+    requirePhone: true,
+    inviteCode: 'NEW'
+  });
+
+  const detailAfter = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.activity).toMatchObject({
+    _id: created.activityId,
+    title: 'Updated Saturday',
+    addressText: 'New Field',
+    signupLimitTotal: 16,
+    joinedCount: 1,
+    requirePhone: true
+  });
+  expect(detailAfter.myRegistration).toMatchObject({
+    activityId: created.activityId,
+    signupName: 'Alex',
+    status: 'joined'
+  });
+});
+
+test('local cloud client blocks non-owner activity edits and capacity below joined count', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const otherOrganizerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T12:00:00.000Z',
+    openid: 'openid_other'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  await expect(
+    otherOrganizerClient.call('updateActivity', {
+      activityId: created.activityId,
+      title: 'Other edit',
+      startAt: '2026-04-27T20:00:00.000Z',
+      endAt: '2026-04-27T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+      addressText: 'New Field',
+      signupLimitTotal: 12,
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
+    })
+  ).rejects.toThrow('Only the organizer or an admin can edit this activity');
+
+  await expect(
+    ownerClient.call('updateActivity', {
+      activityId: created.activityId,
+      title: 'Owner edit',
+      startAt: '2026-04-27T20:00:00.000Z',
+      endAt: '2026-04-27T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+      addressText: 'New Field',
+      signupLimitTotal: 1,
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
+    })
+  ).rejects.toThrow('Total signup limit must cover all team slots');
+});
+
 test('local cloud client can join and cancel an activity', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

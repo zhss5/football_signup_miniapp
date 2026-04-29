@@ -24,6 +24,11 @@
 
 - Confirm participant cancellation works before the deadline
 - Confirm participant cancellation is blocked after the deadline
+- Confirm organizer can open Activity Detail and navigate to `Edit`
+- Confirm organizer edit updates title, time, deadline, location, description, cover image, and total capacity in place
+- Confirm existing registrations remain attached to the same activity after edit
+- Confirm capacity cannot be reduced below joined players or existing regular team slots
+- Confirm regular users and non-owner organizers cannot edit another organizer's activity
 - Confirm organizer cancel changes activity status to `cancelled`
 - Confirm organizer soft delete is allowed only when `joinedCount = 0`
 - Confirm deleted activities remain visible to the organizer in Created history only

@@ -245,3 +245,72 @@ test('getActivityDetail returns viewer permissions for organizer and signup canc
     canCancelSignup: true
   });
 });
+
+test('getActivityDetail exposes edit permission for admins', async () => {
+  const activity = {
+    _id: 'activity_1',
+    title: 'Saturday 8-10',
+    organizerOpenId: 'openid_owner',
+    status: 'published',
+    joinedCount: 0,
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z'
+  };
+  const users = {
+    openid_admin: {
+      _id: 'openid_admin',
+      roles: ['admin']
+    }
+  };
+  const fakeDb = {
+    command: {
+      in(values) {
+        return { values };
+      }
+    },
+    collection(name) {
+      return {
+        doc(id) {
+          return {
+            async get() {
+              if (name === 'activities') {
+                return { data: activity };
+              }
+
+              if (name === 'users') {
+                return { data: users[id] || null };
+              }
+
+              if (name === 'registrations') {
+                throw new Error('not found');
+              }
+
+              throw new Error(`Unsupported doc lookup for ${name}`);
+            }
+          };
+        },
+        where(query) {
+          return {
+            async get() {
+              if (name === 'activity_teams' || name === 'registrations' || name === 'users') {
+                return { data: [] };
+              }
+
+              throw new Error(`Unsupported query for ${name}`);
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const result = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_admin' },
+    { db: fakeDb }
+  );
+
+  expect(result.viewer).toMatchObject({
+    isOrganizer: false,
+    canEditActivity: true
+  });
+});

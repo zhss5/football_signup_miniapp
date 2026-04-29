@@ -11,6 +11,7 @@ module.exports = {
   nav: {
     home: 'Football Signup',
     createActivity: 'Create Activity',
+    editActivity: 'Edit Activity',
     activityDetail: 'Activity Detail',
     myActivities: 'My Activities',
     adjustCover: 'Adjust Cover',
@@ -41,6 +42,7 @@ module.exports = {
       action: 'Share Activity'
     },
     actions: {
+      edit: 'Edit',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
       delete: 'Delete'
@@ -84,7 +86,8 @@ module.exports = {
     addressPlaceholder: 'Address',
     selectedPin: 'Selected pin: {{name}}',
     chooseOnMap: 'Choose on WeChat Map',
-    publish: 'Publish Activity'
+    publish: 'Publish Activity',
+    saveChanges: 'Save Changes'
   },
   activityJoin: {
     title: 'Join {{teamName}}',
@@ -185,6 +188,7 @@ module.exports = {
     organizerDeleteOnly: 'Only the organizer can delete this activity',
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',
     createActivityNotAllowed: 'Only organizers can create activities',
+    editActivityNotAllowed: 'Only the organizer or an admin can edit this activity',
     createPermissionCheckFailed: 'Unable to check create permission'
   }
 };

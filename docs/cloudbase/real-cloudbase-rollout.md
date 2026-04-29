@@ -45,7 +45,7 @@ The runtime now enforces:
 
 ## WeChat DevTools Checklist
 
-1. Import or reopen the project root: `D:/workspace/Nautilus`
+1. Import or reopen the project root: `D:/workspaces/football_signup_miniapp`
 2. Switch the project to your real AppID locally in DevTools
 3. Open the Cloud Development panel
 4. Bind the same environment ID used in `env.local.js`
@@ -72,11 +72,12 @@ Recommended function set:
 2. `listActivities`
 3. `getActivityDetail`
 4. `createActivity`
-5. `joinActivity`
-6. `cancelRegistration`
-7. `cancelActivity`
-8. `deleteActivity`
-9. `getActivityStats`
+5. `updateActivity`
+6. `joinActivity`
+7. `cancelRegistration`
+8. `cancelActivity`
+9. `deleteActivity`
+10. `getActivityStats`
 
 Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
 
@@ -84,9 +85,9 @@ Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerS
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions deploy `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspace\Nautilus' `
+  --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

@@ -1,10 +1,10 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-04-28
+- Date: 2026-04-29
 - Status: In active MVP iteration
 - Active branch: `main`
-- Main workspace: `D:/workspace/Nautilus`
-- Current implementation workspace: `D:/workspace/Nautilus`
+- Main workspace: `D:/workspaces/football_signup_miniapp`
+- Current implementation workspace: `D:/workspaces/football_signup_miniapp`
 
 ## 1. Current Summary
 
@@ -23,8 +23,9 @@ The latest CloudBase work has already:
 - switched one local machine to real CloudBase runtime mode
 - fixed DevTools-side `wx.cloud` runtime detection
 - validated the role-gated `createActivity` flow in CloudBase after deployment
+- added `updateActivity` for organizer/admin edits; deploy this function before real-device edit testing
 
-The current focus is shifting from CloudBase bring-up to product refinement and participant communication.
+The current focus is shifting from CloudBase bring-up to real-device validation, participant communication, and operations polish.
 
 ## 2. Completed Features
 
@@ -122,6 +123,16 @@ The current focus is shifting from CloudBase bring-up to product refinement and 
 - `createActivity` cloud function enforces role permission before writing activity data
 - early operation can grant organizer access by manually editing `users.roles` in CloudBase
 
+### 2.11 Organizer Activity Editing
+
+- Activity Detail shows `Edit` to the original organizer or `admin`
+- `pages/activity-create` supports edit mode for existing activities
+- organizers/admins can update title, date/time, signup deadline, location, description, cover image, total capacity, phone requirement, and invite code
+- existing `activityId`, registrations, organizer, joined count, and created timestamp are preserved
+- `updateActivity` enforces permission, deleted-activity, validation, and capacity rules
+- total capacity cannot be reduced below joined players or below existing regular team slots
+- activity update audit entries are written to `activity_logs`
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -134,14 +145,15 @@ The current implementation differs from the original early MVP assumptions in th
 - the team model includes an auto-generated bench team
 - cover images use a dedicated `2:1` crop flow
 - activity creation is now role-gated instead of open to every user
+- published activities can now be edited in place instead of recreated for routine corrections
 
 ## 4. Verification Status
 
 Latest verified test result:
 
-- command: `npm test`
-- result: `36` test suites passed
-- result: `129` tests passed
+- command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
+- result: `37` test suites passed
+- result: `144` tests passed
 
 Covered areas include:
 
@@ -151,6 +163,7 @@ Covered areas include:
 - page template behavior
 - crop utility behavior
 - layout regressions
+- organizer/admin activity edit permissions and update behavior
 
 ## 5. Known Gaps
 
@@ -161,7 +174,6 @@ The MVP still has known non-blocking gaps:
 - a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
-- organizer activity editing is not implemented yet; first version should let the creator or `admin` update title, time, deadline, location, description, cover image, and total capacity without recreating the activity
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
@@ -173,7 +185,7 @@ The MVP still has known non-blocking gaps:
 
 - local runtime switch support is now implemented
 - one real environment has already been created locally
-- next action is to deploy cloud functions
+- next action is to deploy the new `updateActivity` cloud function after `npm run copy:cloud-shared`
 - create collections and indexes
 - validate permissions and end-to-end data writes
 
@@ -181,9 +193,7 @@ The MVP still has known non-blocking gaps:
 
 - use the My page copyable user ID to grant `organizer` roles manually in CloudBase
 - add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
-- add activity editing for the original organizer or `admin`
-- preserve existing registrations and shared links when editing
-- prevent capacity reductions below existing joined counts
+- validate activity editing on a real device after deploying `updateActivity`
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
@@ -212,9 +222,9 @@ The MVP still has known non-blocking gaps:
 
 ## 7. Related Documents
 
-- Design: `D:/workspace/Nautilus/docs/superpowers/specs/football-signup-miniapp-design.md`
-- Activity editing design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
-- Notification design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-- Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
-- CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
-- Handoff: `D:/workspace/Nautilus/docs/superpowers/handoff/football-signup-miniapp-handoff.md`
+- Design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/football-signup-miniapp-design.md`
+- Activity editing design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- Notification design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- Plan: `D:/workspaces/football_signup_miniapp/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
+- CloudBase rollout: `D:/workspaces/football_signup_miniapp/docs/cloudbase/real-cloudbase-rollout.md`
+- Handoff: `D:/workspaces/football_signup_miniapp/docs/superpowers/handoff/football-signup-miniapp-handoff.md`

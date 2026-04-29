@@ -1,5 +1,7 @@
 jest.mock('../../../miniprogram/services/activity-service', () => ({
-  createActivity: jest.fn()
+  createActivity: jest.fn(),
+  getActivityDetail: jest.fn(),
+  updateActivity: jest.fn()
 }));
 
 jest.mock('../../../miniprogram/services/cloud', () => ({
@@ -11,6 +13,11 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/utils/activity-draft', () => ({
+  buildActivityEditForm: jest.fn(() => ({
+    title: 'Existing Thursday Match',
+    coverImage: 'cloud://cover-existing',
+    imageList: ['cloud://cover-existing']
+  })),
   buildActivityPayload: jest.fn(form => form),
   createDefaultActivityForm: jest.fn(() => ({
     title: 'Thursday Match'
@@ -34,6 +41,8 @@ jest.mock('../../../miniprogram/utils/constants', () => ({
 describe('activity create submit flow', () => {
   let pageConfig;
   let createActivity;
+  let getActivityDetail;
+  let updateActivity;
   let ensureUserProfile;
   let uploadFile;
   let validateActivityDraft;
@@ -50,7 +59,11 @@ describe('activity create submit flow', () => {
 
     jest.resetModules();
     require('../../../miniprogram/pages/activity-create/index');
-    ({ createActivity } = require('../../../miniprogram/services/activity-service'));
+    ({
+      createActivity,
+      getActivityDetail,
+      updateActivity
+    } = require('../../../miniprogram/services/activity-service'));
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ validateActivityDraft } = require('../../../miniprogram/utils/validators'));
@@ -133,6 +146,81 @@ describe('activity create submit flow', () => {
 
     expect(global.wx.redirectTo).toHaveBeenCalledWith({
       url: '/pages/activity-detail/index?activityId=activity_123&fromPublish=1'
+    });
+  });
+
+  test('onLoad in edit mode loads the existing activity into the form when the viewer can edit', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Existing Thursday Match'
+      },
+      teams: [],
+      viewer: {
+        canEditActivity: true
+      }
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onLoad.call(ctx, {
+      mode: 'edit',
+      activityId: 'activity_123'
+    });
+
+    expect(getActivityDetail).toHaveBeenCalledWith('activity_123');
+    expect(ctx.data.isEditMode).toBe(true);
+    expect(ctx.data.canEditActivity).toBe(true);
+    expect(ctx.data.form.title).toBe('Existing Thursday Match');
+  });
+
+  test('onSubmit updates an existing activity in edit mode without reuploading a CloudBase cover', async () => {
+    updateActivity.mockResolvedValue({ activityId: 'activity_123' });
+
+    const ctx = {
+      data: {
+        form: {
+          title: 'Updated Thursday Match',
+          coverImage: 'cloud://cover-existing',
+          imageList: ['cloud://cover-existing']
+        },
+        canSubmitActivity: true,
+        isEditMode: true,
+        editActivityId: 'activity_123'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(uploadFile).not.toHaveBeenCalled();
+    expect(updateActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activityId: 'activity_123',
+        title: 'Updated Thursday Match',
+        coverImage: 'cloud://cover-existing'
+      })
+    );
+    expect(createActivity).not.toHaveBeenCalled();
+    expect(global.wx.redirectTo).toHaveBeenCalledWith({
+      url: '/pages/activity-detail/index?activityId=activity_123'
     });
   });
 

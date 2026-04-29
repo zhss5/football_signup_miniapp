@@ -150,6 +150,22 @@ describe('activity detail page', () => {
     });
   });
 
+  test('openEditActivity navigates to the create page in edit mode for the current activity', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123'
+      }
+    };
+
+    global.wx.navigateTo = jest.fn();
+
+    pageConfig.openEditActivity.call(ctx);
+
+    expect(global.wx.navigateTo).toHaveBeenCalledWith({
+      url: '/pages/activity-create/index?mode=edit&activityId=activity_123'
+    });
+  });
+
   test('onShareAppMessage shares the current activity detail page', () => {
     const ctx = {
       data: {

@@ -3,7 +3,7 @@
     <text class="authorization-title">{{i18n.activityCreate.permissionChecking}}</text>
   </view>
 
-  <view wx:elif="{{!canCreateActivity}}" class="authorization-panel">
+  <view wx:elif="{{!canSubmitActivity}}" class="authorization-panel">
     <text class="authorization-title">{{i18n.activityCreate.noCreatePermissionTitle}}</text>
     <text class="hint">{{i18n.activityCreate.noCreatePermissionHint}}</text>
   </view>
@@ -75,11 +75,11 @@
     />
   </view>
 
-  <view class="field">
+  <view wx:if="{{!isEditMode}}" class="field">
     <text class="label">{{i18n.activityCreate.teams}}</text>
     <text class="hint">{{i18n.activityCreate.teamsHint}}</text>
   </view>
-  <team-editor teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
+  <team-editor wx:if="{{!isEditMode}}" teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
 
   <view class="field">
     <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
@@ -139,6 +139,8 @@
     <button class="secondary-button" bindtap="onChooseLocation">{{i18n.activityCreate.chooseOnMap}}</button>
   </view>
 
-  <button bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityCreate.publish}}</button>
+  <button bindtap="onSubmit" loading="{{submitting}}">
+    {{isEditMode ? i18n.activityCreate.saveChanges : i18n.activityCreate.publish}}
+  </button>
   </block>
 </view>
