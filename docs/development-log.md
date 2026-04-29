@@ -388,3 +388,85 @@ Related:
 
 - `cloudfunctions/ensureUserProfile/index.js`
 - `tests/cloudfunctions/ensureUserProfile.test.js`
+
+## 2026-04-29 - Signup Contact Profile, Phone Source Tracking, and Roster Avatars
+
+The Join page was updated so signups can use WeChat-assisted profile data while still allowing manual entry.
+
+Delivered behavior:
+
+- users can choose a WeChat avatar with `open-type="chooseAvatar"`
+- the signup name input uses the WeChat nickname input capability while remaining manually editable
+- users can tap `用微信手机号` / `Use WeChat` to authorize a phone number
+- users can still skip phone authorization and manually enter a phone number
+- nickname and phone are required for signup; avatar is optional
+- `joinActivity` now records `phoneSource`, `profileSource`, and `avatarUrl`
+- `resolvePhoneNumber` was added to exchange the phone authorization `code` for a WeChat phone number
+- `getActivityDetail` now prefers `registrations.avatarUrl` before falling back to `users.avatarUrl`
+
+Bugs and issues found:
+
+- real-device testing showed a member could choose a WeChat avatar but still appear as a text fallback on Activity Detail
+- root cause: Activity Detail only read `users.avatarUrl`, while the signup record already had the selected avatar
+- fix: roster members now use the registration avatar first, so the chosen signup avatar is not lost if the user profile document is stale or missing the avatar field
+- old registrations that were created before this feature may still lack `avatarUrl`; those records need re-signup or a manual database backfill to show avatars
+
+Unresolved:
+
+- on preview builds, tapping the WeChat phone button can show `已跳过手机号授权`
+- this means the frontend did not receive a successful `getPhoneNumber` `code`, so `resolvePhoneNumber` is not called
+- likely causes still to verify in the WeChat platform console: privacy guide declaration for phone number, phone-number open capability availability, preview package freshness, and account configuration
+- manual phone entry remains the fallback path and is required before submission
+
+Operational notes:
+
+- after this change, upload `joinActivity`, `resolvePhoneNumber`, and `getActivityDetail` before real-device verification
+- update and publish the mini program privacy guide for phone number, nickname, and avatar usage before relying on WeChat phone authorization
+
+Related:
+
+- `cloudfunctions/joinActivity/index.js`
+- `cloudfunctions/resolvePhoneNumber/index.js`
+- `cloudfunctions/getActivityDetail/index.js`
+- `miniprogram/pages/activity-join/index.js`
+- commits `f5576e7` and `3e5e3be`
+
+## 2026-04-29 - Organizer/Admin Registration Removal
+
+Organizer-side member removal was implemented for Activity Detail.
+
+Delivered behavior:
+
+- viewers with `viewer.canManageRegistrations` can remove joined members from the roster
+- `organizer` and `admin` users are allowed to remove members
+- regular users cannot remove other members
+- removal is a soft delete: the registration is marked `cancelled`, not physically deleted
+- the removed member disappears from the team list immediately after reload
+- `activities.joinedCount` and `activity_teams.joinedCount` decrement by one
+- the registration records `removedByOpenId`, `removedAt`, `cancelledAt`, and `updatedAt`
+- removed users are allowed to rejoin later because the active registration status is no longer `joined`
+
+Bugs and issues found:
+
+- this feature required a separate cloud function instead of reusing `cancelRegistration`, because `cancelRegistration` only operates on the current user's own registration
+- Activity Detail needed an explicit management permission field instead of inferring permissions from the existing edit/cancel buttons in the UI
+- the member-row remove button uses a contained `catchtap` handler so tapping `移除` does not trigger unrelated row or team actions
+
+Operational notes:
+
+- upload `removeRegistration` and `getActivityDetail` before real-device testing this feature
+- test with both organizer and admin users because the UI and cloud function both enforce permissions
+
+Verification:
+
+- `node scripts/copy-cloud-shared.mjs`
+- `node node_modules/jest/bin/jest.js --runInBand`
+- result: `40` test suites passed, `178` tests passed
+
+Related:
+
+- `cloudfunctions/removeRegistration/index.js`
+- `cloudfunctions/getActivityDetail/index.js`
+- `miniprogram/components/team-list/index.wxml`
+- `miniprogram/pages/activity-detail/index.js`
+- commit `20166dd`
