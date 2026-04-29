@@ -85,6 +85,21 @@ function buildActivityUpdateData(event, activity, stamp) {
   };
 }
 
+function replaceFieldValue(db, value) {
+  if (db && db.command && typeof db.command.set === 'function') {
+    return db.command.set(value);
+  }
+
+  return value;
+}
+
+function buildDatabaseUpdateData(db, updateData) {
+  return {
+    ...updateData,
+    location: replaceFieldValue(db, updateData.location)
+  };
+}
+
 function getChangedFields(activity, updateData) {
   return Object.keys(updateData).filter(field => {
     if (field === 'updatedAt') {
@@ -180,7 +195,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   );
 
   await db.collection(COLLECTIONS.ACTIVITIES).doc(event.activityId).update({
-    data: updateData
+    data: buildDatabaseUpdateData(db, updateData)
   });
 
   const changedFields = getChangedFields(activity, updateData);

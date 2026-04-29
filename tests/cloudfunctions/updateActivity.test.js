@@ -1,6 +1,10 @@
 const updateActivity = require('../../cloudfunctions/updateActivity/index');
 
 function createFakeDb(options = {}) {
+  const setCommand = value => ({
+    __command: 'set',
+    value
+  });
   const state = {
     users: {
       openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] },
@@ -61,6 +65,9 @@ function createFakeDb(options = {}) {
 
   const db = {
     state,
+    command: {
+      set: setCommand
+    },
     collection(name) {
       return {
         doc(id) {
@@ -82,9 +89,28 @@ function createFakeDb(options = {}) {
             },
             async update({ data }) {
               if (name === 'activities') {
+                if (
+                  options.simulateCloudBaseNestedObjectUpdate &&
+                  data.location &&
+                  typeof data.location === 'object' &&
+                  data.location.__command !== 'set' &&
+                  state.activities[id] &&
+                  state.activities[id].location === null
+                ) {
+                  throw new Error(
+                    "document.update:fail -502001 database request fail. Cannot create field 'latitude' in element {location: null}"
+                  );
+                }
+
+                const normalizedData = Object.keys(data).reduce((acc, key) => {
+                  const value = data[key];
+                  acc[key] = value && value.__command === 'set' ? value.value : value;
+                  return acc;
+                }, {});
+
                 state.activities[id] = {
                   ...state.activities[id],
-                  ...data
+                  ...normalizedData
                 };
                 return { updated: 1 };
               }
@@ -255,6 +281,26 @@ test('updateActivity preserves an explicitly changed map pin name', async () => 
       latitude: 31.3,
       longitude: 121.5
     }
+  });
+});
+
+test('updateActivity replaces a null location with a selected map pin in CloudBase', async () => {
+  const db = createFakeDb({ simulateCloudBaseNestedObjectUpdate: true });
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      location: {
+        latitude: 31.3,
+        longitude: 121.5
+      }
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1.location).toEqual({
+    latitude: 31.3,
+    longitude: 121.5
   });
 });
 
