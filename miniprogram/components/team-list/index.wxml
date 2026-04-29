@@ -13,7 +13,7 @@
             <text class="member-name">{{member.signupName}}</text>
             <button
               wx:if="{{member.memberAction}}"
-              class="member-action-button {{member.memberAction === 'remove' ? 'member-action-danger' : ''}}"
+              class="member-action-button {{member.memberAction === 'cancelSignup' ? 'member-action-cancel' : ''}} {{member.memberAction === 'remove' ? 'member-action-danger' : ''}}"
               size="mini"
               data-action="{{member.memberAction}}"
               data-user-open-id="{{member.userOpenId}}"

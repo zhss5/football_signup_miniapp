@@ -24,6 +24,22 @@ describe('team-list member removal', () => {
     expect(wxml).toContain('catchtap="onMemberActionTap"');
   });
 
+  test('uses a distinct visual style for self cancel signup and manager removal', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain("member.memberAction === 'cancelSignup' ? 'member-action-cancel'");
+    expect(wxml).toContain("member.memberAction === 'remove' ? 'member-action-danger'");
+    expect(wxss).toContain('.member-action-cancel');
+    expect(wxss).toContain('.member-action-danger');
+  });
+
   test('emits remove member identity when a manager taps remove', () => {
     const triggerEvent = jest.fn();
     const ctx = {
