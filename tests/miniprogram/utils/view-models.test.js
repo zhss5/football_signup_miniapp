@@ -120,6 +120,135 @@ test('buildTeamListVm disables all join buttons after signup and prepares member
   expect(DEFAULT_MEMBER_AVATAR_TEXT).toBe('#');
 });
 
+test('buildTeamListVm marks the current user member row with cancel signup action', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 1,
+        maxMembers: 6,
+        members: [
+          {
+            userOpenId: 'openid_self',
+            signupName: 'Alex',
+            avatarUrl: ''
+          }
+        ]
+      }
+    ],
+    {
+      teamId: 'team_red',
+      status: 'joined',
+      userOpenId: 'openid_self'
+    },
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canCancelSignup: true
+    }
+  );
+
+  expect(teams[0].members[0]).toMatchObject({
+    userOpenId: 'openid_self',
+    isCurrentUser: true,
+    memberAction: 'cancelSignup',
+    memberActionText: 'Cancel Signup'
+  });
+});
+
+test('buildTeamListVm marks other member rows with remove action for managers', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 2,
+        maxMembers: 6,
+        members: [
+          {
+            userOpenId: 'openid_self',
+            signupName: 'Alex',
+            avatarUrl: ''
+          },
+          {
+            userOpenId: 'openid_other',
+            signupName: 'Bob',
+            avatarUrl: ''
+          }
+        ]
+      }
+    ],
+    {
+      teamId: 'team_red',
+      status: 'joined',
+      userOpenId: 'openid_self'
+    },
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canCancelSignup: true,
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0].members[0]).toMatchObject({
+    isCurrentUser: true,
+    memberAction: 'cancelSignup'
+  });
+  expect(teams[0].members[1]).toMatchObject({
+    isCurrentUser: false,
+    memberAction: 'remove',
+    memberActionText: 'Remove'
+  });
+});
+
+test('buildTeamListVm does not show remove action on the current user row', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 1,
+        maxMembers: 6,
+        members: [
+          {
+            userOpenId: 'openid_self',
+            signupName: 'Alex',
+            avatarUrl: ''
+          }
+        ]
+      }
+    ],
+    {
+      teamId: 'team_red',
+      status: 'joined',
+      userOpenId: 'openid_self'
+    },
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canCancelSignup: false,
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0].members[0]).toMatchObject({
+    isCurrentUser: true,
+    memberAction: '',
+    memberActionText: ''
+  });
+});
+
 test('buildTeamListVm disables join after signup deadline', () => {
   const teams = buildTeamListVm(
     [

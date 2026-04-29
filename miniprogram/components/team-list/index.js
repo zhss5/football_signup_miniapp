@@ -7,14 +7,6 @@ Component({
     emptyText: {
       type: String,
       value: 'No players yet'
-    },
-    removeMemberText: {
-      type: String,
-      value: 'Remove'
-    },
-    canManageRegistrations: {
-      type: Boolean,
-      value: false
     }
   },
 
@@ -32,10 +24,19 @@ Component({
       });
     },
 
-    onRemoveMemberTap(event) {
+    onMemberActionTap(event) {
       const dataset = event.currentTarget.dataset;
+      const eventNameByAction = {
+        cancelSignup: 'cancelsignup',
+        remove: 'removemember'
+      };
+      const eventName = eventNameByAction[dataset.action];
 
-      this.triggerEvent('removemember', {
+      if (!eventName) {
+        return;
+      }
+
+      this.triggerEvent(eventName, {
         userOpenId: dataset.userOpenId,
         signupName: dataset.signupName
       });

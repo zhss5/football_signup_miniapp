@@ -74,12 +74,28 @@ function buildActivityCardVm(activity, nowProvider, translate = defaultTranslate
   };
 }
 
-function buildMemberVm(member) {
+function buildMemberVm(member, context = {}) {
   const sourceName = (member.signupName || member.displayName || '').trim();
+  const isCurrentUser = Boolean(
+    context.currentUserOpenId && member.userOpenId === context.currentUserOpenId
+  );
+  let memberAction = '';
+  let memberActionText = '';
+
+  if (isCurrentUser && context.canCancelSignup) {
+    memberAction = 'cancelSignup';
+    memberActionText = context.translate('activity.actions.cancelSignup');
+  } else if (!isCurrentUser && context.canManageRegistrations) {
+    memberAction = 'remove';
+    memberActionText = context.translate('activity.actions.removeMember');
+  }
 
   return {
     ...member,
-    avatarText: sourceName ? sourceName.charAt(0).toUpperCase() : DEFAULT_MEMBER_AVATAR_TEXT
+    avatarText: sourceName ? sourceName.charAt(0).toUpperCase() : DEFAULT_MEMBER_AVATAR_TEXT,
+    isCurrentUser,
+    memberAction,
+    memberActionText
   };
 }
 
@@ -88,10 +104,18 @@ function buildTeamListVm(
   myRegistration = null,
   activity = null,
   nowProvider,
-  translate = defaultTranslate
+  translate = defaultTranslate,
+  options = {}
 ) {
   const hasJoined = Boolean(myRegistration && myRegistration.status === 'joined');
   const signupState = getActivitySignupState(activity || {}, nowProvider, translate);
+  const currentUserOpenId = myRegistration && myRegistration.userOpenId;
+  const memberContext = {
+    canCancelSignup: Boolean(options.canCancelSignup),
+    canManageRegistrations: Boolean(options.canManageRegistrations),
+    currentUserOpenId,
+    translate
+  };
 
   return teams.map(team => {
     const isFull = Number(team.joinedCount) >= Number(team.maxMembers);
@@ -113,7 +137,9 @@ function buildTeamListVm(
       ...team,
       joinDisabled,
       joinButtonText,
-      members: Array.isArray(team.members) ? team.members.map(buildMemberVm) : []
+      members: Array.isArray(team.members)
+        ? team.members.map(member => buildMemberVm(member, memberContext))
+        : []
     };
   });
 }

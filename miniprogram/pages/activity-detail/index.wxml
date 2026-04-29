@@ -37,10 +37,9 @@
   <team-list
     teams="{{teams}}"
     emptyText="{{i18n.activity.teamList.empty}}"
-    removeMemberText="{{i18n.activity.actions.removeMember}}"
-    canManageRegistrations="{{viewer && viewer.canManageRegistrations}}"
     bind:jointap="openSignup"
     bind:removemember="onRemoveRegistration"
+    bind:cancelsignup="onCancelSignup"
   />
 
   <button wx:if="{{viewer && viewer.canEditActivity}}" bindtap="openEditActivity">
@@ -51,7 +50,4 @@
     {{i18n.activity.actions.cancelActivity}}
   </button>
 
-  <button wx:if="{{viewer && viewer.canCancelSignup}}" bindtap="onCancelSignup">
-    {{i18n.activity.actions.cancelSignup}}
-  </button>
 </view>

@@ -16,6 +16,7 @@ describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
   let removeRegistration;
+  let buildTeamListVm;
 
   beforeEach(() => {
     pageConfig = null;
@@ -32,6 +33,7 @@ describe('activity detail page', () => {
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
+    ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
   });
 
   test('openSignup stores the selected team name so the sheet can show which team is being joined', () => {
@@ -221,6 +223,7 @@ describe('activity detail page', () => {
       ],
       myRegistration: null,
       viewer: {
+        canCancelSignup: true,
         canManageRegistrations: true
       }
     });
@@ -240,6 +243,17 @@ describe('activity detail page', () => {
 
     await pageConfig.reload.call(ctx);
 
+    expect(buildTeamListVm).toHaveBeenCalledWith(
+      expect.any(Array),
+      null,
+      expect.objectContaining({ _id: 'activity_123' }),
+      undefined,
+      expect.any(Function),
+      expect.objectContaining({
+        canManageRegistrations: true,
+        canCancelSignup: true
+      })
+    );
     expect(ctx.data.viewer.canManageRegistrations).toBe(true);
   });
 

@@ -12,13 +12,14 @@
             <view wx:else class="member-avatar-fallback">{{member.avatarText}}</view>
             <text class="member-name">{{member.signupName}}</text>
             <button
-              wx:if="{{canManageRegistrations}}"
-              class="member-remove-button"
+              wx:if="{{member.memberAction}}"
+              class="member-action-button {{member.memberAction === 'remove' ? 'member-action-danger' : ''}}"
               size="mini"
+              data-action="{{member.memberAction}}"
               data-user-open-id="{{member.userOpenId}}"
               data-signup-name="{{member.signupName}}"
-              catchtap="onRemoveMemberTap"
-            >{{removeMemberText}}</button>
+              catchtap="onMemberActionTap"
+            >{{member.memberActionText}}</button>
           </view>
         </block>
       </view>

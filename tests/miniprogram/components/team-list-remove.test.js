@@ -14,26 +14,26 @@ describe('team-list member removal', () => {
     require('../../../miniprogram/components/team-list/index');
   });
 
-  test('renders remove member controls only for managers', () => {
+  test('renders row-level member action controls', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
       'utf8'
     );
 
-    expect(componentConfig.properties.canManageRegistrations).toBeDefined();
-    expect(wxml).toContain('wx:if="{{canManageRegistrations}}"');
-    expect(wxml).toContain('catchtap="onRemoveMemberTap"');
+    expect(wxml).toContain('wx:if="{{member.memberAction}}"');
+    expect(wxml).toContain('catchtap="onMemberActionTap"');
   });
 
-  test('emits member identity when a manager taps remove', () => {
+  test('emits remove member identity when a manager taps remove', () => {
     const triggerEvent = jest.fn();
     const ctx = {
       triggerEvent
     };
 
-    componentConfig.methods.onRemoveMemberTap.call(ctx, {
+    componentConfig.methods.onMemberActionTap.call(ctx, {
       currentTarget: {
         dataset: {
+          action: 'remove',
           userOpenId: 'openid_player',
           signupName: 'Alex'
         }
@@ -42,6 +42,28 @@ describe('team-list member removal', () => {
 
     expect(triggerEvent).toHaveBeenCalledWith('removemember', {
       userOpenId: 'openid_player',
+      signupName: 'Alex'
+    });
+  });
+
+  test('emits cancel signup when the current user taps their own member action', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      triggerEvent
+    };
+
+    componentConfig.methods.onMemberActionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          action: 'cancelSignup',
+          userOpenId: 'openid_self',
+          signupName: 'Alex'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('cancelsignup', {
+      userOpenId: 'openid_self',
       signupName: 'Alex'
     });
   });

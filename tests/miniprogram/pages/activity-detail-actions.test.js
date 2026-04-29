@@ -11,9 +11,8 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.share.action}}');
     expect(wxml).toContain('{{i18n.activity.actions.edit}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
-    expect(wxml).toContain('{{i18n.activity.actions.cancelSignup}}');
-    expect(wxml).toContain('canManageRegistrations="{{viewer && viewer.canManageRegistrations}}"');
     expect(wxml).toContain('bind:removemember="onRemoveRegistration"');
+    expect(wxml).toContain('bind:cancelsignup="onCancelSignup"');
     expect(wxml).toContain('open-type="share"');
     expect(wxml).toContain('wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}"');
     expect(wxml).toContain('<map');
@@ -23,6 +22,7 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('<cover-view wx:if="{{locationMapVisible}}" class="location-map-wrap">');
     expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>');
     expect(wxml).toContain('bindtap="onOpenLocation"');
+    expect(wxml).not.toContain('wx:if="{{viewer && viewer.canCancelSignup}}"');
     expect(wxml).not.toContain('<signup-sheet');
   });
 

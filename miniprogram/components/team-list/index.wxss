@@ -44,9 +44,14 @@
   margin-left: 16rpx;
 }
 
-.member-remove-button {
+.member-action-button {
   flex: 0 0 auto;
   margin-left: 16rpx;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.member-action-danger {
   color: #dc2626;
   background: #fef2f2;
 }

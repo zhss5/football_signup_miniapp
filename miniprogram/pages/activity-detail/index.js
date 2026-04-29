@@ -125,7 +125,11 @@ Page({
         detail.myRegistration,
         detail.activity,
         undefined,
-        translate
+        translate,
+        {
+          canCancelSignup: Boolean(detail.viewer && detail.viewer.canCancelSignup),
+          canManageRegistrations: Boolean(detail.viewer && detail.viewer.canManageRegistrations)
+        }
       )
     });
   },
