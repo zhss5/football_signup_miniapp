@@ -11,6 +11,7 @@ module.exports = {
   nav: {
     home: '足球报名',
     createActivity: '创建活动',
+    editActivity: '编辑活动',
     activityDetail: '活动详情',
     myActivities: '我的活动',
     adjustCover: '裁剪封面',
@@ -42,6 +43,7 @@ module.exports = {
       action: '分享活动'
     },
     actions: {
+      edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
       delete: '删除'
@@ -81,7 +83,8 @@ module.exports = {
     addressPlaceholder: '地址',
     selectedPin: '已选定位：{{name}}',
     chooseOnMap: '微信地图选点',
-    publish: '发布活动'
+    publish: '发布活动',
+    saveChanges: '保存修改'
   },
   activityJoin: {
     title: '报名 {{teamName}}',

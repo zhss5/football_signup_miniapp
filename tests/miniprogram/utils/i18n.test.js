@@ -25,4 +25,12 @@ describe('i18n utilities', () => {
     );
     expect(getMessages('zh-CN').nav.joinTeam).toBeTruthy();
   });
+
+  test('provides Chinese copy for organizer edit labels', () => {
+    const messages = getMessages('zh-CN');
+
+    expect(messages.activity.actions.edit).toBe('\u7f16\u8f91\u6d3b\u52a8');
+    expect(messages.nav.editActivity).toBe('\u7f16\u8f91\u6d3b\u52a8');
+    expect(messages.activityCreate.saveChanges).toBe('\u4fdd\u5b58\u4fee\u6539');
+  });
 });
