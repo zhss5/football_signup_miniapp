@@ -31,7 +31,7 @@ The codebase supports:
 
 ## 2. CloudBase Deployment Status
 
-All deployable cloud functions were deployed successfully to the configured CloudBase environment:
+Deployable cloud functions currently include:
 
 - `ensureUserProfile`
 - `listActivities`
@@ -43,8 +43,12 @@ All deployable cloud functions were deployed successfully to the configured Clou
 - `cancelActivity`
 - `deleteActivity`
 - `getActivityStats`
+- `removeRegistration`
+- `resolvePhoneNumber`
 
-The last code deployment that changed runtime behavior was:
+Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
+
+Earlier rollout reference:
 
 - `5587bf0` `Bootstrap CloudBase collections on startup`
 
@@ -75,6 +79,9 @@ The latest visible client-side issues were:
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 - uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; the next media-performance task is a batch `coverThumbImage` backfill for list cards.
 - the current signup flow still supports optional participant phone collection, but the newer product backlog calls for removing phone from participant signup.
+- CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
+- The target free-trial CloudBase environment has expired, so the console blocks storage permission changes until the environment is upgraded or renewed.
+- CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control needs become materially higher than the benefit of integrated WeChat hosting.
 
 Resolved/mitigated:
 
@@ -113,7 +120,7 @@ Current git status includes:
 
 - `project.config.json` modified locally and intentionally uncommitted
 - `miniprogram/config/env.local.js.example` deleted locally and intentionally uncommitted
-- `miniprogram/config/env.local.js.cloud` untracked locally and intentionally uncommitted
+- `miniprogram/config/env.local.js.sample` untracked locally and intentionally uncommitted
 
 The local override file is ignored by git and should be recreated from:
 
@@ -135,7 +142,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -160,51 +167,53 @@ npm test
 
 Latest result:
 
-- `37` test suites passed
-- `144` tests passed
+- `41` test suites passed
+- `193` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, and `updateActivity` organizer/admin editing behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields, and CloudBase cover display URL resolution.
 
 ## 8. Next Steps
 
 Continue in this order:
 
-1. Confirm all five database collections exist.
-2. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-3. Run `npm run copy:cloud-shared`, then deploy the new `updateActivity` cloud function.
-4. Apply indexes from:
+1. Upgrade or renew the target CloudBase environment so storage permission changes are allowed.
+2. Configure CloudBase storage permissions so `activity-covers/` can be read by mini-program clients while writes remain restricted.
+3. Confirm all five database collections exist.
+4. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
+5. Run `npm run copy:cloud-shared`, then deploy all cloud functions listed in section 6.
+6. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
-5. Apply database rules from:
+7. Apply database rules from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/security-rules.json`
-6. Run the smoke checklist on DevTools and a real device:
+8. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
-7. Start WeChat verification in the WeChat Official Accounts Platform when the administrator account is available.
-8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate organizer/admin activity editing after CloudBase deployment.
-10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
+9. Add experience members and distribute the experience-version QR code for temporary tester access.
+10. Validate cover image loading, sharing, signup profile entry, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
+11. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - first version keeps `status: published/cancelled/deleted`
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. Implement batch cover-thumbnail generation for historical activity covers:
+12. Implement batch cover-thumbnail generation for historical activity covers:
    - write thumbnails to `activities.coverThumbImage`
    - make activity cards prefer `coverThumbImage` and fall back to `coverImage`
    - provide an admin-only dry-run-capable cloud function
    - process persistent CloudBase `fileID` covers only
    - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if needed
-12. Plan the next mini program backlog items:
+13. Plan the next mini program backlog items:
    - remove participant phone-number collection from signup
    - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
    - let organizers sign up participants on their behalf
    - let organizers copy all active participant names in one action
    - allow a one-team minimum in activity setup instead of always defaulting to two teams
-13. Keep the future operations/backend backlog visible but deferred:
+14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-14. Push local commits if they should be shared:
+15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+16. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 9. Key Files To Read First

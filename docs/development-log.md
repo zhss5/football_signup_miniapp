@@ -580,3 +580,27 @@ Follow-up:
 
 - Activity Detail map preview was also adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map component.
 - This avoids the DevTools/native-component warning that a `cover-view` can only contain specific native child nodes.
+
+## 2026-04-30 - CloudBase Storage Permission and Cost TODO
+
+Real-device/DevTools CloudBase testing isolated a cover-image rendering failure to CloudBase storage permissions rather than the mini program image component.
+
+Findings:
+
+- `wx.cloud.getTempFileURL` returned a per-file result with `status: 1` and `errMsg: STORAGE_EXCEED_AUTHORITY`
+- `wx.cloud.downloadFile` then failed with `-403003 internal server error: empty download url`
+- the same file could still be previewed from the CloudBase console because console/server-side access is not the same as mini-program client access
+- the target environment was a free trial environment whose package had expired, so the console blocked storage permission changes until the environment is upgraded
+
+Operational TODO:
+
+- before relying on CloudBase storage for public activity covers, upgrade or renew the target CloudBase environment and set storage read rules for `activity-covers/`
+- preferred storage rule: allow public/client read for `activity-covers/`, while keeping writes restricted to authenticated users or a stricter organizer/admin upload path
+- after changing storage permissions, wait 1-3 minutes and rerun the real-device cover-image smoke test
+- track monthly CloudBase cost after the first real usage period; keep WeChat CloudBase for MVP if usage stays within the low-cost personal-tier range
+- add a migration checkpoint only if monthly CloudBase cost, platform lock-in, or required backend control becomes materially higher than the MVP benefit of integrated WeChat hosting
+
+Current decision:
+
+- do not migrate away from WeChat CloudBase now
+- continue the MVP on CloudBase, but keep the service layer boundaries intact so a later HTTP API adapter remains possible

@@ -120,6 +120,27 @@ Apply the database rule baseline from:
 
 - `docs/cloudbase/security-rules.json`
 
+## Storage Permission Setup
+
+Activity covers are stored under `activity-covers/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for that path.
+
+Recommended storage rule:
+
+```json
+{
+  "read": "/^activity-covers\\//.test(resource.path)",
+  "write": "auth != null"
+}
+```
+
+If the environment already has a stricter rule, merge the `activity-covers/` read condition into the existing `read` expression instead of overwriting unrelated permissions.
+
+Notes:
+
+- CloudBase console/server-side preview can still open files that mini-program clients cannot read.
+- Storage permission changes can take 1-3 minutes to take effect.
+- Expired free-trial environments can block permission changes until the environment is upgraded or renewed.
+
 ## Recommended Smoke Pass
 
 After deployment, run these checks in DevTools and on a real device:
@@ -159,6 +180,7 @@ If CloudBase mode fails, check these items first:
 - `database collection not exists`: create the missing collection manually or let `ensureUserProfile` bootstrap the required collections.
 - `Error: timeout` during first launch: the first collection bootstrap may exceed the default 3-second function timeout. Increase `ensureUserProfile` to 20-60 seconds in CloudBase function settings, or create the collections manually and retry.
 - Sharing is blocked with an unverified-account message: complete WeChat verification in the WeChat Official Accounts Platform. Adding experience members only grants access to the experience version; it does not replace verification.
+- `STORAGE_EXCEED_AUTHORITY` when resolving an activity cover file ID: update CloudBase storage rules so mini-program clients can read `activity-covers/`. If the console says the free-trial package has expired, upgrade or renew the environment before changing permissions.
 
 ## Related Docs
 

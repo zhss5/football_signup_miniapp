@@ -153,8 +153,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
-- result: `37` test suites passed
-- result: `144` tests passed
+- result: `41` test suites passed
+- result: `193` tests passed
 
 Covered areas include:
 
@@ -180,6 +180,8 @@ The MVP still has known non-blocking gaps:
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
 - historical activity cover images do not have generated list thumbnails yet; large CloudBase originals can make Home loading slow on real devices
+- CloudBase storage permissions for public activity covers still require an upgraded/active environment before they can be changed; expired free-trial environments can block permission updates
+- CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
 - organizer proxy signup for participants is not implemented yet
@@ -193,9 +195,10 @@ The MVP still has known non-blocking gaps:
 
 - local runtime switch support is now implemented
 - one real environment has already been created locally
-- next action is to deploy the new `updateActivity` cloud function after `npm run copy:cloud-shared`
-- create collections and indexes
-- validate permissions and end-to-end data writes
+- upgrade or renew the target CloudBase environment so storage permission changes are allowed
+- configure storage read rules so `activity-covers/` can be read by mini-program clients
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- validate permissions, cover image loading, sharing, signup, organizer/admin removal, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
 
