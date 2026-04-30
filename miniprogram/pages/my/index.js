@@ -1,7 +1,8 @@
 const {
   cancelActivity,
   deleteActivity,
-  listActivities
+  listActivities,
+  resolveActivityCoverImages
 } = require('../../services/activity-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
@@ -62,12 +63,18 @@ Page({
       listActivities({ scope: 'created', limit: 20 }),
       listActivities({ scope: 'joined', limit: 20 })
     ]);
+    const [createdItemsWithCovers, joinedItemsWithCovers] = await Promise.all([
+      resolveActivityCoverImages(created.items),
+      resolveActivityCoverImages(joined.items)
+    ]);
 
-    const createdItemsAll = created.items.map(item => buildActivityCardVm(item, undefined, translate));
+    const createdItemsAll = createdItemsWithCovers.map(item =>
+      buildActivityCardVm(item, undefined, translate)
+    );
 
     this.setData({
       createdItemsAll,
-      joinedItems: joined.items.map(item => buildActivityCardVm(item, undefined, translate))
+      joinedItems: joinedItemsWithCovers.map(item => buildActivityCardVm(item, undefined, translate))
     });
     this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
     await profilePromise;

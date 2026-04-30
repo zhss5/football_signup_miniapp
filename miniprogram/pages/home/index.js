@@ -1,4 +1,7 @@
-const { listActivities } = require('../../services/activity-service');
+const {
+  listActivities,
+  resolveActivityCoverImages
+} = require('../../services/activity-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
@@ -33,8 +36,9 @@ Page({
 
     try {
       const { items } = await listActivities({ scope: 'home', limit: 20 });
+      const itemsWithDisplayCovers = await resolveActivityCoverImages(items);
       this.setData({
-        items: items.map(item => buildActivityCardVm(item, undefined, translate)),
+        items: itemsWithDisplayCovers.map(item => buildActivityCardVm(item, undefined, translate)),
         loading: false
       });
     } catch (error) {

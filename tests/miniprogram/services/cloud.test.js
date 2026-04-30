@@ -131,6 +131,159 @@ describe('cloud service runtime', () => {
     });
   });
 
+  test('resolves CloudBase file ids to temporary HTTPS urls', async () => {
+    const getTempFileURL = jest.fn().mockResolvedValue({
+      fileList: [
+        {
+          fileID: 'cloud://prod-env-123/activity-covers/cover.jpg',
+          tempFileURL: 'https://tmp.example.com/cover.jpg'
+        }
+      ]
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction: jest.fn(),
+        getTempFileURL
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.resolveFileUrls([
+        'cloud://prod-env-123/activity-covers/cover.jpg',
+        'https://already.example.com/cover.jpg'
+      ])
+    ).resolves.toEqual({
+      'cloud://prod-env-123/activity-covers/cover.jpg': 'https://tmp.example.com/cover.jpg',
+      'https://already.example.com/cover.jpg': 'https://already.example.com/cover.jpg'
+    });
+
+    expect(getTempFileURL).toHaveBeenCalledWith({
+      fileList: ['cloud://prod-env-123/activity-covers/cover.jpg']
+    });
+  });
+
+  test('maps temporary HTTPS urls by request order when the response omits file ids', async () => {
+    const getTempFileURL = jest.fn().mockResolvedValue({
+      fileList: [
+        {
+          tempFileURL: 'https://tmp.example.com/cover.jpg'
+        }
+      ]
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction: jest.fn(),
+        getTempFileURL
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.resolveFileUrls(['cloud://prod-env-123/activity-covers/cover.jpg'])
+    ).resolves.toEqual({
+      'cloud://prod-env-123/activity-covers/cover.jpg': 'https://tmp.example.com/cover.jpg'
+    });
+  });
+
+  test('downloads CloudBase files when temporary HTTPS urls are unavailable', async () => {
+    const getTempFileURL = jest.fn().mockResolvedValue({
+      fileList: [
+        {
+          fileID: 'cloud://prod-env-123/activity-covers/cover.jpg'
+        }
+      ]
+    });
+    const downloadFile = jest.fn().mockResolvedValue({
+      tempFilePath: 'wxfile://tmp_cover.jpg'
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction: jest.fn(),
+        getTempFileURL,
+        downloadFile
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.resolveFileUrls(['cloud://prod-env-123/activity-covers/cover.jpg'])
+    ).resolves.toEqual({
+      'cloud://prod-env-123/activity-covers/cover.jpg': 'wxfile://tmp_cover.jpg'
+    });
+
+    expect(downloadFile).toHaveBeenCalledWith({
+      fileID: 'cloud://prod-env-123/activity-covers/cover.jpg'
+    });
+  });
+
+  test('logs unresolved CloudBase files when neither temp urls nor downloads are available', async () => {
+    const info = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const getTempFileURL = jest.fn().mockResolvedValue({
+      fileList: []
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+      ENABLE_CLOUD_DIAGNOSTICS: true
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction: jest.fn(),
+        getTempFileURL
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.resolveFileUrls(['cloud://prod-env-123/activity-covers/cover.jpg'])
+    ).resolves.toEqual({
+      'cloud://prod-env-123/activity-covers/cover.jpg':
+        'cloud://prod-env-123/activity-covers/cover.jpg'
+    });
+
+    expect(info).toHaveBeenCalledWith(
+      '[cloud] file-url:unresolved',
+      expect.objectContaining({
+        unresolvedCount: 1
+      })
+    );
+
+    info.mockRestore();
+  });
+
   test('keeps local mock file paths unchanged', async () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       USE_LOCAL_MOCK: true,

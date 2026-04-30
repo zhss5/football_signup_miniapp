@@ -1,9 +1,9 @@
 <view class="card {{embedded ? 'card-embedded' : ''}}" bindtap="onTap">
-  <view wx:if="{{item.coverImage}}" class="cover-frame">
+  <view wx:if="{{item.coverDisplayImage || item.coverImage}}" class="cover-frame">
     <image
-      wx:if="{{!coverLoadFailed}}"
+      wx:if="{{item.coverDisplayImage && !coverLoadFailed}}"
       class="cover-image"
-      src="{{item.coverImage}}"
+      src="{{item.coverDisplayImage}}"
       mode="aspectFill"
       lazy-load="{{true}}"
       binderror="onCoverError"

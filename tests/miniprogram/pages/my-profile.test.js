@@ -5,7 +5,8 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   cancelActivity: jest.fn(),
   deleteActivity: jest.fn(),
-  listActivities: jest.fn()
+  listActivities: jest.fn(),
+  resolveActivityCoverImages: jest.fn(items => Promise.resolve(items))
 }));
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({

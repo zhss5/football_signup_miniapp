@@ -1,6 +1,7 @@
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   getActivityDetail: jest.fn(),
-  cancelActivity: jest.fn()
+  cancelActivity: jest.fn(),
+  resolveActivityCoverImage: jest.fn(activity => Promise.resolve(activity))
 }));
 
 jest.mock('../../../miniprogram/services/registration-service', () => ({
@@ -17,6 +18,7 @@ describe('activity detail page', () => {
   let getActivityDetail;
   let removeRegistration;
   let buildTeamListVm;
+  let resolveActivityCoverImage;
 
   beforeEach(() => {
     pageConfig = null;
@@ -32,6 +34,7 @@ describe('activity detail page', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
+    ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
   });
@@ -157,10 +160,17 @@ describe('activity detail page', () => {
   });
 
   test('reload builds a map marker when the activity has a selected location', async () => {
+    resolveActivityCoverImage.mockImplementation(activity =>
+      Promise.resolve({
+        ...activity,
+        coverDisplayImage: 'https://tmp.example.com/cover.jpg'
+      })
+    );
     getActivityDetail.mockResolvedValue({
       activity: {
         _id: 'activity_123',
         title: 'Thursday Match',
+        coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
         addressName: 'Pitch Gate',
         addressText: '123 Field Road',
         location: {
@@ -191,6 +201,12 @@ describe('activity detail page', () => {
 
     await pageConfig.reload.call(ctx);
 
+    expect(resolveActivityCoverImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg'
+      })
+    );
+    expect(ctx.data.activity.coverDisplayImage).toBe('https://tmp.example.com/cover.jpg');
     expect(ctx.data.locationMapVisible).toBe(true);
     expect(ctx.data.locationMapMarkers).toEqual([
       expect.objectContaining({

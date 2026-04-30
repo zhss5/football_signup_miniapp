@@ -9,6 +9,7 @@ describe('activity detail actions', () => {
     );
 
     expect(wxml).toContain('{{i18n.activity.share.action}}');
+    expect(wxml).toContain('src="{{activity.coverDisplayImage}}"');
     expect(wxml).toContain('{{i18n.activity.actions.edit}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
     expect(wxml).toContain('bind:removemember="onRemoveRegistration"');
@@ -19,7 +20,8 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('wx:if="{{locationMapVisible}}"');
     expect(wxml).toContain('markers="{{locationMapMarkers}}"');
     expect(wxml).toContain('bindmarkertap="onOpenLocation"');
-    expect(wxml).toContain('<cover-view wx:if="{{locationMapVisible}}" class="location-map-wrap">');
+    expect(wxml).toContain('<view wx:if="{{locationMapVisible}}" class="location-map-wrap">');
+    expect(wxml).toContain('<map');
     expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>');
     expect(wxml).toContain('bindtap="onOpenLocation"');
     expect(wxml).not.toContain('wx:if="{{viewer && viewer.canCancelSignup}}"');

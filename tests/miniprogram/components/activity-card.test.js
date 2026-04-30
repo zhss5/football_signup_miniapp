@@ -2,13 +2,25 @@ const fs = require('fs');
 const path = require('path');
 
 describe('activity card component', () => {
-  test('renders the uploaded cover image when present', () => {
+  test('does not use raw cover file ids as image sources', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
       'utf8'
     );
 
-    expect(wxml).toContain('{{item.coverImage}}');
+    expect(wxml).not.toContain('src="{{item.coverImage}}"');
+  });
+
+  test('renders only the resolved display cover url', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{item.coverDisplayImage || item.coverImage}}"');
+    expect(wxml).toContain('wx:if="{{item.coverDisplayImage && !coverLoadFailed}}"');
+    expect(wxml).toContain('src="{{item.coverDisplayImage}}"');
+    expect(wxml).not.toContain('src="{{item.coverDisplayImage || item.coverImage}}"');
   });
 
   test('lazy loads cover images and falls back when loading fails', () => {

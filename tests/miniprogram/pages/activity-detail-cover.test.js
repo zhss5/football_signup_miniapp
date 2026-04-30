@@ -8,6 +8,9 @@ describe('activity detail page hero', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('{{activity.coverImage}}');
+    expect(wxml).toContain('wx:if="{{activity.coverDisplayImage || activity.coverImage}}"');
+    expect(wxml).toContain('wx:if="{{activity.coverDisplayImage}}"');
+    expect(wxml).toContain('src="{{activity.coverDisplayImage}}"');
+    expect(wxml).not.toContain('src="{{activity.coverDisplayImage || activity.coverImage}}"');
   });
 });

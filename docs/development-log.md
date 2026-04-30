@@ -549,3 +549,34 @@ Notes:
 - image-loading performance is already partially covered by the planned `coverThumbImage` backfill
 - removing phone collection must be reconciled with existing optional phone fields and any old activities that still require phone numbers
 - the operations/admin backlog should remain deferred until the mini program core flow and CloudBase data model are stable enough to support reporting reliably
+
+## 2026-04-30 - CloudBase Cover FileID Display URL Resolution
+
+Real-device and DevTools testing showed that an existing CloudBase cover image could still fail to render in an activity card.
+
+Problem:
+
+- the activity document had a valid `coverImage` CloudBase fileID
+- the CloudBase console could preview the file
+- the mini program image loader attempted to load the raw `cloud://...` value as a component-relative resource, for example `/components/activity-card/cloud://...`
+- the card then fell back to its placeholder after the image load failed
+
+Fix:
+
+- keep the stored `coverImage` value unchanged as the durable CloudBase fileID
+- resolve CloudBase fileIDs to temporary HTTPS display URLs with `wx.cloud.getTempFileURL`
+- if a temporary HTTPS URL is unavailable, fall back to `wx.cloud.downloadFile` and render the returned local temporary file path
+- add `coverDisplayImage` for Home, My, and Activity Detail rendering
+- make activity cards and the detail hero use only `coverDisplayImage` as the `<image>` source, so raw CloudBase fileIDs are not passed to `<image>`
+- keep existing edit/save behavior based on the original `coverImage`, so temporary URLs are not written back to activity documents
+
+Why it mattered:
+
+- fixes rendering for valid CloudBase files that are not reliably loadable as raw `cloud://` image sources
+- prepares the same display path for future `coverThumbImage` list thumbnails
+- avoids mixing persistent storage IDs with temporary render URLs
+
+Follow-up:
+
+- Activity Detail map preview was also adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map component.
+- This avoids the DevTools/native-component warning that a `cover-view` can only contain specific native child nodes.

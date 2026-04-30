@@ -178,8 +178,140 @@ function uploadFile(filePath, cloudPath) {
     .then(res => res.fileID);
 }
 
+function isCloudFileId(value) {
+  return typeof value === 'string' && value.startsWith('cloud://');
+}
+
+function buildIdentityFileUrlMap(fileIds) {
+  return fileIds.reduce((acc, fileId) => {
+    if (fileId) {
+      acc[fileId] = fileId;
+    }
+
+    return acc;
+  }, {});
+}
+
+function getUnresolvedCloudFileIds(cloudFileIds, urlByFileId) {
+  return cloudFileIds.filter(fileId => {
+    const resolvedUrl = urlByFileId[fileId];
+    return !resolvedUrl || isCloudFileId(resolvedUrl);
+  });
+}
+
+function logUnresolvedFileUrls(unresolvedFileIds) {
+  if (unresolvedFileIds.length === 0) {
+    return;
+  }
+
+  logCloudDiagnostic('file-url:unresolved', {
+    unresolvedCount: unresolvedFileIds.length,
+    fileIds: unresolvedFileIds
+  });
+}
+
+function downloadFileUrls(wxRuntime, fileIds, urlByFileId) {
+  if (
+    fileIds.length === 0 ||
+    !wxRuntime ||
+    !wxRuntime.cloud ||
+    typeof wxRuntime.cloud.downloadFile !== 'function'
+  ) {
+    logUnresolvedFileUrls(fileIds);
+    return Promise.resolve(urlByFileId);
+  }
+
+  return Promise.all(
+    fileIds.map(fileID =>
+      wxRuntime.cloud
+        .downloadFile({
+          fileID
+        })
+        .then(res => {
+          if (res && res.tempFilePath) {
+            urlByFileId[fileID] = res.tempFilePath;
+          }
+        })
+        .catch(error => {
+          logCloudDiagnostic('file-url:download-failure', {
+            fileID,
+            errorText: formatErrorText(error),
+            error: summarizeError(error)
+          });
+        })
+    )
+  ).then(() => {
+    logUnresolvedFileUrls(getUnresolvedCloudFileIds(fileIds, urlByFileId));
+    return urlByFileId;
+  });
+}
+
+async function resolveFileUrls(fileIds = []) {
+  const uniqueFileIds = Array.from(new Set(fileIds.filter(Boolean)));
+  const urlByFileId = buildIdentityFileUrlMap(uniqueFileIds);
+  const cloudFileIds = uniqueFileIds.filter(isCloudFileId);
+
+  if (USE_LOCAL_MOCK || cloudFileIds.length === 0) {
+    return urlByFileId;
+  }
+
+  initializeCloudRuntime();
+
+  const wxRuntime = getWxRuntime();
+
+  if (
+    !wxRuntime ||
+    !wxRuntime.cloud ||
+    typeof wxRuntime.cloud.getTempFileURL !== 'function'
+  ) {
+    return downloadFileUrls(wxRuntime, cloudFileIds, urlByFileId);
+  }
+
+  try {
+    const res = await wxRuntime.cloud.getTempFileURL({
+      fileList: cloudFileIds
+    });
+
+    (res.fileList || []).forEach((file = {}, index) => {
+      const requestedFileId = cloudFileIds[index];
+      const responseFileId = file.fileID;
+      const mapFileId =
+        responseFileId && Object.prototype.hasOwnProperty.call(urlByFileId, responseFileId)
+          ? responseFileId
+          : requestedFileId;
+
+      if (mapFileId && file.tempFileURL) {
+        urlByFileId[mapFileId] = file.tempFileURL;
+        if (responseFileId) {
+          urlByFileId[responseFileId] = file.tempFileURL;
+        }
+      } else if (mapFileId) {
+        logCloudDiagnostic('file-url:temp-url-missing', {
+          fileID: mapFileId,
+          responseFileID: responseFileId,
+          status: file.status,
+          errMsg: file.errMsg
+        });
+      }
+    });
+
+    return downloadFileUrls(
+      wxRuntime,
+      getUnresolvedCloudFileIds(cloudFileIds, urlByFileId),
+      urlByFileId
+    );
+  } catch (error) {
+    logCloudDiagnostic('file-url:failure', {
+      errorText: formatErrorText(error),
+      error: summarizeError(error)
+    });
+    return downloadFileUrls(wxRuntime, cloudFileIds, urlByFileId);
+  }
+}
+
 module.exports = {
   call,
   initializeCloudRuntime,
+  resolveFileUrls,
   uploadFile
 };

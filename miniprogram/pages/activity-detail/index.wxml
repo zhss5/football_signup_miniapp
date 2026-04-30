@@ -1,7 +1,8 @@
 <view class="page" wx:if="{{activity}}">
   <view class="hero">
-    <view wx:if="{{activity.coverImage}}" class="cover-frame">
-      <image class="cover-image" src="{{activity.coverImage}}" mode="aspectFill" />
+    <view wx:if="{{activity.coverDisplayImage || activity.coverImage}}" class="cover-frame">
+      <image wx:if="{{activity.coverDisplayImage}}" class="cover-image" src="{{activity.coverDisplayImage}}" mode="aspectFill" />
+      <view wx:else class="cover-placeholder"></view>
     </view>
     <text class="title">{{activity.title}}</text>
     <view class="location-row">
@@ -9,7 +10,7 @@
         <text class="location-name">{{activity.addressName || activity.addressText}}</text>
         <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
       </view>
-      <cover-view wx:if="{{locationMapVisible}}" class="location-map-wrap">
+      <view wx:if="{{locationMapVisible}}" class="location-map-wrap">
         <map
           class="location-map"
           latitude="{{activity.location.latitude}}"
@@ -22,9 +23,10 @@
           show-location="{{false}}"
           bindmarkertap="onOpenLocation"
           bindtap="onOpenLocation"
-        />
-        <cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>
-      </cover-view>
+        >
+          <cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>
+        </map>
+      </view>
     </view>
   </view>
 

@@ -3,7 +3,8 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/activity-service', () => ({
-  listActivities: jest.fn()
+  listActivities: jest.fn(),
+  resolveActivityCoverImages: jest.fn(items => Promise.resolve(items))
 }));
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
@@ -24,6 +25,7 @@ describe('home page', () => {
   let pageConfig;
   let ensureUserProfile;
   let listActivities;
+  let resolveActivityCoverImages;
 
   beforeEach(() => {
     pageConfig = null;
@@ -38,7 +40,7 @@ describe('home page', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/home/index');
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
-    ({ listActivities } = require('../../../miniprogram/services/activity-service'));
+    ({ listActivities, resolveActivityCoverImages } = require('../../../miniprogram/services/activity-service'));
   });
 
   test('loads activities while refreshing create permission from the user profile', async () => {
@@ -75,6 +77,12 @@ describe('home page', () => {
 
     expect(ensureUserProfile).toHaveBeenCalled();
     expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(resolveActivityCoverImages).toHaveBeenCalledWith([
+      {
+        _id: 'activity_123',
+        title: 'Thursday Match'
+      }
+    ]);
     expect(ctx.data.loading).toBe(false);
     expect(ctx.data.canCreateActivity).toBe(true);
     expect(ctx.data.items).toEqual([

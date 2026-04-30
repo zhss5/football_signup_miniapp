@@ -1,4 +1,8 @@
-const { getActivityDetail, cancelActivity } = require('../../services/activity-service');
+const {
+  getActivityDetail,
+  cancelActivity,
+  resolveActivityCoverImage
+} = require('../../services/activity-service');
 const { cancelRegistration, removeRegistration } = require('../../services/registration-service');
 const { buildTeamListVm } = require('../../utils/formatters');
 const {
@@ -117,13 +121,15 @@ Page({
   async reload() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const detail = await getActivityDetail(this.data.activityId);
+    const activityWithDisplayCover = await resolveActivityCoverImage(detail.activity);
     this.setData({
       ...detail,
-      ...buildLocationMapState(detail.activity),
+      activity: activityWithDisplayCover,
+      ...buildLocationMapState(activityWithDisplayCover),
       teams: buildTeamListVm(
         detail.teams,
         detail.myRegistration,
-        detail.activity,
+        activityWithDisplayCover,
         undefined,
         translate,
         {
