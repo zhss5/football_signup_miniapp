@@ -604,3 +604,36 @@ Current decision:
 
 - do not migrate away from WeChat CloudBase now
 - continue the MVP on CloudBase, but keep the service layer boundaries intact so a later HTTP API adapter remains possible
+
+## 2026-04-30 - Local Progress Snapshot Before Push
+
+Current local progress:
+
+- local `main` is ahead of `origin/main` by two commits
+- `ba30c4c Resolve CloudBase cover URLs for display` resolves CloudBase file IDs into display-safe URLs and keeps raw `cloud://` values out of `<image>` `src`
+- `82e9b06 Document CloudBase storage permission TODO` records the CloudBase storage permission blocker, CloudBase cost checkpoint, and updated rollout order
+- latest automated verification result: `41` test suites passed and `193` tests passed
+- local-only configuration changes remain uncommitted and should not be pushed
+
+Issues encountered in the local changes:
+
+- raw CloudBase file IDs were treated by the mini-program image loader as component-relative local paths, causing 500-style render failures
+- `wx.cloud.getTempFileURL` can return a top-level `ok` while a specific file item still has no usable URL
+- diagnostics showed the real per-file failure: `STORAGE_EXCEED_AUTHORITY`
+- `wx.cloud.downloadFile` also failed with `-403003 internal server error: empty download url` for the same file, confirming this was a storage permission issue rather than a component rendering issue
+- CloudBase console could preview the object because console/server-side access is different from mini-program client access
+- the target free-trial CloudBase environment had expired, so the console blocked storage permission updates until the environment is upgraded or renewed
+
+Next execution plan:
+
+1. Upgrade or renew the target CloudBase environment so storage permission changes are allowed.
+2. Configure CloudBase storage permissions so `activity-covers/` can be read by mini-program clients while writes remain restricted.
+3. Recompile/preview and verify the failing activity cover loads without `STORAGE_EXCEED_AUTHORITY`.
+4. Run `npm run copy:cloud-shared`, then deploy all current cloud functions.
+5. Run the real-device smoke pass for cover loading, sharing, signup profile entry, organizer/admin member removal, activity editing, and cancellation flows.
+6. If the smoke pass is clean, implement the `coverThumbImage` batch backfill next to improve Home/My list image performance.
+
+Safety notes before push:
+
+- the pending commits do not include `project.config.json`, `env.local.js`, AppSecret values, tokens, private keys, or the real CloudBase environment ID
+- test-only placeholder values such as `prod-env-123` are not production secrets

@@ -172,7 +172,36 @@ Latest result:
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields, and CloudBase cover display URL resolution.
 
-## 8. Next Steps
+## 8. Current Local Commit Snapshot
+
+Local `main` is ahead of `origin/main` by two commits:
+
+- `ba30c4c Resolve CloudBase cover URLs for display`
+- `82e9b06 Document CloudBase storage permission TODO`
+
+Current progress represented by those commits:
+
+- CloudBase cover file IDs are now resolved into display URLs before rendering on Home, My, and Activity Detail.
+- Activity card and detail templates no longer pass raw `cloud://` file IDs directly to `<image>`.
+- The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
+- Documentation now records the CloudBase storage permission blocker, expired free-trial environment issue, and the CloudBase cost review checkpoint.
+
+Problems encountered during the local changes:
+
+- The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
+- `wx.cloud.getTempFileURL` returned top-level `ok`, but the file item returned `STORAGE_EXCEED_AUTHORITY`.
+- `wx.cloud.downloadFile` also failed with `-403003 internal server error: empty download url`.
+- CloudBase console preview worked because console/server-side access does not prove mini-program client read access.
+- The current free-trial environment is expired, so CloudBase blocks storage permission changes until the environment is upgraded or renewed.
+
+Sensitive-file check before push:
+
+- the pending commits do not include `project.config.json`
+- the pending commits do not include `miniprogram/config/env.local.js`
+- the pending commits do not include AppSecret values, tokens, private keys, or the real CloudBase environment ID
+- local-only config files are still present only in the working tree and should remain uncommitted
+
+## 9. Next Steps
 
 Continue in this order:
 
@@ -216,7 +245,7 @@ Continue in this order:
 16. Push local commits if they should be shared:
    - `git push origin main`
 
-## 9. Key Files To Read First
+## 10. Key Files To Read First
 
 For the next session, these files are the fastest orientation points:
 
@@ -238,7 +267,7 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
 - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 
-## 10. Important Notes
+## 11. Important Notes
 
 - Do not commit real CloudBase environment IDs, AppSecret values, tokens, or local `env.local.js` contents.
 - The documented deployment commands use placeholders such as `your-cloud-env-id`.

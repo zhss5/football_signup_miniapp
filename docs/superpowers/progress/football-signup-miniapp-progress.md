@@ -166,6 +166,28 @@ Covered areas include:
 - layout regressions
 - organizer/admin activity edit permissions and update behavior
 
+## 4.1 Current Local Progress
+
+The local `main` branch currently has two commits that are not on `origin/main` yet:
+
+- `ba30c4c Resolve CloudBase cover URLs for display`
+- `82e9b06 Document CloudBase storage permission TODO`
+
+What changed:
+
+- Home, My, and Activity Detail now render activity covers through `coverDisplayImage` instead of passing raw CloudBase `cloud://` file IDs directly to `<image>`
+- CloudBase file IDs are resolved with `wx.cloud.getTempFileURL`, with fallback diagnostics and `wx.cloud.downloadFile` as a secondary path
+- activity card and detail templates show placeholders when a CloudBase file cannot be resolved for display
+- CloudBase rollout and handoff docs now record the storage permission blocker, cost checkpoint, and updated deployment order
+
+Issues found while testing these changes:
+
+- the mini-program renderer treats raw `cloud://` image values as invalid local component paths
+- a top-level `cloud.getTempFileURL:ok` result can still contain a per-file failure
+- the current failing cover file returns `STORAGE_EXCEED_AUTHORITY`, so the mini-program client cannot read it under the current CloudBase storage rule
+- the free-trial CloudBase environment is expired, which blocks storage permission changes until upgrade or renewal
+- local-only project configuration changes remain intentionally uncommitted and should not be pushed
+
 ## 5. Known Gaps
 
 The MVP still has known non-blocking gaps:
