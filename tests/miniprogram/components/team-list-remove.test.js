@@ -24,6 +24,16 @@ describe('team-list member removal', () => {
     expect(wxml).toContain('catchtap="onMemberActionTap"');
   });
 
+  test('renders manager proxy signup controls for teams that allow it', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{item.canProxySignup}}"');
+    expect(wxml).toContain('bindtap="onProxySignupTap"');
+  });
+
   test('uses a distinct visual style for self cancel signup and manager removal', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
@@ -81,6 +91,27 @@ describe('team-list member removal', () => {
     expect(triggerEvent).toHaveBeenCalledWith('cancelsignup', {
       userOpenId: 'openid_self',
       signupName: 'Alex'
+    });
+  });
+
+  test('emits proxy signup team identity when a manager taps add participant', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      triggerEvent
+    };
+
+    componentConfig.methods.onProxySignupTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          teamId: 'team_white',
+          teamName: 'White'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('proxysignup', {
+      teamId: 'team_white',
+      teamName: 'White'
     });
   });
 });

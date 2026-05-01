@@ -76,3 +76,10 @@
   margin-bottom: 16rpx;
   color: #9ca3af;
 }
+
+.proxy-signup-button {
+  margin-bottom: 12rpx;
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}

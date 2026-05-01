@@ -24,6 +24,15 @@ Component({
       });
     },
 
+    onProxySignupTap(event) {
+      const dataset = event.currentTarget.dataset;
+
+      this.triggerEvent('proxysignup', {
+        teamId: dataset.teamId,
+        teamName: dataset.teamName
+      });
+    },
+
     onMemberActionTap(event) {
       const dataset = event.currentTarget.dataset;
       const eventNameByAction = {

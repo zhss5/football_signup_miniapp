@@ -33,6 +33,10 @@
 - Confirm existing registrations remain attached to the same activity after edit
 - Confirm capacity cannot be reduced below joined players or existing regular team slots
 - Confirm regular users and non-owner organizers cannot edit another organizer's activity
+- Confirm organizer/admin can add a proxy participant to a selected team
+- Confirm regular users cannot see or use proxy signup
+- Confirm organizer/admin can remove a proxy participant after adding them
+- Confirm organizer/admin can copy all active participant names
 - Confirm organizer cancel changes activity status to `cancelled`
 - Confirm organizer soft delete is allowed only when `joinedCount = 0`
 - Confirm deleted activities remain visible to the organizer in Created history only

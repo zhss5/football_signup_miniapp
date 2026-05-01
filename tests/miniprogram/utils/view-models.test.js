@@ -209,6 +209,66 @@ test('buildTeamListVm marks other member rows with remove action for managers', 
   });
 });
 
+test('buildTeamListVm enables proxy signup for managers while signup is open', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 1,
+        maxMembers: 6,
+        members: []
+      }
+    ],
+    {
+      teamId: 'team_red',
+      status: 'joined',
+      userOpenId: 'openid_self'
+    },
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0]).toMatchObject({
+    canProxySignup: true,
+    proxySignupText: 'Add participant'
+  });
+});
+
+test('buildTeamListVm disables proxy signup for managers when the team is full', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 6,
+        maxMembers: 6,
+        members: []
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0]).toMatchObject({
+    canProxySignup: false,
+    proxySignupText: ''
+  });
+});
+
 test('buildTeamListVm does not show remove action on the current user row', () => {
   const teams = buildTeamListVm(
     [

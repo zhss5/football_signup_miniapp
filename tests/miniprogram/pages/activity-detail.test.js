@@ -5,6 +5,7 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/registration-service', () => ({
+  addProxyRegistration: jest.fn(),
   cancelRegistration: jest.fn(),
   removeRegistration: jest.fn()
 }));
@@ -16,6 +17,7 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
+  let addProxyRegistration;
   let removeRegistration;
   let buildTeamListVm;
   let resolveActivityCoverImage;
@@ -36,6 +38,7 @@ describe('activity detail page', () => {
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
+    ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
   });
@@ -354,6 +357,82 @@ describe('activity detail page', () => {
     );
     expect(removeRegistration).toHaveBeenCalledWith('activity_123', 'openid_player');
     expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('onProxySignup prompts for a name, adds the participant, and reloads detail', async () => {
+    addProxyRegistration.mockResolvedValue({
+      status: 'joined'
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({
+        confirm: true,
+        content: ' Guest Player '
+      });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onProxySignup.call(ctx, {
+      detail: {
+        teamId: 'team_white',
+        teamName: 'White'
+      }
+    });
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Add participant',
+        editable: true,
+        placeholderText: 'Participant name'
+      })
+    );
+    expect(addProxyRegistration).toHaveBeenCalledWith(
+      'activity_123',
+      'team_white',
+      'Guest Player'
+    );
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Participant added',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('onProxySignup requires a participant name', async () => {
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({
+        confirm: true,
+        content: '   '
+      });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onProxySignup.call(ctx, {
+      detail: {
+        teamId: 'team_white',
+        teamName: 'White'
+      }
+    });
+
+    expect(addProxyRegistration).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Signup name is required',
+      icon: 'none'
+    });
+    expect(ctx.reload).not.toHaveBeenCalled();
   });
 
   test('onCopyParticipantNames copies all joined member names in team order', () => {

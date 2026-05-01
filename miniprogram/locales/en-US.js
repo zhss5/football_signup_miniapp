@@ -44,6 +44,7 @@ module.exports = {
     actions: {
       edit: 'Edit',
       copyParticipantNames: 'Copy participant names',
+      proxySignup: 'Add participant',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
       removeMember: 'Remove',
@@ -154,6 +155,10 @@ module.exports = {
       title: 'Remove member',
       content: 'Remove {{name}} from this activity?',
       defaultName: 'this member'
+    },
+    proxySignup: {
+      title: 'Add participant',
+      placeholder: 'Participant name'
     }
   },
   toast: {
@@ -165,7 +170,8 @@ module.exports = {
     loadActivitiesFailed: 'Unable to load activities',
     locationPinUnavailable: 'Location pin not available',
     participantNamesCopied: 'Participant names copied',
-    noParticipantsToCopy: 'No participants to copy'
+    noParticipantsToCopy: 'No participants to copy',
+    proxySignupSuccess: 'Participant added'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',
@@ -193,6 +199,7 @@ module.exports = {
     noActiveRegistration: 'No active registration to cancel',
     signupCannotBeCancelled: 'Signup can no longer be cancelled',
     removeRegistrationNotAllowed: 'Only the organizer or an admin can remove registrations',
+    proxySignupNotAllowed: 'Only the organizer or an admin can add participants',
     organizerCancelOnly: 'Only the organizer can cancel this activity',
     organizerDeleteOnly: 'Only the organizer can delete this activity',
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',

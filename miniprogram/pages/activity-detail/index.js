@@ -3,7 +3,11 @@ const {
   cancelActivity,
   resolveActivityCoverImage
 } = require('../../services/activity-service');
-const { cancelRegistration, removeRegistration } = require('../../services/registration-service');
+const {
+  addProxyRegistration,
+  cancelRegistration,
+  removeRegistration
+} = require('../../services/registration-service');
 const { buildTeamListVm } = require('../../utils/formatters');
 const {
   getAppLocale,
@@ -215,6 +219,48 @@ Page({
 
     try {
       await removeRegistration(this.data.activityId, detail.userOpenId);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onProxySignup(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = event.detail || {};
+
+    if (!detail.teamId) {
+      return;
+    }
+
+    const signupName = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.proxySignup.title'),
+        content: detail.teamName || '',
+        editable: true,
+        placeholderText: translate('modal.proxySignup.placeholder'),
+        success: result => resolve(result.confirm ? String(result.content || '').trim() : null)
+      });
+    });
+
+    if (signupName === null) {
+      return;
+    }
+
+    if (!signupName) {
+      wx.showToast({
+        title: translate('errors.signupNameRequired'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      await addProxyRegistration(this.data.activityId, detail.teamId, signupName);
+      wx.showToast({
+        title: translate('toast.proxySignupSuccess'),
+        icon: 'success'
+      });
       await this.reload();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });

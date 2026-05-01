@@ -44,6 +44,7 @@ module.exports = {
     },
     actions: {
       copyParticipantNames: '复制报名名单',
+      proxySignup: '代人报名',
       edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
@@ -153,11 +154,16 @@ module.exports = {
       title: '移除成员',
       content: '确认将 {{name}} 从本活动中移除？',
       defaultName: '该成员'
+    },
+    proxySignup: {
+      title: '代人报名',
+      placeholder: '报名名称'
     }
   },
   toast: {
     participantNamesCopied: '已复制报名名单',
     noParticipantsToCopy: '暂无报名成员',
+    proxySignupSuccess: '已添加报名成员',
     chooseLocationFailed: '无法选择地点',
     chooseImageFailed: '无法选择图片',
     openImageFailed: '无法打开图片',
@@ -192,6 +198,7 @@ module.exports = {
     noActiveRegistration: '当前没有可取消的报名',
     signupCannotBeCancelled: '当前已不能退出报名',
     removeRegistrationNotAllowed: '只有组织者或管理员可以移除报名成员',
+    proxySignupNotAllowed: '只有组织者或管理员可以代人报名',
     organizerCancelOnly: '只有组织者可以取消活动',
     organizerDeleteOnly: '只有组织者可以删除活动',
     deleteOnlyEmpty: '只有无人报名的活动才可以删除'

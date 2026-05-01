@@ -165,6 +165,15 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - participant names follow the current team/member order shown on the detail page
 - empty rosters show a hint and do not write an empty clipboard value
 
+### 2.16 Organizer Proxy Signup
+
+- Activity Detail lets organizers/admins add a participant directly to a selected team
+- proxy signups use the new `addProxyRegistration` cloud function
+- proxy registrations use generated `proxy_...` user IDs so one organizer can add multiple people
+- proxy registrations are marked with `proxyRegistration: true`, `source: proxy`, and `createdByOpenId`
+- proxy signup follows the same activity/team open, deadline, and capacity rules as normal signup
+- existing organizer/admin removal can remove proxy participants
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -181,14 +190,15 @@ The current implementation differs from the original early MVP assumptions in th
 - published activities can now be edited in place instead of recreated for routine corrections
 - participant phone collection was removed from the current signup flow
 - organizers/admins can copy all active participant names from Activity Detail
+- organizers/admins can add proxy participants from Activity Detail
 
 ## 4. Verification Status
 
 Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
-- result: `42` test suites passed
-- result: `205` tests passed
+- result: `43` test suites passed
+- result: `218` tests passed
 
 Covered areas include:
 
@@ -203,6 +213,7 @@ Covered areas include:
 - cover display source preference and fallback behavior
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior
+- organizer proxy signup behavior
 
 ## 4.1 Current Media Progress
 
@@ -239,7 +250,6 @@ The MVP still has known non-blocking gaps:
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
-- organizer proxy signup for participants is not implemented yet
 - the default team setup still starts from two teams; the future requirement is to allow a one-team minimum
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
@@ -251,16 +261,16 @@ The MVP still has known non-blocking gaps:
 - one real environment has already been created locally
 - target CloudBase has been upgraded to the personal plan
 - verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
-- validate permissions, cover image loading, sharing, signup, organizer/admin removal, and end-to-end data writes on a real device
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `addProxyRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- validate permissions, cover image loading, sharing, signup, organizer/admin removal, organizer proxy signup, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
 
 - use the My page copyable user ID to grant `organizer` roles manually in CloudBase
 - add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
 - validate activity editing on a real device after deploying `updateActivity`
-- let organizers sign up participants on their behalf
-- let organizers copy active participant names in one action
+- completed in code: let organizers sign up participants on their behalf
+- completed in code: let organizers copy active participant names in one action
 - move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page

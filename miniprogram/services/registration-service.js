@@ -4,6 +4,10 @@ function joinActivity(payload) {
   return call('joinActivity', payload);
 }
 
+function addProxyRegistration(activityId, teamId, signupName) {
+  return call('addProxyRegistration', { activityId, teamId, signupName });
+}
+
 function resolvePhoneNumber(code) {
   return call('resolvePhoneNumber', { code });
 }
@@ -17,6 +21,7 @@ function removeRegistration(activityId, userOpenId) {
 }
 
 module.exports = {
+  addProxyRegistration,
   joinActivity,
   resolvePhoneNumber,
   cancelRegistration,

@@ -14,6 +14,7 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.actions.copyParticipantNames}}');
     expect(wxml).toContain('bindtap="onCopyParticipantNames"');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
+    expect(wxml).toContain('bind:proxysignup="onProxySignup"');
     expect(wxml).toContain('bind:removemember="onRemoveRegistration"');
     expect(wxml).toContain('bind:cancelsignup="onCancelSignup"');
     expect(wxml).toContain('open-type="share"');

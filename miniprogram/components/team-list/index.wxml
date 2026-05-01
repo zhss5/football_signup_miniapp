@@ -24,6 +24,13 @@
         </block>
       </view>
       <text wx:else class="empty-members">{{emptyText}}</text>
+      <button
+        wx:if="{{item.canProxySignup}}"
+        class="proxy-signup-button"
+        data-team-id="{{item._id}}"
+        data-team-name="{{item.teamName}}"
+        bindtap="onProxySignupTap"
+      >{{item.proxySignupText}}</button>
       <button data-team-id="{{item._id}}" bindtap="onJoinTap" disabled="{{item.joinDisabled}}">{{item.joinButtonText}}</button>
     </view>
   </block>

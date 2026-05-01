@@ -791,3 +791,26 @@ Verification:
 
 - targeted red/green coverage was added for copying joined names, handling empty rosters, and rendering the organizer action entry point.
 - full regression suite passed: `42` test suites, `205` tests.
+
+## 2026-05-01 - Organizer Proxy Signup Implemented
+
+Organizers and admins can now add participants on someone else's behalf from Activity Detail.
+
+Delivered behavior:
+
+- each team card shows `Add participant` when the viewer can manage registrations and that team can still accept signups
+- tapping the action opens an editable modal for the participant name
+- proxy signups create independent registration records with generated `proxy_...` user IDs, so one organizer can add multiple people
+- proxy registrations are marked with `proxyRegistration: true`, `source: proxy`, and `createdByOpenId`
+- existing organizer/admin removal can remove proxy registrations because they still have a stable `userOpenId`
+- regular users cannot call the proxy signup cloud function
+
+Operational notes:
+
+- deploy the new `addProxyRegistration` cloud function after running `npm run copy:cloud-shared`
+- no database permission change is required because the write goes through a cloud function
+
+Verification:
+
+- targeted red/green coverage was added for the cloud function, local mock, team-list entry point, detail-page modal flow, and view-model enable/disable rules.
+- full regression suite passed: `43` test suites, `218` tests.

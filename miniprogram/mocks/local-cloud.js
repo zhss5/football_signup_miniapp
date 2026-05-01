@@ -532,6 +532,79 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function addProxyRegistration(payload) {
+    validateSignupPayload(payload);
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const activity = state.activities[payload.activityId];
+    const team = state.teams[payload.teamId];
+    const signupName = payload.signupName.trim();
+
+    if (!activity || activity.status === 'deleted') {
+      throw new Error('Activity not found');
+    }
+
+    const actor = ensureUserInState(state, openid, stamp);
+    if (!canEditActivity(activity, actor, openid)) {
+      throw new Error('Only the organizer or an admin can add participants');
+    }
+
+    if (activity.status !== 'published') {
+      throw new Error('Activity is not open for signup');
+    }
+
+    const deadline = Date.parse(activity.signupDeadlineAt || '');
+    if (Number.isFinite(deadline) && Date.parse(stamp) > deadline) {
+      throw new Error('Signup is closed');
+    }
+
+    if (!team || team.activityId !== payload.activityId || team.status === 'inactive') {
+      throw new Error('Team not found');
+    }
+
+    if (activity.joinedCount >= activity.signupLimitTotal) {
+      throw new Error('Activity is full');
+    }
+
+    if (team.joinedCount >= team.maxMembers) {
+      throw new Error('Team is full');
+    }
+
+    const proxyUserOpenId = nextId(state, 'proxy');
+    const registrationId = `${payload.activityId}_${proxyUserOpenId}`;
+    const registrationData = {
+      _id: registrationId,
+      activityId: payload.activityId,
+      teamId: payload.teamId,
+      userOpenId: proxyUserOpenId,
+      status: 'joined',
+      signupName,
+      avatarUrl: '',
+      profileSource: 'proxy',
+      source: 'proxy',
+      proxyRegistration: true,
+      createdByOpenId: openid,
+      joinedAt: stamp,
+      cancelledAt: '',
+      updatedAt: stamp
+    };
+
+    state.registrations[registrationId] = registrationData;
+    activity.joinedCount += 1;
+    activity.updatedAt = stamp;
+    team.joinedCount += 1;
+    writeState(state);
+
+    return {
+      registrationId,
+      teamId: payload.teamId,
+      userOpenId: proxyUserOpenId,
+      status: 'joined',
+      proxyRegistration: true
+    };
+  }
+
   function resolvePhoneNumber(payload) {
     if (!payload.code) {
       throw new Error('Phone authorization code is required');
@@ -727,6 +800,7 @@ function createLocalCloudClient(options = {}) {
     listActivities,
     getActivityDetail,
     joinActivity,
+    addProxyRegistration,
     resolvePhoneNumber,
     cancelRegistration,
     removeRegistration,

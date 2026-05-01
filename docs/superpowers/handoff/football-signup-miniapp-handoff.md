@@ -27,6 +27,7 @@ The codebase supports:
 - role-gated activity creation for `organizer` and `admin` users
 - organizer/admin activity editing through the `updateActivity` cloud function
 - organizer/admin one-tap participant name copy from Activity Detail
+- organizer/admin proxy signup through the `addProxyRegistration` cloud function
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -44,6 +45,7 @@ Deployable cloud functions currently include:
 - `createActivity`
 - `updateActivity`
 - `joinActivity`
+- `addProxyRegistration`
 - `cancelRegistration`
 - `cancelActivity`
 - `deleteActivity`
@@ -150,7 +152,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -175,10 +177,10 @@ npm test
 
 Latest result:
 
-- `42` test suites passed
-- `205` tests passed
+- `43` test suites passed
+- `218` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -225,6 +227,8 @@ Current organizer roster behavior:
 - Activity Detail shows `Copy participant names` to viewers with registration-management permission.
 - copied text is one participant name per line in the current team/member display order.
 - empty rosters show a toast and do not write an empty clipboard value.
+- Activity Detail also lets organizers/admins add proxy participants to a selected team.
+- proxy participants use generated `proxy_...` user IDs and can be removed through the existing organizer/admin removal flow.
 
 Problems encountered during cover-display testing:
 
@@ -255,7 +259,7 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
+9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, and organizer proxy signup after CloudBase deployment.
 10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - first version keeps `status: published/cancelled/deleted`
@@ -267,8 +271,6 @@ Continue in this order:
 13. Plan later mini program backlog items:
    - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
-   - let organizers sign up participants on their behalf
-   - let organizers copy all active participant names in one action
    - allow a one-team minimum in activity setup instead of always defaulting to two teams
 14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters

@@ -159,6 +159,103 @@ test('local cloud client lets an organizer update an activity without changing r
   });
 });
 
+test('local cloud client lets an organizer add a proxy participant', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  const added = await ownerClient.call('addProxyRegistration', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Guest Player'
+  });
+  const detailAfter = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(added).toMatchObject({
+    status: 'joined',
+    proxyRegistration: true,
+    teamId: detailBefore.teams[0]._id
+  });
+  expect(detailAfter.activity.joinedCount).toBe(1);
+  expect(detailAfter.teams[0].joinedCount).toBe(1);
+  expect(detailAfter.teams[0].members[0]).toMatchObject({
+    signupName: 'Guest Player',
+    userOpenId: expect.stringMatching(/^proxy_/)
+  });
+});
+
+test('local cloud client blocks regular users from adding proxy participants', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const regularClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_regular',
+    defaultRoles: ['user']
+  });
+
+  await regularClient.call('ensureUserProfile');
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await expect(
+    regularClient.call('addProxyRegistration', {
+      activityId: created.activityId,
+      teamId: detailBefore.teams[0]._id,
+      signupName: 'Guest Player'
+    })
+  ).rejects.toThrow('Only the organizer or an admin can add participants');
+});
+
 test('local cloud client blocks non-owner activity edits and capacity below joined count', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({
