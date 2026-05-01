@@ -75,7 +75,7 @@ module.exports = {
     inviteCode: '邀请码',
     inviteCodePlaceholder: '可选邀请码',
     teams: '分队设置',
-    teamsHint: '默认两队，可继续新增第 3 队和第 4 队。',
+    teamsHint: '默认一支队伍，可按需要继续新增队伍。',
     totalSignupLimit: '总报名人数',
     totalSignupLimitPlaceholder: '总报名人数',
     namedTeamsSlots: '正式队容量：{{count}} 人',

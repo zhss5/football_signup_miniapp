@@ -860,3 +860,26 @@ Verification:
 
 - targeted red/green coverage was added for the cloud function, local mock, service adapter, view model, team-list event, and Activity Detail picker flow.
 - full regression suite passed: `44` test suites, `232` tests.
+
+## 2026-05-01 - One-Team Activity Default Implemented
+
+Activity creation now starts from one editable team instead of forcing two teams.
+
+Delivered behavior:
+
+- new activity forms default to one `White` team with `12` slots.
+- organizers can still add more teams up to the existing four-team maximum.
+- team rows show remove controls whenever there is more than one team.
+- the team editor refuses to remove the final remaining team.
+- the create-page team hint now says the default is one team.
+- existing cloud validation already allowed one-team activities, so no cloud function behavior change was required.
+
+Why it matters:
+
+- organizers can create simple one-list signup activities without managing an unnecessary second team.
+- two-team and multi-team football setups remain available by adding teams.
+
+Verification:
+
+- targeted red/green coverage was added for the default draft form, create-page initialization, and team-editor one-team minimum behavior.
+- full regression suite passed: `46` test suites, `235` tests.

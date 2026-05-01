@@ -63,6 +63,10 @@ Component({
     },
 
     onRemoveTeam(event) {
+      if (this.properties.teams.length <= 1) {
+        return;
+      }
+
       const index = Number(event.currentTarget.dataset.index);
       const teams = this.properties.teams.filter((team, currentIndex) => currentIndex !== index);
       this.emitTeams(teams);

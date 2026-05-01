@@ -30,6 +30,7 @@ The codebase supports:
 - organizer/admin proxy signup through the `addProxyRegistration` cloud function
 - organizer/admin-only proxy participant badge in Activity Detail rosters
 - organizer/admin team reassignment through the `moveRegistration` cloud function
+- one-team activity creation default with add/remove team controls up to four named teams
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -185,10 +186,10 @@ npm test
 
 Latest result:
 
-- `44` test suites passed
-- `232` tests passed
+- `46` test suites passed
+- `235` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -221,6 +222,13 @@ Current signup simplification:
 - Join Activity no longer renders phone input or WeChat phone authorization
 - `joinActivity` accepts signups without `phone`, and still preserves optional phone fields if a future flow sends them
 - keep phone fields as optional extension fields; no immediate migration is required
+
+Current activity creation team defaults:
+
+- New activity forms start with one editable team.
+- The default team uses the localized `White` team name and `12` slots.
+- Organizers can add teams up to the existing four-team maximum.
+- Team rows can be removed down to one team; the final remaining team cannot be removed.
 
 Current signup profile behavior:
 
@@ -282,7 +290,6 @@ Continue in this order:
 13. Plan later mini program backlog items:
    - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
-   - allow a one-team minimum in activity setup instead of always defaulting to two teams
 14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate

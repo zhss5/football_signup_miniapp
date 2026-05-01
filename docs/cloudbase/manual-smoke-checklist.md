@@ -8,6 +8,8 @@
 
 ## Activity Creation
 
+- Confirm a new activity starts with one default team
+- Confirm the final remaining team cannot be removed
 - Confirm activity creation writes one `activities` document
 - Confirm activity creation writes the related `activity_teams` documents
 - Confirm map-selected address fields are stored

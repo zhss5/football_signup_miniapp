@@ -10,7 +10,7 @@ The project is built for a fast MVP launch first, while keeping room for future 
 - Configure activity date, start time, end time, and signup deadline
 - Select activity location with WeChat map
 - Upload one cover image and crop it to a shared `2:1` ratio
-- Configure up to four named teams
+- Start from one default team and configure up to four named teams
 - Auto-generate a bench team when total capacity exceeds named-team capacity
 - Join exactly one team per activity
 - Cancel signup before the signup deadline
@@ -129,6 +129,7 @@ The repository already contains a runnable MVP implementation in local mock mode
 - cover-image crop flow
 - CloudBase deployment packaging and real-cloud function wiring
 - organizer/admin roster operations for copying names, proxy signup, removal, and team reassignment
+- one-team default activity setup with optional additional teams
 
 ## Next Recommended Work
 

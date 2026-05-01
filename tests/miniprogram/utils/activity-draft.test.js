@@ -11,6 +11,12 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
 
   expect(form.activityDate).toBe('2026-04-29');
   expect(form.signupDeadlineDate).toBe('2026-04-29');
+  expect(form.teams).toEqual([
+    {
+      teamName: 'White',
+      maxMembers: 12
+    }
+  ]);
   expect(form).not.toHaveProperty('requirePhone');
 });
 

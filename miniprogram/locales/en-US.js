@@ -74,7 +74,7 @@ module.exports = {
     inviteCode: 'Invite code',
     inviteCodePlaceholder: 'Optional invite code',
     teams: 'Teams',
-    teamsHint: 'Default to two teams. You can add Team 3 and Team 4 if needed.',
+    teamsHint: 'Default to one team. Add more teams if needed.',
     totalSignupLimit: 'Total signup limit',
     totalSignupLimitPlaceholder: 'Total signup limit',
     namedTeamsSlots: 'Named teams: {{count}} slots',

@@ -41,7 +41,7 @@ The activity cover image is cropped to a shared `2:1` ratio so that the same fra
 
 The current MVP uses this team model:
 
-- the form starts with two named teams by default
+- the form starts with one named team by default
 - the organizer can add up to four named teams
 - total signup limit is independent from named-team capacity
 - when total signup limit is greater than the sum of named-team capacities, the system auto-generates a bench team

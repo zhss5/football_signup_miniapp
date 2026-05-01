@@ -372,7 +372,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 ### Milestone B6: Signup Flow Refinements
 
 - add an insurance link to the activity/signup experience
-- support one-team activity setup as the minimum default
+- completed in code: support one-team activity setup as the minimum default
 - keep two-team setup available as a common football default, but do not force it for every activity
 
 ### Milestone C: Monetization Readiness

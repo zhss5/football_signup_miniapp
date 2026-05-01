@@ -195,8 +195,7 @@ Page({
     const i18n = getMessages(locale);
     const translate = makeTranslator(locale);
     const defaultTeams = [
-      { teamName: translate('teamEditor.whiteTeam'), maxMembers: 6 },
-      { teamName: translate('teamEditor.redTeam'), maxMembers: 6 }
+      { teamName: translate('teamEditor.whiteTeam'), maxMembers: 12 }
     ];
     const form = resetForm ? createDefaultActivityForm({ defaultTeams }) : this.data.form;
 

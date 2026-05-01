@@ -61,8 +61,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 ### 2.4 Team Model
 
-- two default named teams
-- support for adding Team 3 and Team 4
+- one default named team
+- support for adding up to four named teams
 - per-team capacity
 - auto-generated bench team when total capacity exceeds named-team capacity
 - roster display with member list per team
@@ -184,6 +184,14 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - moving a participant updates the registration `teamId` and source/target team counts without changing activity `joinedCount`
 - regular users cannot see the move action or execute the cloud function
 
+### 2.18 One-Team Activity Default
+
+- new activity forms start with one editable team by default
+- the default team uses the localized `White` team name and `12` slots
+- organizers can add teams up to the existing four-team maximum
+- team rows can be removed down to one team, but the final team cannot be removed
+- create/update validation continues to require at least one team
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -203,14 +211,15 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can add proxy participants from Activity Detail
 - organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
 - organizers/admins can move participants between teams
+- activity creation now starts from one team instead of two
 
 ## 4. Verification Status
 
 Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
-- result: `44` test suites passed
-- result: `232` tests passed
+- result: `46` test suites passed
+- result: `235` tests passed
 
 Covered areas include:
 
@@ -228,6 +237,7 @@ Covered areas include:
 - organizer proxy signup behavior
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior
+- one-team default activity setup behavior
 
 ## 4.1 Current Media Progress
 
@@ -264,7 +274,6 @@ The MVP still has known non-blocking gaps:
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
-- the default team setup still starts from two teams; the future requirement is to allow a one-team minimum
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
 ## 6. Recommended Next Steps
@@ -319,7 +328,7 @@ The MVP still has known non-blocking gaps:
 - add optional Join page nickname/avatar selection and prefill from the user profile
 - add activity/signup insurance-link display
 - add preferred playing position selection as a `P2` participant profile/signup refinement
-- allow one-team activity setup as the minimum default instead of always creating two teams
+- completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality
 
