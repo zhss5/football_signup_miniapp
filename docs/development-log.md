@@ -663,8 +663,9 @@ Delivered behavior:
 Operational notes:
 
 - deploy `generateActivityCoverThumbs` after running `npm run copy:cloud-shared`
-- the function package depends on CloudBase image processing through `@cloudbase/extension-ci` and `@cloudbase/node-sdk`
+- the function package depends on CloudBase image processing through `@cloudbase/extension-ci` and `@cloudbase/node-sdk`; `@cloudbase/extension-ci` currently uses the `0.x` package line, so keep the function dependency on `^0.2.3`
 - ensure the CloudBase image processing/CloudInfinite extension is available in the target environment before running the real backfill
+- if CloudBase shows the function in `CreateFailed`, delete that failed cloud function record before redeploying because CloudBase will reject code updates while the function is stuck in the failed-create state
 - first run the function with:
 
 ```json
