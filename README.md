@@ -9,7 +9,7 @@ The project is built for a fast MVP launch first, while keeping room for future 
 - Create football signup activities
 - Configure activity date, start time, end time, and signup deadline
 - Select activity location with WeChat map
-- Add an optional insurance signup link and let participants copy it from Activity Detail
+- Add an optional insurance signup link and let participants open it from Activity Detail
 - Upload one cover image and crop it to a shared `2:1` ratio
 - Start from one default team and configure up to four named teams
 - Auto-generate a bench team when total capacity exceeds named-team capacity
@@ -131,7 +131,7 @@ The repository already contains a runnable MVP implementation in local mock mode
 - CloudBase deployment packaging and real-cloud function wiring
 - organizer/admin roster operations for copying names, proxy signup, removal, and team reassignment
 - one-team default activity setup with optional additional teams
-- optional insurance link support for activity creation, editing, and detail-page copying
+- optional insurance link support for activity creation, editing, and detail-page web-view opening
 
 ## Next Recommended Work
 

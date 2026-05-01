@@ -30,6 +30,7 @@ describe('activity detail page', () => {
       pageConfig = config;
     });
     global.wx = {
+      navigateTo: jest.fn(),
       showToast: jest.fn(),
       showModal: jest.fn(),
       showShareMenu: jest.fn(),
@@ -560,30 +561,24 @@ describe('activity detail page', () => {
     });
   });
 
-  test('onCopyInsuranceLink copies the activity insurance link', () => {
-    global.wx.setClipboardData.mockImplementation(({ success }) => {
-      success();
-    });
-
+  test('onOpenInsuranceLink opens the activity insurance link in a web-view page', () => {
     const ctx = {
       data: {
         locale: 'en-US',
         activity: {
-          insuranceLink: 'https://insurance.example.com/apply'
+          insuranceLink: 'https://insurance.example.com/apply?activity=abc&team=white'
         }
       }
     };
 
-    pageConfig.onCopyInsuranceLink.call(ctx);
+    pageConfig.onOpenInsuranceLink.call(ctx);
 
-    expect(global.wx.setClipboardData).toHaveBeenCalledWith({
-      data: 'https://insurance.example.com/apply',
-      success: expect.any(Function)
+    expect(global.wx.navigateTo).toHaveBeenCalledWith({
+      url:
+        '/pages/insurance-webview/index?url=' +
+        encodeURIComponent('https://insurance.example.com/apply?activity=abc&team=white')
     });
-    expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Insurance link copied',
-      icon: 'success'
-    });
+    expect(global.wx.setClipboardData).not.toHaveBeenCalled();
   });
 
   test('onShareAppMessage shares the current activity detail page', () => {

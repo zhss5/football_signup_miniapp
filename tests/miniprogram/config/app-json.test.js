@@ -14,4 +14,10 @@ describe('mini program app.json config', () => {
 
     expect(desc.length).toBeLessThanOrEqual(30);
   });
+
+  test('registers the insurance web-view page', () => {
+    const appJson = readAppJson();
+
+    expect(appJson.pages).toContain('pages/insurance-webview/index');
+  });
 });

@@ -31,7 +31,7 @@ The codebase supports:
 - organizer/admin-only proxy participant badge in Activity Detail rosters
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
-- optional activity insurance link creation, editing, and Activity Detail clipboard copy
+- optional activity insurance link creation, editing, and Activity Detail web-view opening
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -73,6 +73,7 @@ Latest insurance-link change:
 - `createActivity` and `updateActivity` now persist the optional trimmed `insuranceLink`.
 - upload a new mini program frontend build so the Create/Edit field and the Activity Detail share-card insurance purchase link are available.
 - redeploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared` before testing this feature on CloudBase.
+- configure the insurance URL domain in the mini program business-domain settings before expecting the external page to open on real devices.
 
 Earlier rollout reference:
 
@@ -193,10 +194,10 @@ npm test
 
 Latest result:
 
-- `46` test suites passed
-- `238` tests passed
+- `47` test suites passed
+- `241` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page copying, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -260,7 +261,8 @@ Current insurance-link behavior:
 
 - Create/Edit Activity has an optional insurance signup link field.
 - Activity Detail shows the insurance purchase link at the top of the share card only when the activity has a link.
-- tapping the insurance purchase link copies the link to the clipboard; it does not attempt to open arbitrary external web pages inside the mini program.
+- tapping the insurance purchase link opens the URL through `pages/insurance-webview/index`.
+- the external insurance domain must be configured as a mini program business domain; otherwise WeChat can block the web-view page on real devices.
 
 Problems encountered during cover-display testing:
 

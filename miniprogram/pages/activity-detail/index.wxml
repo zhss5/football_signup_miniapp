@@ -31,7 +31,7 @@
   </view>
 
   <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
-    <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onCopyInsuranceLink">
+    <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onOpenInsuranceLink">
       {{i18n.activity.insurance.copyAction}}
     </button>
     <text class="share-title">{{shareHintVisible ? i18n.activity.share.publishedTitle : i18n.activity.share.defaultTitle}}</text>

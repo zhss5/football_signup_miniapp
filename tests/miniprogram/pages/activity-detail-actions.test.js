@@ -28,7 +28,7 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>');
     expect(wxml).toContain('bindtap="onOpenLocation"');
     expect(wxml).toContain(
-      '<button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onCopyInsuranceLink">'
+      '<button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onOpenInsuranceLink">'
     );
     expect(wxml.indexOf('class="share-card')).toBeLessThan(
       wxml.indexOf('class="insurance-link-button"')

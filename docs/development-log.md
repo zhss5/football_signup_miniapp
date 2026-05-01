@@ -894,19 +894,20 @@ Delivered behavior:
 - the frontend draft helper trims `insuranceLink` before submit.
 - `createActivity`, `updateActivity`, and local mock mode persist the trimmed link.
 - Activity Detail shows `Insurance purchase link` / `保险购买链接` at the top of the share card when a link exists.
-- tapping the insurance purchase link copies the link to the clipboard instead of trying to open an arbitrary external page inside the mini program.
+- tapping the insurance purchase link opens the configured URL in a dedicated mini program `web-view` page.
 
 Why it matters:
 
 - organizers can include the insurance workflow in the activity setup without collecting extra participant phone data.
-- participants can reliably access the insurance link even before external web-view domain handling is configured.
+- participants can open the insurance page directly after the insurance domain is configured as a mini program business domain.
 
 Operational notes:
 
 - deploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared`.
-- upload a new mini program frontend build so the Create/Edit field and Activity Detail copy action are available.
+- upload a new mini program frontend build so the Create/Edit field and Activity Detail web-view action are available.
+- configure the insurance website domain in the mini program business-domain settings before expecting real devices to load the external page.
 
 Verification:
 
-- targeted red/green coverage was added for draft payloads, create/update cloud functions, local mock storage, Create page rendering, Activity Detail rendering, and clipboard copying.
-- full regression suite passed: `46` test suites, `238` tests after the share-card placement and label adjustment.
+- targeted red/green coverage was added for draft payloads, create/update cloud functions, local mock storage, Create page rendering, Activity Detail rendering, and web-view opening.
+- full regression suite passed: `47` test suites, `241` tests after adding the dedicated insurance web-view page.

@@ -351,8 +351,7 @@ Page({
     });
   },
 
-  onCopyInsuranceLink() {
-    const translate = makeTranslator(this.data.locale || getAppLocale());
+  onOpenInsuranceLink() {
     const activity = this.data.activity || {};
     const insuranceLink = String(activity.insuranceLink || '').trim();
 
@@ -360,14 +359,8 @@ Page({
       return;
     }
 
-    wx.setClipboardData({
-      data: insuranceLink,
-      success: () => {
-        wx.showToast({
-          title: translate('toast.insuranceLinkCopied'),
-          icon: 'success'
-        });
-      }
+    wx.navigateTo({
+      url: `/pages/insurance-webview/index?url=${encodeURIComponent(insuranceLink)}`
     });
   },
 

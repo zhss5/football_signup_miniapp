@@ -199,7 +199,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - the draft helper trims `insuranceLink` before submit
 - `createActivity`, `updateActivity`, and local mock mode persist the trimmed link
 - Activity Detail shows the insurance purchase link at the top of the share card only when the activity has a link
-- the first version copies the link to the clipboard instead of trying to open an external web page inside the mini program
+- tapping the insurance purchase link opens the URL in a dedicated mini program `web-view` page
+- real-device opening requires the insurance URL domain to be configured as a mini program business domain
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -228,8 +229,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `46` test suites passed
-- result: `238` tests passed
+- result: `47` test suites passed
+- result: `241` tests passed
 
 Covered areas include:
 
@@ -248,7 +249,7 @@ Covered areas include:
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior
 - one-team default activity setup behavior
-- optional insurance-link create/edit/detail-copy behavior
+- optional insurance-link create/edit/detail web-view opening behavior
 
 ## 4.1 Current Media Progress
 
@@ -336,7 +337,7 @@ The MVP still has known non-blocking gaps:
 - keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
-- completed in code: add activity/signup insurance-link display and detail-page copy action
+- completed in code: add activity/signup insurance-link display and detail-page web-view opening
 - add preferred playing position selection as a `P2` participant profile/signup refinement
 - completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation

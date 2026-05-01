@@ -65,7 +65,7 @@ The detail page shows:
 - team member list with avatar placeholder and signup name
 - organizer/admin-only proxy badge for participants added on someone else's behalf
 - organizer/admin move action for moving participants between teams
-- optional insurance link copy action when the activity has an insurance signup link
+- optional insurance link open action when the activity has an insurance signup link
 - current user signup state
 - organizer action button when permitted
 - signup cancel button when permitted
@@ -357,7 +357,7 @@ Key fields:
 - `coverImage`: CloudBase file ID in real-cloud mode, local temporary path in local mock mode
 - `coverThumbImage`: smaller CloudBase file ID used by list/card rendering
 - `imageList`: future-ready image list; currently stores the same single cover image
-- `insuranceLink`: optional external insurance signup link copied from Activity Detail
+- `insuranceLink`: optional external insurance signup link opened from Activity Detail through a mini program `web-view`
 - `signupLimitTotal`
 - `joinedCount`
 - `requirePhone`: legacy field, stored as `false`
