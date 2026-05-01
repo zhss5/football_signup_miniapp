@@ -73,6 +73,22 @@ function buildLocationMapState(activity = {}) {
   };
 }
 
+function buildParticipantNameList(teams = []) {
+  return teams.reduce((names, team) => {
+    const members = Array.isArray(team.members) ? team.members : [];
+
+    members.forEach(member => {
+      const name = String(member.signupName || member.displayName || '').trim();
+
+      if (name) {
+        names.push(name);
+      }
+    });
+
+    return names;
+  }, []);
+}
+
 Page({
   data: {
     activityId: '',
@@ -203,6 +219,29 @@ Page({
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
+  },
+
+  onCopyParticipantNames() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const names = buildParticipantNameList(this.data.teams);
+
+    if (names.length === 0) {
+      wx.showToast({
+        title: translate('toast.noParticipantsToCopy'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    wx.setClipboardData({
+      data: names.join('\n'),
+      success: () => {
+        wx.showToast({
+          title: translate('toast.participantNamesCopied'),
+          icon: 'success'
+        });
+      }
+    });
   },
 
   async onCancelActivity() {

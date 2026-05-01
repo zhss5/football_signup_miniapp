@@ -43,6 +43,7 @@ module.exports = {
       action: '分享活动'
     },
     actions: {
+      copyParticipantNames: '复制报名名单',
       edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
@@ -155,6 +156,8 @@ module.exports = {
     }
   },
   toast: {
+    participantNamesCopied: '已复制报名名单',
+    noParticipantsToCopy: '暂无报名成员',
     chooseLocationFailed: '无法选择地点',
     chooseImageFailed: '无法选择图片',
     openImageFailed: '无法打开图片',

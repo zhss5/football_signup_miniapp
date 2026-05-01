@@ -28,7 +28,8 @@ describe('activity detail page', () => {
     global.wx = {
       showToast: jest.fn(),
       showModal: jest.fn(),
-      showShareMenu: jest.fn()
+      showShareMenu: jest.fn(),
+      setClipboardData: jest.fn()
     };
 
     jest.resetModules();
@@ -353,6 +354,67 @@ describe('activity detail page', () => {
     );
     expect(removeRegistration).toHaveBeenCalledWith('activity_123', 'openid_player');
     expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('onCopyParticipantNames copies all joined member names in team order', () => {
+    global.wx.setClipboardData.mockImplementation(({ success }) => {
+      success();
+    });
+
+    const ctx = {
+      data: {
+        locale: 'en-US',
+        teams: [
+          {
+            teamName: 'White',
+            members: [
+              { signupName: 'Alex' },
+              { signupName: '  Ben  ' }
+            ]
+          },
+          {
+            teamName: 'Red',
+            members: [
+              { displayName: 'Chris' },
+              { signupName: '' }
+            ]
+          }
+        ]
+      }
+    };
+
+    pageConfig.onCopyParticipantNames.call(ctx);
+
+    expect(global.wx.setClipboardData).toHaveBeenCalledWith({
+      data: 'Alex\nBen\nChris',
+      success: expect.any(Function)
+    });
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Participant names copied',
+      icon: 'success'
+    });
+  });
+
+  test('onCopyParticipantNames shows a hint when there are no joined members', () => {
+    const ctx = {
+      data: {
+        locale: 'en-US',
+        teams: [
+          {
+            teamName: 'White',
+            members: []
+          }
+        ]
+      }
+    };
+
+    pageConfig.onCopyParticipantNames.call(ctx);
+
+    expect(global.wx.setClipboardData).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'No participants to copy',
+      icon: 'none'
+    });
   });
 
   test('onShareAppMessage shares the current activity detail page', () => {

@@ -43,6 +43,7 @@ module.exports = {
     },
     actions: {
       edit: 'Edit',
+      copyParticipantNames: 'Copy participant names',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
       removeMember: 'Remove',
@@ -162,7 +163,9 @@ module.exports = {
     cropImageFailed: 'Unable to crop image',
     loadImageSourceFailed: 'Unable to load image source.',
     loadActivitiesFailed: 'Unable to load activities',
-    locationPinUnavailable: 'Location pin not available'
+    locationPinUnavailable: 'Location pin not available',
+    participantNamesCopied: 'Participant names copied',
+    noParticipantsToCopy: 'No participants to copy'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',

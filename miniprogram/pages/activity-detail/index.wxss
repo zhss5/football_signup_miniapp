@@ -131,3 +131,21 @@
   height: 112rpx;
   box-sizing: border-box;
 }
+
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.action-button {
+  width: 100%;
+  margin: 0;
+  color: #111827;
+  background: #ffffff;
+}
+
+.danger-action-button {
+  color: #b91c1c;
+}

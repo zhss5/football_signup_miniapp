@@ -11,6 +11,8 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.share.action}}');
     expect(wxml).toContain('src="{{activity.coverDisplayImage}}"');
     expect(wxml).toContain('{{i18n.activity.actions.edit}}');
+    expect(wxml).toContain('{{i18n.activity.actions.copyParticipantNames}}');
+    expect(wxml).toContain('bindtap="onCopyParticipantNames"');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
     expect(wxml).toContain('bind:removemember="onRemoveRegistration"');
     expect(wxml).toContain('bind:cancelsignup="onCancelSignup"');

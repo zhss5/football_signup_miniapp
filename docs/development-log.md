@@ -770,3 +770,24 @@ Verification:
 - targeted red/green coverage was added for profile prefill and delayed-profile non-overwrite behavior.
 - related Activity Join, `joinActivity`, and local mock tests passed together.
 - full regression suite passed: `42` test suites, `203` tests.
+
+## 2026-05-01 - Organizer Participant Name Copy Implemented
+
+Organizers and admins can now copy the active participant names from Activity Detail in one action.
+
+Delivered behavior:
+
+- Activity Detail shows `Copy participant names` when the viewer can manage registrations.
+- copied text contains one participant name per line, preserving the current team/member order.
+- empty or unnamed member entries are skipped.
+- if no participant names are available, the page shows a non-blocking hint instead of writing an empty clipboard value.
+
+Why it matters:
+
+- organizers can quickly paste the roster into WeChat group messages, spreadsheets, or payment/attendance notes
+- the feature uses the already-loaded team list and does not require a new cloud function
+
+Verification:
+
+- targeted red/green coverage was added for copying joined names, handling empty rosters, and rendering the organizer action entry point.
+- full regression suite passed: `42` test suites, `205` tests.

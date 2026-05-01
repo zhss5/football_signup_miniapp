@@ -44,12 +44,18 @@
     bind:cancelsignup="onCancelSignup"
   />
 
-  <button wx:if="{{viewer && viewer.canEditActivity}}" bindtap="openEditActivity">
-    {{i18n.activity.actions.edit}}
-  </button>
+  <view wx:if="{{viewer && (viewer.canManageRegistrations || viewer.canEditActivity || viewer.canCancelActivity)}}" class="action-panel">
+    <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
+      {{i18n.activity.actions.copyParticipantNames}}
+    </button>
 
-  <button wx:if="{{viewer && viewer.canCancelActivity}}" bindtap="onCancelActivity">
-    {{i18n.activity.actions.cancelActivity}}
-  </button>
+    <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
+      {{i18n.activity.actions.edit}}
+    </button>
+
+    <button wx:if="{{viewer.canCancelActivity}}" class="action-button danger-action-button" bindtap="onCancelActivity">
+      {{i18n.activity.actions.cancelActivity}}
+    </button>
+  </view>
 
 </view>

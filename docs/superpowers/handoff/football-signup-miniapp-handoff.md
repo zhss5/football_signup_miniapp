@@ -26,6 +26,7 @@ The codebase supports:
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
 - organizer/admin activity editing through the `updateActivity` cloud function
+- organizer/admin one-tap participant name copy from Activity Detail
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -175,9 +176,9 @@ npm test
 Latest result:
 
 - `42` test suites passed
-- `203` tests passed
+- `205` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -218,6 +219,12 @@ Current signup profile behavior:
 - saved `users.avatarUrl` prefills the avatar preview without re-uploading the existing CloudBase file.
 - manual name/avatar edits made before profile loading finishes are preserved.
 - `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl` after signup.
+
+Current organizer roster behavior:
+
+- Activity Detail shows `Copy participant names` to viewers with registration-management permission.
+- copied text is one participant name per line in the current team/member display order.
+- empty rosters show a toast and do not write an empty clipboard value.
 
 Problems encountered during cover-display testing:
 

@@ -158,6 +158,13 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - manual name/avatar changes made while profile loading is still pending are preserved
 - `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, and the activity registration snapshot after signup
 
+### 2.15 Organizer Participant Name Copy
+
+- Activity Detail shows a copy action to organizers/admins who can manage registrations
+- copied roster text is one participant name per line
+- participant names follow the current team/member order shown on the detail page
+- empty rosters show a hint and do not write an empty clipboard value
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -173,6 +180,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activity creation is now role-gated instead of open to every user
 - published activities can now be edited in place instead of recreated for routine corrections
 - participant phone collection was removed from the current signup flow
+- organizers/admins can copy all active participant names from Activity Detail
 
 ## 4. Verification Status
 
@@ -180,7 +188,7 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `42` test suites passed
-- result: `203` tests passed
+- result: `205` tests passed
 
 Covered areas include:
 
@@ -194,6 +202,7 @@ Covered areas include:
 - signup phone-removal behavior across frontend, mock, and cloud functions
 - cover display source preference and fallback behavior
 - signup profile prefill from saved user profile data
+- organizer participant-name copy behavior
 
 ## 4.1 Current Media Progress
 
@@ -231,7 +240,6 @@ The MVP still has known non-blocking gaps:
 - insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
 - organizer proxy signup for participants is not implemented yet
-- organizer one-tap copy of all active participant names is not implemented yet
 - the default team setup still starts from two teams; the future requirement is to allow a one-team minimum
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
