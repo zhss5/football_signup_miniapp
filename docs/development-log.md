@@ -723,3 +723,26 @@ Follow-up:
 Verification:
 
 - targeted red/green tests covered the join page, create page, activity detail route, signup-sheet component, activity draft helper, `createActivity`, `updateActivity`, `joinActivity`, and the local mock.
+
+## 2026-05-01 - Cover Display Source Fallback Improved
+
+The cover display resolver now uses different source priorities for list cards and the activity detail page.
+
+Delivered behavior:
+
+- Home/My list cards prefer `coverThumbImage` for faster card rendering.
+- Home/My list cards fall back to `coverImage` when the thumbnail cannot be resolved to a display URL.
+- Activity Detail prefers the full `coverImage` so the hero image keeps the best available resolution.
+- Activity Detail falls back to `coverThumbImage` if the full cover cannot be resolved.
+- Raw CloudBase `cloud://` file IDs are still filtered out before rendering, so `<image>` receives only display-safe URLs or local temporary file paths.
+
+Why it matters:
+
+- keeps list pages fast while avoiding blank images when a thumbnail is missing or unreadable
+- keeps the detail page sharper than a `480x240` thumbnail
+- makes older activities and newly uploaded activities share the same fallback path
+
+Verification:
+
+- targeted red/green coverage was added for list thumbnail preference, list fallback to original cover, detail original-cover preference, and detail fallback to thumbnail.
+- full regression suite passed: `42` test suites, `201` tests.

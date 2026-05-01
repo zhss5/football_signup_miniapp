@@ -137,7 +137,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 - new cover uploads generate `coverThumbImage` automatically during the crop/upload flow
 - `createActivity` and `updateActivity` persist `coverThumbImage`
-- Home/My/activity cards already prefer thumbnails through `coverDisplayImage`
+- Home/My/activity cards prefer thumbnails through `coverDisplayImage` and fall back to `coverImage`
+- Activity Detail prefers the full `coverImage` and falls back to `coverThumbImage`
 - historical CloudBase cover backfill is deferred; current scope is new uploads only
 
 ### 2.13 Signup Phone Removal
@@ -171,7 +172,7 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `42` test suites passed
-- result: `198` tests passed
+- result: `201` tests passed
 
 Covered areas include:
 
@@ -183,6 +184,7 @@ Covered areas include:
 - layout regressions
 - organizer/admin activity edit permissions and update behavior
 - signup phone-removal behavior across frontend, mock, and cloud functions
+- cover display source preference and fallback behavior
 
 ## 4.1 Current Media Progress
 
@@ -192,6 +194,8 @@ Cover display and thumbnail behavior now includes:
 - CloudBase file IDs are resolved with `wx.cloud.getTempFileURL`, with fallback diagnostics and `wx.cloud.downloadFile` as a secondary path
 - activity card and detail templates show placeholders when a CloudBase file cannot be resolved for display
 - new uploads store a separate `coverThumbImage` for list/card display
+- Home/My list cards resolve thumbnails first and fall back to the original cover when needed
+- Activity Detail resolves the original cover first and falls back to the thumbnail when needed
 - CloudBase rollout and handoff docs record the storage permission, new-upload thumbnail behavior, cost checkpoint, and deployment order
 
 Issues found while testing cover display:

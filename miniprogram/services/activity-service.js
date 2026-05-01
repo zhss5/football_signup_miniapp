@@ -28,15 +28,22 @@ function getActivityStats(activityId) {
   return call('getActivityStats', { activityId });
 }
 
-function getActivityCoverSource(activity = {}) {
-  return activity.coverThumbImage || activity.coverImage || '';
+function getActivityCoverSources(activity = {}, preferredCover = 'thumb') {
+  const coverImage = activity.coverImage || '';
+  const coverThumbImage = activity.coverThumbImage || '';
+  const orderedSources =
+    preferredCover === 'cover'
+      ? [coverImage, coverThumbImage]
+      : [coverThumbImage, coverImage];
+
+  return Array.from(new Set(orderedSources.filter(Boolean)));
 }
 
 function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
 
-function getResolvedCoverDisplayImage(coverSource, urlByFileId) {
+function getResolvedCoverUrl(coverSource, urlByFileId = {}) {
   if (!coverSource) {
     return '';
   }
@@ -50,16 +57,38 @@ function getResolvedCoverDisplayImage(coverSource, urlByFileId) {
   return resolvedUrl || coverSource;
 }
 
-async function resolveActivityCoverImages(items = []) {
-  const coverSources = Array.from(new Set(items.map(getActivityCoverSource).filter(Boolean)));
+function getResolvedCoverDisplayImage(coverSources, urlByFileId) {
+  const orderedSources = Array.isArray(coverSources) ? coverSources : [coverSources];
+
+  for (const coverSource of orderedSources) {
+    const resolvedUrl = getResolvedCoverUrl(coverSource, urlByFileId);
+
+    if (resolvedUrl) {
+      return resolvedUrl;
+    }
+  }
+
+  return '';
+}
+
+async function resolveActivityCoverImages(items = [], options = {}) {
+  const preferredCover = options.preferredCover || 'thumb';
+  const coverSources = Array.from(
+    new Set(
+      items.reduce(
+        (sources, item) => sources.concat(getActivityCoverSources(item, preferredCover)),
+        []
+      )
+    )
+  );
   const urlByFileId = await resolveFileUrls(coverSources);
 
   return items.map(item => {
-    const coverSource = getActivityCoverSource(item);
+    const coverSourceCandidates = getActivityCoverSources(item, preferredCover);
 
     return {
       ...item,
-      coverDisplayImage: getResolvedCoverDisplayImage(coverSource, urlByFileId)
+      coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId)
     };
   });
 }
@@ -69,7 +98,9 @@ async function resolveActivityCoverImage(activity) {
     return activity;
   }
 
-  const [resolvedActivity] = await resolveActivityCoverImages([activity]);
+  const [resolvedActivity] = await resolveActivityCoverImages([activity], {
+    preferredCover: 'cover'
+  });
   return resolvedActivity;
 }
 

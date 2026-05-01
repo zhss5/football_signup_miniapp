@@ -21,6 +21,7 @@ The codebase supports:
 - shared cloud helper copying through `npm run copy:cloud-shared`
 - cover image upload to CloudBase storage with persistent `fileID`
 - automatic cover thumbnail upload to `coverThumbImage` for new/edited covers
+- list pages prefer `coverThumbImage` and detail pages prefer `coverImage`, with mutual fallback when one display URL cannot be resolved
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -173,9 +174,9 @@ npm test
 Latest result:
 
 - `42` test suites passed
-- `198` tests passed
+- `201` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, and CloudBase cover display URL resolution.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -183,6 +184,8 @@ Current cover-display progress:
 
 - CloudBase cover file IDs are now resolved into display URLs before rendering on Home, My, and Activity Detail.
 - Activity card and detail templates no longer pass raw `cloud://` file IDs directly to `<image>`.
+- Home/My list cards resolve `coverThumbImage` first and fall back to `coverImage`.
+- Activity Detail resolves `coverImage` first and falls back to `coverThumbImage`.
 - The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
 - Documentation records the CloudBase storage permission investigation and the CloudBase cost review checkpoint.
 
