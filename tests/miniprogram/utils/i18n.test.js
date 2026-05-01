@@ -33,4 +33,10 @@ describe('i18n utilities', () => {
     expect(messages.nav.editActivity).toBe('\u7f16\u8f91\u6d3b\u52a8');
     expect(messages.activityCreate.saveChanges).toBe('\u4fdd\u5b58\u4fee\u6539');
   });
+
+  test('provides the requested insurance purchase link label', () => {
+    const messages = getMessages('zh-CN');
+
+    expect(messages.activity.insurance.copyAction).toBe('\u4fdd\u9669\u8d2d\u4e70\u94fe\u63a5\ud83d\udd17');
+  });
 });

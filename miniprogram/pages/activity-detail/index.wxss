@@ -44,37 +44,26 @@
   border-radius: 24rpx;
 }
 
-.insurance-card {
-  margin-bottom: 24rpx;
-  padding: 24rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-}
-
-.insurance-title {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #111827;
-}
-
-.insurance-copy {
-  display: block;
-  margin-top: 10rpx;
-  color: #6b7280;
-  font-size: 24rpx;
-  line-height: 1.5;
-}
-
-.insurance-button {
-  margin-top: 16rpx;
-  background: #0f766e;
-  color: #ffffff;
-}
-
 .share-card-highlight {
   border: 2rpx solid #16a34a;
   box-shadow: 0 8rpx 24rpx rgba(22, 163, 74, 0.12);
+}
+
+.insurance-link-button {
+  display: block;
+  width: auto;
+  margin: 0 0 18rpx;
+  padding: 0;
+  background: transparent;
+  color: #0f766e;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.insurance-link-button::after {
+  border: 0;
 }
 
 .share-title {

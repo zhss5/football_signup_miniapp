@@ -198,7 +198,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - Create/Edit Activity includes an optional `insuranceLink` field
 - the draft helper trims `insuranceLink` before submit
 - `createActivity`, `updateActivity`, and local mock mode persist the trimmed link
-- Activity Detail shows an insurance card only when the activity has a link
+- Activity Detail shows the insurance purchase link at the top of the share card only when the activity has a link
 - the first version copies the link to the clipboard instead of trying to open an external web page inside the mini program
 
 ## 3. Behavior Changes From the Original MVP Draft
@@ -229,7 +229,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `46` test suites passed
-- result: `237` tests passed
+- result: `238` tests passed
 
 Covered areas include:
 

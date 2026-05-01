@@ -27,8 +27,16 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('<map');
     expect(wxml).toContain('<cover-view class="location-map-hitarea" bindtap="onOpenLocation"></cover-view>');
     expect(wxml).toContain('bindtap="onOpenLocation"');
-    expect(wxml).toContain('wx:if="{{activity.insuranceLink}}"');
-    expect(wxml).toContain('bindtap="onCopyInsuranceLink"');
+    expect(wxml).toContain(
+      '<button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onCopyInsuranceLink">'
+    );
+    expect(wxml.indexOf('class="share-card')).toBeLessThan(
+      wxml.indexOf('class="insurance-link-button"')
+    );
+    expect(wxml.indexOf('class="insurance-link-button"')).toBeLessThan(
+      wxml.indexOf('class="share-title"')
+    );
+    expect(wxml).not.toContain('class="insurance-card"');
     expect(wxml).not.toContain('wx:if="{{viewer && viewer.canCancelSignup}}"');
     expect(wxml).not.toContain('<signup-sheet');
   });

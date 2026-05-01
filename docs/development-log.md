@@ -893,8 +893,8 @@ Delivered behavior:
 - Create/Edit Activity shows an optional insurance link field.
 - the frontend draft helper trims `insuranceLink` before submit.
 - `createActivity`, `updateActivity`, and local mock mode persist the trimmed link.
-- Activity Detail shows an insurance card only when a link exists.
-- tapping the insurance action copies the link to the clipboard instead of trying to open an arbitrary external page inside the mini program.
+- Activity Detail shows `Insurance purchase link` / `保险购买链接` at the top of the share card when a link exists.
+- tapping the insurance purchase link copies the link to the clipboard instead of trying to open an arbitrary external page inside the mini program.
 
 Why it matters:
 
@@ -909,4 +909,4 @@ Operational notes:
 Verification:
 
 - targeted red/green coverage was added for draft payloads, create/update cloud functions, local mock storage, Create page rendering, Activity Detail rendering, and clipboard copying.
-- full regression suite passed: `46` test suites, `237` tests.
+- full regression suite passed: `46` test suites, `238` tests after the share-card placement and label adjustment.

@@ -21,8 +21,8 @@
 ## Signup Flow
 
 - Confirm the activity detail page shows team counts and member names
-- Confirm the activity detail page shows the insurance card only for activities with an insurance link
-- Confirm tapping the insurance action copies the insurance link to the clipboard
+- Confirm the activity detail share card shows the insurance purchase link only for activities with an insurance link
+- Confirm tapping the insurance purchase link copies the insurance link to the clipboard
 - Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm join flow writes `registrations._id = activityId_openid`
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`

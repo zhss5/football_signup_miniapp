@@ -71,7 +71,7 @@ Latest proxy-badge change:
 Latest insurance-link change:
 
 - `createActivity` and `updateActivity` now persist the optional trimmed `insuranceLink`.
-- upload a new mini program frontend build so the Create/Edit field and Activity Detail copy action are available.
+- upload a new mini program frontend build so the Create/Edit field and the Activity Detail share-card insurance purchase link are available.
 - redeploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared` before testing this feature on CloudBase.
 
 Earlier rollout reference:
@@ -194,7 +194,7 @@ npm test
 Latest result:
 
 - `46` test suites passed
-- `237` tests passed
+- `238` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page copying, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -259,8 +259,8 @@ Current organizer roster behavior:
 Current insurance-link behavior:
 
 - Create/Edit Activity has an optional insurance signup link field.
-- Activity Detail shows an insurance card only when the activity has a link.
-- tapping the insurance action copies the link to the clipboard; it does not attempt to open arbitrary external web pages inside the mini program.
+- Activity Detail shows the insurance purchase link at the top of the share card only when the activity has a link.
+- tapping the insurance purchase link copies the link to the clipboard; it does not attempt to open arbitrary external web pages inside the mini program.
 
 Problems encountered during cover-display testing:
 

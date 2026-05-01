@@ -30,15 +30,10 @@
     </view>
   </view>
 
-  <view wx:if="{{activity.insuranceLink}}" class="insurance-card">
-    <text class="insurance-title">{{i18n.activity.insurance.title}}</text>
-    <text class="insurance-copy">{{i18n.activity.insurance.copyHint}}</text>
-    <button class="insurance-button" bindtap="onCopyInsuranceLink">
+  <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
+    <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onCopyInsuranceLink">
       {{i18n.activity.insurance.copyAction}}
     </button>
-  </view>
-
-  <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
     <text class="share-title">{{shareHintVisible ? i18n.activity.share.publishedTitle : i18n.activity.share.defaultTitle}}</text>
     <text class="share-copy">{{shareHintVisible ? i18n.activity.share.publishedCopy : i18n.activity.share.defaultCopy}}</text>
     <button class="share-button" open-type="share">{{i18n.activity.share.action}}</button>

@@ -45,7 +45,7 @@ module.exports = {
     insurance: {
       title: '\u4fdd\u9669',
       copyHint: '\u590d\u5236\u4fdd\u9669\u94fe\u63a5\u540e\uff0c\u53ef\u5728\u5fae\u4fe1\u6216\u6d4f\u89c8\u5668\u6253\u5f00\u3002',
-      copyAction: '\u590d\u5236\u4fdd\u9669\u94fe\u63a5'
+      copyAction: '\u4fdd\u9669\u8d2d\u4e70\u94fe\u63a5\ud83d\udd17'
     },
     actions: {
       copyParticipantNames: '复制报名名单',
