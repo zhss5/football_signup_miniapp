@@ -687,7 +687,7 @@ Next implementation target:
 - remove the create/edit activity phone requirement control
 - simplify the signup page so participants no longer enter or authorize a phone number
 - update `joinActivity` and the local mock so phone is no longer required
-- keep old phone fields in existing records as harmless legacy data rather than migrating them immediately
+- keep phone fields as optional extension fields rather than migrating or deleting them
 - pause `resolvePhoneNumber` usage in the active signup flow while keeping the authorization interface as a future extension point
 
 Why this is next:
@@ -707,8 +707,8 @@ Delivered behavior:
 - Activity Detail no longer passes `requirePhone` into the join page route.
 - Join Activity now asks only for signup name plus optional avatar selection.
 - The join page no longer calls `resolvePhoneNumber` and no longer renders `open-type="getPhoneNumber"`.
-- `joinActivity` no longer requires `phone` and no longer writes `phoneSnapshot`, `phoneSource`, `phoneNumber`, or `phoneSource` user fields.
-- Existing phone fields in old records are treated as harmless legacy data; no migration is required for this change.
+- `joinActivity` no longer requires `phone`, but it preserves optional `phoneSnapshot`, `phoneSource`, `phoneNumber`, and `phoneSource` fields when a future signup flow deliberately sends a phone payload.
+- Existing phone fields remain compatible; no migration is required for this change.
 
 Operational notes:
 

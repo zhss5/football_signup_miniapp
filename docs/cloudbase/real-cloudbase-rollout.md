@@ -172,7 +172,7 @@ After deployment, run these checks in DevTools and on a real device:
 7. Join a team from a second account
 8. Confirm the join page does not show phone input or WeChat phone authorization
 9. Confirm `registrations._id = activityId_openid`
-10. Confirm new registration records do not contain `phoneSnapshot`
+10. Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
 11. Cancel the signup before the deadline
 12. Confirm organizer cancel and soft delete rules still hold
 13. Confirm a deleted activity disappears from Home and Joined, but remains in Created

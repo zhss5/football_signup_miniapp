@@ -228,8 +228,8 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - completed signup simplification: participant phone-number collection has been removed unless a later activity-specific requirement brings it back
   - Create/Edit Activity no longer exposes `requirePhone`
   - Join Activity no longer shows phone input or WeChat phone authorization
-  - `joinActivity` and the local mock no longer require or write phone fields
-  - old phone fields remain as legacy data and do not need immediate migration
+  - `joinActivity` and the local mock no longer require phone fields, but preserve them when a future flow provides them
+  - phone fields remain as optional extension fields and do not need immediate migration
   - keep `resolvePhoneNumber` as a dormant extension point for future phone-number requirements
 - add activity/signup insurance-link support
 - add participant preferred playing position selection; priority `P2`
@@ -358,7 +358,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - completed in code: activity-level phone requirement controls have been removed
 - completed in code: the signup flow no longer calls `resolvePhoneNumber`
 - completed in code: signup works without any phone payload
-- completed in code: legacy phone fields in old records are preserved but new signups stop writing them
+- completed in code: phone fields are optional; current UI does not send them, but `joinActivity` and the local mock preserve them when provided
 - extension point: keep `resolvePhoneNumber` available but disconnected from the active signup flow
 
 ### Milestone B5: Signup Profile Completion

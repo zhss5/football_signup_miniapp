@@ -28,22 +28,32 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
     data.avatarUrl = profile.avatarUrl;
   }
 
+  if (profile.phone) {
+    data.phoneNumber = profile.phone;
+    data.phoneSource = profile.phoneSource;
+  }
+
   if (userRes.data) {
     await userRef.update({ data });
     return;
   }
 
-  await userRef.set({
-    data: {
-      preferredName: profile.signupName,
-      avatarUrl: profile.avatarUrl || '',
-      profileSource: profile.profileSource,
-      roles: ['user'],
-      createdAt: stamp,
-      lastActiveAt: stamp,
-      updatedAt: stamp
-    }
-  });
+  const newUserData = {
+    preferredName: profile.signupName,
+    avatarUrl: profile.avatarUrl || '',
+    profileSource: profile.profileSource,
+    roles: ['user'],
+    createdAt: stamp,
+    lastActiveAt: stamp,
+    updatedAt: stamp
+  };
+
+  if (profile.phone) {
+    newUserData.phoneNumber = profile.phone;
+    newUserData.phoneSource = profile.phoneSource;
+  }
+
+  await userRef.set({ data: newUserData });
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -58,6 +68,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
   const signupName = normalizeText(event.signupName);
+  const phone = normalizeText(event.phone);
+  const phoneSource = phone ? normalizeSource(event.phoneSource) : '';
   const avatarUrl = normalizeText(event.avatarUrl);
   const profileSource = avatarUrl ? normalizeSource(event.profileSource) : 'manual';
 
@@ -92,25 +104,34 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       openid,
       {
         signupName,
+        phone,
+        phoneSource,
         avatarUrl,
         profileSource
       },
       stamp
     );
 
+    const registrationData = {
+      activityId: event.activityId,
+      teamId: event.teamId,
+      userOpenId: openid,
+      status: 'joined',
+      signupName,
+      avatarUrl,
+      profileSource,
+      source: event.source || 'direct',
+      joinedAt: stamp,
+      updatedAt: stamp
+    };
+
+    if (phone) {
+      registrationData.phoneSnapshot = phone;
+      registrationData.phoneSource = phoneSource;
+    }
+
     await transaction.collection('registrations').doc(registrationId).set({
-      data: {
-        activityId: event.activityId,
-        teamId: event.teamId,
-        userOpenId: openid,
-        status: 'joined',
-        signupName,
-        avatarUrl,
-        profileSource,
-        source: event.source || 'direct',
-        joinedAt: stamp,
-        updatedAt: stamp
-      }
+      data: registrationData
     });
 
     await transaction.collection('activities').doc(event.activityId).update({

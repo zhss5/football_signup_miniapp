@@ -455,6 +455,8 @@ function createLocalCloudClient(options = {}) {
     const registrationId = `${payload.activityId}_${openid}`;
     const current = state.registrations[registrationId];
     const signupName = payload.signupName.trim();
+    const phone = String(payload.phone || '').trim();
+    const phoneSource = phone ? normalizeSource(payload.phoneSource) : '';
     const avatarUrl = String(payload.avatarUrl || '').trim();
     const profileSource = avatarUrl ? normalizeSource(payload.profileSource) : 'manual';
 
@@ -488,11 +490,15 @@ function createLocalCloudClient(options = {}) {
     if (avatarUrl) {
       user.avatarUrl = avatarUrl;
     }
+    if (phone) {
+      user.phoneNumber = phone;
+      user.phoneSource = phoneSource;
+    }
     user.profileSource = profileSource;
     user.lastActiveAt = stamp;
     user.updatedAt = stamp;
 
-    state.registrations[registrationId] = {
+    const registrationData = {
       _id: registrationId,
       activityId: payload.activityId,
       teamId: payload.teamId,
@@ -506,6 +512,13 @@ function createLocalCloudClient(options = {}) {
       cancelledAt: current ? current.cancelledAt || '' : '',
       updatedAt: stamp
     };
+
+    if (phone) {
+      registrationData.phoneSnapshot = phone;
+      registrationData.phoneSource = phoneSource;
+    }
+
+    state.registrations[registrationId] = registrationData;
 
     activity.joinedCount += 1;
     activity.updatedAt = stamp;

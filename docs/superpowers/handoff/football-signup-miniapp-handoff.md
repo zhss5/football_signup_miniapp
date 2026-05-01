@@ -83,7 +83,7 @@ The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 - uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, while old cover backfill is deferred.
-- participant phone collection has been removed from the active signup flow; old phone fields may still exist in historical records as legacy data.
+- participant phone collection has been removed from the active signup flow; optional phone fields remain supported for future extensions.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
 - The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control needs become materially higher than the benefit of integrated WeChat hosting.
@@ -173,7 +173,7 @@ npm test
 Latest result:
 
 - `42` test suites passed
-- `196` tests passed
+- `198` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, and CloudBase cover display URL resolution.
 
@@ -204,8 +204,8 @@ Current signup simplification:
 - Create/Edit Activity no longer exposes `requirePhone`
 - `createActivity` and `updateActivity` force `requirePhone: false`
 - Join Activity no longer renders phone input or WeChat phone authorization
-- `joinActivity` accepts signups without `phone` and stops writing phone fields to new registrations/users
-- keep old phone fields as legacy data; no immediate migration is required
+- `joinActivity` accepts signups without `phone`, and still preserves optional phone fields if a future flow sends them
+- keep phone fields as optional extension fields; no immediate migration is required
 
 Problems encountered during cover-display testing:
 

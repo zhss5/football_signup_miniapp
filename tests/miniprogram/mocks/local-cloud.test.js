@@ -337,6 +337,68 @@ test('local cloud client stores signup profile metadata without phone fields', a
   });
 });
 
+test('local cloud client preserves optional phone fields when provided by a future signup flow', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: true,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    phone: '13800000000',
+    phoneSource: 'wechat',
+    source: 'share'
+  });
+
+  const detailAfter = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.activity.requirePhone).toBe(false);
+  expect(detailAfter.myRegistration).toEqual(expect.objectContaining({
+    phoneSnapshot: '13800000000',
+    phoneSource: 'wechat'
+  }));
+
+  const state = storage.getItem('football-signup-local-cloud-v1');
+  expect(state.users.openid_player).toMatchObject({
+    phoneNumber: '13800000000',
+    phoneSource: 'wechat'
+  });
+});
+
 test('local cloud client uses registration avatar when user profile avatar is unavailable', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

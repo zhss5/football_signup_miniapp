@@ -146,8 +146,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - new or edited activities are stored with `requirePhone: false`
 - Join Activity no longer renders phone input or WeChat phone authorization
 - `joinActivity` and the local mock accept signups without `phone`
-- new registrations and user-profile updates no longer write phone fields
-- old phone fields remain as legacy data and do not need migration
+- current UI-created registrations and user-profile updates do not send phone fields
+- `joinActivity` and the local mock still preserve optional phone fields when a future flow provides them
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -171,7 +171,7 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `42` test suites passed
-- result: `196` tests passed
+- result: `198` tests passed
 
 Covered areas include:
 
@@ -250,7 +250,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: participant phone-number collection is removed from signup
 - completed in code: the create/edit activity `requirePhone` control is removed
 - completed in code: the signup flow no longer calls `resolvePhoneNumber`
-- completed in code: `joinActivity` and the local mock no longer require or write phone fields
+- completed in code: `joinActivity` and the local mock no longer require phone fields, but preserve optional phone fields when provided
 - extension point: `resolvePhoneNumber` remains available in the cloud function, service adapter, and local mock, but stays disconnected from the active signup flow
 
 ### Option B2: Participant Notifications

@@ -215,8 +215,9 @@ Design decision:
 - activities are stored with `requirePhone = false`
 - Create/Edit Activity does not expose a phone requirement control
 - Join Activity does not render phone input or WeChat phone authorization
-- new registration records do not store `phoneSnapshot`
-- old phone fields may remain in historical records as legacy data and do not require immediate migration
+- registration records created by the current UI do not store `phoneSnapshot`
+- `joinActivity` may store optional phone fields when a future flow deliberately sends them
+- phone fields remain compatible and do not require immediate migration
 
 ## 6. Core Business Rules
 
