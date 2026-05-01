@@ -74,6 +74,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - dedicated cover crop page
 - full-image crop stage with highlighted selection frame
 - cropped output reused as the runtime cover image
+- new uploads now generate both a detail cover and a smaller `coverThumbImage` for activity cards
 
 ### 2.6 Activity Detail and Signup
 
@@ -133,6 +134,14 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - total capacity cannot be reduced below joined players or below existing regular team slots
 - activity update audit entries are written to `activity_logs`
 
+### 2.12 Cover Thumbnail Generation
+
+- new cover uploads generate `coverThumbImage` automatically during the crop/upload flow
+- `createActivity` and `updateActivity` persist `coverThumbImage`
+- Home/My/activity cards already prefer thumbnails through `coverDisplayImage`
+- historical CloudBase covers can be backfilled with the admin-only `generateActivityCoverThumbs` cloud function
+- the batch function supports dry-run, force regeneration, and limited batch sizes
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -144,6 +153,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activity creation includes WeChat map selection
 - the team model includes an auto-generated bench team
 - cover images use a dedicated `2:1` crop flow
+- cover images now have a separate thumbnail field for card/list performance
 - activity creation is now role-gated instead of open to every user
 - published activities can now be edited in place instead of recreated for routine corrections
 - the current signup model still includes optional participant phone collection, but the newer backlog calls for removing phone from the participant signup flow
@@ -166,26 +176,22 @@ Covered areas include:
 - layout regressions
 - organizer/admin activity edit permissions and update behavior
 
-## 4.1 Current Local Progress
+## 4.1 Current Media Progress
 
-The local `main` branch currently has two commits that are not on `origin/main` yet:
-
-- `ba30c4c Resolve CloudBase cover URLs for display`
-- `82e9b06 Document CloudBase storage permission TODO`
-
-What changed:
+Cover display and thumbnail behavior now includes:
 
 - Home, My, and Activity Detail now render activity covers through `coverDisplayImage` instead of passing raw CloudBase `cloud://` file IDs directly to `<image>`
 - CloudBase file IDs are resolved with `wx.cloud.getTempFileURL`, with fallback diagnostics and `wx.cloud.downloadFile` as a secondary path
 - activity card and detail templates show placeholders when a CloudBase file cannot be resolved for display
-- CloudBase rollout and handoff docs now record the storage permission blocker, cost checkpoint, and updated deployment order
+- new uploads store a separate `coverThumbImage` for list/card display
+- historical covers can be backfilled through `generateActivityCoverThumbs`
+- CloudBase rollout and handoff docs record the storage permission, thumbnail backfill, cost checkpoint, and deployment order
 
-Issues found while testing these changes:
+Issues found while testing cover display:
 
 - the mini-program renderer treats raw `cloud://` image values as invalid local component paths
 - a top-level `cloud.getTempFileURL:ok` result can still contain a per-file failure
 - the current failing cover file returns `STORAGE_EXCEED_AUTHORITY`, so the mini-program client cannot read it under the current CloudBase storage rule
-- the free-trial CloudBase environment is expired, which blocks storage permission changes until upgrade or renewal
 - local-only project configuration changes remain intentionally uncommitted and should not be pushed
 
 ## 5. Known Gaps
@@ -201,8 +207,8 @@ The MVP still has known non-blocking gaps:
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
-- historical activity cover images do not have generated list thumbnails yet; large CloudBase originals can make Home loading slow on real devices
-- CloudBase storage permissions for public activity covers still require an upgraded/active environment before they can be changed; expired free-trial environments can block permission updates
+- historical activity cover images need the new `generateActivityCoverThumbs` backfill run before older activities benefit from list thumbnails
+- CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
@@ -217,9 +223,9 @@ The MVP still has known non-blocking gaps:
 
 - local runtime switch support is now implemented
 - one real environment has already been created locally
-- upgrade or renew the target CloudBase environment so storage permission changes are allowed
-- configure storage read rules so `activity-covers/` can be read by mini-program clients
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- target CloudBase has been upgraded to the personal plan
+- verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, `generateActivityCoverThumbs`, and any functions not yet uploaded in the target environment
 - validate permissions, cover image loading, sharing, signup, organizer/admin removal, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
@@ -250,10 +256,10 @@ The MVP still has known non-blocking gaps:
 
 ### Option C: Media and UX Polish
 
-- implement batch cover-thumbnail generation for historical activity covers:
-  - add `coverThumbImage` to activity documents
-  - make activity cards prefer `coverThumbImage` and fall back to `coverImage`
-  - provide an admin-only dry-run-capable cloud function that skips already-generated thumbnails by default
+- run batch cover-thumbnail generation for historical activity covers:
+  - deploy `generateActivityCoverThumbs`
+  - confirm the CloudBase image processing/CloudInfinite extension is available
+  - run dry-run first
   - process persistent CloudBase `fileID` covers only
   - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if original files remain too large
 - replace slider-based cropping with gesture-based dragging and zooming

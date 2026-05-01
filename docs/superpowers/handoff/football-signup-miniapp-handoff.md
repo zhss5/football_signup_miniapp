@@ -20,6 +20,7 @@ The codebase supports:
 - cloud function packages with per-function `package.json`
 - shared cloud helper copying through `npm run copy:cloud-shared`
 - cover image upload to CloudBase storage with persistent `fileID`
+- automatic cover thumbnail upload to `coverThumbImage` for new/edited covers
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -45,6 +46,7 @@ Deployable cloud functions currently include:
 - `getActivityStats`
 - `removeRegistration`
 - `resolvePhoneNumber`
+- `generateActivityCoverThumbs`
 
 Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
 
@@ -77,10 +79,10 @@ The following CloudBase rollout issues were fixed:
 The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
-- uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; the next media-performance task is a batch `coverThumbImage` backfill for list cards.
+- uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, and old covers need the `generateActivityCoverThumbs` backfill.
 - the current signup flow still supports optional participant phone collection, but the newer product backlog calls for removing phone from participant signup.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
-- The target free-trial CloudBase environment has expired, so the console blocks storage permission changes until the environment is upgraded or renewed.
+- The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control needs become materially higher than the benefit of integrated WeChat hosting.
 
 Resolved/mitigated:
@@ -142,7 +144,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats generateActivityCoverThumbs `
   --lang zh
 ```
 
@@ -172,77 +174,79 @@ Latest result:
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields, and CloudBase cover display URL resolution.
 
-## 8. Current Local Commit Snapshot
+## 8. Current Implementation Snapshot
 
-Local `main` is ahead of `origin/main` by two commits:
-
-- `ba30c4c Resolve CloudBase cover URLs for display`
-- `82e9b06 Document CloudBase storage permission TODO`
-
-Current progress represented by those commits:
+Current cover-display progress:
 
 - CloudBase cover file IDs are now resolved into display URLs before rendering on Home, My, and Activity Detail.
 - Activity card and detail templates no longer pass raw `cloud://` file IDs directly to `<image>`.
 - The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
-- Documentation now records the CloudBase storage permission blocker, expired free-trial environment issue, and the CloudBase cost review checkpoint.
+- Documentation records the CloudBase storage permission investigation and the CloudBase cost review checkpoint.
 
-Problems encountered during the local changes:
+Current cover-thumbnail progress:
+
+- the cover crop page exports both the detail cover and a smaller thumbnail file
+- create/edit activity uploads thumbnails to `activity-cover-thumbs/`
+- `createActivity`, `updateActivity`, and the local mock persist `coverThumbImage`
+- the new `generateActivityCoverThumbs` cloud function can backfill historical covers
+- the backfill function is admin-only and supports `dryRun`, `limit`, and `force`
+
+Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
 - `wx.cloud.getTempFileURL` returned top-level `ok`, but the file item returned `STORAGE_EXCEED_AUTHORITY`.
 - `wx.cloud.downloadFile` also failed with `-403003 internal server error: empty download url`.
 - CloudBase console preview worked because console/server-side access does not prove mini-program client read access.
-- The current free-trial environment is expired, so CloudBase blocks storage permission changes until the environment is upgraded or renewed.
 
 Sensitive-file check before push:
 
-- the pending commits do not include `project.config.json`
-- the pending commits do not include `miniprogram/config/env.local.js`
-- the pending commits do not include AppSecret values, tokens, private keys, or the real CloudBase environment ID
+- committed changes should not include `project.config.json`
+- committed changes should not include `miniprogram/config/env.local.js`
+- committed changes should not include AppSecret values, tokens, private keys, or the real CloudBase environment ID
 - local-only config files are still present only in the working tree and should remain uncommitted
 
 ## 9. Next Steps
 
 Continue in this order:
 
-1. Upgrade or renew the target CloudBase environment so storage permission changes are allowed.
-2. Configure CloudBase storage permissions so `activity-covers/` can be read by mini-program clients while writes remain restricted.
-3. Confirm all five database collections exist.
-4. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-5. Run `npm run copy:cloud-shared`, then deploy all cloud functions listed in section 6.
-6. Apply indexes from:
+1. Confirm CloudBase storage permissions allow mini-program client reads for both `activity-covers/` and `activity-cover-thumbs/`.
+2. Confirm all five database collections exist.
+3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
+4. Run `npm run copy:cloud-shared`, then deploy all cloud functions listed in section 6.
+5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
-7. Apply database rules from:
+6. Apply database rules from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/security-rules.json`
-8. Run the smoke checklist on DevTools and a real device:
+7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
-9. Add experience members and distribute the experience-version QR code for temporary tester access.
-10. Validate cover image loading, sharing, signup profile entry, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
-11. Implement participant notification subscriptions first, then organizer-triggered notifications using:
+8. Add experience members and distribute the experience-version QR code for temporary tester access.
+9. Validate cover image loading, sharing, signup profile entry, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
+10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - first version keeps `status: published/cancelled/deleted`
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-12. Implement batch cover-thumbnail generation for historical activity covers:
-   - write thumbnails to `activities.coverThumbImage`
-   - make activity cards prefer `coverThumbImage` and fall back to `coverImage`
-   - provide an admin-only dry-run-capable cloud function
-   - process persistent CloudBase `fileID` covers only
+11. Run batch cover-thumbnail generation for historical activity covers:
+   - ensure the CloudBase image processing/CloudInfinite extension is available in the target environment
+   - deploy `generateActivityCoverThumbs`
+   - first call it with `{ "dryRun": true, "limit": 20 }`
+   - then call it with `{ "dryRun": false, "limit": 20 }`
+   - repeat in batches if there are more historical covers
    - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if needed
-13. Plan the next mini program backlog items:
+12. Plan the next mini program backlog items:
    - remove participant phone-number collection from signup
    - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
    - let organizers sign up participants on their behalf
    - let organizers copy all active participant names in one action
    - allow a one-team minimum in activity setup instead of always defaulting to two teams
-14. Keep the future operations/backend backlog visible but deferred:
+13. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-16. Push local commits if they should be shared:
+14. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+15. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

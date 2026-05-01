@@ -637,3 +637,57 @@ Safety notes before push:
 
 - the pending commits do not include `project.config.json`, `env.local.js`, AppSecret values, tokens, private keys, or the real CloudBase environment ID
 - test-only placeholder values such as `prod-env-123` are not production secrets
+
+## 2026-05-01 - Cover Thumbnail Generation Implemented
+
+Activity cover thumbnail support was implemented for both future uploads and historical backfill.
+
+Delivered behavior:
+
+- the cover crop page now exports two files:
+  - `coverImage`: `1200x600` compressed JPEG for detail display
+  - `coverThumbImage`: `480x240` compressed JPEG for list/card display
+- new activity creation uploads both files:
+  - original cover path: `activity-covers/`
+  - thumbnail path: `activity-cover-thumbs/`
+- activity editing preserves existing `coverThumbImage` and uploads a new thumbnail when the organizer selects a new cover
+- `createActivity`, `updateActivity`, and the local mock now store `coverThumbImage`
+- a new admin-only `generateActivityCoverThumbs` cloud function can backfill thumbnails for existing CloudBase cover files
+- the batch function supports:
+  - `dryRun`
+  - `limit`
+  - `force`
+  - skipping non-CloudBase cover paths
+  - skipping activities that already have thumbnails unless `force` is true
+
+Operational notes:
+
+- deploy `generateActivityCoverThumbs` after running `npm run copy:cloud-shared`
+- the function package depends on CloudBase image processing through `@cloudbase/extension-ci` and `@cloudbase/node-sdk`
+- ensure the CloudBase image processing/CloudInfinite extension is available in the target environment before running the real backfill
+- first run the function with:
+
+```json
+{
+  "dryRun": true,
+  "limit": 20
+}
+```
+
+- after confirming the candidate list, run:
+
+```json
+{
+  "dryRun": false,
+  "limit": 20
+}
+```
+
+Verification:
+
+- target thumbnail tests passed locally before the full suite:
+  - `generateActivityCoverThumbs`
+  - create/update activity thumbnail persistence
+  - crop page thumbnail export
+  - activity create submit thumbnail upload
+  - local mock thumbnail storage

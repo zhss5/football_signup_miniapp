@@ -12,6 +12,8 @@
 - Confirm activity creation writes the related `activity_teams` documents
 - Confirm map-selected address fields are stored
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
+- Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
+- Confirm Home/My activity cards load the thumbnail without 403 image errors
 
 ## Signup Flow
 

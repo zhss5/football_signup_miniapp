@@ -179,6 +179,7 @@ function buildUpdatePayload(overrides = {}) {
     },
     description: 'Updated notes',
     coverImage: 'cloud://cover-updated',
+    coverThumbImage: 'cloud://cover-updated-thumb',
     imageList: ['cloud://cover-updated'],
     signupLimitTotal: 16,
     requirePhone: true,
@@ -204,6 +205,7 @@ test('updateActivity lets the activity organizer update editable fields and writ
   expect(db.state.activities.activity_1).toMatchObject({
     title: 'Updated Match',
     addressText: 'New address',
+    coverThumbImage: 'cloud://cover-updated-thumb',
     signupLimitTotal: 16,
     organizerOpenId: 'openid_owner',
     joinedCount: 2,

@@ -2,6 +2,9 @@ const {
   COVER_OUTPUT_HEIGHT,
   COVER_OUTPUT_QUALITY,
   COVER_OUTPUT_WIDTH,
+  COVER_THUMB_OUTPUT_HEIGHT,
+  COVER_THUMB_OUTPUT_QUALITY,
+  COVER_THUMB_OUTPUT_WIDTH,
   MAX_ZOOM_PERCENT,
   MIN_ZOOM_PERCENT,
   buildCropRect,
@@ -152,11 +155,12 @@ Page({
 
     try {
       this.setData({ processing: true });
-      const tempFilePath = await this.exportCroppedImage();
+      const { tempFilePath, thumbTempFilePath } = await this.exportCroppedImages();
       this.resultDelivered = true;
       if (this.openerEventChannel) {
         this.openerEventChannel.emit('coverCropped', {
           tempFilePath,
+          thumbTempFilePath,
           imageList: [tempFilePath]
         });
       }
@@ -179,7 +183,24 @@ Page({
     wx.navigateBack();
   },
 
-  exportCroppedImage() {
+  exportCanvasImage({ destWidth, destHeight, quality }) {
+    return new Promise((resolve, reject) => {
+      wx.canvasToTempFilePath(
+        {
+          canvasId: 'coverCropCanvas',
+          destWidth,
+          destHeight,
+          fileType: 'jpg',
+          quality,
+          success: ({ tempFilePath }) => resolve(tempFilePath),
+          fail: reject
+        },
+        this
+      );
+    });
+  },
+
+  exportCroppedImages() {
     const { cropRect, imagePath } = this.data;
 
     return new Promise((resolve, reject) => {
@@ -196,20 +217,32 @@ Page({
         COVER_OUTPUT_WIDTH,
         COVER_OUTPUT_HEIGHT
       );
-      context.draw(false, () => {
-        wx.canvasToTempFilePath(
-          {
-            canvasId: 'coverCropCanvas',
+      context.draw(false, async () => {
+        try {
+          const tempFilePath = await this.exportCanvasImage({
             destWidth: COVER_OUTPUT_WIDTH,
             destHeight: COVER_OUTPUT_HEIGHT,
-            fileType: 'jpg',
-            quality: COVER_OUTPUT_QUALITY,
-            success: ({ tempFilePath }) => resolve(tempFilePath),
-            fail: reject
-          },
-          this
-        );
+            quality: COVER_OUTPUT_QUALITY
+          });
+          const thumbTempFilePath = await this.exportCanvasImage({
+            destWidth: COVER_THUMB_OUTPUT_WIDTH,
+            destHeight: COVER_THUMB_OUTPUT_HEIGHT,
+            quality: COVER_THUMB_OUTPUT_QUALITY
+          });
+
+          resolve({
+            tempFilePath,
+            thumbTempFilePath
+          });
+        } catch (error) {
+          reject(error);
+        }
       });
     });
+  },
+
+  async exportCroppedImage() {
+    const { tempFilePath } = await this.exportCroppedImages();
+    return tempFilePath;
   }
 });

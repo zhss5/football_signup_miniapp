@@ -98,6 +98,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
         longitude: 121.4737
       },
       coverImage: 'cloud://football/cover-1.png',
+      coverThumbImage: 'cloud://football/thumb-1.jpg',
       imageList: ['cloud://football/cover-1.png'],
       signupLimitTotal: 20,
       requirePhone: false,
@@ -119,6 +120,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
     },
     signupDeadlineAt: '2026-04-26T19:30:00.000Z',
     coverImage: 'cloud://football/cover-1.png',
+    coverThumbImage: 'cloud://football/thumb-1.jpg',
     imageList: ['cloud://football/cover-1.png'],
     signupLimitTotal: 20
   });

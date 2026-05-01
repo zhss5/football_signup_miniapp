@@ -275,7 +275,13 @@ describe('activity create submit flow', () => {
   });
 
   test('onSubmit uploads a selected cover before creating the activity', async () => {
-    uploadFile.mockResolvedValue('cloud://prod-env-123/activity-covers/cover.jpg');
+    uploadFile.mockImplementation((filePath, cloudPath) => {
+      if (cloudPath.startsWith('activity-cover-thumbs/')) {
+        return Promise.resolve('cloud://prod-env-123/activity-cover-thumbs/cover-thumb.jpg');
+      }
+
+      return Promise.resolve('cloud://prod-env-123/activity-covers/cover.jpg');
+    });
     createActivity.mockResolvedValue({ activityId: 'activity_123' });
 
     const ctx = {
@@ -283,6 +289,7 @@ describe('activity create submit flow', () => {
         form: {
           title: 'Thursday Match',
           coverImage: 'wxfile://tmp_cover.jpg',
+          coverThumbImage: 'wxfile://tmp_cover_thumb.jpg',
           imageList: ['wxfile://tmp_cover.jpg']
         },
         canCreateActivity: true
@@ -302,9 +309,14 @@ describe('activity create submit flow', () => {
       'wxfile://tmp_cover.jpg',
       expect.stringMatching(/^activity-covers\/.+\.jpg$/)
     );
+    expect(uploadFile).toHaveBeenCalledWith(
+      'wxfile://tmp_cover_thumb.jpg',
+      expect.stringMatching(/^activity-cover-thumbs\/.+\.jpg$/)
+    );
     expect(createActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+        coverThumbImage: 'cloud://prod-env-123/activity-cover-thumbs/cover-thumb.jpg',
         imageList: ['cloud://prod-env-123/activity-covers/cover.jpg']
       })
     );

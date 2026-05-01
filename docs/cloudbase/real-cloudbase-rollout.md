@@ -75,9 +75,12 @@ Recommended function set:
 5. `updateActivity`
 6. `joinActivity`
 7. `cancelRegistration`
-8. `cancelActivity`
-9. `deleteActivity`
-10. `getActivityStats`
+8. `removeRegistration`
+9. `resolvePhoneNumber`
+10. `cancelActivity`
+11. `deleteActivity`
+12. `getActivityStats`
+13. `generateActivityCoverThumbs`
 
 Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
 
@@ -87,7 +90,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats generateActivityCoverThumbs `
   --lang zh
 ```
 
@@ -122,24 +125,54 @@ Apply the database rule baseline from:
 
 ## Storage Permission Setup
 
-Activity covers are stored under `activity-covers/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for that path.
+Activity covers are stored under `activity-covers/` and generated thumbnails are stored under `activity-cover-thumbs/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for those paths.
 
 Recommended storage rule:
 
 ```json
 {
-  "read": "/^activity-covers\\//.test(resource.path)",
+  "read": "/^activity-covers\\//.test(resource.path) || /^activity-cover-thumbs\\//.test(resource.path)",
   "write": "auth != null"
 }
 ```
 
-If the environment already has a stricter rule, merge the `activity-covers/` read condition into the existing `read` expression instead of overwriting unrelated permissions.
+If the environment already has a stricter rule, merge the `activity-covers/` and `activity-cover-thumbs/` read conditions into the existing `read` expression instead of overwriting unrelated permissions.
 
 Notes:
 
 - CloudBase console/server-side preview can still open files that mini-program clients cannot read.
 - Storage permission changes can take 1-3 minutes to take effect.
 - Expired free-trial environments can block permission changes until the environment is upgraded or renewed.
+
+## Historical Cover Thumbnail Backfill
+
+Newly uploaded covers generate `coverThumbImage` automatically. Existing activity covers need a one-time backfill after `generateActivityCoverThumbs` is deployed.
+
+Before running the backfill:
+
+1. Confirm the target CloudBase environment has the image processing/CloudInfinite extension available.
+2. Confirm `activity-cover-thumbs/` is covered by the storage read rule.
+3. Confirm the caller has `admin` in `users.roles`.
+
+First run a dry-run cloud function test:
+
+```json
+{
+  "dryRun": true,
+  "limit": 20
+}
+```
+
+Then run the real batch:
+
+```json
+{
+  "dryRun": false,
+  "limit": 20
+}
+```
+
+Repeat the real batch if there are more than 20 historical covers. Use `force: true` only when intentionally regenerating existing thumbnails.
 
 ## Recommended Smoke Pass
 
@@ -154,13 +187,14 @@ After deployment, run these checks in DevTools and on a real device:
    - cover image
 3. Confirm both `activities` and `activity_teams` documents are created
 4. Confirm the activity cover image is stored as a CloudBase `fileID`, not a temporary local path
-5. Open the activity detail page and confirm the roster loads
-6. Join a team from a second account
-7. Confirm `registrations._id = activityId_openid`
-8. Cancel the signup before the deadline
-9. Confirm organizer cancel and soft delete rules still hold
-10. Confirm a deleted activity disappears from Home and Joined, but remains in Created
-11. Confirm sharing behavior:
+5. Confirm the activity record also has `coverThumbImage` for newly uploaded covers
+6. Open the activity detail page and confirm the roster loads
+7. Join a team from a second account
+8. Confirm `registrations._id = activityId_openid`
+9. Cancel the signup before the deadline
+10. Confirm organizer cancel and soft delete rules still hold
+11. Confirm a deleted activity disappears from Home and Joined, but remains in Created
+12. Confirm sharing behavior:
    - If WeChat verification is complete, verify activity sharing on a real device.
    - If verification is not complete, expect WeChat to block sharing with a platform message.
    - For temporary testing, add testers as experience members and share the experience-version QR code instead of relying on in-app sharing.

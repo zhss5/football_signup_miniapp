@@ -85,9 +85,17 @@ function buildCoverCloudPath(filePath) {
   return `activity-covers/${Date.now()}-${suffix}${extension}`;
 }
 
+function buildCoverThumbCloudPath(filePath) {
+  const extension = getCoverFileExtension(filePath);
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  return `activity-cover-thumbs/${Date.now()}-${suffix}${extension}`;
+}
+
 async function uploadActivityCover(payload) {
   const coverImage =
     payload.coverImage || (Array.isArray(payload.imageList) ? payload.imageList[0] : '');
+  const coverThumbImage = payload.coverThumbImage || '';
 
   if (!coverImage) {
     return payload;
@@ -98,10 +106,14 @@ async function uploadActivityCover(payload) {
   }
 
   const fileId = await uploadFile(coverImage, buildCoverCloudPath(coverImage));
+  const thumbFileId = coverThumbImage && !/^(cloud|https?):\/\//.test(coverThumbImage)
+    ? await uploadFile(coverThumbImage, buildCoverThumbCloudPath(coverThumbImage))
+    : coverThumbImage;
 
   return {
     ...payload,
     coverImage: fileId,
+    coverThumbImage: thumbFileId || '',
     imageList: [fileId]
   };
 }
@@ -406,6 +418,7 @@ Page({
       const form = {
         ...this.data.form,
         coverImage: cropResult.tempFilePath,
+        coverThumbImage: cropResult.thumbTempFilePath || '',
         imageList: cropResult.imageList || [cropResult.tempFilePath]
       };
 
@@ -426,6 +439,7 @@ Page({
     const form = {
       ...this.data.form,
       coverImage: '',
+      coverThumbImage: '',
       imageList: []
     };
 

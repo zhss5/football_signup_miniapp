@@ -33,6 +33,18 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
   expect(new Date(payload.signupDeadlineAt).getTime()).toBeLessThanOrEqual(new Date(payload.startAt).getTime());
 });
 
+test('buildActivityPayload preserves a generated cover thumbnail', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    coverImage: 'wxfile://cover-1.jpg',
+    coverThumbImage: 'wxfile://cover-1-thumb.jpg',
+    imageList: ['wxfile://cover-1.jpg']
+  });
+
+  expect(payload.coverImage).toBe('wxfile://cover-1.jpg');
+  expect(payload.coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
+});
+
 test('buildActivityEditForm maps an existing activity detail into the create form shape', () => {
   const startAt = new Date(2026, 3, 26, 20, 0).toISOString();
   const endAt = new Date(2026, 3, 26, 22, 0).toISOString();
@@ -52,6 +64,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
       },
       description: 'Original notes',
       coverImage: 'cloud://cover-a',
+      coverThumbImage: 'cloud://cover-a-thumb',
       imageList: ['cloud://cover-a'],
       signupLimitTotal: 20,
       requirePhone: true,
@@ -75,6 +88,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     addressName: 'Old field',
     description: 'Original notes',
     coverImage: 'cloud://cover-a',
+    coverThumbImage: 'cloud://cover-a-thumb',
     imageList: ['cloud://cover-a'],
     signupLimitTotal: 20,
     requirePhone: true,

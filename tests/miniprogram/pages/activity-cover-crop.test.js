@@ -1,6 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const { COVER_OUTPUT_QUALITY } = require('../../../miniprogram/utils/cover-crop');
+const {
+  COVER_OUTPUT_HEIGHT,
+  COVER_OUTPUT_QUALITY,
+  COVER_OUTPUT_WIDTH,
+  COVER_THUMB_OUTPUT_HEIGHT,
+  COVER_THUMB_OUTPUT_QUALITY,
+  COVER_THUMB_OUTPUT_WIDTH
+} = require('../../../miniprogram/utils/cover-crop');
 
 function readFile(relativePath) {
   return fs.readFileSync(path.join(__dirname, '../../../', relativePath), 'utf8');
@@ -36,5 +43,16 @@ describe('activity cover crop flow', () => {
     expect(COVER_OUTPUT_QUALITY).toBeLessThanOrEqual(0.8);
     expect(pageJs).toContain('quality: COVER_OUTPUT_QUALITY');
     expect(pageJs).toContain("fileType: 'jpg'");
+  });
+
+  test('exports a smaller compressed thumbnail together with the cover image', () => {
+    const pageJs = readFile('miniprogram/pages/activity-cover-crop/index.js');
+
+    expect(COVER_THUMB_OUTPUT_WIDTH).toBeLessThan(COVER_OUTPUT_WIDTH);
+    expect(COVER_THUMB_OUTPUT_HEIGHT).toBeLessThan(COVER_OUTPUT_HEIGHT);
+    expect(COVER_THUMB_OUTPUT_QUALITY).toBeLessThanOrEqual(COVER_OUTPUT_QUALITY);
+    expect(pageJs).toContain('thumbTempFilePath');
+    expect(pageJs).toContain('COVER_THUMB_OUTPUT_WIDTH');
+    expect(pageJs).toContain('COVER_THUMB_OUTPUT_HEIGHT');
   });
 });

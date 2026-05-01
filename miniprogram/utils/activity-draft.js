@@ -49,6 +49,7 @@ function createDefaultActivityForm(options = {}) {
     location: null,
     description: '',
     coverImage: '',
+    coverThumbImage: '',
     imageList: [],
     signupLimitTotal: 12,
     requirePhone: false,
@@ -89,6 +90,7 @@ function normalizeImageList(form) {
 function buildActivityPayload(form) {
   const imageList = normalizeImageList(form);
   const coverImage = imageList[0] || form.coverImage || '';
+  const coverThumbImage = coverImage ? form.coverThumbImage || '' : '';
 
   return {
     ...form,
@@ -96,6 +98,7 @@ function buildActivityPayload(form) {
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
     coverImage,
+    coverThumbImage,
     imageList
   };
 }
@@ -128,6 +131,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
     location: activity.location || null,
     description: activity.description || '',
     coverImage: imageList[0] || activity.coverImage || '',
+    coverThumbImage: activity.coverThumbImage || '',
     imageList,
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
     requirePhone: Boolean(activity.requirePhone),
