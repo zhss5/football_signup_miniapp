@@ -189,6 +189,12 @@ Current cover-thumbnail progress:
 - `createActivity`, `updateActivity`, and the local mock persist `coverThumbImage`
 - historical backfill is paused; do not deploy a backfill function for now
 
+Current permission conclusion:
+
+- database collections can stay restricted because the mini program reads business data through cloud functions
+- storage rules must allow client reads for `activity-covers/` and `activity-cover-thumbs/` because covers are rendered by the client `<image>` component after resolving file IDs to temporary HTTPS URLs
+- if images fail with `403` or `STORAGE_EXCEED_AUTHORITY`, check storage rules before database permissions
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -225,20 +231,25 @@ Continue in this order:
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
-12. Plan the next mini program backlog items:
-   - remove participant phone-number collection from signup
+11. Implement signup phone removal before larger notification or backend work:
+   - remove the create/edit activity phone requirement control
+   - remove phone input and phone authorization from the signup page
+   - update `joinActivity` and local mock validation so phone is no longer required
+   - keep legacy phone fields in old records
+   - retire `resolvePhoneNumber` only after the simplified flow is stable
+12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
+13. Plan later mini program backlog items:
    - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
    - let organizers sign up participants on their behalf
    - let organizers copy all active participant names in one action
    - allow a one-team minimum in activity setup instead of always defaulting to two teams
-13. Keep the future operations/backend backlog visible but deferred:
+14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-14. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-15. Push local commits if they should be shared:
+15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+16. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

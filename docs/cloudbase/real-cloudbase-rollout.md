@@ -126,6 +126,12 @@ Apply the database rule baseline from:
 
 Activity covers are stored under `activity-covers/` and generated thumbnails are stored under `activity-cover-thumbs/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for those paths.
 
+Database permissions and storage permissions are intentionally different:
+
+- Database collections can stay restricted, for example `creator-only read/write`, because the mini program reads business data through cloud functions such as `listActivities` and `getActivityDetail`.
+- Cloud storage must allow client reads for activity cover paths because the image rendering path resolves a file ID into a temporary HTTPS URL and the mini program `<image>` component loads that URL directly.
+- If storage read is blocked, activities can still load from the database while covers fail with `403` or `STORAGE_EXCEED_AUTHORITY`.
+
 Recommended storage rule:
 
 ```json

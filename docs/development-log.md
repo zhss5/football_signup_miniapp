@@ -666,3 +666,30 @@ Verification:
   - crop page thumbnail export
   - activity create submit thumbnail upload
   - local mock thumbnail storage
+
+## 2026-05-01 - Permission Model and Next Implementation Target
+
+The CloudBase permission model and next implementation target were clarified after real-device image testing.
+
+Permission conclusion:
+
+- database collection permissions do not need to be opened for normal mini program reads
+- business data reads go through cloud functions, and cloud functions have server-side database access
+- storage permissions are different because activity covers are ultimately loaded by the client `<image>` component through a resolved HTTPS URL
+- storage read rules must allow client reads for `activity-covers/` and `activity-cover-thumbs/`
+- if storage read is blocked, the app can still read activity documents while cover images fail with `403` or `STORAGE_EXCEED_AUTHORITY`
+
+Next implementation target:
+
+- prioritize removing participant phone-number collection from signup
+- remove the create/edit activity phone requirement control
+- simplify the signup page so participants no longer enter or authorize a phone number
+- update `joinActivity` and the local mock so phone is no longer required
+- keep old phone fields in existing records as harmless legacy data rather than migrating them immediately
+- pause `resolvePhoneNumber` usage and later delete the cloud function after the simplified signup flow is stable
+
+Why this is next:
+
+- the product no longer needs participant phone numbers
+- removing phone reduces privacy/compliance surface area
+- signup becomes shorter and easier to test on real devices

@@ -225,7 +225,12 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add organizer-driven team reassignment or bench promotion
 - keep early organizer grants as manual CloudBase edits to `users.roles`; add an admin-only authorization page only if manual edits become painful
 - add Join page profile prefill and completion: load `users.preferredName/avatarUrl`, let users actively choose a WeChat-assisted nickname/avatar, save profile defaults, and keep `registrations.signupName` editable per activity
-- remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
+- next implementation target: remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
+  - remove the create/edit activity `requirePhone` control
+  - remove phone input and phone authorization from the signup page
+  - update `joinActivity` and local mock validation so phone is optional/unused
+  - keep old phone fields as legacy data and avoid immediate migration
+  - retire `resolvePhoneNumber` after the simplified signup flow is stable
 - add activity/signup insurance-link support
 - add participant preferred playing position selection; priority `P2`
 - allow organizers to sign up participants on their behalf
@@ -347,16 +352,23 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - record notification send logs and duplicate-prevention state
 - keep automatic pre-activity reminders as a later enhancement
 
-### Milestone B4: Signup Profile Completion
+### Milestone B4: Signup Flow Simplification
+
+- remove participant phone-number collection from the signup flow
+- remove activity-level phone requirement controls
+- stop calling `resolvePhoneNumber`
+- verify signup still works without any phone payload
+- keep legacy phone fields in old records but stop writing them for new signups
+
+### Milestone B5: Signup Profile Completion
 
 - prefill Join page signup names from `users.preferredName`
 - let users actively choose a WeChat-assisted nickname and avatar without blocking signup
-- remove participant phone-number collection from the signup flow
 - add preferred playing position selection as priority `P2`
 - upload selected avatars to CloudBase storage in real-cloud mode
 - store reusable profile defaults on `users`, while keeping activity-specific roster names on `registrations.signupName`
 
-### Milestone B5: Signup Flow Refinements
+### Milestone B6: Signup Flow Refinements
 
 - add an insurance link to the activity/signup experience
 - support one-team activity setup as the minimum default

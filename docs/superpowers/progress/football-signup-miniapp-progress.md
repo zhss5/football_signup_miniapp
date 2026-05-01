@@ -237,6 +237,15 @@ The MVP still has known non-blocking gaps:
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
 
+### Option B1: Simplify Signup Contact Fields
+
+- remove participant phone-number collection from signup as the next implementation target
+- remove the create/edit activity `requirePhone` control
+- stop calling `resolvePhoneNumber` from the signup flow
+- update `joinActivity` and the local mock so phone is no longer required
+- keep existing phone fields as legacy data and avoid immediate migration
+- after the simplified flow is stable, remove or retire the unused `resolvePhoneNumber` cloud function and related privacy documentation
+
 ### Option B2: Participant Notifications
 
 - implement WeChat subscription request after successful signup before notification sending
@@ -257,7 +266,6 @@ The MVP still has known non-blocking gaps:
 - keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
-- remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
 - add activity/signup insurance-link display
 - add preferred playing position selection as a `P2` participant profile/signup refinement
 - allow one-team activity setup as the minimum default instead of always creating two teams
