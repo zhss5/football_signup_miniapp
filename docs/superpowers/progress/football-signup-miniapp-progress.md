@@ -150,6 +150,14 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - current UI-created registrations and user-profile updates do not send phone fields
 - `joinActivity` and the local mock still preserve optional phone fields when a future flow provides them
 
+### 2.14 Signup Profile Prefill
+
+- Activity Join loads `ensureUserProfile` when the page opens
+- saved `users.preferredName` prefills the signup name
+- saved `users.avatarUrl` prefills the avatar preview without re-uploading an existing CloudBase file
+- manual name/avatar changes made while profile loading is still pending are preserved
+- `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, and the activity registration snapshot after signup
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -172,7 +180,7 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `42` test suites passed
-- result: `201` tests passed
+- result: `203` tests passed
 
 Covered areas include:
 
@@ -185,6 +193,7 @@ Covered areas include:
 - organizer/admin activity edit permissions and update behavior
 - signup phone-removal behavior across frontend, mock, and cloud functions
 - cover display source preference and fallback behavior
+- signup profile prefill from saved user profile data
 
 ## 4.1 Current Media Progress
 
@@ -213,7 +222,6 @@ The MVP still has known non-blocking gaps:
 - production role grants still require manual CloudBase edits to `users.roles`
 - a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
-- signup profile prefill is not implemented yet; the Join page should let users actively choose a WeChat-assisted nickname and avatar, save them to `users.preferredName` and `users.avatarUrl`, and prefill future signups from those fields
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet

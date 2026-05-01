@@ -1,5 +1,6 @@
 const { joinActivity } = require('../../services/registration-service');
 const { uploadFile } = require('../../services/cloud');
+const { ensureUserProfile } = require('../../services/user-service');
 const {
   getAppLocale,
   getMessages,
@@ -42,6 +43,35 @@ function buildAvatarCloudPath() {
   return `user-avatars/${Date.now()}-${suffix}.jpg`;
 }
 
+function normalizeProfileSource(value) {
+  return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+async function prefillUserProfile(page) {
+  try {
+    const { user = {} } = await ensureUserProfile();
+    const update = {};
+    const preferredName = String(user.preferredName || '').trim();
+    const avatarUrl = String(user.avatarUrl || '').trim();
+
+    if (!page.data.nameEdited && !page.data.signupName && preferredName) {
+      update.signupName = preferredName;
+    }
+
+    if (!page.data.avatarEdited && !page.data.avatarUrl && avatarUrl) {
+      update.avatarUrl = avatarUrl;
+      update.avatarTempFilePath = '';
+      update.profileSource = normalizeProfileSource(user.profileSource);
+    }
+
+    if (Object.keys(update).length > 0) {
+      page.setData(update);
+    }
+  } catch (error) {
+    // Signup still works if the saved profile cannot be loaded.
+  }
+}
+
 Page({
   data: {
     activityId: '',
@@ -51,13 +81,15 @@ Page({
     i18n: {},
     joinTitleText: '',
     signupName: '',
+    nameEdited: false,
     avatarUrl: '',
     avatarTempFilePath: '',
+    avatarEdited: false,
     profileSource: 'manual',
     submitting: false
   },
 
-  onLoad(query) {
+  async onLoad(query) {
     const teamName = decodeURIComponent(query.teamName || '');
 
     this.openerEventChannel =
@@ -70,11 +102,13 @@ Page({
     });
 
     applyPageI18n(this, teamName);
+    await prefillUserProfile(this);
   },
 
   onNameInput(event) {
     this.setData({
-      signupName: event.detail.value
+      signupName: event.detail.value,
+      nameEdited: true
     });
   },
 
@@ -88,8 +122,13 @@ Page({
     this.setData({
       avatarUrl,
       avatarTempFilePath: avatarUrl,
+      avatarEdited: true,
       profileSource: 'wechat'
     });
+  },
+
+  async prefillUserProfile() {
+    await prefillUserProfile(this);
   },
 
   async onSubmit() {

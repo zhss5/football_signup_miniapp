@@ -29,6 +29,7 @@ The codebase supports:
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
+- signup profile prefill from saved `users.preferredName/avatarUrl`
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -174,9 +175,9 @@ npm test
 Latest result:
 
 - `42` test suites passed
-- `201` tests passed
+- `203` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -209,6 +210,14 @@ Current signup simplification:
 - Join Activity no longer renders phone input or WeChat phone authorization
 - `joinActivity` accepts signups without `phone`, and still preserves optional phone fields if a future flow sends them
 - keep phone fields as optional extension fields; no immediate migration is required
+
+Current signup profile behavior:
+
+- Activity Join loads the current user profile through `ensureUserProfile`.
+- saved `users.preferredName` prefills the signup name field.
+- saved `users.avatarUrl` prefills the avatar preview without re-uploading the existing CloudBase file.
+- manual name/avatar edits made before profile loading finishes are preserved.
+- `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl` after signup.
 
 Problems encountered during cover-display testing:
 

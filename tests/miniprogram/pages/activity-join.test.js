@@ -9,10 +9,15 @@ jest.mock('../../../miniprogram/services/cloud', () => ({
   uploadFile: jest.fn()
 }));
 
+jest.mock('../../../miniprogram/services/user-service', () => ({
+  ensureUserProfile: jest.fn()
+}));
+
 describe('activity join page', () => {
   let pageConfig;
   let joinActivity;
   let uploadFile;
+  let ensureUserProfile;
   let openerEventChannel;
 
   beforeEach(() => {
@@ -36,6 +41,8 @@ describe('activity join page', () => {
     require('../../../miniprogram/pages/activity-join/index');
     ({ joinActivity } = require('../../../miniprogram/services/registration-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
+    ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
+    ensureUserProfile.mockResolvedValue({ user: {} });
   });
 
   afterEach(() => {
@@ -102,6 +109,88 @@ describe('activity join page', () => {
     expect(global.wx.navigateBack).toHaveBeenCalledWith({
       delta: 1
     });
+  });
+
+  test('prefills signup name and avatar from the saved user profile', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        preferredName: 'Saved Alex',
+        avatarUrl: 'cloud://prod-env-123/user-avatars/saved-alex.jpg',
+        profileSource: 'wechat'
+      }
+    });
+
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onLoad.call(ctx, {
+      activityId: 'activity_123',
+      teamId: 'team_red',
+      teamName: 'Red'
+    });
+
+    expect(ensureUserProfile).toHaveBeenCalled();
+    expect(ctx.data.signupName).toBe('Saved Alex');
+    expect(ctx.data.avatarUrl).toBe('cloud://prod-env-123/user-avatars/saved-alex.jpg');
+    expect(ctx.data.avatarTempFilePath).toBe('');
+    expect(ctx.data.profileSource).toBe('wechat');
+  });
+
+  test('does not overwrite manually entered profile fields when profile loading finishes later', async () => {
+    let resolveProfile;
+    ensureUserProfile.mockReturnValue(
+      new Promise(resolve => {
+        resolveProfile = resolve;
+      })
+    );
+
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    const loadPromise = pageConfig.onLoad.call(ctx, {
+      activityId: 'activity_123',
+      teamId: 'team_red',
+      teamName: 'Red'
+    });
+
+    pageConfig.onNameInput.call(ctx, {
+      detail: {
+        value: 'Manual Alex'
+      }
+    });
+    pageConfig.onChooseAvatar.call(ctx, {
+      detail: {
+        avatarUrl: 'wxfile://manual-avatar.jpg'
+      }
+    });
+
+    resolveProfile({
+      user: {
+        preferredName: 'Saved Alex',
+        avatarUrl: 'cloud://prod-env-123/user-avatars/saved-alex.jpg',
+        profileSource: 'wechat'
+      }
+    });
+    await loadPromise;
+
+    expect(ctx.data.signupName).toBe('Manual Alex');
+    expect(ctx.data.avatarUrl).toBe('wxfile://manual-avatar.jpg');
+    expect(ctx.data.avatarTempFilePath).toBe('wxfile://manual-avatar.jpg');
+    expect(ctx.data.profileSource).toBe('wechat');
   });
 
   test('renders WeChat profile entry points without any phone collection UI', () => {

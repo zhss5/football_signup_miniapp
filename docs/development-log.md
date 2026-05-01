@@ -746,3 +746,27 @@ Verification:
 
 - targeted red/green coverage was added for list thumbnail preference, list fallback to original cover, detail original-cover preference, and detail fallback to thumbnail.
 - full regression suite passed: `42` test suites, `201` tests.
+
+## 2026-05-01 - Signup Profile Prefill Closed the Loop
+
+The signup flow now reuses the saved user profile when a participant joins another activity.
+
+Delivered behavior:
+
+- Activity Join loads the current user profile with `ensureUserProfile`.
+- If the participant has a saved `preferredName`, the signup name field is prefilled.
+- If the participant has a saved `avatarUrl`, the avatar preview is prefilled without re-uploading the existing CloudBase file.
+- If the participant starts typing or chooses an avatar before profile loading finishes, the async profile result does not overwrite their manual input.
+- Existing `joinActivity` behavior continues to write `signupName`, `avatarUrl`, and `profileSource` into the registration and update `users.preferredName/avatarUrl`.
+
+Why it matters:
+
+- participants do not need to re-enter the same signup name and avatar for every activity
+- registration records still keep the activity-specific snapshot used by team rosters
+- the user profile remains the source for future signup prefill
+
+Verification:
+
+- targeted red/green coverage was added for profile prefill and delayed-profile non-overwrite behavior.
+- related Activity Join, `joinActivity`, and local mock tests passed together.
+- full regression suite passed: `42` test suites, `203` tests.
