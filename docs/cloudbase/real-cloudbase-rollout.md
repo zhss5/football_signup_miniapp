@@ -80,7 +80,6 @@ Recommended function set:
 10. `cancelActivity`
 11. `deleteActivity`
 12. `getActivityStats`
-13. `generateActivityCoverThumbs`
 
 Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
 
@@ -90,7 +89,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats generateActivityCoverThumbs `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -143,36 +142,6 @@ Notes:
 - CloudBase console/server-side preview can still open files that mini-program clients cannot read.
 - Storage permission changes can take 1-3 minutes to take effect.
 - Expired free-trial environments can block permission changes until the environment is upgraded or renewed.
-
-## Historical Cover Thumbnail Backfill
-
-Newly uploaded covers generate `coverThumbImage` automatically. Existing activity covers need a one-time backfill after `generateActivityCoverThumbs` is deployed.
-
-Before running the backfill:
-
-1. Confirm the target CloudBase environment has the image processing/CloudInfinite extension available.
-2. Confirm `activity-cover-thumbs/` is covered by the storage read rule.
-3. Confirm the caller has `admin` in `users.roles`.
-
-First run a dry-run cloud function test:
-
-```json
-{
-  "dryRun": true,
-  "limit": 20
-}
-```
-
-Then run the real batch:
-
-```json
-{
-  "dryRun": false,
-  "limit": 20
-}
-```
-
-Repeat the real batch if there are more than 20 historical covers. Use `force: true` only when intentionally regenerating existing thumbnails.
 
 ## Recommended Smoke Pass
 

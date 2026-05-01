@@ -139,8 +139,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - new cover uploads generate `coverThumbImage` automatically during the crop/upload flow
 - `createActivity` and `updateActivity` persist `coverThumbImage`
 - Home/My/activity cards already prefer thumbnails through `coverDisplayImage`
-- historical CloudBase covers can be backfilled with the admin-only `generateActivityCoverThumbs` cloud function
-- the batch function supports dry-run, force regeneration, and limited batch sizes
+- historical CloudBase cover backfill is deferred; current scope is new uploads only
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -184,8 +183,7 @@ Cover display and thumbnail behavior now includes:
 - CloudBase file IDs are resolved with `wx.cloud.getTempFileURL`, with fallback diagnostics and `wx.cloud.downloadFile` as a secondary path
 - activity card and detail templates show placeholders when a CloudBase file cannot be resolved for display
 - new uploads store a separate `coverThumbImage` for list/card display
-- historical covers can be backfilled through `generateActivityCoverThumbs`
-- CloudBase rollout and handoff docs record the storage permission, thumbnail backfill, cost checkpoint, and deployment order
+- CloudBase rollout and handoff docs record the storage permission, new-upload thumbnail behavior, cost checkpoint, and deployment order
 
 Issues found while testing cover display:
 
@@ -207,7 +205,7 @@ The MVP still has known non-blocking gaps:
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
 - one-tap phone retrieval still needs verification in a real certified mini program environment
-- historical activity cover images need the new `generateActivityCoverThumbs` backfill run before older activities benefit from list thumbnails
+- historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - insurance-link support is not implemented yet
@@ -225,7 +223,7 @@ The MVP still has known non-blocking gaps:
 - one real environment has already been created locally
 - target CloudBase has been upgraded to the personal plan
 - verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, `generateActivityCoverThumbs`, and any functions not yet uploaded in the target environment
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, and any functions not yet uploaded in the target environment
 - validate permissions, cover image loading, sharing, signup, organizer/admin removal, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
@@ -256,12 +254,7 @@ The MVP still has known non-blocking gaps:
 
 ### Option C: Media and UX Polish
 
-- run batch cover-thumbnail generation for historical activity covers:
-  - deploy `generateActivityCoverThumbs`
-  - confirm the CloudBase image processing/CloudInfinite extension is available
-  - run dry-run first
-  - process persistent CloudBase `fileID` covers only
-  - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if original files remain too large
+- keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
 - remove participant phone-number collection from signup unless a later activity-specific requirement brings it back

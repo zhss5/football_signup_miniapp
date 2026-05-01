@@ -638,9 +638,9 @@ Safety notes before push:
 - the pending commits do not include `project.config.json`, `env.local.js`, AppSecret values, tokens, private keys, or the real CloudBase environment ID
 - test-only placeholder values such as `prod-env-123` are not production secrets
 
-## 2026-05-01 - Cover Thumbnail Generation Implemented
+## 2026-05-01 - New Upload Cover Thumbnail Generation Implemented
 
-Activity cover thumbnail support was implemented for both future uploads and historical backfill.
+Activity cover thumbnail support was implemented for newly uploaded covers. Historical cover backfill is deferred because the current CloudBase console does not expose the required image processing/CloudInfinite capability.
 
 Delivered behavior:
 
@@ -652,42 +652,16 @@ Delivered behavior:
   - thumbnail path: `activity-cover-thumbs/`
 - activity editing preserves existing `coverThumbImage` and uploads a new thumbnail when the organizer selects a new cover
 - `createActivity`, `updateActivity`, and the local mock now store `coverThumbImage`
-- a new admin-only `generateActivityCoverThumbs` cloud function can backfill thumbnails for existing CloudBase cover files
-- the batch function supports:
-  - `dryRun`
-  - `limit`
-  - `force`
-  - skipping non-CloudBase cover paths
-  - skipping activities that already have thumbnails unless `force` is true
 
 Operational notes:
 
-- deploy `generateActivityCoverThumbs` after running `npm run copy:cloud-shared`
-- the function package depends on CloudBase image processing through `@cloudbase/extension-ci` and `@cloudbase/node-sdk`; `@cloudbase/extension-ci` currently uses the `0.x` package line, so keep the function dependency on `^0.2.3`
-- ensure the CloudBase image processing/CloudInfinite extension is available in the target environment before running the real backfill
-- if CloudBase shows the function in `CreateFailed`, delete that failed cloud function record before redeploying because CloudBase will reject code updates while the function is stuck in the failed-create state
-- first run the function with:
-
-```json
-{
-  "dryRun": true,
-  "limit": 20
-}
-```
-
-- after confirming the candidate list, run:
-
-```json
-{
-  "dryRun": false,
-  "limit": 20
-}
-```
+- deploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared`
+- keep storage read rules covering both `activity-covers/` and `activity-cover-thumbs/`
+- do not deploy or run a historical thumbnail backfill function for now
 
 Verification:
 
 - target thumbnail tests passed locally before the full suite:
-  - `generateActivityCoverThumbs`
   - create/update activity thumbnail persistence
   - crop page thumbnail export
   - activity create submit thumbnail upload

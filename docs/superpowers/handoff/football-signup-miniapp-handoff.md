@@ -46,7 +46,6 @@ Deployable cloud functions currently include:
 - `getActivityStats`
 - `removeRegistration`
 - `resolvePhoneNumber`
-- `generateActivityCoverThumbs`
 
 Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
 
@@ -79,7 +78,7 @@ The following CloudBase rollout issues were fixed:
 The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
-- uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, and old covers need the `generateActivityCoverThumbs` backfill.
+- uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, while old cover backfill is deferred.
 - the current signup flow still supports optional participant phone collection, but the newer product backlog calls for removing phone from participant signup.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
 - The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
@@ -144,7 +143,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats generateActivityCoverThumbs `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -188,8 +187,7 @@ Current cover-thumbnail progress:
 - the cover crop page exports both the detail cover and a smaller thumbnail file
 - create/edit activity uploads thumbnails to `activity-cover-thumbs/`
 - `createActivity`, `updateActivity`, and the local mock persist `coverThumbImage`
-- the new `generateActivityCoverThumbs` cloud function can backfill historical covers
-- the backfill function is admin-only and supports `dryRun`, `limit`, and `force`
+- historical backfill is paused; do not deploy a backfill function for now
 
 Problems encountered during cover-display testing:
 
@@ -227,13 +225,7 @@ Continue in this order:
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. Run batch cover-thumbnail generation for historical activity covers:
-   - ensure the CloudBase image processing/CloudInfinite extension is available in the target environment
-   - deploy `generateActivityCoverThumbs`
-   - first call it with `{ "dryRun": true, "limit": 20 }`
-   - then call it with `{ "dryRun": false, "limit": 20 }`
-   - repeat in batches if there are more historical covers
-   - keep Activity Detail on `coverImage` for the first pass, then evaluate a detail-optimized image if needed
+11. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 12. Plan the next mini program backlog items:
    - remove participant phone-number collection from signup
    - add an activity/signup insurance link
