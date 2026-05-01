@@ -41,6 +41,11 @@ module.exports = {
       defaultCopy: 'Use WeChat share to send this signup page to your group.',
       action: 'Share Activity'
     },
+    insurance: {
+      title: 'Insurance',
+      copyHint: 'Copy the insurance link and open it in WeChat or a browser.',
+      copyAction: 'Copy Insurance Link'
+    },
     actions: {
       edit: 'Edit',
       copyParticipantNames: 'Copy participant names',
@@ -73,6 +78,8 @@ module.exports = {
     deadlineHint: 'Signup deadline must be earlier than or equal to the activity start time.',
     inviteCode: 'Invite code',
     inviteCodePlaceholder: 'Optional invite code',
+    insuranceLink: 'Insurance link',
+    insuranceLinkPlaceholder: 'Optional insurance signup link',
     teams: 'Teams',
     teamsHint: 'Default to one team. Add more teams if needed.',
     totalSignupLimit: 'Total signup limit',
@@ -177,6 +184,7 @@ module.exports = {
     loadActivitiesFailed: 'Unable to load activities',
     locationPinUnavailable: 'Location pin not available',
     participantNamesCopied: 'Participant names copied',
+    insuranceLinkCopied: 'Insurance link copied',
     noParticipantsToCopy: 'No participants to copy',
     proxySignupSuccess: 'Participant added',
     moveRegistrationSuccess: 'Participant moved',

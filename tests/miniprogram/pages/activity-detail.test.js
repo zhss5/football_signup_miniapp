@@ -560,6 +560,32 @@ describe('activity detail page', () => {
     });
   });
 
+  test('onCopyInsuranceLink copies the activity insurance link', () => {
+    global.wx.setClipboardData.mockImplementation(({ success }) => {
+      success();
+    });
+
+    const ctx = {
+      data: {
+        locale: 'en-US',
+        activity: {
+          insuranceLink: 'https://insurance.example.com/apply'
+        }
+      }
+    };
+
+    pageConfig.onCopyInsuranceLink.call(ctx);
+
+    expect(global.wx.setClipboardData).toHaveBeenCalledWith({
+      data: 'https://insurance.example.com/apply',
+      success: expect.any(Function)
+    });
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Insurance link copied',
+      icon: 'success'
+    });
+  });
+
   test('onShareAppMessage shares the current activity detail page', () => {
     const ctx = {
       data: {

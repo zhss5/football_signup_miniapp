@@ -100,6 +100,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
       coverImage: 'cloud://football/cover-1.png',
       coverThumbImage: 'cloud://football/thumb-1.jpg',
       imageList: ['cloud://football/cover-1.png'],
+      insuranceLink: ' https://insurance.example.com/apply ',
       signupLimitTotal: 20,
       requirePhone: true,
       teams: [
@@ -122,6 +123,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
     coverImage: 'cloud://football/cover-1.png',
     coverThumbImage: 'cloud://football/thumb-1.jpg',
     imageList: ['cloud://football/cover-1.png'],
+    insuranceLink: 'https://insurance.example.com/apply',
     signupLimitTotal: 20,
     requirePhone: false
   });

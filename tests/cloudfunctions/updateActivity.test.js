@@ -25,6 +25,7 @@ function createFakeDb(options = {}) {
         addressName: 'Old field',
         location: null,
         description: '',
+        insuranceLink: '',
         coverImage: '',
         imageList: [],
         signupLimitTotal: 12,
@@ -178,6 +179,7 @@ function buildUpdatePayload(overrides = {}) {
       longitude: 121.4
     },
     description: 'Updated notes',
+    insuranceLink: ' https://insurance.example.com/updated ',
     coverImage: 'cloud://cover-updated',
     coverThumbImage: 'cloud://cover-updated-thumb',
     imageList: ['cloud://cover-updated'],
@@ -205,6 +207,7 @@ test('updateActivity lets the activity organizer update editable fields and writ
   expect(db.state.activities.activity_1).toMatchObject({
     title: 'Updated Match',
     addressText: 'New address',
+    insuranceLink: 'https://insurance.example.com/updated',
     coverThumbImage: 'cloud://cover-updated-thumb',
     signupLimitTotal: 16,
     requirePhone: false,

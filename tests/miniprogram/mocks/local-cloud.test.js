@@ -33,6 +33,7 @@ test('local cloud client can create an activity and list it on home', async () =
     coverImage: 'wxfile://cover-1.png',
     coverThumbImage: 'wxfile://cover-1-thumb.jpg',
     imageList: ['wxfile://cover-1.png'],
+    insuranceLink: 'https://insurance.example.com/apply',
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
@@ -53,6 +54,7 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].signupDeadlineAt).toBe('2026-04-26T19:30:00.000Z');
   expect(list.items[0].imageList).toEqual(['wxfile://cover-1.png']);
   expect(list.items[0].coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
+  expect(list.items[0].insuranceLink).toBe('https://insurance.example.com/apply');
 });
 
 test('local cloud client blocks regular users from creating activities when roles are restricted', async () => {

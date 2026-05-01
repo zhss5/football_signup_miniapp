@@ -53,6 +53,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - end time
 - signup deadline date and time
 - invite code
+- optional insurance signup link
 - description
 - total signup limit
 - dynamic team setup
@@ -192,6 +193,14 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - team rows can be removed down to one team, but the final team cannot be removed
 - create/update validation continues to require at least one team
 
+### 2.19 Activity Insurance Link
+
+- Create/Edit Activity includes an optional `insuranceLink` field
+- the draft helper trims `insuranceLink` before submit
+- `createActivity`, `updateActivity`, and local mock mode persist the trimmed link
+- Activity Detail shows an insurance card only when the activity has a link
+- the first version copies the link to the clipboard instead of trying to open an external web page inside the mini program
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -212,14 +221,15 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
 - organizers/admins can move participants between teams
 - activity creation now starts from one team instead of two
+- activities can include an optional insurance signup link
 
 ## 4. Verification Status
 
 Latest verified test result:
 
-- command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
+- command: `npm test -- --runInBand`
 - result: `46` test suites passed
-- result: `235` tests passed
+- result: `237` tests passed
 
 Covered areas include:
 
@@ -238,6 +248,7 @@ Covered areas include:
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior
 - one-team default activity setup behavior
+- optional insurance-link create/edit/detail-copy behavior
 
 ## 4.1 Current Media Progress
 
@@ -272,7 +283,6 @@ The MVP still has known non-blocking gaps:
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
-- insurance-link support is not implemented yet
 - participant preferred playing position selection is not implemented yet; priority `P2`
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
@@ -326,7 +336,7 @@ The MVP still has known non-blocking gaps:
 - keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
-- add activity/signup insurance-link display
+- completed in code: add activity/signup insurance-link display and detail-page copy action
 - add preferred playing position selection as a `P2` participant profile/signup refinement
 - completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation

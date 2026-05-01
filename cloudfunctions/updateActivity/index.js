@@ -76,6 +76,7 @@ function buildActivityUpdateData(event, activity, stamp) {
     addressName: resolveAddressName(event, activity, addressText),
     location: event.location || null,
     description: event.description || '',
+    insuranceLink: String(event.insuranceLink || '').trim(),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
     imageList,

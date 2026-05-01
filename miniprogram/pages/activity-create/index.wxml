@@ -75,6 +75,17 @@
     />
   </view>
 
+  <view class="field">
+    <text class="label">{{i18n.activityCreate.insuranceLink}}</text>
+    <input
+      class="input"
+      placeholder="{{i18n.activityCreate.insuranceLinkPlaceholder}}"
+      data-field="insuranceLink"
+      value="{{form.insuranceLink}}"
+      bindinput="onFieldInput"
+    />
+  </view>
+
   <view wx:if="{{!isEditMode}}" class="field">
     <text class="label">{{i18n.activityCreate.teams}}</text>
     <text class="hint">{{i18n.activityCreate.teamsHint}}</text>

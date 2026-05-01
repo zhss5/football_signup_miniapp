@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-04-29
+- Date: 2026-05-01
 - Branch: `main`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -31,6 +31,7 @@ The codebase supports:
 - organizer/admin-only proxy participant badge in Activity Detail rosters
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
+- optional activity insurance link creation, editing, and Activity Detail clipboard copy
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -66,6 +67,12 @@ Latest proxy-badge change:
 
 - `getActivityDetail` now returns `proxyRegistration` on roster members only for viewers with registration-management permission, so redeploy `getActivityDetail` before validating the badge on CloudBase.
 - upload a new mini program frontend build so the `team-list` template/style changes are available on device.
+
+Latest insurance-link change:
+
+- `createActivity` and `updateActivity` now persist the optional trimmed `insuranceLink`.
+- upload a new mini program frontend build so the Create/Edit field and Activity Detail copy action are available.
+- redeploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared` before testing this feature on CloudBase.
 
 Earlier rollout reference:
 
@@ -187,9 +194,9 @@ npm test
 Latest result:
 
 - `46` test suites passed
-- `235` tests passed
+- `237` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page copying, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -249,6 +256,12 @@ Current organizer roster behavior:
 - Activity Detail lets organizers/admins move active participants to another non-full team.
 - moving a participant keeps the activity joined count unchanged while updating source and target team counts.
 
+Current insurance-link behavior:
+
+- Create/Edit Activity has an optional insurance signup link field.
+- Activity Detail shows an insurance card only when the activity has a link.
+- tapping the insurance action copies the link to the clipboard; it does not attempt to open arbitrary external web pages inside the mini program.
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -288,7 +301,6 @@ Continue in this order:
 11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 13. Plan later mini program backlog items:
-   - add an activity/signup insurance link
    - add preferred playing position selection as priority `P2`
 14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters

@@ -28,6 +28,7 @@ The current MVP supports the following creation fields:
 - signup deadline date
 - signup deadline time
 - optional invite code
+- optional insurance signup link
 - total signup limit
 - dynamic team configuration
 - per-team capacity
@@ -64,6 +65,7 @@ The detail page shows:
 - team member list with avatar placeholder and signup name
 - organizer/admin-only proxy badge for participants added on someone else's behalf
 - organizer/admin move action for moving participants between teams
+- optional insurance link copy action when the activity has an insurance signup link
 - current user signup state
 - organizer action button when permitted
 - signup cancel button when permitted
@@ -353,7 +355,9 @@ Key fields:
 - `location`
 - `description`
 - `coverImage`: CloudBase file ID in real-cloud mode, local temporary path in local mock mode
+- `coverThumbImage`: smaller CloudBase file ID used by list/card rendering
 - `imageList`: future-ready image list; currently stores the same single cover image
+- `insuranceLink`: optional external insurance signup link copied from Activity Detail
 - `signupLimitTotal`
 - `joinedCount`
 - `requirePhone`: legacy field, stored as `false`
@@ -477,6 +481,7 @@ The current MVP decisions are:
 - enforce one active signup per user per activity
 - enforce signup deadline for both joining and cancellation
 - support dynamic teams plus an auto-generated bench team
+- support an optional insurance signup link on activities
 - support organizer cancellation and soft deletion
 - use a `2:1` cover image crop shared across list and detail surfaces
 - use a tabbed `My` page with Created and Joined history

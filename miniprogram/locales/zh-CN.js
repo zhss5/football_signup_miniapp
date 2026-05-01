@@ -42,6 +42,11 @@ module.exports = {
       defaultCopy: '使用微信分享把这条报名页发送给你的群聊。',
       action: '分享活动'
     },
+    insurance: {
+      title: '\u4fdd\u9669',
+      copyHint: '\u590d\u5236\u4fdd\u9669\u94fe\u63a5\u540e\uff0c\u53ef\u5728\u5fae\u4fe1\u6216\u6d4f\u89c8\u5668\u6253\u5f00\u3002',
+      copyAction: '\u590d\u5236\u4fdd\u9669\u94fe\u63a5'
+    },
     actions: {
       copyParticipantNames: '复制报名名单',
       proxySignup: '代人报名',
@@ -74,6 +79,8 @@ module.exports = {
     deadlineHint: '报名截止时间必须早于或等于活动开始时间。',
     inviteCode: '邀请码',
     inviteCodePlaceholder: '可选邀请码',
+    insuranceLink: '保险链接',
+    insuranceLinkPlaceholder: '可选保险报名链接',
     teams: '分队设置',
     teamsHint: '默认一支队伍，可按需要继续新增队伍。',
     totalSignupLimit: '总报名人数',
@@ -169,6 +176,7 @@ module.exports = {
   },
   toast: {
     participantNamesCopied: '已复制报名名单',
+    insuranceLinkCopied: '已复制保险链接',
     noParticipantsToCopy: '暂无报名成员',
     proxySignupSuccess: '已添加报名成员',
     moveRegistrationSuccess: '已调整队伍',

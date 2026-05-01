@@ -351,6 +351,26 @@ Page({
     });
   },
 
+  onCopyInsuranceLink() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const activity = this.data.activity || {};
+    const insuranceLink = String(activity.insuranceLink || '').trim();
+
+    if (!insuranceLink) {
+      return;
+    }
+
+    wx.setClipboardData({
+      data: insuranceLink,
+      success: () => {
+        wx.showToast({
+          title: translate('toast.insuranceLinkCopied'),
+          icon: 'success'
+        });
+      }
+    });
+  },
+
   async onCancelActivity() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const confirmed = await new Promise(resolve => {

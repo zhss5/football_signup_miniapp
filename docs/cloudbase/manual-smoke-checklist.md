@@ -13,6 +13,7 @@
 - Confirm activity creation writes one `activities` document
 - Confirm activity creation writes the related `activity_teams` documents
 - Confirm map-selected address fields are stored
+- Confirm optional insurance link is stored when entered
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
@@ -20,6 +21,8 @@
 ## Signup Flow
 
 - Confirm the activity detail page shows team counts and member names
+- Confirm the activity detail page shows the insurance card only for activities with an insurance link
+- Confirm tapping the insurance action copies the insurance link to the clipboard
 - Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm join flow writes `registrations._id = activityId_openid`
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
@@ -32,6 +35,7 @@
 - Confirm participant cancellation is blocked after the deadline
 - Confirm organizer can open Activity Detail and navigate to `Edit`
 - Confirm organizer edit updates title, time, deadline, location, description, cover image, and total capacity in place
+- Confirm organizer edit can add, change, and clear the optional insurance link
 - Confirm existing registrations remain attached to the same activity after edit
 - Confirm capacity cannot be reduced below joined players or existing regular team slots
 - Confirm regular users and non-owner organizers cannot edit another organizer's activity

@@ -883,3 +883,30 @@ Verification:
 
 - targeted red/green coverage was added for the default draft form, create-page initialization, and team-editor one-team minimum behavior.
 - full regression suite passed: `46` test suites, `235` tests.
+
+## 2026-05-01 - Activity Insurance Link Implemented
+
+Activities can now include an optional insurance signup link.
+
+Delivered behavior:
+
+- Create/Edit Activity shows an optional insurance link field.
+- the frontend draft helper trims `insuranceLink` before submit.
+- `createActivity`, `updateActivity`, and local mock mode persist the trimmed link.
+- Activity Detail shows an insurance card only when a link exists.
+- tapping the insurance action copies the link to the clipboard instead of trying to open an arbitrary external page inside the mini program.
+
+Why it matters:
+
+- organizers can include the insurance workflow in the activity setup without collecting extra participant phone data.
+- participants can reliably access the insurance link even before external web-view domain handling is configured.
+
+Operational notes:
+
+- deploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the Create/Edit field and Activity Detail copy action are available.
+
+Verification:
+
+- targeted red/green coverage was added for draft payloads, create/update cloud functions, local mock storage, Create page rendering, Activity Detail rendering, and clipboard copying.
+- full regression suite passed: `46` test suites, `237` tests.

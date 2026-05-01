@@ -17,6 +17,7 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
       maxMembers: 12
     }
   ]);
+  expect(form.insuranceLink).toBe('');
   expect(form).not.toHaveProperty('requirePhone');
 });
 
@@ -30,10 +31,12 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
     signupDeadlineDate: '2026-04-26',
     signupDeadlineTime: '19:30',
     addressText: 'Half Stone',
+    insuranceLink: ' https://insurance.example.com/apply ',
     coverImage: 'wxfile://cover-1.png',
     imageList: ['wxfile://cover-1.png']
   });
 
+  expect(payload.insuranceLink).toBe('https://insurance.example.com/apply');
   expect(payload.coverImage).toBe('wxfile://cover-1.png');
   expect(payload.imageList).toEqual(['wxfile://cover-1.png']);
   expect(payload).not.toHaveProperty('requirePhone');
@@ -71,6 +74,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
         longitude: 121.4
       },
       description: 'Original notes',
+      insuranceLink: 'https://insurance.example.com/original',
       coverImage: 'cloud://cover-a',
       coverThumbImage: 'cloud://cover-a-thumb',
       imageList: ['cloud://cover-a'],
@@ -95,6 +99,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     addressText: 'Old address',
     addressName: 'Old field',
     description: 'Original notes',
+    insuranceLink: 'https://insurance.example.com/original',
     coverImage: 'cloud://cover-a',
     coverThumbImage: 'cloud://cover-a-thumb',
     imageList: ['cloud://cover-a'],

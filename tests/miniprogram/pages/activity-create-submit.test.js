@@ -115,6 +115,18 @@ describe('activity create submit flow', () => {
     expect(wxml).not.toContain('onRequirePhoneChange');
   });
 
+  test('renders an optional insurance link field', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('data-field="insuranceLink"');
+    expect(wxml).toContain('{{i18n.activityCreate.insuranceLink}}');
+  });
+
   test('onSubmit blocks users without create permission', async () => {
     const ctx = {
       data: {
