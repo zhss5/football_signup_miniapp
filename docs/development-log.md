@@ -836,3 +836,27 @@ Verification:
 
 - targeted red/green coverage was added for CloudBase detail output, local mock output, view-model visibility rules, and team-list rendering.
 - full regression suite passed: `43` test suites, `220` tests.
+
+## 2026-05-01 - Organizer Team Reassignment Implemented
+
+Organizers and admins can now move an active participant from one team to another from Activity Detail.
+
+Delivered behavior:
+
+- Activity Detail roster rows show a `Move` / `换队` action for viewers with registration-management permission.
+- tapping the action opens a target-team picker that excludes the current team and full teams.
+- the new `moveRegistration` cloud function validates organizer/admin permission, published activity state, active registration state, target team ownership, and target capacity.
+- moving a participant updates the registration `teamId`, records `movedByOpenId` and `movedAt`, decrements the source team count, and increments the target team count.
+- activity `joinedCount` is unchanged because the participant remains signed up.
+- regular users cannot see the action or call the cloud function successfully.
+- the local mock implements the same behavior for DevTools local testing.
+
+Operational notes:
+
+- deploy the new `moveRegistration` cloud function after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the roster `Move` action is available.
+
+Verification:
+
+- targeted red/green coverage was added for the cloud function, local mock, service adapter, view model, team-list event, and Activity Detail picker flow.
+- full regression suite passed: `44` test suites, `232` tests.

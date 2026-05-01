@@ -47,6 +47,7 @@ module.exports = {
       proxySignup: 'Add participant',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
+      moveMember: 'Move',
       removeMember: 'Remove',
       delete: 'Delete'
     },
@@ -55,6 +56,9 @@ module.exports = {
     },
     member: {
       proxySignup: 'Proxy'
+    },
+    moveTarget: {
+      label: '{{teamName}} ({{joined}} / {{total}})'
     }
   },
   activityCreate: {
@@ -174,7 +178,9 @@ module.exports = {
     locationPinUnavailable: 'Location pin not available',
     participantNamesCopied: 'Participant names copied',
     noParticipantsToCopy: 'No participants to copy',
-    proxySignupSuccess: 'Participant added'
+    proxySignupSuccess: 'Participant added',
+    moveRegistrationSuccess: 'Participant moved',
+    noMoveTargetTeam: 'No available target team'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',
@@ -203,6 +209,10 @@ module.exports = {
     signupCannotBeCancelled: 'Signup can no longer be cancelled',
     removeRegistrationNotAllowed: 'Only the organizer or an admin can remove registrations',
     proxySignupNotAllowed: 'Only the organizer or an admin can add participants',
+    moveRegistrationNotAllowed: 'Only the organizer or an admin can move registrations',
+    noActiveRegistrationToMove: 'No active registration to move',
+    activityRosterClosed: 'Activity is not open for roster changes',
+    alreadyInTargetTeam: 'Already in target team',
     organizerCancelOnly: 'Only the organizer can cancel this activity',
     organizerDeleteOnly: 'Only the organizer can delete this activity',
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',

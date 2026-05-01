@@ -269,6 +269,72 @@ test('local cloud client blocks regular users from adding proxy participants', a
   ).rejects.toThrow('Only the organizer or an admin can add participants');
 });
 
+test('local cloud client lets organizers move members between teams', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+
+  await expect(
+    ownerClient.call('moveRegistration', {
+      activityId: created.activityId,
+      userOpenId: 'openid_player',
+      targetTeamId: detailBefore.teams[1]._id
+    })
+  ).resolves.toMatchObject({
+    moved: true,
+    fromTeamId: detailBefore.teams[0]._id,
+    teamId: detailBefore.teams[1]._id
+  });
+
+  const detailAfter = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.teams[0].joinedCount).toBe(0);
+  expect(detailAfter.teams[0].members).toHaveLength(0);
+  expect(detailAfter.teams[1].joinedCount).toBe(1);
+  expect(detailAfter.teams[1].members[0]).toMatchObject({
+    userOpenId: 'openid_player',
+    signupName: 'Alex'
+  });
+});
+
 test('local cloud client blocks non-owner activity edits and capacity below joined count', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

@@ -176,6 +176,14 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - organizer/admin roster views mark proxy participants with a manager-only badge
 - regular users do not see whether a participant was added by proxy signup
 
+### 2.17 Organizer Team Reassignment
+
+- Activity Detail lets organizers/admins move an active participant to another team
+- target-team choices exclude the participant's current team and full teams
+- the new `moveRegistration` cloud function enforces organizer/admin permission and target capacity
+- moving a participant updates the registration `teamId` and source/target team counts without changing activity `joinedCount`
+- regular users cannot see the move action or execute the cloud function
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -194,14 +202,15 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can copy all active participant names from Activity Detail
 - organizers/admins can add proxy participants from Activity Detail
 - organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
+- organizers/admins can move participants between teams
 
 ## 4. Verification Status
 
 Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
-- result: `43` test suites passed
-- result: `220` tests passed
+- result: `44` test suites passed
+- result: `232` tests passed
 
 Covered areas include:
 
@@ -218,6 +227,7 @@ Covered areas include:
 - organizer participant-name copy behavior
 - organizer proxy signup behavior
 - manager-only proxy participant badge behavior
+- organizer team reassignment behavior
 
 ## 4.1 Current Media Progress
 
@@ -246,7 +256,7 @@ The MVP still has known non-blocking gaps:
 - production role grants still require manual CloudBase edits to `users.roles`
 - a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
-- organizer-driven team reassignment and bench promotion are not implemented yet
+- bench promotion is not implemented as a dedicated workflow yet; organizers can move participants manually between non-full teams
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
@@ -265,8 +275,8 @@ The MVP still has known non-blocking gaps:
 - one real environment has already been created locally
 - target CloudBase has been upgraded to the personal plan
 - verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `addProxyRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
-- validate permissions, cover image loading, sharing, signup, organizer/admin removal, organizer proxy signup, and end-to-end data writes on a real device
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `moveRegistration`, `addProxyRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- validate permissions, cover image loading, sharing, signup, organizer/admin removal, organizer proxy signup, organizer team reassignment, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
 
@@ -275,7 +285,7 @@ The MVP still has known non-blocking gaps:
 - validate activity editing on a real device after deploying `updateActivity`
 - completed in code: let organizers sign up participants on their behalf
 - completed in code: let organizers copy active participant names in one action
-- move players between teams
+- completed in code: move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page
 

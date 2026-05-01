@@ -29,6 +29,7 @@ The codebase supports:
 - organizer/admin one-tap participant name copy from Activity Detail
 - organizer/admin proxy signup through the `addProxyRegistration` cloud function
 - organizer/admin-only proxy participant badge in Activity Detail rosters
+- organizer/admin team reassignment through the `moveRegistration` cloud function
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -52,6 +53,7 @@ Deployable cloud functions currently include:
 - `deleteActivity`
 - `getActivityStats`
 - `removeRegistration`
+- `moveRegistration`
 
 Legacy note:
 
@@ -158,7 +160,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -183,10 +185,10 @@ npm test
 
 Latest result:
 
-- `43` test suites passed
-- `220` tests passed
+- `44` test suites passed
+- `232` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -236,6 +238,8 @@ Current organizer roster behavior:
 - Activity Detail also lets organizers/admins add proxy participants to a selected team.
 - proxy participants use generated `proxy_...` user IDs and can be removed through the existing organizer/admin removal flow.
 - proxy participants show a small proxy badge only to organizers/admins; regular users see the same member name without the badge.
+- Activity Detail lets organizers/admins move active participants to another non-full team.
+- moving a participant keeps the activity joined count unchanged while updating source and target team counts.
 
 Problems encountered during cover-display testing:
 
@@ -266,7 +270,7 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, and organizer proxy signup after CloudBase deployment.
+9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, and organizer team reassignment after CloudBase deployment.
 10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - first version keeps `status: published/cancelled/deleted`

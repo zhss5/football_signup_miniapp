@@ -68,7 +68,7 @@
 .member-action-button {
   flex: 0 0 auto;
   margin-left: 16rpx;
-  min-width: 140rpx;
+  min-width: 112rpx;
   height: 56rpx;
   line-height: 56rpx;
   padding: 0 18rpx;
@@ -77,6 +77,12 @@
   font-weight: 600;
   color: #374151;
   background: #f9fafb;
+}
+
+.member-action-move {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .member-action-cancel {

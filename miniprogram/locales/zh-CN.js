@@ -48,6 +48,7 @@ module.exports = {
       edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
+      moveMember: '换队',
       removeMember: '移除',
       delete: '删除'
     },
@@ -56,6 +57,9 @@ module.exports = {
     },
     member: {
       proxySignup: '代报名'
+    },
+    moveTarget: {
+      label: '{{teamName}}（{{joined}} / {{total}}）'
     }
   },
   activityCreate: {
@@ -167,6 +171,8 @@ module.exports = {
     participantNamesCopied: '已复制报名名单',
     noParticipantsToCopy: '暂无报名成员',
     proxySignupSuccess: '已添加报名成员',
+    moveRegistrationSuccess: '已调整队伍',
+    noMoveTargetTeam: '暂无可调整的目标队伍',
     chooseLocationFailed: '无法选择地点',
     chooseImageFailed: '无法选择图片',
     openImageFailed: '无法打开图片',
@@ -202,6 +208,10 @@ module.exports = {
     signupCannotBeCancelled: '当前已不能退出报名',
     removeRegistrationNotAllowed: '只有组织者或管理员可以移除报名成员',
     proxySignupNotAllowed: '只有组织者或管理员可以代人报名',
+    moveRegistrationNotAllowed: '只有组织者或管理员可以调整队伍',
+    noActiveRegistrationToMove: '没有可调整的报名记录',
+    activityRosterClosed: '当前活动不可调整队伍',
+    alreadyInTargetTeam: '已在目标队伍中',
     organizerCancelOnly: '只有组织者可以取消活动',
     organizerDeleteOnly: '只有组织者可以删除活动',
     deleteOnlyEmpty: '只有无人报名的活动才可以删除'

@@ -15,6 +15,7 @@ The project is built for a fast MVP launch first, while keeping room for future 
 - Join exactly one team per activity
 - Cancel signup before the signup deadline
 - Cancel or soft-delete activities as the organizer
+- Let organizers/admins copy participant names, add proxy participants, and move participants between teams
 - View created and joined activities from the `My` page
 - Run the app in local mock mode inside WeChat DevTools without a real CloudBase environment
 - Run against a real CloudBase environment through deployed cloud functions
@@ -127,11 +128,12 @@ The repository already contains a runnable MVP implementation in local mock mode
 - `My` page tabs and created-history filters
 - cover-image crop flow
 - CloudBase deployment packaging and real-cloud function wiring
+- organizer/admin roster operations for copying names, proxy signup, removal, and team reassignment
 
 ## Next Recommended Work
 
 - complete the production CloudBase smoke pass on a real device
 - apply and verify production database indexes and security rules
-- add organizer-side player reassignment and bench promotion
+- add a dedicated bench-promotion workflow if manual team reassignment becomes insufficient
 - replace slider-based crop controls with gesture-based interaction
 - prepare payment-related data and flows

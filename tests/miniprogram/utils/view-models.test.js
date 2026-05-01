@@ -205,7 +205,38 @@ test('buildTeamListVm marks other member rows with remove action for managers', 
   expect(teams[0].members[1]).toMatchObject({
     isCurrentUser: false,
     memberAction: 'remove',
-    memberActionText: 'Remove'
+    memberActionText: 'Remove',
+    moveActionVisible: true,
+    moveActionText: 'Move'
+  });
+});
+
+test('buildTeamListVm hides move actions from regular users', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 1,
+        maxMembers: 6,
+        members: [
+          {
+            userOpenId: 'openid_other',
+            signupName: 'Bob',
+            avatarUrl: ''
+          }
+        ]
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    }
+  );
+
+  expect(teams[0].members[0]).toMatchObject({
+    moveActionVisible: false,
+    moveActionText: ''
   });
 });
 

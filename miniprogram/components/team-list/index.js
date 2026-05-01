@@ -37,6 +37,7 @@ Component({
       const dataset = event.currentTarget.dataset;
       const eventNameByAction = {
         cancelSignup: 'cancelsignup',
+        move: 'movemember',
         remove: 'removemember'
       };
       const eventName = eventNameByAction[dataset.action];
@@ -45,10 +46,16 @@ Component({
         return;
       }
 
-      this.triggerEvent(eventName, {
+      const detail = {
         userOpenId: dataset.userOpenId,
         signupName: dataset.signupName
-      });
+      };
+
+      if (dataset.action === 'move') {
+        detail.currentTeamId = dataset.currentTeamId;
+      }
+
+      this.triggerEvent(eventName, detail);
     }
   }
 });

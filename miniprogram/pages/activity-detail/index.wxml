@@ -41,6 +41,7 @@
     emptyText="{{i18n.activity.teamList.empty}}"
     bind:jointap="openSignup"
     bind:proxysignup="onProxySignup"
+    bind:movemember="onMoveRegistration"
     bind:removemember="onRemoveRegistration"
     bind:cancelsignup="onCancelSignup"
   />

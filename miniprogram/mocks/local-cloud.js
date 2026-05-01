@@ -721,6 +721,84 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function moveRegistration(payload) {
+    if (!payload.activityId) {
+      throw new Error('activityId is required');
+    }
+
+    if (!payload.userOpenId) {
+      throw new Error('userOpenId is required');
+    }
+
+    if (!payload.targetTeamId) {
+      throw new Error('targetTeamId is required');
+    }
+
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const activity = state.activities[payload.activityId];
+    const actor = state.users[openid] || buildDefaultUser(openid, stamp);
+
+    if (!activity || activity.status === 'deleted') {
+      throw new Error('Activity not found');
+    }
+
+    if (!canEditActivity(activity, actor, openid)) {
+      throw new Error('Only the organizer or an admin can move registrations');
+    }
+
+    if (activity.status !== 'published') {
+      throw new Error('Activity is not open for roster changes');
+    }
+
+    const registrationId = `${payload.activityId}_${payload.userOpenId}`;
+    const current = state.registrations[registrationId];
+
+    if (!current || current.status !== 'joined') {
+      throw new Error('No active registration to move');
+    }
+
+    if (current.teamId === payload.targetTeamId) {
+      throw new Error('Already in target team');
+    }
+
+    const targetTeam = state.teams[payload.targetTeamId];
+    if (!targetTeam || targetTeam.activityId !== payload.activityId || targetTeam.status === 'inactive') {
+      throw new Error('Team not found');
+    }
+
+    if (Number(targetTeam.joinedCount || 0) >= Number(targetTeam.maxMembers || 0)) {
+      throw new Error('Team is full');
+    }
+
+    const sourceTeam = state.teams[current.teamId];
+    const fromTeamId = current.teamId;
+
+    current.teamId = payload.targetTeamId;
+    current.movedByOpenId = openid;
+    current.movedAt = stamp;
+    current.updatedAt = stamp;
+
+    if (sourceTeam) {
+      sourceTeam.joinedCount = Math.max(Number(sourceTeam.joinedCount || 0) - 1, 0);
+    }
+
+    targetTeam.joinedCount = Number(targetTeam.joinedCount || 0) + 1;
+    activity.updatedAt = stamp;
+
+    writeState(state);
+    return {
+      registrationId,
+      activityId: payload.activityId,
+      userOpenId: payload.userOpenId,
+      fromTeamId,
+      teamId: payload.targetTeamId,
+      status: 'joined',
+      moved: true
+    };
+  }
+
   function cancelActivity(payload) {
     const state = readState();
     const openid = getOpenId();
@@ -813,6 +891,7 @@ function createLocalCloudClient(options = {}) {
     resolvePhoneNumber,
     cancelRegistration,
     removeRegistration,
+    moveRegistration,
     cancelActivity,
     deleteActivity,
     getActivityStats

@@ -318,7 +318,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add activity editing for organizers and admins
 - add organizer proxy signup for participants
 - add organizer one-tap copy of active participant names
-- move players between teams
+- completed in code: move players between teams
 - promote bench players
 - expose organizer stats more clearly
 

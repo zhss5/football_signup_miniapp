@@ -63,6 +63,7 @@ The detail page shows:
 - teams with `joined / max`
 - team member list with avatar placeholder and signup name
 - organizer/admin-only proxy badge for participants added on someone else's behalf
+- organizer/admin move action for moving participants between teams
 - current user signup state
 - organizer action button when permitted
 - signup cancel button when permitted
@@ -393,6 +394,8 @@ Key fields:
 - `status`: `joined/cancelled`
 - `signupName`
 - `source`: `share/direct`
+- `movedByOpenId`: latest organizer/admin who moved the participant between teams
+- `movedAt`: latest move timestamp
 - `payStatus`: reserved
 - `orderId`: reserved
 - `proxyRegistration`: true when an organizer/admin added the participant on someone else's behalf
@@ -426,6 +429,7 @@ The current MVP uses these main cloud functions:
 - `addProxyRegistration`
 - `cancelRegistration`
 - `removeRegistration`
+- `moveRegistration`
 - `cancelActivity`
 - `deleteActivity`
 - `getActivityStats`
@@ -441,6 +445,7 @@ The current MVP uses these main cloud functions:
 | Cancel own signup before deadline | allow for self | allow for self | allow for self |
 | Add proxy participant | deny | allow | deny |
 | Remove participant | deny | allow | deny |
+| Move participant to another team | deny | allow | deny |
 | Copy participant names | deny | allow | deny |
 | See proxy participant badge | deny | allow | deny |
 | Cancel activity | deny | allow | deny |

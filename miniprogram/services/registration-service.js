@@ -8,6 +8,10 @@ function addProxyRegistration(activityId, teamId, signupName) {
   return call('addProxyRegistration', { activityId, teamId, signupName });
 }
 
+function moveRegistration(activityId, userOpenId, targetTeamId) {
+  return call('moveRegistration', { activityId, userOpenId, targetTeamId });
+}
+
 function resolvePhoneNumber(code) {
   return call('resolvePhoneNumber', { code });
 }
@@ -23,6 +27,7 @@ function removeRegistration(activityId, userOpenId) {
 module.exports = {
   addProxyRegistration,
   joinActivity,
+  moveRegistration,
   resolvePhoneNumber,
   cancelRegistration,
   removeRegistration

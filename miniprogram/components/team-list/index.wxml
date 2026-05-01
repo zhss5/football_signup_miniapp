@@ -15,6 +15,16 @@
               <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
             </view>
             <button
+              wx:if="{{member.moveActionVisible}}"
+              class="member-action-button member-action-move"
+              size="mini"
+              data-action="move"
+              data-user-open-id="{{member.userOpenId}}"
+              data-signup-name="{{member.signupName}}"
+              data-current-team-id="{{item._id}}"
+              catchtap="onMemberActionTap"
+            >{{member.moveActionText}}</button>
+            <button
               wx:if="{{member.memberAction}}"
               class="member-action-button {{member.memberAction === 'cancelSignup' ? 'member-action-cancel' : ''}} {{member.memberAction === 'remove' ? 'member-action-danger' : ''}}"
               size="mini"

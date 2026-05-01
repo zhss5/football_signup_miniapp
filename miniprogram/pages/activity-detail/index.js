@@ -6,6 +6,7 @@ const {
 const {
   addProxyRegistration,
   cancelRegistration,
+  moveRegistration,
   removeRegistration
 } = require('../../services/registration-service');
 const { buildTeamListVm } = require('../../utils/formatters');
@@ -91,6 +92,25 @@ function buildParticipantNameList(teams = []) {
 
     return names;
   }, []);
+}
+
+function buildMoveTargetOptions(teams = [], currentTeamId, translate) {
+  return teams
+    .filter(team => {
+      if (!team || team._id === currentTeamId) {
+        return false;
+      }
+
+      return Number(team.joinedCount || 0) < Number(team.maxMembers || 0);
+    })
+    .map(team => ({
+      teamId: team._id,
+      label: translate('activity.moveTarget.label', {
+        teamName: team.teamName,
+        joined: team.joinedCount || 0,
+        total: team.maxMembers || 0
+      })
+    }));
 }
 
 Page({
@@ -259,6 +279,47 @@ Page({
       await addProxyRegistration(this.data.activityId, detail.teamId, signupName);
       wx.showToast({
         title: translate('toast.proxySignupSuccess'),
+        icon: 'success'
+      });
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onMoveRegistration(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = event.detail || {};
+
+    if (!detail.userOpenId || !detail.currentTeamId) {
+      return;
+    }
+
+    const targets = buildMoveTargetOptions(this.data.teams, detail.currentTeamId, translate);
+    if (targets.length === 0) {
+      wx.showToast({
+        title: translate('toast.noMoveTargetTeam'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    const tapIndex = await new Promise(resolve => {
+      wx.showActionSheet({
+        itemList: targets.map(item => item.label),
+        success: result => resolve(result.tapIndex),
+        fail: () => resolve(-1)
+      });
+    });
+
+    if (tapIndex < 0 || !targets[tapIndex]) {
+      return;
+    }
+
+    try {
+      await moveRegistration(this.data.activityId, detail.userOpenId, targets[tapIndex].teamId);
+      wx.showToast({
+        title: translate('toast.moveRegistrationSuccess'),
         icon: 'success'
       });
       await this.reload();

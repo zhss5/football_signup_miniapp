@@ -49,6 +49,17 @@ describe('team-list member removal', () => {
     expect(wxss).toContain('.member-proxy-badge');
   });
 
+  test('renders manager move member controls', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.moveActionVisible}}"');
+    expect(wxml).toContain('data-action="move"');
+    expect(wxml).toContain('data-current-team-id="{{item._id}}"');
+  });
+
   test('uses a distinct visual style for self cancel signup and manager removal', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
@@ -84,6 +95,30 @@ describe('team-list member removal', () => {
     expect(triggerEvent).toHaveBeenCalledWith('removemember', {
       userOpenId: 'openid_player',
       signupName: 'Alex'
+    });
+  });
+
+  test('emits move member identity when a manager taps move', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      triggerEvent
+    };
+
+    componentConfig.methods.onMemberActionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          action: 'move',
+          userOpenId: 'openid_player',
+          signupName: 'Alex',
+          currentTeamId: 'team_white'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('movemember', {
+      userOpenId: 'openid_player',
+      signupName: 'Alex',
+      currentTeamId: 'team_white'
     });
   });
 

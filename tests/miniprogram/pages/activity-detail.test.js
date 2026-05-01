@@ -7,6 +7,7 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
 jest.mock('../../../miniprogram/services/registration-service', () => ({
   addProxyRegistration: jest.fn(),
   cancelRegistration: jest.fn(),
+  moveRegistration: jest.fn(),
   removeRegistration: jest.fn()
 }));
 
@@ -18,6 +19,7 @@ describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
   let addProxyRegistration;
+  let moveRegistration;
   let removeRegistration;
   let buildTeamListVm;
   let resolveActivityCoverImage;
@@ -39,6 +41,7 @@ describe('activity detail page', () => {
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
+    ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
   });
@@ -433,6 +436,67 @@ describe('activity detail page', () => {
       icon: 'none'
     });
     expect(ctx.reload).not.toHaveBeenCalled();
+  });
+
+  test('onMoveRegistration lets managers choose a target team and reloads detail', async () => {
+    moveRegistration.mockResolvedValue({
+      moved: true
+    });
+    global.wx.showActionSheet = jest.fn(({ success }) => {
+      success({ tapIndex: 0 });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        teams: [
+          {
+            _id: 'team_white',
+            teamName: 'White',
+            joinedCount: 1,
+            maxMembers: 6
+          },
+          {
+            _id: 'team_red',
+            teamName: 'Red',
+            joinedCount: 1,
+            maxMembers: 6
+          },
+          {
+            _id: 'team_blue',
+            teamName: 'Blue',
+            joinedCount: 6,
+            maxMembers: 6
+          }
+        ]
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onMoveRegistration.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        currentTeamId: 'team_white'
+      }
+    });
+
+    expect(global.wx.showActionSheet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemList: ['Red (1 / 6)']
+      })
+    );
+    expect(moveRegistration).toHaveBeenCalledWith(
+      'activity_123',
+      'openid_player',
+      'team_red'
+    );
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Participant moved',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('onCopyParticipantNames copies all joined member names in team order', () => {

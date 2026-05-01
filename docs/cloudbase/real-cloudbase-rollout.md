@@ -77,9 +77,10 @@ Recommended function set:
 7. `addProxyRegistration`
 8. `cancelRegistration`
 9. `removeRegistration`
-10. `cancelActivity`
-11. `deleteActivity`
-12. `getActivityStats`
+10. `moveRegistration`
+11. `cancelActivity`
+12. `deleteActivity`
+13. `getActivityStats`
 
 Legacy note:
 
@@ -95,7 +96,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

@@ -90,6 +90,7 @@ function buildMemberVm(member, context = {}) {
     memberActionText = context.translate('activity.actions.removeMember');
   }
 
+  const moveActionVisible = Boolean(context.canManageRegistrations);
   const proxyBadgeVisible = Boolean(context.canManageRegistrations && member.proxyRegistration);
 
   return {
@@ -98,6 +99,8 @@ function buildMemberVm(member, context = {}) {
     isCurrentUser,
     memberAction,
     memberActionText,
+    moveActionVisible,
+    moveActionText: moveActionVisible ? context.translate('activity.actions.moveMember') : '',
     proxyBadgeVisible,
     proxyBadgeText: proxyBadgeVisible ? context.translate('activity.member.proxySignup') : ''
   };
