@@ -252,7 +252,6 @@ function translateErrorMessage(error, translate) {
     'Team capacity must be greater than 0': 'errors.teamCapacityRequired',
     'Total signup limit must cover all team slots': 'errors.totalSignupLimitCoverTeams',
     'Signup name is required': 'errors.signupNameRequired',
-    'Phone is required': 'errors.phoneRequired',
     'Activity not found': 'errors.activityNotFound',
     'Activity is not open for signup': 'errors.activityNotOpen',
     'Signup is closed': 'errors.signupClosed',

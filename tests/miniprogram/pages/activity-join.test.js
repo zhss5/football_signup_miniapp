@@ -2,8 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 jest.mock('../../../miniprogram/services/registration-service', () => ({
-  joinActivity: jest.fn(),
-  resolvePhoneNumber: jest.fn()
+  joinActivity: jest.fn()
 }));
 
 jest.mock('../../../miniprogram/services/cloud', () => ({
@@ -13,7 +12,6 @@ jest.mock('../../../miniprogram/services/cloud', () => ({
 describe('activity join page', () => {
   let pageConfig;
   let joinActivity;
-  let resolvePhoneNumber;
   let uploadFile;
   let openerEventChannel;
 
@@ -36,7 +34,7 @@ describe('activity join page', () => {
 
     jest.resetModules();
     require('../../../miniprogram/pages/activity-join/index');
-    ({ joinActivity, resolvePhoneNumber } = require('../../../miniprogram/services/registration-service'));
+    ({ joinActivity } = require('../../../miniprogram/services/registration-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
   });
 
@@ -69,15 +67,11 @@ describe('activity join page', () => {
     pageConfig.onLoad.call(ctx, {
       activityId: 'activity_123',
       teamId: 'team_red',
-      teamName: 'Red',
-      requirePhone: '1'
+      teamName: 'Red'
     });
 
     ctx.setData({
       signupName: 'Alex',
-      phone: '13800000000',
-      phoneSource: 'wechat',
-      authorizedPhone: '13800000000',
       avatarUrl: 'wxfile://tmp_avatar.jpg',
       avatarTempFilePath: 'wxfile://tmp_avatar.jpg',
       profileSource: 'wechat'
@@ -93,8 +87,6 @@ describe('activity join page', () => {
       activityId: 'activity_123',
       teamId: 'team_red',
       signupName: 'Alex',
-      phone: '13800000000',
-      phoneSource: 'wechat',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
       profileSource: 'wechat',
       source: 'share'
@@ -112,7 +104,7 @@ describe('activity join page', () => {
     });
   });
 
-  test('renders WeChat profile and phone entry points on the signup page', () => {
+  test('renders WeChat profile entry points without any phone collection UI', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/pages/activity-join/index.wxml'),
       'utf8'
@@ -120,15 +112,14 @@ describe('activity join page', () => {
 
     expect(wxml).toContain('open-type="chooseAvatar"');
     expect(wxml).toContain('type="nickname"');
-    expect(wxml).toContain('open-type="getPhoneNumber"');
+    expect(wxml).not.toContain('open-type="getPhoneNumber"');
+    expect(wxml).not.toContain('bindgetphonenumber');
+    expect(wxml).not.toContain('phonePlaceholder');
+    expect(pageConfig.onGetPhoneNumber).toBeUndefined();
+    expect(pageConfig.onPhoneInput).toBeUndefined();
   });
 
-  test('fills the phone field from WeChat phone authorization', async () => {
-    resolvePhoneNumber.mockResolvedValue({
-      phoneNumber: '13800000000',
-      phoneSource: 'wechat'
-    });
-
+  test('requires only a signup name before submitting', async () => {
     const ctx = {
       data: {},
       setData(update) {
@@ -145,70 +136,14 @@ describe('activity join page', () => {
       teamName: 'Red'
     });
 
-    await pageConfig.onGetPhoneNumber.call(ctx, {
-      detail: {
-        errMsg: 'getPhoneNumber:ok',
-        code: 'phone_code_123'
-      }
-    });
-
-    expect(resolvePhoneNumber).toHaveBeenCalledWith('phone_code_123');
-    expect(ctx.data.phone).toBe('13800000000');
-    expect(ctx.data.authorizedPhone).toBe('13800000000');
-    expect(ctx.data.phoneSource).toBe('wechat');
-  });
-
-  test('treats edited phone numbers as manual after WeChat authorization', () => {
-    const ctx = {
-      data: {
-        authorizedPhone: '13800000000',
-        phoneSource: 'wechat'
-      },
-      setData(update) {
-        this.data = {
-          ...this.data,
-          ...update
-        };
-      }
-    };
-
-    pageConfig.onPhoneInput.call(ctx, {
-      detail: {
-        value: '13900000000'
-      }
-    });
-
-    expect(ctx.data.phone).toBe('13900000000');
-    expect(ctx.data.phoneSource).toBe('manual');
-  });
-
-  test('requires a phone number even when the activity did not require phone before', async () => {
-    const ctx = {
-      data: {},
-      setData(update) {
-        this.data = {
-          ...this.data,
-          ...update
-        };
-      }
-    };
-
-    pageConfig.onLoad.call(ctx, {
-      activityId: 'activity_123',
-      teamId: 'team_red',
-      teamName: 'Red',
-      requirePhone: '0'
-    });
-
     ctx.setData({
-      signupName: 'Alex',
-      phone: ''
+      signupName: ''
     });
 
     await pageConfig.onSubmit.call(ctx);
 
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Phone is required',
+      title: 'Signup name is required',
       icon: 'none'
     });
     expect(joinActivity).not.toHaveBeenCalled();

@@ -11,6 +11,7 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
 
   expect(form.activityDate).toBe('2026-04-29');
   expect(form.signupDeadlineDate).toBe('2026-04-29');
+  expect(form).not.toHaveProperty('requirePhone');
 });
 
 test('buildActivityPayload composes activity times and keeps a single uploaded image list', () => {
@@ -29,6 +30,7 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
 
   expect(payload.coverImage).toBe('wxfile://cover-1.png');
   expect(payload.imageList).toEqual(['wxfile://cover-1.png']);
+  expect(payload).not.toHaveProperty('requirePhone');
   expect(new Date(payload.startAt).getTime()).toBeLessThan(new Date(payload.endAt).getTime());
   expect(new Date(payload.signupDeadlineAt).getTime()).toBeLessThanOrEqual(new Date(payload.startAt).getTime());
 });
@@ -91,11 +93,11 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     coverThumbImage: 'cloud://cover-a-thumb',
     imageList: ['cloud://cover-a'],
     signupLimitTotal: 20,
-    requirePhone: true,
     inviteCode: 'ABC',
     teams: [
       { teamName: 'White', maxMembers: 6 },
       { teamName: 'Red', maxMembers: 6 }
     ]
   });
+  expect(form).not.toHaveProperty('requirePhone');
 });

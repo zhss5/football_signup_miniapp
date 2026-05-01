@@ -102,6 +102,19 @@ describe('activity create submit flow', () => {
     expect(ctx.data.canCreateActivity).toBe(false);
   });
 
+  test('does not expose the legacy phone requirement control', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(pageConfig.onRequirePhoneChange).toBeUndefined();
+    expect(wxml).not.toContain('requirePhone');
+    expect(wxml).not.toContain('onRequirePhoneChange');
+  });
+
   test('onSubmit blocks users without create permission', async () => {
     const ctx = {
       data: {

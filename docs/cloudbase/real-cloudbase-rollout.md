@@ -76,10 +76,14 @@ Recommended function set:
 6. `joinActivity`
 7. `cancelRegistration`
 8. `removeRegistration`
-9. `resolvePhoneNumber`
-10. `cancelActivity`
-11. `deleteActivity`
-12. `getActivityStats`
+9. `cancelActivity`
+10. `deleteActivity`
+11. `getActivityStats`
+
+Legacy note:
+
+- `resolvePhoneNumber` still exists in the repository, but the active signup flow no longer calls it because participant phone collection has been removed.
+- Do not include `resolvePhoneNumber` in the normal deployment set unless you are deliberately testing the old phone-number capability before retiring it.
 
 Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
 
@@ -89,7 +93,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -165,11 +169,13 @@ After deployment, run these checks in DevTools and on a real device:
 5. Confirm the activity record also has `coverThumbImage` for newly uploaded covers
 6. Open the activity detail page and confirm the roster loads
 7. Join a team from a second account
-8. Confirm `registrations._id = activityId_openid`
-9. Cancel the signup before the deadline
-10. Confirm organizer cancel and soft delete rules still hold
-11. Confirm a deleted activity disappears from Home and Joined, but remains in Created
-12. Confirm sharing behavior:
+8. Confirm the join page does not show phone input or WeChat phone authorization
+9. Confirm `registrations._id = activityId_openid`
+10. Confirm new registration records do not contain `phoneSnapshot`
+11. Cancel the signup before the deadline
+12. Confirm organizer cancel and soft delete rules still hold
+13. Confirm a deleted activity disappears from Home and Joined, but remains in Created
+14. Confirm sharing behavior:
    - If WeChat verification is complete, verify activity sharing on a real device.
    - If verification is not complete, expect WeChat to block sharing with a platform message.
    - For temporary testing, add testers as experience members and share the experience-version QR code instead of relying on in-app sharing.

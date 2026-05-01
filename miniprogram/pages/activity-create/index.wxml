@@ -97,11 +97,6 @@
   </view>
 
   <view class="field">
-    <text class="label">{{i18n.activityCreate.requirePhone}}</text>
-    <switch checked="{{form.requirePhone}}" bindchange="onRequirePhoneChange" />
-  </view>
-
-  <view class="field">
     <text class="label">{{i18n.activityCreate.description}}</text>
     <textarea
       class="textarea"

@@ -207,6 +207,7 @@ test('updateActivity lets the activity organizer update editable fields and writ
     addressText: 'New address',
     coverThumbImage: 'cloud://cover-updated-thumb',
     signupLimitTotal: 16,
+    requirePhone: false,
     organizerOpenId: 'openid_owner',
     joinedCount: 2,
     createdAt: '2026-04-19T10:00:00.000Z',

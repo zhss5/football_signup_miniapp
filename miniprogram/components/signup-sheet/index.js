@@ -7,25 +7,16 @@ Component({
     teamName: {
       type: String,
       value: ''
-    },
-    requirePhone: {
-      type: Boolean,
-      value: false
     }
   },
 
   data: {
-    signupName: '',
-    phone: ''
+    signupName: ''
   },
 
   methods: {
     onNameInput(event) {
       this.setData({ signupName: event.detail.value });
-    },
-
-    onPhoneInput(event) {
-      this.setData({ phone: event.detail.value });
     },
 
     submit() {
@@ -34,21 +25,14 @@ Component({
         return;
       }
 
-      if (this.properties.requirePhone && !this.data.phone.trim()) {
-        wx.showToast({ title: 'Phone is required', icon: 'none' });
-        return;
-      }
-
       this.triggerEvent('submit', {
-        signupName: this.data.signupName,
-        phone: this.data.phone
+        signupName: this.data.signupName
       });
     },
 
     close() {
       this.setData({
-        signupName: '',
-        phone: ''
+        signupName: ''
       });
       this.triggerEvent('close');
     }

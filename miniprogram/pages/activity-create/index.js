@@ -325,15 +325,6 @@ Page({
     this.syncDerivedState(form);
   },
 
-  onRequirePhoneChange(event) {
-    const form = {
-      ...this.data.form,
-      requirePhone: event.detail.value
-    };
-
-    this.syncDerivedState(form);
-  },
-
   onTeamsChange(event) {
     const form = {
       ...this.data.form,

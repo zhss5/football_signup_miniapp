@@ -43,9 +43,7 @@ describe('activity detail page', () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
-        activity: {
-          requirePhone: true
-        },
+        activity: {},
         teams: [
           { _id: 'team_white', teamName: 'White', joinDisabled: false },
           { _id: 'team_red', teamName: 'Red', joinDisabled: false }
@@ -62,7 +60,7 @@ describe('activity detail page', () => {
     });
 
     expect(global.wx.navigateTo).toHaveBeenCalledWith({
-      url: '/pages/activity-join/index?activityId=activity_123&teamId=team_red&teamName=Red&requirePhone=1',
+      url: '/pages/activity-join/index?activityId=activity_123&teamId=team_red&teamName=Red',
       events: {
         signupSuccess: expect.any(Function)
       }

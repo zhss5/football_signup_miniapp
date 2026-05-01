@@ -7,7 +7,6 @@ test('joinActivity rejects full team', async () => {
         activityId: 'activity_1',
         teamId: 'team_white',
         signupName: 'Alex',
-        phone: '13800000000',
         source: 'share'
       },
       { OPENID: 'openid_a' },
@@ -27,7 +26,6 @@ test('joinActivity rejects duplicate active registration', async () => {
         activityId: 'activity_1',
         teamId: 'team_white',
         signupName: 'Alex',
-        phone: '13800000000',
         source: 'share'
       },
       { OPENID: 'openid_a' },
@@ -47,7 +45,6 @@ test('joinActivity rejects signups after deadline', async () => {
         activityId: 'activity_1',
         teamId: 'team_white',
         signupName: 'Alex',
-        phone: '13800000000',
         source: 'share'
       },
       { OPENID: 'openid_a' },
@@ -60,26 +57,7 @@ test('joinActivity rejects signups after deadline', async () => {
   ).rejects.toThrow('Signup is closed');
 });
 
-test('joinActivity requires a phone number for manual signups', async () => {
-  await expect(
-    joinActivity.main(
-      {
-        activityId: 'activity_1',
-        teamId: 'team_white',
-        signupName: 'Alex',
-        source: 'share'
-      },
-      { OPENID: 'openid_a' },
-      {
-        runJoin: async () => {
-          throw new Error('unexpected join execution');
-        }
-      }
-    )
-  ).rejects.toThrow('Phone is required');
-});
-
-test('joinActivity uses the document id without writing _id into registration data', async () => {
+test('joinActivity uses the document id and does not write phone data into registration records', async () => {
   jest.resetModules();
 
   const setRegistration = jest.fn().mockResolvedValue({});
@@ -159,8 +137,6 @@ test('joinActivity uses the document id without writing _id into registration da
       activityId: 'activity_1',
       teamId: 'team_white',
       signupName: 'Alex',
-      phone: '13800000000',
-      phoneSource: 'wechat',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
       profileSource: 'wechat'
     },
@@ -175,20 +151,28 @@ test('joinActivity uses the document id without writing _id into registration da
   });
   expect(setRegistration).toHaveBeenCalledWith({
     data: expect.objectContaining({
-      phoneSnapshot: '13800000000',
-      phoneSource: 'wechat',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
       profileSource: 'wechat'
+    })
+  });
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.not.objectContaining({
+      phoneSnapshot: expect.anything(),
+      phoneSource: expect.anything()
     })
   });
   expect(updateUser).toHaveBeenCalledWith({
     data: expect.objectContaining({
       preferredName: 'Alex',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
-      phoneNumber: '13800000000',
-      phoneSource: 'wechat',
       profileSource: 'wechat',
       lastActiveAt: '2026-04-19T10:00:00.000Z'
+    })
+  });
+  expect(updateUser).toHaveBeenCalledWith({
+    data: expect.not.objectContaining({
+      phoneNumber: expect.anything(),
+      phoneSource: expect.anything()
     })
   });
 

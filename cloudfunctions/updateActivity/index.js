@@ -80,7 +80,7 @@ function buildActivityUpdateData(event, activity, stamp) {
     coverThumbImage: event.coverThumbImage || '',
     imageList,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
-    requirePhone: Boolean(event.requirePhone),
+    requirePhone: false,
     inviteCode: event.inviteCode || '',
     updatedAt: stamp
   };

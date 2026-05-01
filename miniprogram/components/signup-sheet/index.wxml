@@ -1,7 +1,6 @@
 <view wx:if="{{visible}}" class="sheet">
   <text class="sheet-title">Join {{teamName}}</text>
   <input placeholder="Signup name" bindinput="onNameInput" />
-  <input wx:if="{{requirePhone}}" placeholder="Phone" bindinput="onPhoneInput" />
   <button bindtap="submit">Confirm</button>
   <button bindtap="close">Close</button>
 </view>

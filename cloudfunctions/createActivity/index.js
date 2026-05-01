@@ -81,7 +81,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     imageList,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
     joinedCount: 0,
-    requirePhone: Boolean(event.requirePhone),
+    requirePhone: false,
     inviteCode: event.inviteCode || '',
     feeMode: 'free',
     status: 'published',

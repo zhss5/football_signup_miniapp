@@ -19,8 +19,6 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
   const userRes = await userRef.get().catch(() => ({ data: null }));
   const data = {
     preferredName: profile.signupName,
-    phoneNumber: profile.phone,
-    phoneSource: profile.phoneSource,
     profileSource: profile.profileSource,
     lastActiveAt: stamp,
     updatedAt: stamp
@@ -39,8 +37,6 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
     data: {
       preferredName: profile.signupName,
       avatarUrl: profile.avatarUrl || '',
-      phoneNumber: profile.phone,
-      phoneSource: profile.phoneSource,
       profileSource: profile.profileSource,
       roles: ['user'],
       createdAt: stamp,
@@ -62,8 +58,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
   const signupName = normalizeText(event.signupName);
-  const phone = normalizeText(event.phone);
-  const phoneSource = normalizeSource(event.phoneSource);
   const avatarUrl = normalizeText(event.avatarUrl);
   const profileSource = avatarUrl ? normalizeSource(event.profileSource) : 'manual';
 
@@ -98,8 +92,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       openid,
       {
         signupName,
-        phone,
-        phoneSource,
         avatarUrl,
         profileSource
       },
@@ -113,8 +105,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         userOpenId: openid,
         status: 'joined',
         signupName,
-        phoneSnapshot: phone,
-        phoneSource,
         avatarUrl,
         profileSource,
         source: event.source || 'direct',

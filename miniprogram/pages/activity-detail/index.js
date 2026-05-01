@@ -150,8 +150,7 @@ Page({
       url:
         `/pages/activity-join/index?activityId=${this.data.activityId}` +
         `&teamId=${selectedTeam._id}` +
-        `&teamName=${encodeURIComponent(selectedTeam.teamName)}` +
-        `&requirePhone=${this.data.activity && this.data.activity.requirePhone ? '1' : '0'}`,
+        `&teamName=${encodeURIComponent(selectedTeam.teamName)}`,
       events: {
         signupSuccess: () => {
           this.setData({ needsReloadOnShow: true });

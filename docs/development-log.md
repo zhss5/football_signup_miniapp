@@ -393,6 +393,8 @@ Related:
 
 The Join page was updated so signups can use WeChat-assisted profile data while still allowing manual entry.
 
+Superseded note: participant phone collection was removed on 2026-05-01. The avatar and nickname parts of this entry remain relevant, while the phone authorization behavior is now legacy context only.
+
 Delivered behavior:
 
 - users can choose a WeChat avatar with `open-type="chooseAvatar"`
@@ -693,3 +695,27 @@ Why this is next:
 - the product no longer needs participant phone numbers
 - removing phone reduces privacy/compliance surface area
 - signup becomes shorter and easier to test on real devices
+
+## 2026-05-01 - Participant Phone Collection Removed
+
+The signup flow was simplified so participants no longer enter or authorize a phone number.
+
+Delivered behavior:
+
+- Create/Edit Activity no longer exposes a `requirePhone` switch.
+- `createActivity`, `updateActivity`, and the local mock now force `requirePhone: false` even if an older client sends the legacy field.
+- Activity Detail no longer passes `requirePhone` into the join page route.
+- Join Activity now asks only for signup name plus optional avatar selection.
+- The join page no longer calls `resolvePhoneNumber` and no longer renders `open-type="getPhoneNumber"`.
+- `joinActivity` no longer requires `phone` and no longer writes `phoneSnapshot`, `phoneSource`, `phoneNumber`, or `phoneSource` user fields.
+- Existing phone fields in old records are treated as harmless legacy data; no migration is required for this change.
+
+Operational notes:
+
+- Deploy at least `createActivity`, `updateActivity`, and `joinActivity` after running `npm run copy:cloud-shared`.
+- `resolvePhoneNumber` is no longer part of the normal signup runtime. Keep the legacy function untouched for now, and delete/retire it only after the simplified flow is stable in CloudBase.
+- Privacy and certification work is simpler because the core signup path no longer collects participant phone numbers.
+
+Verification:
+
+- targeted red/green tests covered the join page, create page, activity detail route, signup-sheet component, activity draft helper, `createActivity`, `updateActivity`, `joinActivity`, and the local mock.

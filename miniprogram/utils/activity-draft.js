@@ -52,7 +52,6 @@ function createDefaultActivityForm(options = {}) {
     coverThumbImage: '',
     imageList: [],
     signupLimitTotal: 12,
-    requirePhone: false,
     inviteCode: '',
     teams: defaultTeams
   };
@@ -88,12 +87,13 @@ function normalizeImageList(form) {
 }
 
 function buildActivityPayload(form) {
+  const { requirePhone, ...payloadBase } = form;
   const imageList = normalizeImageList(form);
   const coverImage = imageList[0] || form.coverImage || '';
   const coverThumbImage = coverImage ? form.coverThumbImage || '' : '';
 
   return {
-    ...form,
+    ...payloadBase,
     startAt: combineDateAndTime(form.activityDate, form.startTime),
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
@@ -134,7 +134,6 @@ function buildActivityEditForm(activity = {}, teams = []) {
     coverThumbImage: activity.coverThumbImage || '',
     imageList,
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
-    requirePhone: Boolean(activity.requirePhone),
     inviteCode: activity.inviteCode || '',
     teams: editableTeams
   };

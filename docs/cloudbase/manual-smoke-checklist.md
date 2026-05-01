@@ -18,7 +18,9 @@
 ## Signup Flow
 
 - Confirm the activity detail page shows team counts and member names
+- Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm join flow writes `registrations._id = activityId_openid`
+- Confirm new registration records do not contain `phoneSnapshot`
 - Confirm only one active signup per activity is allowed
 - Confirm signup is blocked after `signupDeadlineAt`
 

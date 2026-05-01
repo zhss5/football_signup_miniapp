@@ -27,4 +27,17 @@ describe('signup sheet component', () => {
 
     expect(wxml).toContain('{{teamName}}');
   });
+
+  test('does not expose legacy phone controls', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/signup-sheet/index.wxml'),
+      'utf8'
+    );
+
+    expect(componentConfig.properties.requirePhone).toBeUndefined();
+    expect(componentConfig.data).not.toHaveProperty('phone');
+    expect(componentConfig.methods.onPhoneInput).toBeUndefined();
+    expect(wxml).not.toContain('placeholder="Phone"');
+    expect(wxml).not.toContain('requirePhone');
+  });
 });

@@ -122,7 +122,6 @@ test('local cloud client lets an organizer update an activity without changing r
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
     signupName: 'Alex',
-    phone: '13800000000',
     source: 'share'
   });
 
@@ -151,7 +150,7 @@ test('local cloud client lets an organizer update an activity without changing r
     addressText: 'New Field',
     signupLimitTotal: 16,
     joinedCount: 1,
-    requirePhone: true
+    requirePhone: false
   });
   expect(detailAfter.myRegistration).toMatchObject({
     activityId: created.activityId,
@@ -264,7 +263,6 @@ test('local cloud client can join and cancel an activity', async () => {
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
     signupName: 'Alex',
-    phone: '13800000000',
     source: 'share'
   });
 
@@ -276,7 +274,7 @@ test('local cloud client can join and cancel an activity', async () => {
   expect(cancelled.status).toBe('cancelled');
 });
 
-test('local cloud client stores signup contact and profile source metadata', async () => {
+test('local cloud client stores signup profile metadata without phone fields', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({
     storage,
@@ -316,8 +314,6 @@ test('local cloud client stores signup contact and profile source metadata', asy
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
     signupName: 'Alex',
-    phone: '13800000000',
-    phoneSource: 'manual',
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
     profileSource: 'wechat',
     source: 'share'
@@ -327,12 +323,14 @@ test('local cloud client stores signup contact and profile source metadata', asy
     activityId: created.activityId
   });
 
-  expect(detailAfter.myRegistration).toMatchObject({
-    phoneSnapshot: '13800000000',
-    phoneSource: 'manual',
+  expect(detailAfter.myRegistration).toEqual(expect.objectContaining({
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
     profileSource: 'wechat'
-  });
+  }));
+  expect(detailAfter.myRegistration).toEqual(expect.not.objectContaining({
+    phoneSnapshot: expect.anything(),
+    phoneSource: expect.anything()
+  }));
   expect(detailAfter.teams[0].members[0]).toMatchObject({
     signupName: 'Alex',
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg'
@@ -379,7 +377,6 @@ test('local cloud client uses registration avatar when user profile avatar is un
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
     signupName: 'Alex',
-    phone: '13800000000',
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
     source: 'share'
   });

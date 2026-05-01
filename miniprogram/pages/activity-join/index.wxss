@@ -89,33 +89,6 @@
   background: #f9fafb;
 }
 
-.phone-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.phone-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.phone-auth-button {
-  flex: 0 0 220rpx;
-  height: 88rpx;
-  line-height: 88rpx;
-  padding: 0;
-  margin: 0;
-  border-radius: 24rpx;
-  color: #16a34a;
-  font-size: 24rpx;
-  background: #ecfdf3;
-}
-
-.phone-auth-button::after {
-  border-color: #bbf7d0;
-}
-
 .confirm-button {
   margin-top: 28rpx;
 }

@@ -101,7 +101,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
       coverThumbImage: 'cloud://football/thumb-1.jpg',
       imageList: ['cloud://football/cover-1.png'],
       signupLimitTotal: 20,
-      requirePhone: false,
+      requirePhone: true,
       teams: [
         { teamName: 'White', maxMembers: 6 },
         { teamName: 'Red', maxMembers: 6 }
@@ -122,7 +122,8 @@ test('createActivity stores map location, deadline, image list, and auto generat
     coverImage: 'cloud://football/cover-1.png',
     coverThumbImage: 'cloud://football/thumb-1.jpg',
     imageList: ['cloud://football/cover-1.png'],
-    signupLimitTotal: 20
+    signupLimitTotal: 20,
+    requirePhone: false
   });
 
   const teamWrites = writes.filter(item => item.name === 'activity_teams');

@@ -25,26 +25,6 @@
       />
     </view>
 
-    <view class="field">
-      <text class="label">{{i18n.activityJoin.phone}}</text>
-      <view class="phone-row">
-        <input
-          class="input phone-input"
-          placeholder="{{i18n.activityJoin.phonePlaceholder}}"
-          type="number"
-          value="{{phone}}"
-          bindinput="onPhoneInput"
-        />
-        <button
-          class="phone-auth-button"
-          open-type="getPhoneNumber"
-          bindgetphonenumber="onGetPhoneNumber"
-          loading="{{phoneAuthorizing}}"
-        >{{i18n.activityJoin.useWeChatPhone}}</button>
-      </view>
-      <text class="hint small-hint">{{i18n.activityJoin.phoneHint}}</text>
-    </view>
-
     <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityJoin.confirm}}</button>
   </view>
 </view>

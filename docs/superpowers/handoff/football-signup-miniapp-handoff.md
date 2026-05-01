@@ -27,6 +27,7 @@ The codebase supports:
 - organizer/admin activity editing through the `updateActivity` cloud function
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
+- simplified signup without participant phone collection
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -45,7 +46,10 @@ Deployable cloud functions currently include:
 - `deleteActivity`
 - `getActivityStats`
 - `removeRegistration`
-- `resolvePhoneNumber`
+
+Legacy note:
+
+- `resolvePhoneNumber` still exists in the repository, but the active signup flow no longer calls it and it is not required for normal deployment.
 
 Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
 
@@ -79,7 +83,7 @@ The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 - uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, while old cover backfill is deferred.
-- the current signup flow still supports optional participant phone collection, but the newer product backlog calls for removing phone from participant signup.
+- participant phone collection has been removed from the active signup flow; old phone fields may still exist in historical records as legacy data.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
 - The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control needs become materially higher than the benefit of integrated WeChat hosting.
@@ -143,7 +147,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration resolvePhoneNumber cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity cancelRegistration removeRegistration cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -169,9 +173,9 @@ npm test
 Latest result:
 
 - `41` test suites passed
-- `193` tests passed
+- `194` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields, and CloudBase cover display URL resolution.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, and CloudBase cover display URL resolution.
 
 ## 8. Current Implementation Snapshot
 
@@ -195,6 +199,14 @@ Current permission conclusion:
 - storage rules must allow client reads for `activity-covers/` and `activity-cover-thumbs/` because covers are rendered by the client `<image>` component after resolving file IDs to temporary HTTPS URLs
 - if images fail with `403` or `STORAGE_EXCEED_AUTHORITY`, check storage rules before database permissions
 
+Current signup simplification:
+
+- Create/Edit Activity no longer exposes `requirePhone`
+- `createActivity` and `updateActivity` force `requirePhone: false`
+- Join Activity no longer renders phone input or WeChat phone authorization
+- `joinActivity` accepts signups without `phone` and stops writing phone fields to new registrations/users
+- keep old phone fields as legacy data; no immediate migration is required
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -216,7 +228,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for both `activity-covers/` and `activity-cover-thumbs/`.
 2. Confirm all five database collections exist.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all cloud functions listed in section 6.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -224,19 +236,14 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate cover image loading, sharing, signup profile entry, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
+9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, and organizer/admin member removal after CloudBase deployment.
 10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - first version keeps `status: published/cancelled/deleted`
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. Implement signup phone removal before larger notification or backend work:
-   - remove the create/edit activity phone requirement control
-   - remove phone input and phone authorization from the signup page
-   - update `joinActivity` and local mock validation so phone is no longer required
-   - keep legacy phone fields in old records
-   - retire `resolvePhoneNumber` only after the simplified flow is stable
+11. After the simplified signup flow is stable in CloudBase, retire or delete the unused `resolvePhoneNumber` function and phone-related privacy notes.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 13. Plan later mini program backlog items:
    - add an activity/signup insurance link

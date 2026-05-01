@@ -31,7 +31,6 @@ The current MVP supports the following creation fields:
 - total signup limit
 - dynamic team configuration
 - per-team capacity
-- optional phone requirement
 - description
 - one cover image
 - WeChat map location selection
@@ -209,13 +208,15 @@ Design decision:
 
 ### 5.6 Phone Number Rules
 
-The MVP does not require phone number collection by default, but organizers can enable it per activity.
+The active MVP signup flow does not collect participant phone numbers.
 
 Design decision:
 
-- activities default to `requirePhone = false`
-- if enabled, signup requires phone authorization or manual input
-- the registration record stores a `phoneSnapshot`
+- activities are stored with `requirePhone = false`
+- Create/Edit Activity does not expose a phone requirement control
+- Join Activity does not render phone input or WeChat phone authorization
+- new registration records do not store `phoneSnapshot`
+- old phone fields may remain in historical records as legacy data and do not require immediate migration
 
 ## 6. Core Business Rules
 
@@ -288,7 +289,7 @@ Rules:
 1. the user taps the signup button for a team
 2. the app opens the signup sheet and shows the target team name
 3. the user enters `signupName`
-4. if the activity requires a phone number, the user completes phone retrieval or manual input
+4. the user may optionally choose an avatar
 5. the frontend calls `joinActivity`
 6. the backend validates:
    - activity status
@@ -328,7 +329,6 @@ Key fields:
 - `preferredName`: reusable signup/profile display name
 - `wechatNickname`: reserved
 - `avatarUrl`: user-selected avatar file ID or empty
-- `phone`: optional
 - `roles`
 - `createdAt`
 - `lastActiveAt`
@@ -353,7 +353,7 @@ Key fields:
 - `imageList`: future-ready image list; currently stores the same single cover image
 - `signupLimitTotal`
 - `joinedCount`
-- `requirePhone`
+- `requirePhone`: legacy field, stored as `false`
 - `inviteCode`
 - `feeMode`
 - `feeAmount`: reserved
@@ -390,7 +390,6 @@ Key fields:
 - `userOpenId`
 - `status`: `joined/cancelled`
 - `signupName`
-- `phoneSnapshot`
 - `source`: `share/direct`
 - `payStatus`: reserved
 - `orderId`: reserved
@@ -458,7 +457,7 @@ The current MVP decisions are:
 - create user profiles automatically with `openid`
 - use manual `signupName` entry
 - allow optional user-selected nickname/avatar profile defaults for signup prefill
-- collect phone number only when configured per activity
+- do not collect participant phone numbers in the active signup flow
 - enforce one active signup per user per activity
 - enforce signup deadline for both joining and cancellation
 - support dynamic teams plus an auto-generated bench team

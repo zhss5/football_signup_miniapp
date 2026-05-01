@@ -225,12 +225,12 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - add organizer-driven team reassignment or bench promotion
 - keep early organizer grants as manual CloudBase edits to `users.roles`; add an admin-only authorization page only if manual edits become painful
 - add Join page profile prefill and completion: load `users.preferredName/avatarUrl`, let users actively choose a WeChat-assisted nickname/avatar, save profile defaults, and keep `registrations.signupName` editable per activity
-- next implementation target: remove participant phone-number collection from signup unless a later activity-specific requirement brings it back
-  - remove the create/edit activity `requirePhone` control
-  - remove phone input and phone authorization from the signup page
-  - update `joinActivity` and local mock validation so phone is optional/unused
-  - keep old phone fields as legacy data and avoid immediate migration
-  - retire `resolvePhoneNumber` after the simplified signup flow is stable
+- completed signup simplification: participant phone-number collection has been removed unless a later activity-specific requirement brings it back
+  - Create/Edit Activity no longer exposes `requirePhone`
+  - Join Activity no longer shows phone input or WeChat phone authorization
+  - `joinActivity` and the local mock no longer require or write phone fields
+  - old phone fields remain as legacy data and do not need immediate migration
+  - retire `resolvePhoneNumber` after the simplified signup flow is stable in CloudBase
 - add activity/signup insurance-link support
 - add participant preferred playing position selection; priority `P2`
 - allow organizers to sign up participants on their behalf
@@ -275,7 +275,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - finalize CloudBase security rules
 - finalize manual indexes
 - validate real CloudBase deployment and permissions
-- validate one-tap phone retrieval under a real certified mini program
+- retire the unused `resolvePhoneNumber` cloud function after the simplified signup flow is stable in CloudBase
 
 ### 8.4 Future Expansion
 
@@ -354,11 +354,12 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 
 ### Milestone B4: Signup Flow Simplification
 
-- remove participant phone-number collection from the signup flow
-- remove activity-level phone requirement controls
-- stop calling `resolvePhoneNumber`
-- verify signup still works without any phone payload
-- keep legacy phone fields in old records but stop writing them for new signups
+- completed in code: participant phone-number collection has been removed from the signup flow
+- completed in code: activity-level phone requirement controls have been removed
+- completed in code: the signup flow no longer calls `resolvePhoneNumber`
+- completed in code: signup works without any phone payload
+- completed in code: legacy phone fields in old records are preserved but new signups stop writing them
+- remaining cleanup: retire `resolvePhoneNumber` after the simplified signup flow is stable in CloudBase
 
 ### Milestone B5: Signup Profile Completion
 

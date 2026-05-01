@@ -59,7 +59,6 @@ Recommended manual checks:
    - address
    - description
    - total signup limit
-   - optional phone requirement
 4. Adjust team names and team limits
 5. Tap `Publish Activity`
 6. Confirm redirect to the activity detail page

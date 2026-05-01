@@ -1,6 +1,6 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-04-29
+- Date: 2026-05-01
 - Status: In active MVP iteration
 - Active branch: `main`
 - Main workspace: `D:/workspaces/football_signup_miniapp`
@@ -44,7 +44,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - no separate registration page
 - one active signup per user per activity
 - signup name entered manually
-- optional phone requirement per activity
+- signup name entry and optional avatar selection without participant phone collection
 
 ### 2.3 Activity Creation
 
@@ -56,7 +56,6 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - description
 - total signup limit
 - dynamic team setup
-- optional phone requirement
 - WeChat map location selection
 - one cover image with future-ready `imageList`
 
@@ -128,7 +127,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 - Activity Detail shows `Edit` to the original organizer or `admin`
 - `pages/activity-create` supports edit mode for existing activities
-- organizers/admins can update title, date/time, signup deadline, location, description, cover image, total capacity, phone requirement, and invite code
+- organizers/admins can update title, date/time, signup deadline, location, description, cover image, total capacity, and invite code
 - existing `activityId`, registrations, organizer, joined count, and created timestamp are preserved
 - `updateActivity` enforces permission, deleted-activity, validation, and capacity rules
 - total capacity cannot be reduced below joined players or below existing regular team slots
@@ -140,6 +139,15 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - `createActivity` and `updateActivity` persist `coverThumbImage`
 - Home/My/activity cards already prefer thumbnails through `coverDisplayImage`
 - historical CloudBase cover backfill is deferred; current scope is new uploads only
+
+### 2.13 Signup Phone Removal
+
+- Create/Edit Activity no longer exposes a phone requirement control
+- new or edited activities are stored with `requirePhone: false`
+- Join Activity no longer renders phone input or WeChat phone authorization
+- `joinActivity` and the local mock accept signups without `phone`
+- new registrations and user-profile updates no longer write phone fields
+- old phone fields remain as legacy data and do not need migration
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -155,7 +163,7 @@ The current implementation differs from the original early MVP assumptions in th
 - cover images now have a separate thumbnail field for card/list performance
 - activity creation is now role-gated instead of open to every user
 - published activities can now be edited in place instead of recreated for routine corrections
-- the current signup model still includes optional participant phone collection, but the newer backlog calls for removing phone from the participant signup flow
+- participant phone collection was removed from the current signup flow
 
 ## 4. Verification Status
 
@@ -163,17 +171,18 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `41` test suites passed
-- result: `193` tests passed
+- result: `194` tests passed
 
 Covered areas include:
 
 - cloud-function behavior
-- local mock behavior
+- local mock behavior, including signup without phone fields
 - view-model rules
 - page template behavior
 - crop utility behavior
 - layout regressions
 - organizer/admin activity edit permissions and update behavior
+- signup phone-removal behavior across frontend, mock, and cloud functions
 
 ## 4.1 Current Media Progress
 
@@ -204,7 +213,6 @@ The MVP still has known non-blocking gaps:
 - organizer-driven team reassignment and bench promotion are not implemented yet
 - participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
 - restore-from-delete flow is not implemented yet
-- one-tap phone retrieval still needs verification in a real certified mini program environment
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
@@ -223,7 +231,7 @@ The MVP still has known non-blocking gaps:
 - one real environment has already been created locally
 - target CloudBase has been upgraded to the personal plan
 - verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `joinActivity`, `resolvePhoneNumber`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
 - validate permissions, cover image loading, sharing, signup, organizer/admin removal, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
@@ -239,12 +247,11 @@ The MVP still has known non-blocking gaps:
 
 ### Option B1: Simplify Signup Contact Fields
 
-- remove participant phone-number collection from signup as the next implementation target
-- remove the create/edit activity `requirePhone` control
-- stop calling `resolvePhoneNumber` from the signup flow
-- update `joinActivity` and the local mock so phone is no longer required
-- keep existing phone fields as legacy data and avoid immediate migration
-- after the simplified flow is stable, remove or retire the unused `resolvePhoneNumber` cloud function and related privacy documentation
+- completed in code: participant phone-number collection is removed from signup
+- completed in code: the create/edit activity `requirePhone` control is removed
+- completed in code: the signup flow no longer calls `resolvePhoneNumber`
+- completed in code: `joinActivity` and the local mock no longer require or write phone fields
+- remaining cleanup: after the simplified flow is stable in CloudBase, remove or retire the unused `resolvePhoneNumber` cloud function and related privacy documentation
 
 ### Option B2: Participant Notifications
 

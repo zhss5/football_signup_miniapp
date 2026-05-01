@@ -83,10 +83,6 @@ function validateSignupPayload(payload) {
     throw new Error('signupName is required');
   }
 
-  if (!payload.phone || !String(payload.phone).trim()) {
-    throw new Error('Phone is required');
-  }
-
   return true;
 }
 
