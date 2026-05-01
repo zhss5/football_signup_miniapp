@@ -49,7 +49,7 @@ Deployable cloud functions currently include:
 
 Legacy note:
 
-- `resolvePhoneNumber` still exists in the repository, but the active signup flow no longer calls it and it is not required for normal deployment.
+- `resolvePhoneNumber` still exists in the repository, and the service/local-mock adapters are intentionally retained for future extension. The active signup flow no longer calls it and it is not required for normal deployment.
 
 Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
 
@@ -172,8 +172,8 @@ npm test
 
 Latest result:
 
-- `41` test suites passed
-- `194` tests passed
+- `42` test suites passed
+- `196` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, signup profile fields without phone collection, and CloudBase cover display URL resolution.
 
@@ -243,7 +243,7 @@ Continue in this order:
    - first version adds `confirmStatus: pending/confirmed`
    - confirming an activity will proceed does not close signup
    - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
-11. After the simplified signup flow is stable in CloudBase, retire or delete the unused `resolvePhoneNumber` function and phone-related privacy notes.
+11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 13. Plan later mini program backlog items:
    - add an activity/signup insurance link

@@ -170,8 +170,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
-- result: `41` test suites passed
-- result: `194` tests passed
+- result: `42` test suites passed
+- result: `196` tests passed
 
 Covered areas include:
 
@@ -251,7 +251,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: the create/edit activity `requirePhone` control is removed
 - completed in code: the signup flow no longer calls `resolvePhoneNumber`
 - completed in code: `joinActivity` and the local mock no longer require or write phone fields
-- remaining cleanup: after the simplified flow is stable in CloudBase, remove or retire the unused `resolvePhoneNumber` cloud function and related privacy documentation
+- extension point: `resolvePhoneNumber` remains available in the cloud function, service adapter, and local mock, but stays disconnected from the active signup flow
 
 ### Option B2: Participant Notifications
 

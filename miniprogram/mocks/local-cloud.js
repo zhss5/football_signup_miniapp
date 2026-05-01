@@ -519,6 +519,20 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function resolvePhoneNumber(payload) {
+    if (!payload.code) {
+      throw new Error('Phone authorization code is required');
+    }
+
+    const phoneNumber = String(payload.phoneNumber || '13800000000').trim();
+    return {
+      phoneNumber,
+      purePhoneNumber: phoneNumber,
+      countryCode: '86',
+      phoneSource: 'wechat'
+    };
+  }
+
   function cancelRegistration(payload) {
     const state = readState();
     const openid = getOpenId();
@@ -700,6 +714,7 @@ function createLocalCloudClient(options = {}) {
     listActivities,
     getActivityDetail,
     joinActivity,
+    resolvePhoneNumber,
     cancelRegistration,
     removeRegistration,
     cancelActivity,

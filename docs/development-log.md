@@ -688,7 +688,7 @@ Next implementation target:
 - simplify the signup page so participants no longer enter or authorize a phone number
 - update `joinActivity` and the local mock so phone is no longer required
 - keep old phone fields in existing records as harmless legacy data rather than migrating them immediately
-- pause `resolvePhoneNumber` usage and later delete the cloud function after the simplified signup flow is stable
+- pause `resolvePhoneNumber` usage in the active signup flow while keeping the authorization interface as a future extension point
 
 Why this is next:
 
@@ -713,8 +713,12 @@ Delivered behavior:
 Operational notes:
 
 - Deploy at least `createActivity`, `updateActivity`, and `joinActivity` after running `npm run copy:cloud-shared`.
-- `resolvePhoneNumber` is no longer part of the normal signup runtime. Keep the legacy function untouched for now, and delete/retire it only after the simplified flow is stable in CloudBase.
+- `resolvePhoneNumber` is no longer part of the normal signup runtime, but the cloud function plus frontend/local-mock adapters are kept as a dormant extension point for future phone-number requirements.
 - Privacy and certification work is simpler because the core signup path no longer collects participant phone numbers.
+
+Follow-up:
+
+- keep automated coverage for the dormant phone authorization adapter so the interface does not disappear accidentally while the signup flow remains phone-free.
 
 Verification:
 

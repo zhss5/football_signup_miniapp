@@ -758,3 +758,23 @@ test('local cloud client blocks signup cancellation after deadline', async () =>
     })
   ).rejects.toThrow('Signup can no longer be cancelled');
 });
+
+test('local cloud client keeps phone authorization available for future extensions', async () => {
+  const client = createLocalCloudClient({
+    storage: createMemoryStorage(),
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  await expect(
+    client.call('resolvePhoneNumber', {
+      code: 'phone_code_123',
+      phoneNumber: '13900000000'
+    })
+  ).resolves.toEqual({
+    phoneNumber: '13900000000',
+    purePhoneNumber: '13900000000',
+    countryCode: '86',
+    phoneSource: 'wechat'
+  });
+});

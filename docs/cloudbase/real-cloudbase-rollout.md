@@ -83,7 +83,8 @@ Recommended function set:
 Legacy note:
 
 - `resolvePhoneNumber` still exists in the repository, but the active signup flow no longer calls it because participant phone collection has been removed.
-- Do not include `resolvePhoneNumber` in the normal deployment set unless you are deliberately testing the old phone-number capability before retiring it.
+- The service/local-mock adapters are intentionally retained as a dormant extension point.
+- Do not include `resolvePhoneNumber` in the normal deployment set unless a future feature deliberately re-enables phone authorization.
 
 Use WeChat DevTools for manual deployment, or run the CLI deployment from PowerShell:
 

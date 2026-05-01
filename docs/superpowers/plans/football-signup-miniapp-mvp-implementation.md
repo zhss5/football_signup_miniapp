@@ -230,7 +230,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
   - Join Activity no longer shows phone input or WeChat phone authorization
   - `joinActivity` and the local mock no longer require or write phone fields
   - old phone fields remain as legacy data and do not need immediate migration
-  - retire `resolvePhoneNumber` after the simplified signup flow is stable in CloudBase
+  - keep `resolvePhoneNumber` as a dormant extension point for future phone-number requirements
 - add activity/signup insurance-link support
 - add participant preferred playing position selection; priority `P2`
 - allow organizers to sign up participants on their behalf
@@ -275,7 +275,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - finalize CloudBase security rules
 - finalize manual indexes
 - validate real CloudBase deployment and permissions
-- retire the unused `resolvePhoneNumber` cloud function after the simplified signup flow is stable in CloudBase
+- keep the unused `resolvePhoneNumber` cloud function and adapters as a dormant extension point unless the product definitively drops future phone-number needs
 
 ### 8.4 Future Expansion
 
@@ -359,7 +359,7 @@ The main remaining work is no longer MVP scaffolding. It is product refinement a
 - completed in code: the signup flow no longer calls `resolvePhoneNumber`
 - completed in code: signup works without any phone payload
 - completed in code: legacy phone fields in old records are preserved but new signups stop writing them
-- remaining cleanup: retire `resolvePhoneNumber` after the simplified signup flow is stable in CloudBase
+- extension point: keep `resolvePhoneNumber` available but disconnected from the active signup flow
 
 ### Milestone B5: Signup Profile Completion
 
