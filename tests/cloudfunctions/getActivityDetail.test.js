@@ -26,6 +26,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   const activity = {
     _id: 'activity_1',
     title: 'Saturday 8-10',
+    organizerOpenId: 'openid_owner',
     addressText: 'Half Stone'
   };
   const teams = [
@@ -54,6 +55,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       userOpenId: 'openid_a',
       status: 'joined',
       signupName: 'Alex',
+      proxyRegistration: true,
       joinedAt: '2026-04-19T10:00:00.000Z'
     }
   ];
@@ -123,16 +125,24 @@ test('getActivityDetail groups joined members under each team', async () => {
 
   const result = await getActivityDetail.main(
     { activityId: 'activity_1' },
-    { OPENID: 'openid_a' },
+    { OPENID: 'openid_owner' },
     { db: fakeDb }
   );
 
   expect(result.teams).toHaveLength(2);
   expect(result.teams[0].members[0]).toMatchObject({
     signupName: 'Alex',
-    avatarUrl: 'https://example.com/avatar-a.png'
+    avatarUrl: 'https://example.com/avatar-a.png',
+    proxyRegistration: true
   });
-  expect(result.myRegistration.teamId).toBe('team_white');
+
+  const regularResult = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_viewer' },
+    { db: fakeDb }
+  );
+
+  expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
 });
 
 test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {

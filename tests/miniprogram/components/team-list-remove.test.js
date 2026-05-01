@@ -34,6 +34,21 @@ describe('team-list member removal', () => {
     expect(wxml).toContain('bindtap="onProxySignupTap"');
   });
 
+  test('renders proxy member badge only from the prepared member view model flag', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.proxyBadgeVisible}}"');
+    expect(wxml).toContain('{{member.proxyBadgeText}}');
+    expect(wxss).toContain('.member-proxy-badge');
+  });
+
   test('uses a distinct visual style for self cancel signup and manager removal', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),

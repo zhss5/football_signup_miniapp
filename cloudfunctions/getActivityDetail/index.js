@@ -60,6 +60,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       activity.data.status === 'published' &&
       (!Number.isFinite(deadline) || Date.parse(stamp) <= deadline)
   );
+  const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
 
   const userOpenIds = Array.from(new Set(joinedRes.data.map(item => item.userOpenId)));
   let usersById = {};
@@ -84,15 +85,19 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       }
 
       const user = usersById[registration.userOpenId] || {};
-      acc[registration.teamId].push({
+      const member = {
         userOpenId: registration.userOpenId,
         signupName: registration.signupName,
         avatarUrl: registration.avatarUrl || user.avatarUrl || ''
-      });
+      };
+
+      if (canManageRegistrations) {
+        member.proxyRegistration = Boolean(registration.proxyRegistration);
+      }
+
+      acc[registration.teamId].push(member);
       return acc;
     }, {});
-
-  const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
 
   return {
     activity: activity.data,

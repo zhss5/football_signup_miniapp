@@ -35,6 +35,8 @@
 - Confirm regular users and non-owner organizers cannot edit another organizer's activity
 - Confirm organizer/admin can add a proxy participant to a selected team
 - Confirm regular users cannot see or use proxy signup
+- Confirm organizer/admin can see the proxy badge on a proxy participant
+- Confirm regular users can see the participant name but cannot see the proxy badge
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names
 - Confirm organizer cancel changes activity status to `cancelled`

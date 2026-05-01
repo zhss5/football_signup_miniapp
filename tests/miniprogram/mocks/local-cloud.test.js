@@ -166,6 +166,12 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
     now: () => '2026-04-19T10:00:00.000Z',
     openid: 'openid_owner'
   });
+  const regularClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_regular',
+    defaultRoles: ['user']
+  });
 
   const created = await ownerClient.call('createActivity', {
     title: 'Saturday 8-10',
@@ -206,8 +212,15 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   expect(detailAfter.teams[0].joinedCount).toBe(1);
   expect(detailAfter.teams[0].members[0]).toMatchObject({
     signupName: 'Guest Player',
-    userOpenId: expect.stringMatching(/^proxy_/)
+    userOpenId: expect.stringMatching(/^proxy_/),
+    proxyRegistration: true
   });
+
+  const regularDetail = await regularClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(regularDetail.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
 });
 
 test('local cloud client blocks regular users from adding proxy participants', async () => {

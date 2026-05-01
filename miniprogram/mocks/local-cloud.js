@@ -400,6 +400,7 @@ function createLocalCloudClient(options = {}) {
     }
 
     const viewerUser = state.users[openid] || buildDefaultUser(openid, now());
+    const canManageRegistrations = canEditActivity(activity, viewerUser, openid);
     const teams = Object.values(state.teams)
       .filter(team => team.activityId === payload.activityId && team.status !== 'inactive')
       .sort((left, right) => left.sort - right.sort)
@@ -407,14 +408,22 @@ function createLocalCloudClient(options = {}) {
         const members = Object.values(state.registrations)
           .filter(item => item.activityId === payload.activityId && item.teamId === team._id && item.status === 'joined')
           .sort((left, right) => String(left.joinedAt).localeCompare(String(right.joinedAt)))
-          .map(item => ({
-            userOpenId: item.userOpenId,
-            signupName: item.signupName,
-            avatarUrl:
-              item.avatarUrl ||
-              (state.users[item.userOpenId] && state.users[item.userOpenId].avatarUrl) ||
-              ''
-          }));
+          .map(item => {
+            const member = {
+              userOpenId: item.userOpenId,
+              signupName: item.signupName,
+              avatarUrl:
+                item.avatarUrl ||
+                (state.users[item.userOpenId] && state.users[item.userOpenId].avatarUrl) ||
+                ''
+            };
+
+            if (canManageRegistrations) {
+              member.proxyRegistration = Boolean(item.proxyRegistration);
+            }
+
+            return member;
+          });
 
         return {
           ...team,
@@ -436,8 +445,8 @@ function createLocalCloudClient(options = {}) {
       myRegistration: clone(current),
       viewer: {
         isOrganizer: activity.organizerOpenId === openid,
-        canEditActivity: canEditActivity(activity, viewerUser, openid),
-        canManageRegistrations: canEditActivity(activity, viewerUser, openid),
+        canEditActivity: canManageRegistrations,
+        canManageRegistrations,
         canCancelActivity: activity.organizerOpenId === openid && activity.status === 'published',
         canDeleteActivity: activity.organizerOpenId === openid && Number(activity.joinedCount) === 0,
         canCancelSignup

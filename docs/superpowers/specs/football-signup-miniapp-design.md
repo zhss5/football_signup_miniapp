@@ -62,6 +62,7 @@ The detail page shows:
 - location name and address text
 - teams with `joined / max`
 - team member list with avatar placeholder and signup name
+- organizer/admin-only proxy badge for participants added on someone else's behalf
 - current user signup state
 - organizer action button when permitted
 - signup cancel button when permitted
@@ -394,6 +395,8 @@ Key fields:
 - `source`: `share/direct`
 - `payStatus`: reserved
 - `orderId`: reserved
+- `proxyRegistration`: true when an organizer/admin added the participant on someone else's behalf
+- `createdByOpenId`: organizer/admin openid for proxy registrations
 - `joinedAt`
 - `cancelledAt`
 - `updatedAt`
@@ -418,8 +421,11 @@ The current MVP uses these main cloud functions:
 - `listActivities`
 - `getActivityDetail`
 - `createActivity`
+- `updateActivity`
 - `joinActivity`
+- `addProxyRegistration`
 - `cancelRegistration`
+- `removeRegistration`
 - `cancelActivity`
 - `deleteActivity`
 - `getActivityStats`
@@ -433,6 +439,10 @@ The current MVP uses these main cloud functions:
 | View deleted activity detail | deny | allow | deny |
 | Join one team | allow for self | allow for self | allow for self |
 | Cancel own signup before deadline | allow for self | allow for self | allow for self |
+| Add proxy participant | deny | allow | deny |
+| Remove participant | deny | allow | deny |
+| Copy participant names | deny | allow | deny |
+| See proxy participant badge | deny | allow | deny |
 | Cancel activity | deny | allow | deny |
 | Soft delete empty activity | deny | allow | deny |
 | View organizer stats | deny | allow | deny |

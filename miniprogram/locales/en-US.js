@@ -52,6 +52,9 @@ module.exports = {
     },
     teamList: {
       empty: 'No players yet'
+    },
+    member: {
+      proxySignup: 'Proxy'
     }
   },
   activityCreate: {

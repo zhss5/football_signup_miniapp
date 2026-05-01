@@ -38,10 +38,31 @@
   font-weight: 700;
 }
 
-.member-name {
+.member-info {
   flex: 1;
   min-width: 0;
   margin-left: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.member-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-proxy-badge {
+  flex: 0 0 auto;
+  margin-left: 10rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  color: #92400e;
+  background: #fef3c7;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  font-weight: 600;
 }
 
 .member-action-button {

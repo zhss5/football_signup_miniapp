@@ -173,6 +173,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - proxy registrations are marked with `proxyRegistration: true`, `source: proxy`, and `createdByOpenId`
 - proxy signup follows the same activity/team open, deadline, and capacity rules as normal signup
 - existing organizer/admin removal can remove proxy participants
+- organizer/admin roster views mark proxy participants with a manager-only badge
+- regular users do not see whether a participant was added by proxy signup
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -191,6 +193,7 @@ The current implementation differs from the original early MVP assumptions in th
 - participant phone collection was removed from the current signup flow
 - organizers/admins can copy all active participant names from Activity Detail
 - organizers/admins can add proxy participants from Activity Detail
+- organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
 
 ## 4. Verification Status
 
@@ -198,7 +201,7 @@ Latest verified test result:
 
 - command: `node scripts/copy-cloud-shared.mjs` followed by `node node_modules/jest/bin/jest.js --runInBand`
 - result: `43` test suites passed
-- result: `218` tests passed
+- result: `220` tests passed
 
 Covered areas include:
 
@@ -214,6 +217,7 @@ Covered areas include:
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior
 - organizer proxy signup behavior
+- manager-only proxy participant badge behavior
 
 ## 4.1 Current Media Progress
 

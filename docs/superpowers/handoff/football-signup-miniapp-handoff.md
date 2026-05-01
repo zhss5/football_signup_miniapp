@@ -28,6 +28,7 @@ The codebase supports:
 - organizer/admin activity editing through the `updateActivity` cloud function
 - organizer/admin one-tap participant name copy from Activity Detail
 - organizer/admin proxy signup through the `addProxyRegistration` cloud function
+- organizer/admin-only proxy participant badge in Activity Detail rosters
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -57,6 +58,11 @@ Legacy note:
 - `resolvePhoneNumber` still exists in the repository, and the service/local-mock adapters are intentionally retained for future extension. The active signup flow no longer calls it and it is not required for normal deployment.
 
 Some functions were deployed successfully during earlier rollout, but the target CloudBase environment should be treated as needing a fresh full-function deployment after `npm run copy:cloud-shared` before the next real-device smoke pass.
+
+Latest proxy-badge change:
+
+- `getActivityDetail` now returns `proxyRegistration` on roster members only for viewers with registration-management permission, so redeploy `getActivityDetail` before validating the badge on CloudBase.
+- upload a new mini program frontend build so the `team-list` template/style changes are available on device.
 
 Earlier rollout reference:
 
@@ -178,9 +184,9 @@ npm test
 Latest result:
 
 - `43` test suites passed
-- `218` tests passed
+- `220` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, signup profile fields without phone collection, signup profile prefill, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -229,6 +235,7 @@ Current organizer roster behavior:
 - empty rosters show a toast and do not write an empty clipboard value.
 - Activity Detail also lets organizers/admins add proxy participants to a selected team.
 - proxy participants use generated `proxy_...` user IDs and can be removed through the existing organizer/admin removal flow.
+- proxy participants show a small proxy badge only to organizers/admins; regular users see the same member name without the badge.
 
 Problems encountered during cover-display testing:
 

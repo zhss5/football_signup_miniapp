@@ -814,3 +814,25 @@ Verification:
 
 - targeted red/green coverage was added for the cloud function, local mock, team-list entry point, detail-page modal flow, and view-model enable/disable rules.
 - full regression suite passed: `43` test suites, `218` tests.
+
+## 2026-05-01 - Manager-Only Proxy Signup Badge Implemented
+
+Proxy participants are now visually distinguished from self-signup participants for organizers and admins only.
+
+Delivered behavior:
+
+- `getActivityDetail` includes `proxyRegistration` on roster members only for viewers with registration-management permission.
+- the local mock returns the same permission-gated member flag for local DevTools testing.
+- `buildTeamListVm` derives `proxyBadgeVisible` and `proxyBadgeText` only when the viewer can manage registrations.
+- Activity Detail team rows show a small `Proxy` / `代报名` badge beside proxy participant names for organizers/admins.
+- regular users still see the same roster names, without receiving or rendering the proxy badge flag.
+
+Operational notes:
+
+- deploy `getActivityDetail` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the `team-list` template and styles are included.
+
+Verification:
+
+- targeted red/green coverage was added for CloudBase detail output, local mock output, view-model visibility rules, and team-list rendering.
+- full regression suite passed: `43` test suites, `220` tests.

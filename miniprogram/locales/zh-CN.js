@@ -53,6 +53,9 @@ module.exports = {
     },
     teamList: {
       empty: '暂无报名成员'
+    },
+    member: {
+      proxySignup: '代报名'
     }
   },
   activityCreate: {

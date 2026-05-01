@@ -90,12 +90,16 @@ function buildMemberVm(member, context = {}) {
     memberActionText = context.translate('activity.actions.removeMember');
   }
 
+  const proxyBadgeVisible = Boolean(context.canManageRegistrations && member.proxyRegistration);
+
   return {
     ...member,
     avatarText: sourceName ? sourceName.charAt(0).toUpperCase() : DEFAULT_MEMBER_AVATAR_TEXT,
     isCurrentUser,
     memberAction,
-    memberActionText
+    memberActionText,
+    proxyBadgeVisible,
+    proxyBadgeText: proxyBadgeVisible ? context.translate('activity.member.proxySignup') : ''
   };
 }
 
