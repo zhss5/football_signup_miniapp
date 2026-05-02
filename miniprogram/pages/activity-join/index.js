@@ -6,6 +6,12 @@ const {
 } = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const {
+  MAX_PREFERRED_POSITIONS,
+  POSITION_VALUES,
+  buildPositionOptions,
+  normalizePreferredPositions
+} = require('../../utils/positions');
+const {
   getAppLocale,
   getMessages,
   makeTranslator,
@@ -90,6 +96,8 @@ Page({
     avatarTempFilePath: '',
     avatarEdited: false,
     profileSource: 'manual',
+    preferredPositions: [],
+    positionOptions: buildPositionOptions([]),
     submitting: false
   },
 
@@ -131,6 +139,35 @@ Page({
     });
   },
 
+  onPositionTap(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const value = String(event.currentTarget.dataset.value || '').trim();
+
+    if (!POSITION_VALUES.includes(value)) {
+      return;
+    }
+
+    const current = normalizePreferredPositions(this.data.preferredPositions);
+    const next = current.includes(value)
+      ? current.filter(item => item !== value)
+      : current.length < MAX_PREFERRED_POSITIONS
+        ? current.concat(value)
+        : current;
+
+    if (!current.includes(value) && current.length >= MAX_PREFERRED_POSITIONS) {
+      wx.showToast({
+        title: translate('activityJoin.preferredPositionsLimit'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    this.setData({
+      preferredPositions: next,
+      positionOptions: buildPositionOptions(next)
+    });
+  },
+
   async prefillUserProfile() {
     await prefillUserProfile(this);
   },
@@ -160,6 +197,7 @@ Page({
         signupName,
         avatarUrl,
         profileSource: avatarUrl && this.data.profileSource === 'wechat' ? 'wechat' : 'manual',
+        preferredPositions: normalizePreferredPositions(this.data.preferredPositions),
         source: 'share'
       });
 

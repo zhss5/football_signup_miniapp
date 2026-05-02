@@ -93,6 +93,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
       if (canManageRegistrations) {
         member.proxyRegistration = Boolean(registration.proxyRegistration);
+        member.preferredPositions = Array.isArray(registration.preferredPositions)
+          ? registration.preferredPositions.filter(Boolean)
+          : [];
       }
 
       acc[registration.teamId].push(member);

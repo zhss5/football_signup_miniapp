@@ -55,6 +55,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       userOpenId: 'openid_a',
       status: 'joined',
       signupName: 'Alex',
+      preferredPositions: ['前锋', '门将'],
       proxyRegistration: true,
       joinedAt: '2026-04-19T10:00:00.000Z'
     }
@@ -133,6 +134,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   expect(result.teams[0].members[0]).toMatchObject({
     signupName: 'Alex',
     avatarUrl: 'https://example.com/avatar-a.png',
+    preferredPositions: ['前锋', '门将'],
     proxyRegistration: true
   });
 
@@ -143,6 +145,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   );
 
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
+  expect(regularResult.teams[0].members[0]).not.toHaveProperty('preferredPositions');
 });
 
 test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {

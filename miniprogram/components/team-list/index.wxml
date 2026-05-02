@@ -11,8 +11,11 @@
             <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
             <view wx:else class="member-avatar-fallback">{{member.avatarText}}</view>
             <view class="member-info">
-              <text class="member-name">{{member.signupName}}</text>
-              <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
+              <view class="member-name-row">
+                <text class="member-name">{{member.signupName}}</text>
+                <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
+              </view>
+              <text wx:if="{{member.preferredPositionsVisible}}" class="member-position-text">{{member.preferredPositionsText}}</text>
             </view>
             <button
               wx:if="{{member.moveActionVisible}}"

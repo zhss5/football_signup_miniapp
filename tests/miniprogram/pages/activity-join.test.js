@@ -100,7 +100,8 @@ describe('activity join page', () => {
       signupName: 'Alex',
       avatarUrl: 'wxfile://tmp_avatar.jpg',
       avatarTempFilePath: 'wxfile://tmp_avatar.jpg',
-      profileSource: 'wechat'
+      profileSource: 'wechat',
+      preferredPositions: ['前锋', '门将']
     });
 
     await pageConfig.onSubmit.call(ctx);
@@ -115,6 +116,7 @@ describe('activity join page', () => {
       signupName: 'Alex',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
       profileSource: 'wechat',
+      preferredPositions: ['前锋', '门将'],
       source: 'share'
     });
     expect(requestActivityNotificationSubscriptionConsent).toHaveBeenCalled();
@@ -273,6 +275,69 @@ describe('activity join page', () => {
     expect(wxml).not.toContain('phonePlaceholder');
     expect(pageConfig.onGetPhoneNumber).toBeUndefined();
     expect(pageConfig.onPhoneInput).toBeUndefined();
+  });
+
+  test('lets participants select up to two preferred positions', () => {
+    const ctx = {
+      data: {
+        preferredPositions: []
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '前锋'
+        }
+      }
+    });
+    pageConfig.onPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '门将'
+        }
+      }
+    });
+    pageConfig.onPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '中场'
+        }
+      }
+    });
+
+    expect(ctx.data.preferredPositions).toEqual(['前锋', '门将']);
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Choose up to 2 positions',
+      icon: 'none'
+    });
+
+    pageConfig.onPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '前锋'
+        }
+      }
+    });
+
+    expect(ctx.data.preferredPositions).toEqual(['门将']);
+  });
+
+  test('renders the preferred position selector', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-join/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('{{i18n.activityJoin.preferredPositions}}');
+    expect(wxml).toContain('wx:for="{{positionOptions}}"');
+    expect(wxml).toContain('bindtap="onPositionTap"');
   });
 
   test('requires only a signup name before submitting', async () => {

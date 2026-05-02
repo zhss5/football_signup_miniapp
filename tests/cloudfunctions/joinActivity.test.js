@@ -138,7 +138,8 @@ test('joinActivity uses the document id and does not write phone data into regis
       teamId: 'team_white',
       signupName: 'Alex',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
-      profileSource: 'wechat'
+      profileSource: 'wechat',
+      preferredPositions: ['前锋', '门将']
     },
     {},
     { now: '2026-04-19T10:00:00.000Z' }
@@ -152,7 +153,13 @@ test('joinActivity uses the document id and does not write phone data into regis
   expect(setRegistration).toHaveBeenCalledWith({
     data: expect.objectContaining({
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
-      profileSource: 'wechat'
+      profileSource: 'wechat',
+      preferredPositions: ['前锋', '门将']
+    })
+  });
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      preferredPositions: ['前锋', '门将']
     })
   });
   expect(setRegistration).toHaveBeenCalledWith({
@@ -177,6 +184,23 @@ test('joinActivity uses the document id and does not write phone data into regis
   });
 
   jest.dontMock('wx-server-sdk');
+});
+
+test('joinActivity rejects more than two preferred positions', async () => {
+  await expect(
+    joinActivity.main(
+      {
+        activityId: 'activity_1',
+        teamId: 'team_white',
+        signupName: 'Alex',
+        preferredPositions: ['前锋', '中场', '门将']
+      },
+      { OPENID: 'openid_a' },
+      {
+        runJoin: async () => ({ status: 'joined' })
+      }
+    )
+  ).rejects.toThrow('At most two preferred positions are allowed');
 });
 
 test('joinActivity preserves optional phone fields when a future signup flow provides them', async () => {

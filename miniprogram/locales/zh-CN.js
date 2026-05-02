@@ -243,3 +243,7 @@ module.exports.modal.confirmProceeding = {
 };
 module.exports.toast.activityConfirmed = '\u6d3b\u52a8\u5df2\u786e\u8ba4';
 module.exports.toast.notificationFailed = '\u901a\u77e5\u53d1\u9001\u5931\u8d25';
+module.exports.activityJoin.preferredPositions = '\u559c\u6b22\u4f4d\u7f6e';
+module.exports.activityJoin.preferredPositionsHint =
+  '\u53ef\u4e0d\u9009\uff0c\u6700\u591a\u9009 2 \u4e2a\u3002';
+module.exports.activityJoin.preferredPositionsLimit = '\u6700\u591a\u9009 2 \u4e2a\u4f4d\u7f6e';

@@ -308,6 +308,42 @@ test('buildTeamListVm marks proxy members for managers only', () => {
   });
 });
 
+test('buildTeamListVm shows preferred positions to managers only', () => {
+  const teams = [
+    {
+      _id: 'team_red',
+      teamName: 'Red',
+      joinedCount: 1,
+      maxMembers: 6,
+      members: [
+        {
+          userOpenId: 'openid_player',
+          signupName: 'Alex',
+          avatarUrl: '',
+          preferredPositions: ['前锋', '门将']
+        }
+      ]
+    }
+  ];
+  const activity = {
+    status: 'published'
+  };
+
+  const managerVm = buildTeamListVm(teams, null, activity, undefined, undefined, {
+    canManageRegistrations: true
+  });
+  const regularVm = buildTeamListVm(teams, null, activity);
+
+  expect(managerVm[0].members[0]).toMatchObject({
+    preferredPositionsVisible: true,
+    preferredPositionsText: '前锋 / 门将'
+  });
+  expect(regularVm[0].members[0]).toMatchObject({
+    preferredPositionsVisible: false,
+    preferredPositionsText: ''
+  });
+});
+
 test('buildTeamListVm disables proxy signup for managers when the team is full', () => {
   const teams = buildTeamListVm(
     [

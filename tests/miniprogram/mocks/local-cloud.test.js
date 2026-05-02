@@ -498,16 +498,21 @@ test('local cloud client stores signup profile metadata without phone fields', a
     signupName: 'Alex',
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
     profileSource: 'wechat',
+    preferredPositions: ['前锋', '门将'],
     source: 'share'
   });
 
   const detailAfter = await participantClient.call('getActivityDetail', {
     activityId: created.activityId
   });
+  const ownerDetailAfter = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
 
   expect(detailAfter.myRegistration).toEqual(expect.objectContaining({
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
-    profileSource: 'wechat'
+    profileSource: 'wechat',
+    preferredPositions: ['前锋', '门将']
   }));
   expect(detailAfter.myRegistration).toEqual(expect.not.objectContaining({
     phoneSnapshot: expect.anything(),
@@ -516,6 +521,10 @@ test('local cloud client stores signup profile metadata without phone fields', a
   expect(detailAfter.teams[0].members[0]).toMatchObject({
     signupName: 'Alex',
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg'
+  });
+  expect(detailAfter.teams[0].members[0]).not.toHaveProperty('preferredPositions');
+  expect(ownerDetailAfter.teams[0].members[0]).toMatchObject({
+    preferredPositions: ['前锋', '门将']
   });
 });
 

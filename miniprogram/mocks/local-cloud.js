@@ -1,4 +1,9 @@
 const { BENCH_TEAM_NAME } = require('../utils/constants');
+const {
+  MAX_PREFERRED_POSITIONS,
+  POSITION_VALUES,
+  normalizePreferredPositions
+} = require('../utils/positions');
 const { canCreateActivity, canEditActivity } = require('../utils/roles');
 const { validateActivityDraft } = require('../utils/validators');
 
@@ -20,6 +25,21 @@ function validateSignupPayload(payload) {
 
 function normalizeSource(value) {
   return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+function validatePreferredPositions(value) {
+  const input = Array.isArray(value) ? value : [];
+  const normalized = normalizePreferredPositions(input);
+
+  if (normalized.length > MAX_PREFERRED_POSITIONS) {
+    throw new Error('At most two preferred positions are allowed');
+  }
+
+  if (input.some(item => !POSITION_VALUES.includes(String(item || '').trim()))) {
+    throw new Error('Unsupported preferred position');
+  }
+
+  return normalized;
 }
 
 function createDefaultState() {
@@ -429,6 +449,9 @@ function createLocalCloudClient(options = {}) {
 
             if (canManageRegistrations) {
               member.proxyRegistration = Boolean(item.proxyRegistration);
+              member.preferredPositions = Array.isArray(item.preferredPositions)
+                ? item.preferredPositions.filter(Boolean)
+                : [];
             }
 
             return member;
@@ -477,6 +500,7 @@ function createLocalCloudClient(options = {}) {
     const phoneSource = phone ? normalizeSource(payload.phoneSource) : '';
     const avatarUrl = String(payload.avatarUrl || '').trim();
     const profileSource = avatarUrl ? normalizeSource(payload.profileSource) : 'manual';
+    const preferredPositions = validatePreferredPositions(payload.preferredPositions);
 
     if (!activity || activity.status !== 'published') {
       throw new Error('Activity is not open for signup');
@@ -525,6 +549,7 @@ function createLocalCloudClient(options = {}) {
       signupName,
       avatarUrl,
       profileSource,
+      preferredPositions,
       source: payload.source || 'direct',
       joinedAt: stamp,
       cancelledAt: current ? current.cancelledAt || '' : '',

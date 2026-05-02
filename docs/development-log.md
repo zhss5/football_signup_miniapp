@@ -1097,3 +1097,26 @@ Verification:
 
 - added page coverage for trimming the description and rendering the description card binding.
 - full regression suite passed: `50` test suites, `268` tests.
+
+## 2026-05-02 - Participant Preferred Positions
+
+Signup now captures optional preferred playing positions.
+
+Delivered behavior:
+
+- Activity Join lets a participant select up to two preferred positions, or leave the field empty
+- supported positions are forward, midfield, wing, defensive midfield, center back, fullback, and goalkeeper, shown in Chinese in the UI
+- `joinActivity` validates the submitted positions and stores them on the registration document as `preferredPositions`
+- local mock mode mirrors the cloud-function behavior
+- Activity Detail exposes member preferred positions only to organizers/admins through the manager-only member view model
+- regular participants do not see other members' preferred positions in the team list
+
+Operational notes:
+
+- deploy `joinActivity` and `getActivityDetail` after running `npm run copy:cloud-shared`
+- upload a new mini program build so the Activity Join selector and Activity Detail display are available
+
+Verification:
+
+- added coverage for join-page selection, cloud validation/storage, local mock storage, detail member visibility, and team-list rendering.
+- full regression suite passed: `50` test suites, `273` tests.

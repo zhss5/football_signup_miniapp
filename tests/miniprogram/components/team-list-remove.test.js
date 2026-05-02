@@ -49,6 +49,21 @@ describe('team-list member removal', () => {
     expect(wxss).toContain('.member-proxy-badge');
   });
 
+  test('renders manager-only preferred position text from the member view model flag', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.preferredPositionsVisible}}"');
+    expect(wxml).toContain('{{member.preferredPositionsText}}');
+    expect(wxss).toContain('.member-position-text');
+  });
+
   test('renders manager move member controls', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),

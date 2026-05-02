@@ -235,7 +235,7 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `265` tests passed
+- `273` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -287,6 +287,8 @@ Current signup profile behavior:
 - saved `users.avatarUrl` prefills the avatar preview without re-uploading the existing CloudBase file.
 - manual name/avatar edits made before profile loading finishes are preserved.
 - `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl` after signup.
+- Activity Join lets participants optionally select up to two preferred positions from `前锋`, `中场`, `边锋`, `后腰`, `中卫`, `边卫`, and `门将`.
+- `joinActivity` validates and stores selected positions as `registrations.preferredPositions`.
 
 Current organizer roster behavior:
 
@@ -298,6 +300,7 @@ Current organizer roster behavior:
 - proxy participants show a small proxy badge only to organizers/admins; regular users see the same member name without the badge.
 - Activity Detail lets organizers/admins move active participants to another non-full team.
 - moving a participant keeps the activity joined count unchanged while updating source and target team counts.
+- organizers/admins can see each member's preferred positions on Activity Detail; regular participants cannot see other members' position choices.
 
 Current insurance-link behavior:
 
@@ -359,14 +362,12 @@ Continue in this order:
    - validate signup subscription prompt, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
-13. Plan later mini program backlog items:
-   - add preferred playing position selection as priority `P2`
-14. Keep the future operations/backend backlog visible but deferred:
+13. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-16. Push local commits if they should be shared:
+14. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+15. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

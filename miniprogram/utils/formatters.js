@@ -92,6 +92,12 @@ function buildMemberVm(member, context = {}) {
 
   const moveActionVisible = Boolean(context.canManageRegistrations);
   const proxyBadgeVisible = Boolean(context.canManageRegistrations && member.proxyRegistration);
+  const preferredPositions = Array.isArray(member.preferredPositions)
+    ? member.preferredPositions.filter(Boolean)
+    : [];
+  const preferredPositionsVisible = Boolean(
+    context.canManageRegistrations && preferredPositions.length > 0
+  );
 
   return {
     ...member,
@@ -102,7 +108,9 @@ function buildMemberVm(member, context = {}) {
     moveActionVisible,
     moveActionText: moveActionVisible ? context.translate('activity.actions.moveMember') : '',
     proxyBadgeVisible,
-    proxyBadgeText: proxyBadgeVisible ? context.translate('activity.member.proxySignup') : ''
+    proxyBadgeText: proxyBadgeVisible ? context.translate('activity.member.proxySignup') : '',
+    preferredPositionsVisible,
+    preferredPositionsText: preferredPositionsVisible ? preferredPositions.join(' / ') : ''
   };
 }
 

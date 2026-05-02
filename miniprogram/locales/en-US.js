@@ -119,6 +119,9 @@ module.exports = {
     avatarHint: 'Optional. Tap to use or change your WeChat avatar.',
     signupName: 'Signup name',
     signupNamePlaceholder: 'Signup name',
+    preferredPositions: 'Preferred positions',
+    preferredPositionsHint: 'Optional. Choose up to 2 positions.',
+    preferredPositionsLimit: 'Choose up to 2 positions',
     confirm: 'Confirm',
     success: 'Signup successful'
   },

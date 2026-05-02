@@ -29,7 +29,9 @@
 - Confirm tapping the insurance purchase link opens the insurance URL in the mini program web-view
 - If the web-view page is blocked on a real device, confirm the insurance URL domain is configured as a mini program business domain
 - Confirm the join page does not show phone input or WeChat phone authorization
+- Confirm the join page lets participants choose zero, one, or two preferred positions and blocks a third choice
 - Confirm join flow writes `registrations._id = activityId_openid`
+- Confirm join flow stores selected positions in `registrations.preferredPositions`
 - Confirm the subscription prompt appears during signup on a real device when an activity-notice template ID is configured
 - Confirm the signup still succeeds if the user declines the subscription prompt
 - If signup subscription recording fails with `DATABASE_COLLECTION_NOT_EXIST`, confirm `recordNotificationSubscription` was redeployed and `notification_subscriptions` exists
@@ -51,6 +53,8 @@
 - Confirm organizer/admin can add a proxy participant to a selected team
 - Confirm regular users cannot see or use proxy signup
 - Confirm organizer/admin can see the proxy badge on a proxy participant
+- Confirm organizer/admin can see member preferred positions on Activity Detail
+- Confirm regular users cannot see other members' preferred positions
 - Confirm regular users can see the participant name but cannot see the proxy badge
 - Confirm organizer/admin can move a participant to another non-full team
 - Confirm regular users cannot see or use member move controls

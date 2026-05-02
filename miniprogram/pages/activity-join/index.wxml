@@ -25,6 +25,20 @@
       />
     </view>
 
+    <view class="field">
+      <text class="label">{{i18n.activityJoin.preferredPositions}}</text>
+      <text class="hint small-hint">{{i18n.activityJoin.preferredPositionsHint}}</text>
+      <view class="position-grid">
+        <button
+          wx:for="{{positionOptions}}"
+          wx:key="value"
+          class="position-option {{item.selected ? 'position-option-selected' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onPositionTap"
+        >{{item.label}}</button>
+      </view>
+    </view>
+
     <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityJoin.confirm}}</button>
   </view>
 </view>

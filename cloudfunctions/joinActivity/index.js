@@ -6,12 +6,47 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const POSITION_VALUES = ['前锋', '中场', '边锋', '后腰', '中卫', '边卫', '门将'];
+const MAX_PREFERRED_POSITIONS = 2;
+
 function normalizeText(value) {
   return String(value || '').trim();
 }
 
 function normalizeSource(value) {
   return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+function normalizePreferredPositions(value) {
+  const seen = new Set();
+  const input = Array.isArray(value) ? value : [];
+
+  return input.reduce((positions, item) => {
+    const position = normalizeText(item);
+
+    if (!POSITION_VALUES.includes(position) || seen.has(position)) {
+      return positions;
+    }
+
+    seen.add(position);
+    positions.push(position);
+    return positions;
+  }, []);
+}
+
+function validatePreferredPositions(value) {
+  const input = Array.isArray(value) ? value : [];
+  const normalized = normalizePreferredPositions(input);
+
+  if (normalized.length > MAX_PREFERRED_POSITIONS) {
+    throw businessError('At most two preferred positions are allowed');
+  }
+
+  if (input.some(item => !POSITION_VALUES.includes(normalizeText(item)))) {
+    throw businessError('Unsupported preferred position');
+  }
+
+  return normalized;
 }
 
 async function syncUserProfile(transaction, openid, profile, stamp) {
@@ -58,10 +93,11 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
+  const preferredPositions = validatePreferredPositions(event.preferredPositions);
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
 
   if (deps.runJoin) {
-    return deps.runJoin(event, openid);
+    return deps.runJoin({ ...event, preferredPositions }, openid);
   }
 
   const db = cloud.database();
@@ -120,6 +156,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       signupName,
       avatarUrl,
       profileSource,
+      preferredPositions,
       source: event.source || 'direct',
       joinedAt: stamp,
       updatedAt: stamp
@@ -155,4 +192,4 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   });
 }
 
-module.exports = { main };
+module.exports = { main, normalizePreferredPositions, validatePreferredPositions };

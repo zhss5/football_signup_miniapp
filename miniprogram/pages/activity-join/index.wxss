@@ -89,6 +89,32 @@
   background: #f9fafb;
 }
 
+.position-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.position-option {
+  flex: 0 0 auto;
+  min-width: 124rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  margin: 0;
+  padding: 0 22rpx;
+  border-radius: 32rpx;
+  color: #374151;
+  background: #f9fafb;
+  font-size: 24rpx;
+}
+
+.position-option-selected {
+  color: #166534;
+  background: #dcfce7;
+  font-weight: 700;
+}
+
 .confirm-button {
   margin-top: 28rpx;
 }

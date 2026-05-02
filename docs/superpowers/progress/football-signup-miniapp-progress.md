@@ -246,6 +246,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
+- participants can optionally choose up to two preferred playing positions during signup, and organizers/admins can see those choices on Activity Detail
 
 ## 4. Verification Status
 
@@ -253,7 +254,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `265` tests passed
+- result: `273` tests passed
 
 Covered areas include:
 
@@ -312,7 +313,6 @@ The MVP still has known non-blocking gaps:
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
-- participant preferred playing position selection is not implemented yet; priority `P2`
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 
 ## 6. Recommended Next Steps
@@ -369,7 +369,7 @@ The MVP still has known non-blocking gaps:
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
 - completed in code: add activity/signup insurance-link display and detail-page web-view opening
-- add preferred playing position selection as a `P2` participant profile/signup refinement
+- completed in code: add preferred playing position selection as a participant signup refinement
 - completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality
