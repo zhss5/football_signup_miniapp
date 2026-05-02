@@ -990,3 +990,25 @@ Verification:
 
 - targeted red/green coverage was added for draft payloads, Create page rendering, create/update cloud functions, local mock storage, and notification message text.
 - full regression suite passed: `50` test suites, `261` tests.
+
+## 2026-05-02 - Real-Device Subscription and Cover Fallback Fixes
+
+Two real-device issues were addressed after testing an uploaded build.
+
+Findings:
+
+- the subscription prompt was being requested only after the signup cloud call finished; on real devices this can fall outside WeChat's user-tap requirement, so no prompt appears
+- the failed subscription request was intentionally swallowed so signup could still succeed, which made the missing prompt easy to miss
+- activity cards and the detail hero only rendered the resolved temporary HTTPS cover URL; if that URL failed on a real device, the UI fell straight to a gray placeholder
+
+Delivered behavior:
+
+- signup now requests subscription consent immediately in the submit tap flow, before avatar upload and the `joinActivity` cloud call
+- the accepted or declined subscription result is recorded only after signup succeeds
+- activity cards and Activity Detail keep multiple cover candidates, including resolved temporary URLs and direct CloudBase file IDs, and move to the next candidate when image loading fails
+- no cloud function code change is required for this fix, but the frontend must be uploaded again; `recordNotificationSubscription` still needs to exist in CloudBase
+
+Verification:
+
+- targeted red/green coverage was added for consent-before-signup order and cover-image fallback candidates.
+- full regression suite passed: `50` test suites, `263` tests.

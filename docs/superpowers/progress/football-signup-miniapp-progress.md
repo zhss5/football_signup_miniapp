@@ -141,6 +141,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - `createActivity` and `updateActivity` persist `coverThumbImage`
 - Home/My/activity cards prefer thumbnails through `coverDisplayImage` and fall back to `coverImage`
 - Activity Detail prefers the full `coverImage` and falls back to `coverThumbImage`
+- list cards and Activity Detail retain direct CloudBase file IDs as backup image sources when temporary HTTPS cover URLs fail on real devices
 - historical CloudBase cover backfill is deferred; current scope is new uploads only
 
 ### 2.13 Signup Phone Removal
@@ -207,7 +208,9 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 - new activities store `confirmStatus: pending`, `confirmedAt`, and `confirmedByOpenId`
 - successful signup requests the configured activity-notice subscription template
+- the subscription prompt is requested immediately in the user submit tap flow, before the signup cloud call, so real devices still treat it as user-initiated
 - the new `recordNotificationSubscription` cloud function stores accepted or declined subscription choices in `notification_subscriptions`
+- the subscription choice is recorded only after the signup cloud call succeeds
 - Activity Detail shows `Confirm Activity` to organizers/admins while a published activity is unconfirmed
 - confirming an activity stores confirmation metadata, shows an in-app confirmed state, and sends proceeding notices to subscribed active participants
 - confirmation notices use the activity's optional `notificationHint` when present
@@ -247,7 +250,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `261` tests passed
+- result: `263` tests passed
 
 Covered areas include:
 
@@ -269,6 +272,7 @@ Covered areas include:
 - optional insurance-link create/edit/detail web-view opening behavior
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
 - notification reminder persistence and confirmation-message reminder behavior
+- real-device subscription prompt timing and cover-image fallback candidates
 
 ## 4.1 Current Media Progress
 

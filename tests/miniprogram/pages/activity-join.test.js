@@ -14,7 +14,8 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
-  requestActivityNotificationSubscription: jest.fn()
+  recordActivityNotificationSubscription: jest.fn(),
+  requestActivityNotificationSubscriptionConsent: jest.fn()
 }));
 
 describe('activity join page', () => {
@@ -22,7 +23,8 @@ describe('activity join page', () => {
   let joinActivity;
   let uploadFile;
   let ensureUserProfile;
-  let requestActivityNotificationSubscription;
+  let recordActivityNotificationSubscription;
+  let requestActivityNotificationSubscriptionConsent;
   let openerEventChannel;
 
   beforeEach(() => {
@@ -47,11 +49,18 @@ describe('activity join page', () => {
     ({ joinActivity } = require('../../../miniprogram/services/registration-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
-    ({ requestActivityNotificationSubscription } = require('../../../miniprogram/services/notification-service'));
+    ({
+      recordActivityNotificationSubscription,
+      requestActivityNotificationSubscriptionConsent
+    } = require('../../../miniprogram/services/notification-service'));
     ensureUserProfile.mockResolvedValue({ user: {} });
-    requestActivityNotificationSubscription.mockResolvedValue({
+    requestActivityNotificationSubscriptionConsent.mockResolvedValue({
       configured: true,
+      templateId: 'tmpl_123',
       status: 'accepted'
+    });
+    recordActivityNotificationSubscription.mockResolvedValue({
+      ok: true
     });
   });
 
@@ -108,7 +117,21 @@ describe('activity join page', () => {
       profileSource: 'wechat',
       source: 'share'
     });
-    expect(requestActivityNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(requestActivityNotificationSubscriptionConsent).toHaveBeenCalled();
+    expect(
+      requestActivityNotificationSubscriptionConsent.mock.invocationCallOrder[0]
+    ).toBeLessThan(joinActivity.mock.invocationCallOrder[0]);
+    expect(recordActivityNotificationSubscription).toHaveBeenCalledWith(
+      'activity_123',
+      expect.objectContaining({
+        configured: true,
+        templateId: 'tmpl_123',
+        status: 'accepted'
+      })
+    );
+    expect(
+      recordActivityNotificationSubscription.mock.invocationCallOrder[0]
+    ).toBeGreaterThan(joinActivity.mock.invocationCallOrder[0]);
     expect(openerEventChannel.emit).toHaveBeenCalledWith('signupSuccess');
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup successful',
@@ -124,7 +147,7 @@ describe('activity join page', () => {
 
   test('keeps signup successful when notification subscription request fails', async () => {
     joinActivity.mockResolvedValue({ status: 'joined' });
-    requestActivityNotificationSubscription.mockRejectedValue(new Error('subscribe failed'));
+    requestActivityNotificationSubscriptionConsent.mockRejectedValue(new Error('subscribe failed'));
 
     const ctx = {
       data: {},
@@ -148,6 +171,7 @@ describe('activity join page', () => {
     await pageConfig.onSubmit.call(ctx);
 
     expect(joinActivity).toHaveBeenCalled();
+    expect(recordActivityNotificationSubscription).not.toHaveBeenCalled();
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup successful',
       icon: 'success'

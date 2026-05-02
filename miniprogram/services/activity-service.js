@@ -71,6 +71,30 @@ function getResolvedCoverDisplayImage(coverSources, urlByFileId) {
   return '';
 }
 
+function dedupeSources(sources) {
+  return Array.from(new Set(sources.filter(Boolean)));
+}
+
+function getResolvedCoverImageSources(coverSources, urlByFileId) {
+  const orderedSources = Array.isArray(coverSources) ? coverSources : [coverSources];
+
+  return dedupeSources(
+    orderedSources.reduce((sources, coverSource) => {
+      const resolvedUrl = getResolvedCoverUrl(coverSource, urlByFileId);
+
+      if (resolvedUrl) {
+        sources.push(resolvedUrl);
+      }
+
+      if (isCloudFileId(coverSource)) {
+        sources.push(coverSource);
+      }
+
+      return sources;
+    }, [])
+  );
+}
+
 async function resolveActivityCoverImages(items = [], options = {}) {
   const preferredCover = options.preferredCover || 'thumb';
   const coverSources = Array.from(
@@ -85,10 +109,12 @@ async function resolveActivityCoverImages(items = [], options = {}) {
 
   return items.map(item => {
     const coverSourceCandidates = getActivityCoverSources(item, preferredCover);
+    const coverImageSources = getResolvedCoverImageSources(coverSourceCandidates, urlByFileId);
 
     return {
       ...item,
-      coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId)
+      coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId),
+      coverImageSources
     };
   });
 }

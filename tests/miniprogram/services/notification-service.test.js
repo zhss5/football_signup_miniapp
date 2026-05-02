@@ -45,6 +45,38 @@ describe('notification service', () => {
     });
   });
 
+  test('can request subscription consent before recording it', async () => {
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        activityNotice: 'tmpl_123'
+      }
+    }));
+
+    const {
+      requestActivityNotificationSubscriptionConsent,
+      recordActivityNotificationSubscription
+    } = require('../../../miniprogram/services/notification-service');
+
+    const consent = await requestActivityNotificationSubscriptionConsent();
+
+    expect(consent).toMatchObject({
+      configured: true,
+      templateKey: 'activity_notice',
+      templateId: 'tmpl_123',
+      status: 'accepted'
+    });
+    expect(call).not.toHaveBeenCalled();
+
+    await recordActivityNotificationSubscription('activity_1', consent);
+
+    expect(call).toHaveBeenCalledWith('recordNotificationSubscription', {
+      activityId: 'activity_1',
+      templateKey: 'activity_notice',
+      templateId: 'tmpl_123',
+      status: 'accepted'
+    });
+  });
+
   test('does nothing when the activity notice template id is not configured', async () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {}

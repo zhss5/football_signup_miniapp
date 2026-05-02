@@ -17,13 +17,13 @@ describe('activity card component', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('wx:if="{{item.coverDisplayImage || item.coverImage}}"');
-    expect(wxml).toContain('wx:if="{{item.coverDisplayImage && !coverLoadFailed}}"');
-    expect(wxml).toContain('src="{{item.coverDisplayImage}}"');
+    expect(wxml).toContain('wx:if="{{activeCoverImage || item.coverImage}}"');
+    expect(wxml).toContain('wx:if="{{activeCoverImage && !coverLoadFailed}}"');
+    expect(wxml).toContain('src="{{activeCoverImage}}"');
     expect(wxml).not.toContain('src="{{item.coverDisplayImage || item.coverImage}}"');
   });
 
-  test('lazy loads cover images and falls back when loading fails', () => {
+  test('lazy loads cover images and falls back to backup sources when loading fails', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
       'utf8'
@@ -40,6 +40,8 @@ describe('activity card component', () => {
     expect(wxml).toContain('lazy-load="{{true}}"');
     expect(wxml).toContain('binderror="onCoverError"');
     expect(wxml).toContain('coverLoadFailed');
+    expect(js).toContain('coverCandidates');
+    expect(js).toContain('coverSourceIndex');
     expect(js).toContain('onCoverError');
     expect(wxss).toContain('.cover-placeholder');
   });

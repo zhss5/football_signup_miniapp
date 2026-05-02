@@ -22,6 +22,7 @@ The codebase supports:
 - cover image upload to CloudBase storage with persistent `fileID`
 - automatic cover thumbnail upload to `coverThumbImage` for new/edited covers
 - list pages prefer `coverThumbImage` and detail pages prefer `coverImage`, with mutual fallback when one display URL cannot be resolved
+- list cards and Activity Detail can retry direct CloudBase file IDs when temporary HTTPS cover URLs fail to load on real devices
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -35,6 +36,7 @@ The codebase supports:
 - optional activity notification reminder creation and editing
 - activity confirmation state with organizer/admin-triggered `Confirm Activity`
 - signup subscription opt-in and cloud-function-backed notification records
+- signup subscription consent is requested inside the submit tap flow before the signup cloud call, then recorded after signup succeeds
 - organizer/admin-triggered proceeding and cancellation notices for subscribed active participants
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
@@ -93,6 +95,13 @@ Latest activity-notification change:
 - configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only config before expecting real subscription prompts or sends.
 - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, `updateActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`.
 - upload a new mini program frontend build so the subscription prompt, confirmed banner, and organizer action are available on device.
+
+Latest real-device subscription and cover-display fix:
+
+- no cloud function code changed for this fix.
+- upload a new mini program frontend build so signup requests subscription consent before the `joinActivity` cloud call.
+- upload a new mini program frontend build so list cards and Activity Detail can retry fallback cover sources when the first image URL fails.
+- keep `recordNotificationSubscription` deployed; the frontend still records accepted/declined subscription choices through that function after signup succeeds.
 
 Earlier rollout reference:
 
@@ -216,18 +225,19 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `261` tests passed
+- `263` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
 Current cover-display progress:
 
 - CloudBase cover file IDs are now resolved into display URLs before rendering on Home, My, and Activity Detail.
-- Activity card and detail templates no longer pass raw `cloud://` file IDs directly to `<image>`.
+- Activity card and detail templates render managed cover candidates instead of directly binding stored `cloud://` fields.
 - Home/My list cards resolve `coverThumbImage` first and fall back to `coverImage`.
 - Activity Detail resolves `coverImage` first and falls back to `coverThumbImage`.
+- If a resolved temporary HTTPS URL fails to load on a real device, list cards and Activity Detail retry the direct CloudBase file ID before showing the placeholder.
 - The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
 - Documentation records the CloudBase storage permission investigation and the CloudBase cost review checkpoint.
 
@@ -289,6 +299,7 @@ Current activity notification behavior:
 
 - new activities carry a separate confirmation state: `confirmStatus: pending/confirmed`.
 - signup requests a subscription only when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured.
+- signup requests subscription consent before the signup cloud call to preserve WeChat's user-tap requirement; recording the choice still happens after signup succeeds.
 - subscription choices are stored in `notification_subscriptions`; declined choices are stored too, but only accepted active registrations are notified.
 - organizers/admins can confirm a published activity from Activity Detail.
 - confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.

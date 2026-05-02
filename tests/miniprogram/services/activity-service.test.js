@@ -29,7 +29,11 @@ describe('activity service cover display urls', () => {
       {
         _id: 'activity_1',
         coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
-        coverDisplayImage: 'https://tmp.example.com/cover.jpg'
+        coverDisplayImage: 'https://tmp.example.com/cover.jpg',
+        coverImageSources: [
+          'https://tmp.example.com/cover.jpg',
+          'cloud://prod-env-123/activity-covers/cover.jpg'
+        ]
       }
     ]);
   });
@@ -46,7 +50,13 @@ describe('activity service cover display urls', () => {
     expect(activity).toMatchObject({
       coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
       coverThumbImage: 'cloud://prod-env-123/activity-covers/thumb.jpg',
-      coverDisplayImage: 'https://tmp.example.com/thumb.jpg'
+      coverDisplayImage: 'https://tmp.example.com/thumb.jpg',
+      coverImageSources: [
+        'https://tmp.example.com/thumb.jpg',
+        'cloud://prod-env-123/activity-covers/thumb.jpg',
+        'https://tmp.example.com/cover.jpg',
+        'cloud://prod-env-123/activity-covers/cover.jpg'
+      ]
     });
     expect(resolveFileUrls).toHaveBeenCalledWith([
       'cloud://prod-env-123/activity-covers/thumb.jpg',
@@ -127,8 +137,32 @@ describe('activity service cover display urls', () => {
       {
         _id: 'activity_1',
         coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
-        coverDisplayImage: ''
+        coverDisplayImage: '',
+        coverImageSources: ['cloud://prod-env-123/activity-covers/cover.jpg']
       }
+    ]);
+  });
+
+  test('keeps direct CloudBase file ids as fallback image sources when temporary urls fail', async () => {
+    resolveFileUrls.mockResolvedValue({
+      'cloud://prod-env-123/activity-covers/thumb.jpg':
+        'cloud://prod-env-123/activity-covers/thumb.jpg',
+      'cloud://prod-env-123/activity-covers/cover.jpg':
+        'cloud://prod-env-123/activity-covers/cover.jpg'
+    });
+
+    const [activity] = await activityService.resolveActivityCoverImages([
+      {
+        _id: 'activity_1',
+        coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+        coverThumbImage: 'cloud://prod-env-123/activity-covers/thumb.jpg'
+      }
+    ]);
+
+    expect(activity.coverDisplayImage).toBe('');
+    expect(activity.coverImageSources).toEqual([
+      'cloud://prod-env-123/activity-covers/thumb.jpg',
+      'cloud://prod-env-123/activity-covers/cover.jpg'
     ]);
   });
 });

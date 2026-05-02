@@ -1,7 +1,13 @@
 <view class="page" wx:if="{{activity}}">
   <view class="hero">
-    <view wx:if="{{activity.coverDisplayImage || activity.coverImage}}" class="cover-frame">
-      <image wx:if="{{activity.coverDisplayImage}}" class="cover-image" src="{{activity.coverDisplayImage}}" mode="aspectFill" />
+    <view wx:if="{{activityCoverImage || activity.coverImage}}" class="cover-frame">
+      <image
+        wx:if="{{activityCoverImage && !activityCoverLoadFailed}}"
+        class="cover-image"
+        src="{{activityCoverImage}}"
+        mode="aspectFill"
+        binderror="onActivityCoverError"
+      />
       <view wx:else class="cover-placeholder"></view>
     </view>
     <text class="title">{{activity.title}}</text>

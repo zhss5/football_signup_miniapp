@@ -114,6 +114,14 @@ function buildMoveTargetOptions(teams = [], currentTeamId, translate) {
     }));
 }
 
+function buildCoverCandidates(activity = {}) {
+  if (Array.isArray(activity.coverImageSources) && activity.coverImageSources.length > 0) {
+    return activity.coverImageSources.filter(Boolean);
+  }
+
+  return [activity.coverDisplayImage].filter(Boolean);
+}
+
 Page({
   data: {
     activityId: '',
@@ -126,7 +134,11 @@ Page({
     shareHintVisible: false,
     needsReloadOnShow: false,
     locationMapVisible: false,
-    locationMapMarkers: []
+    locationMapMarkers: [],
+    activityCoverCandidates: [],
+    activityCoverImage: '',
+    activityCoverLoadFailed: false,
+    activityCoverSourceIndex: 0
   },
 
   async onLoad(query) {
@@ -163,9 +175,14 @@ Page({
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const detail = await getActivityDetail(this.data.activityId);
     const activityWithDisplayCover = await resolveActivityCoverImage(detail.activity);
+    const activityCoverCandidates = buildCoverCandidates(activityWithDisplayCover);
     this.setData({
       ...detail,
       activity: activityWithDisplayCover,
+      activityCoverCandidates,
+      activityCoverImage: activityCoverCandidates[0] || '',
+      activityCoverLoadFailed: false,
+      activityCoverSourceIndex: 0,
       ...buildLocationMapState(activityWithDisplayCover),
       teams: buildTeamListVm(
         detail.teams,
@@ -179,6 +196,21 @@ Page({
         }
       )
     });
+  },
+
+  onActivityCoverError() {
+    const nextIndex = this.data.activityCoverSourceIndex + 1;
+    const nextCoverImage = this.data.activityCoverCandidates[nextIndex] || '';
+
+    if (nextCoverImage) {
+      this.setData({
+        activityCoverImage: nextCoverImage,
+        activityCoverSourceIndex: nextIndex
+      });
+      return;
+    }
+
+    this.setData({ activityCoverLoadFailed: true });
   },
 
   openSignup(event) {

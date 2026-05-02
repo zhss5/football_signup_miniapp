@@ -38,6 +38,13 @@ function requestSubscribeMessage(wxRuntime, templateId) {
 }
 
 async function requestActivityNotificationSubscription(activityId) {
+  const subscription = await requestActivityNotificationSubscriptionConsent();
+  await recordActivityNotificationSubscription(activityId, subscription);
+
+  return subscription;
+}
+
+async function requestActivityNotificationSubscriptionConsent() {
   const templateId = getActivityNoticeTemplateId();
 
   if (!templateId) {
@@ -60,19 +67,33 @@ async function requestActivityNotificationSubscription(activityId) {
   const requestResult = await requestSubscribeMessage(wxRuntime, templateId);
   const status = normalizeSubscribeStatus(requestResult && requestResult[templateId]);
 
-  await call('recordNotificationSubscription', {
-    activityId,
-    templateKey: ACTIVITY_NOTICE_TEMPLATE_KEY,
-    templateId,
-    status
-  });
-
   return {
     configured: true,
     templateKey: ACTIVITY_NOTICE_TEMPLATE_KEY,
     templateId,
     status
   };
+}
+
+async function recordActivityNotificationSubscription(activityId, subscription = {}) {
+  if (
+    !activityId ||
+    !subscription.configured ||
+    subscription.skipped ||
+    !subscription.templateId
+  ) {
+    return {
+      skipped: true,
+      reason: 'subscription-not-recordable'
+    };
+  }
+
+  return call('recordNotificationSubscription', {
+    activityId,
+    templateKey: subscription.templateKey || ACTIVITY_NOTICE_TEMPLATE_KEY,
+    templateId: subscription.templateId,
+    status: normalizeSubscribeStatus(subscription.status)
+  });
 }
 
 function notifyActivityParticipants(activityId, notificationType) {
@@ -85,5 +106,7 @@ function notifyActivityParticipants(activityId, notificationType) {
 module.exports = {
   ACTIVITY_NOTICE_TEMPLATE_KEY,
   notifyActivityParticipants,
+  recordActivityNotificationSubscription,
+  requestActivityNotificationSubscriptionConsent,
   requestActivityNotificationSubscription
 };

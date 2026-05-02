@@ -1,6 +1,9 @@
 const { joinActivity } = require('../../services/registration-service');
 const { uploadFile } = require('../../services/cloud');
-const { requestActivityNotificationSubscription } = require('../../services/notification-service');
+const {
+  recordActivityNotificationSubscription,
+  requestActivityNotificationSubscriptionConsent
+} = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const {
   getAppLocale,
@@ -142,6 +145,7 @@ Page({
     }
 
     this.setData({ submitting: true });
+    const subscriptionPromise = requestActivityNotificationSubscriptionConsent().catch(() => null);
 
     try {
       let avatarUrl = this.data.avatarUrl || '';
@@ -160,7 +164,12 @@ Page({
       });
 
       markActivityDetailForRefresh(this.data.activityId);
-      await requestActivityNotificationSubscription(this.data.activityId).catch(() => null);
+      const subscription = await subscriptionPromise;
+      if (subscription) {
+        await recordActivityNotificationSubscription(this.data.activityId, subscription).catch(
+          () => null
+        );
+      }
 
       if (this.openerEventChannel && typeof this.openerEventChannel.emit === 'function') {
         this.openerEventChannel.emit('signupSuccess');

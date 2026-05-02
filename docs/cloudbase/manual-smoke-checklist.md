@@ -18,6 +18,8 @@
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
+- Confirm newly uploaded cover thumbnails display on a real device, not only in the DevTools simulator
+- If a thumbnail URL fails on a real device, confirm the card/detail page retries a fallback cover source before showing the placeholder
 
 ## Signup Flow
 
@@ -27,7 +29,8 @@
 - If the web-view page is blocked on a real device, confirm the insurance URL domain is configured as a mini program business domain
 - Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm join flow writes `registrations._id = activityId_openid`
-- Confirm the post-signup subscription prompt appears after a successful signup when an activity-notice template ID is configured
+- Confirm the subscription prompt appears during signup on a real device when an activity-notice template ID is configured
+- Confirm the signup still succeeds if the user declines the subscription prompt
 - Confirm `notification_subscriptions` records the user's accepted or declined choice
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
 - Confirm only one active signup per activity is allowed
