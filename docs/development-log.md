@@ -1149,3 +1149,24 @@ Verification:
 
 - targeted red/green coverage was added for Activity Join prefill, delayed-profile non-overwrite behavior, CloudBase profile updates, and local mock profile updates.
 - full regression suite passed: `50` test suites, `273` tests.
+
+## 2026-05-02 - Participant Copy List Includes Positions
+
+Organizer roster copying now includes preferred position choices when they are available.
+
+Delivered behavior:
+
+- `Copy participant names` still copies one participant per line in the current team/member order.
+- participants with preferred positions are copied as `Name (Position / Position)`.
+- participants without preferred positions are copied as plain names.
+- position text remains manager-only because the copy action is available only to organizers/admins, and regular participant detail data does not expose other members' positions.
+
+Why it matters:
+
+- organizers can paste a useful roster into WeChat groups or spreadsheets without manually retyping each player's position preferences.
+- the feature uses the already-loaded Activity Detail team view model and does not require a cloud-function change.
+
+Verification:
+
+- targeted red/green coverage was added for copied roster text with preferred positions.
+- full regression suite passed: `50` test suites, `273` tests.

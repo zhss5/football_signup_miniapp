@@ -603,14 +603,14 @@ describe('activity detail page', () => {
           {
             teamName: 'White',
             members: [
-              { signupName: 'Alex' },
+              { signupName: 'Alex', preferredPositions: ['前锋', '门将'] },
               { signupName: '  Ben  ' }
             ]
           },
           {
             teamName: 'Red',
             members: [
-              { displayName: 'Chris' },
+              { displayName: 'Chris', preferredPositionsText: '中场' },
               { signupName: '' }
             ]
           }
@@ -621,7 +621,7 @@ describe('activity detail page', () => {
     pageConfig.onCopyParticipantNames.call(ctx);
 
     expect(global.wx.setClipboardData).toHaveBeenCalledWith({
-      data: 'Alex\nBen\nChris',
+      data: 'Alex (前锋 / 门将)\nBen\nChris (中场)',
       success: expect.any(Function)
     });
     expect(global.wx.showToast).toHaveBeenCalledWith({

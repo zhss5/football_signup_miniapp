@@ -88,12 +88,33 @@ function buildParticipantNameList(teams = []) {
       const name = String(member.signupName || member.displayName || '').trim();
 
       if (name) {
-        names.push(name);
+        const positionsText = buildParticipantPositionsText(member);
+        names.push(positionsText ? `${name} (${positionsText})` : name);
       }
     });
 
     return names;
   }, []);
+}
+
+function buildParticipantPositionsText(member = {}) {
+  if (member.preferredPositionsVisible === false) {
+    return '';
+  }
+
+  const existingText = String(member.preferredPositionsText || '').trim();
+  if (existingText) {
+    return existingText;
+  }
+
+  if (!Array.isArray(member.preferredPositions)) {
+    return '';
+  }
+
+  return member.preferredPositions
+    .map(item => String(item || '').trim())
+    .filter(Boolean)
+    .join(' / ');
 }
 
 function buildMoveTargetOptions(teams = [], currentTeamId, translate) {

@@ -302,7 +302,7 @@ Current signup profile behavior:
 Current organizer roster behavior:
 
 - Activity Detail shows `Copy participant names` to viewers with registration-management permission.
-- copied text is one participant name per line in the current team/member display order.
+- copied text is one participant per line in the current team/member display order, with preferred positions appended as `Name (Position / Position)` when available.
 - empty rosters show a toast and do not write an empty clipboard value.
 - Activity Detail also lets organizers/admins add proxy participants to a selected team.
 - proxy participants use generated `proxy_...` user IDs and can be removed through the existing organizer/admin removal flow.

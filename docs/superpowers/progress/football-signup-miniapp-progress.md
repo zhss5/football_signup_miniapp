@@ -169,7 +169,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 ### 2.15 Organizer Participant Name Copy
 
 - Activity Detail shows a copy action to organizers/admins who can manage registrations
-- copied roster text is one participant name per line
+- copied roster text is one participant per line and includes preferred positions when available
 - participant names follow the current team/member order shown on the detail page
 - empty rosters show a hint and do not write an empty clipboard value
 
@@ -335,7 +335,7 @@ The MVP still has known non-blocking gaps:
 - add a minimal admin path to grant organizer access only if manual CloudBase edits become painful
 - validate activity editing on a real device after deploying `updateActivity`
 - completed in code: let organizers sign up participants on their behalf
-- completed in code: let organizers copy active participant names in one action
+- completed in code: let organizers copy active participant names and preferred positions in one action
 - completed in code: move players between teams
 - promote bench players into regular teams
 - improve organizer action grouping on the detail page

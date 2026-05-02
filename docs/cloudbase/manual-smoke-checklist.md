@@ -60,7 +60,7 @@
 - Confirm organizer/admin can move a participant to another non-full team
 - Confirm regular users cannot see or use member move controls
 - Confirm organizer/admin can remove a proxy participant after adding them
-- Confirm organizer/admin can copy all active participant names
+- Confirm organizer/admin can copy all active participant names, including preferred positions when available
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm confirmation notices use the optional notification reminder when the activity has one
