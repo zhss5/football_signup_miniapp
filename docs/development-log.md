@@ -1014,3 +1014,25 @@ Verification:
 
 - targeted red/green coverage was added for consent-before-signup order and cover-image fallback candidates.
 - full regression suite passed: `50` test suites, `264` tests.
+
+## 2026-05-02 - Mobile Temp Cover Upload Fix
+
+Real-device testing showed that newer activities had cover fields in the database but no matching files in CloudBase storage.
+
+Root cause:
+
+- mobile crop output can use `http://tmp/...` temporary file paths
+- the create/edit upload path treated all `http(s)://` values as already-persistent images and skipped CloudBase upload
+- the activity document was still created, leaving later devices with a temporary cover path that cannot be loaded
+
+Delivered behavior:
+
+- only `cloud://` file IDs are treated as already uploaded
+- `http://tmp/...`, `https://tmp/...`, and `wxfile://...` cover paths are uploaded to CloudBase before `createActivity` or `updateActivity`
+- this prevents new activities from being created with non-persistent temporary cover paths
+- old affected activities need their cover image reselected or their database cover fields repaired manually, because the files were never uploaded
+
+Verification:
+
+- added coverage for mobile HTTP temp cover paths.
+- full regression suite passed: `50` test suites, `265` tests.

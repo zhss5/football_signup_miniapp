@@ -76,6 +76,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - full-image crop stage with highlighted selection frame
 - cropped output reused as the runtime cover image
 - new uploads now generate both a detail cover and a smaller `coverThumbImage` for activity cards
+- real-device `http://tmp/...` crop outputs are uploaded to CloudBase instead of being stored as temporary paths
 
 ### 2.6 Activity Detail and Signup
 
@@ -252,7 +253,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `264` tests passed
+- result: `265` tests passed
 
 Covered areas include:
 

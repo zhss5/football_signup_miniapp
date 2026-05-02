@@ -359,6 +359,54 @@ describe('activity create submit flow', () => {
     );
   });
 
+  test('onSubmit uploads mobile HTTP temp cover paths before creating the activity', async () => {
+    uploadFile.mockImplementation((filePath, cloudPath) => {
+      if (cloudPath.startsWith('activity-cover-thumbs/')) {
+        return Promise.resolve('cloud://prod-env-123/activity-cover-thumbs/mobile-thumb.jpg');
+      }
+
+      return Promise.resolve('cloud://prod-env-123/activity-covers/mobile-cover.jpg');
+    });
+    createActivity.mockResolvedValue({ activityId: 'activity_123' });
+
+    const ctx = {
+      data: {
+        form: {
+          title: 'Thursday Match',
+          coverImage: 'http://tmp/mobile-cover.jpg',
+          coverThumbImage: 'http://tmp/mobile-cover-thumb.jpg',
+          imageList: ['http://tmp/mobile-cover.jpg']
+        },
+        canCreateActivity: true
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(uploadFile).toHaveBeenCalledWith(
+      'http://tmp/mobile-cover.jpg',
+      expect.stringMatching(/^activity-covers\/.+\.jpg$/)
+    );
+    expect(uploadFile).toHaveBeenCalledWith(
+      'http://tmp/mobile-cover-thumb.jpg',
+      expect.stringMatching(/^activity-cover-thumbs\/.+\.jpg$/)
+    );
+    expect(createActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coverImage: 'cloud://prod-env-123/activity-covers/mobile-cover.jpg',
+        coverThumbImage: 'cloud://prod-env-123/activity-cover-thumbs/mobile-thumb.jpg',
+        imageList: ['cloud://prod-env-123/activity-covers/mobile-cover.jpg']
+      })
+    );
+  });
+
   test('onSubmit highlights the location input when address validation fails', async () => {
     validateActivityDraft.mockImplementation(() => {
       throw new Error('Activity address is required');

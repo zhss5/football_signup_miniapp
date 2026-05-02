@@ -92,6 +92,10 @@ function buildCoverThumbCloudPath(filePath) {
   return `activity-cover-thumbs/${Date.now()}-${suffix}${extension}`;
 }
 
+function isCloudFileId(value) {
+  return typeof value === 'string' && value.startsWith('cloud://');
+}
+
 async function uploadActivityCover(payload) {
   const coverImage =
     payload.coverImage || (Array.isArray(payload.imageList) ? payload.imageList[0] : '');
@@ -101,12 +105,12 @@ async function uploadActivityCover(payload) {
     return payload;
   }
 
-  if (/^(cloud|https?):\/\//.test(coverImage)) {
+  if (isCloudFileId(coverImage)) {
     return payload;
   }
 
   const fileId = await uploadFile(coverImage, buildCoverCloudPath(coverImage));
-  const thumbFileId = coverThumbImage && !/^(cloud|https?):\/\//.test(coverThumbImage)
+  const thumbFileId = coverThumbImage && !isCloudFileId(coverThumbImage)
     ? await uploadFile(coverThumbImage, buildCoverThumbCloudPath(coverThumbImage))
     : coverThumbImage;
 

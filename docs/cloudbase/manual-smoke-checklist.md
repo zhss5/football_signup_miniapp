@@ -17,6 +17,7 @@
 - Confirm optional notification reminder is stored when entered
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
+- Confirm newly created real-device activities add new files under `activity-covers/` and `activity-cover-thumbs/`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
 - Confirm newly uploaded cover thumbnails display on a real device, not only in the DevTools simulator
 - If a thumbnail URL fails on a real device, confirm the card/detail page downloads a fallback CloudBase cover source, then tries the original `cloud://` file ID before showing the placeholder

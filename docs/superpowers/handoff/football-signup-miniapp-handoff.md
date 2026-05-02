@@ -21,6 +21,7 @@ The codebase supports:
 - shared cloud helper copying through `npm run copy:cloud-shared`
 - cover image upload to CloudBase storage with persistent `fileID`
 - automatic cover thumbnail upload to `coverThumbImage` for new/edited covers
+- real-device `http://tmp/...` crop outputs are uploaded to CloudBase and are not treated as persistent URLs
 - list pages prefer `coverThumbImage` and detail pages prefer `coverImage`, with mutual fallback when one display URL cannot be resolved
 - list cards and Activity Detail can retry direct CloudBase file IDs when temporary HTTPS cover URLs fail to load on real devices
 - fallback CloudBase file IDs are downloaded with `wx.cloud.downloadFile` and rendered from local temporary file paths
@@ -104,6 +105,13 @@ Latest real-device subscription and cover-display fix:
 - upload a new mini program frontend build so signup requests subscription consent before the `joinActivity` cloud call.
 - upload a new mini program frontend build so list cards and Activity Detail can download fallback CloudBase cover sources when the first image URL fails.
 - keep `recordNotificationSubscription` deployed; the frontend still records accepted/declined subscription choices through that function after signup succeeds.
+
+Latest mobile cover-upload fix:
+
+- mobile crop output may be `http://tmp/...`; it must be treated as a temporary local file, not a persistent cover URL.
+- only `cloud://` cover values are skipped as already uploaded.
+- upload a new mini program frontend build before creating more activities with covers.
+- affected existing activities whose cover fields point to temporary paths need manual repair or reselecting/reuploading the cover image, because their files were never uploaded to CloudBase.
 
 Earlier rollout reference:
 
@@ -227,7 +235,7 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `264` tests passed
+- `265` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -247,6 +255,7 @@ Current cover-thumbnail progress:
 
 - the cover crop page exports both the detail cover and a smaller thumbnail file
 - create/edit activity uploads thumbnails to `activity-cover-thumbs/`
+- create/edit activity uploads mobile `http://tmp/...` crop outputs instead of storing them directly
 - `createActivity`, `updateActivity`, and the local mock persist `coverThumbImage`
 - historical backfill is paused; do not deploy a backfill function for now
 
