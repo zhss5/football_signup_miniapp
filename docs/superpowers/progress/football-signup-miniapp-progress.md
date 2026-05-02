@@ -268,6 +268,7 @@ Covered areas include:
 - cover display source preference and fallback behavior
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior
+- activity description display on Activity Detail
 - organizer proxy signup behavior
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior

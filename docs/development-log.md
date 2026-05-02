@@ -1082,3 +1082,18 @@ Verification:
 
 - added a UTC-runtime regression test that expects `2026-05-03T12:00:00.000Z` to render as `2026-05-03 20:00`.
 - full regression suite passed: `50` test suites, `266` tests.
+
+## 2026-05-02 - Activity Description Displayed on Detail Page
+
+Activity descriptions are now visible to participants.
+
+Delivered behavior:
+
+- Activity Detail trims `activities.description` and stores it as `activityDescriptionText`
+- a description card is shown below the main activity hero only when the trimmed text is non-empty
+- empty descriptions do not add an empty section to the page
+
+Verification:
+
+- added page coverage for trimming the description and rendering the description card binding.
+- full regression suite passed: `50` test suites, `268` tests.

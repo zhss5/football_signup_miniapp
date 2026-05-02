@@ -19,6 +19,9 @@ jest.mock('../../../miniprogram/services/notification-service', () => ({
   notifyActivityParticipants: jest.fn()
 }));
 
+const fs = require('fs');
+const path = require('path');
+
 describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
@@ -324,6 +327,50 @@ describe('activity detail page', () => {
 
     expect(ctx.data.locationMapVisible).toBe(false);
     expect(ctx.data.locationMapMarkers).toEqual([]);
+  });
+
+  test('reload trims activity description for detail display', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        description: '  Bring both kits and arrive 15 minutes early.  ',
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.activityDescriptionText).toBe('Bring both kits and arrive 15 minutes early.');
+  });
+
+  test('activity detail template renders the activity description card', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{activityDescriptionText}}"');
+    expect(wxml).toContain('{{i18n.activity.descriptionTitle}}');
+    expect(wxml).toContain('{{activityDescriptionText}}');
   });
 
   test('onConfirmActivityProceeding confirms the activity, notifies subscribers, and reloads detail', async () => {

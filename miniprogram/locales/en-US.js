@@ -47,6 +47,7 @@ module.exports = {
       copyHint: 'Copy the insurance link and open it in WeChat or a browser.',
       copyAction: 'Insurance purchase link \ud83d\udd17'
     },
+    descriptionTitle: 'Description',
     actions: {
       edit: 'Edit',
       copyParticipantNames: 'Copy participant names',

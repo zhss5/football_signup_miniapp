@@ -152,7 +152,8 @@ Page({
     activityCoverCandidates: [],
     activityCoverImage: '',
     activityCoverLoadFailed: false,
-    activityCoverSourceIndex: 0
+    activityCoverSourceIndex: 0,
+    activityDescriptionText: ''
   },
 
   async onLoad(query) {
@@ -190,9 +191,11 @@ Page({
     const detail = await getActivityDetail(this.data.activityId);
     const activityWithDisplayCover = await resolveActivityCoverImage(detail.activity);
     const activityCoverCandidates = buildCoverCandidates(activityWithDisplayCover);
+    const activityDescriptionText = String(activityWithDisplayCover.description || '').trim();
     this.setData({
       ...detail,
       activity: activityWithDisplayCover,
+      activityDescriptionText,
       activityCoverCandidates,
       activityCoverImage: activityCoverCandidates[0] || '',
       activityCoverLoadFailed: false,

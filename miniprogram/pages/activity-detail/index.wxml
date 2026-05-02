@@ -39,6 +39,11 @@
     </view>
   </view>
 
+  <view wx:if="{{activityDescriptionText}}" class="description-card">
+    <text class="description-title">{{i18n.activity.descriptionTitle}}</text>
+    <text class="description-copy">{{activityDescriptionText}}</text>
+  </view>
+
   <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
     <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onOpenInsuranceLink">
       {{i18n.activity.insurance.copyAction}}
