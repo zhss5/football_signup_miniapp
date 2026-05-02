@@ -267,8 +267,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `50` test suites passed
-- result: `285` tests passed
+- result: `51` test suites passed
+- result: `294` tests passed
 
 Covered areas include:
 
@@ -288,6 +288,7 @@ Covered areas include:
 - compact member action button border rendering
 - preferred-position chip border rendering
 - signup profile prefill from saved user profile data
+- signup-name normalization for emoji/special-character names, embedded line breaks, and length limits
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
 - organizer proxy signup behavior

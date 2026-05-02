@@ -186,3 +186,97 @@ test('addProxyRegistration rejects regular users', async () => {
 
   jest.dontMock('wx-server-sdk');
 });
+
+test('addProxyRegistration normalizes proxy participant names', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                _id: 'activity_1',
+                organizerOpenId: 'openid_owner',
+                status: 'published',
+                signupDeadlineAt: '2026-04-20T10:00:00.000Z',
+                joinedCount: 0,
+                signupLimitTotal: 10
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                _id: 'team_white',
+                activityId: 'activity_1',
+                joinedCount: 0,
+                maxMembers: 6,
+                status: 'active'
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                roles: ['user', 'organizer']
+              }
+            })
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            set: setRegistration
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_owner' })),
+    database: jest.fn(() => ({
+      runTransaction: callback => callback(transaction)
+    }))
+  }));
+
+  const addProxyRegistration = require('../../cloudfunctions/addProxyRegistration/index');
+
+  await addProxyRegistration.main(
+    {
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      signupName: '  Guest\nPlayer😀123456789  '
+    },
+    {},
+    {
+      now: '2026-04-19T10:00:00.000Z',
+      idSuffix: 'abc123'
+    }
+  );
+
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      signupName: 'Guest Player😀123'
+    })
+  });
+
+  jest.dontMock('wx-server-sdk');
+});

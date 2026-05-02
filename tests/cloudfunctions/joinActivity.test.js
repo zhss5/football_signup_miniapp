@@ -304,3 +304,100 @@ test('joinActivity preserves optional phone fields when a future signup flow pro
 
   jest.dontMock('wx-server-sdk');
 });
+
+test('joinActivity normalizes signup names with line breaks and length limits', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const updateUser = jest.fn().mockResolvedValue({});
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'published',
+                signupDeadlineAt: '2026-04-20T10:00:00.000Z',
+                joinedCount: 0,
+                signupLimitTotal: 10
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 0,
+                maxMembers: 6
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({ data: null }),
+            set: setRegistration
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                preferredName: '',
+                avatarUrl: '',
+                roles: ['user'],
+                createdAt: '2026-04-01T10:00:00.000Z'
+              }
+            }),
+            update: updateUser
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_a' })),
+    database: jest.fn(() => ({
+      runTransaction: callback => callback(transaction)
+    }))
+  }));
+
+  const isolatedJoinActivity = require('../../cloudfunctions/joinActivity/index');
+
+  await isolatedJoinActivity.main(
+    {
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      signupName: '  Alex\nBen😀12345678901234567890  '
+    },
+    {},
+    { now: '2026-04-19T10:00:00.000Z' }
+  );
+
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      signupName: 'Alex Ben😀1234567'
+    })
+  });
+  expect(updateUser).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      preferredName: 'Alex Ben😀1234567'
+    })
+  });
+
+  jest.dontMock('wx-server-sdk');
+});

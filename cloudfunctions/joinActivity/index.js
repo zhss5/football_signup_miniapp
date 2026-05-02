@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
-const { validateSignupPayload } = require('./validators');
+const { normalizeSignupName, validateSignupPayload } = require('./validators');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
 
@@ -105,7 +105,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = cloud.database();
   const registrationId = `${event.activityId}_${openid}`;
   const stamp = nowIso(deps.now);
-  const signupName = normalizeText(event.signupName);
+  const signupName = normalizeSignupName(event.signupName);
   const phone = normalizeText(event.phone);
   const phoneSource = phone ? normalizeSource(event.phoneSource) : '';
   const avatarUrl = normalizeText(event.avatarUrl);

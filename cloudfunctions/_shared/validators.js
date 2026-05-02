@@ -1,4 +1,14 @@
 const MAX_ACTIVITY_IMAGES = 1;
+const MAX_SIGNUP_NAME_LENGTH = 16;
+
+function normalizeSignupName(value) {
+  const normalizedWhitespace = String(value || '')
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return Array.from(normalizedWhitespace).slice(0, MAX_SIGNUP_NAME_LENGTH).join('');
+}
 
 function parseDate(value, fieldName) {
   const stamp = Date.parse(value);
@@ -79,7 +89,7 @@ function validateSignupPayload(payload) {
     throw new Error('teamId is required');
   }
 
-  if (!payload.signupName || !payload.signupName.trim()) {
+  if (!normalizeSignupName(payload.signupName)) {
     throw new Error('signupName is required');
   }
 
@@ -87,6 +97,8 @@ function validateSignupPayload(payload) {
 }
 
 module.exports = {
+  MAX_SIGNUP_NAME_LENGTH,
+  normalizeSignupName,
   validateActivityDraft,
   validateSignupPayload
 };

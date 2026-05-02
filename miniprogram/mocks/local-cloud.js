@@ -5,6 +5,7 @@ const {
   normalizePreferredPositions
 } = require('../utils/positions');
 const { canCreateActivity, canEditActivity } = require('../utils/roles');
+const { normalizeSignupName } = require('../utils/signup-name');
 const { validateActivityDraft } = require('../utils/validators');
 
 function validateSignupPayload(payload) {
@@ -16,7 +17,7 @@ function validateSignupPayload(payload) {
     throw new Error('teamId is required');
   }
 
-  if (!payload.signupName || !payload.signupName.trim()) {
+  if (!normalizeSignupName(payload.signupName)) {
     throw new Error('signupName is required');
   }
 
@@ -496,7 +497,7 @@ function createLocalCloudClient(options = {}) {
     const team = state.teams[payload.teamId];
     const registrationId = `${payload.activityId}_${openid}`;
     const current = state.registrations[registrationId];
-    const signupName = payload.signupName.trim();
+    const signupName = normalizeSignupName(payload.signupName);
     const phone = String(payload.phone || '').trim();
     const phoneSource = phone ? normalizeSource(payload.phoneSource) : '';
     const avatarUrl = String(payload.avatarUrl || '').trim();
@@ -584,7 +585,7 @@ function createLocalCloudClient(options = {}) {
     const stamp = now();
     const activity = state.activities[payload.activityId];
     const team = state.teams[payload.teamId];
-    const signupName = payload.signupName.trim();
+    const signupName = normalizeSignupName(payload.signupName);
 
     if (!activity || activity.status === 'deleted') {
       throw new Error('Activity not found');

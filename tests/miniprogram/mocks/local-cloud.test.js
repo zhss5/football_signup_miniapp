@@ -203,7 +203,7 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   const added = await ownerClient.call('addProxyRegistration', {
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
-    signupName: 'Guest Player'
+    signupName: '  Guest\nPlayer😀123456789  '
   });
   const detailAfter = await ownerClient.call('getActivityDetail', {
     activityId: created.activityId
@@ -217,7 +217,7 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   expect(detailAfter.activity.joinedCount).toBe(1);
   expect(detailAfter.teams[0].joinedCount).toBe(1);
   expect(detailAfter.teams[0].members[0]).toMatchObject({
-    signupName: 'Guest Player',
+    signupName: 'Guest Player😀123',
     userOpenId: expect.stringMatching(/^proxy_/),
     proxyRegistration: true
   });

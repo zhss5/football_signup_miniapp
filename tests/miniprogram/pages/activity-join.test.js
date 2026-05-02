@@ -180,6 +180,37 @@ describe('activity join page', () => {
     });
   });
 
+  test('normalizes the signup name before submitting', async () => {
+    joinActivity.mockResolvedValue({ status: 'joined' });
+
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onLoad.call(ctx, {
+      activityId: 'activity_123',
+      teamId: 'team_red',
+      teamName: 'Red'
+    });
+    ctx.setData({
+      signupName: '  Alex\nBen😀12345678901234567890  '
+    });
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(joinActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        signupName: 'Alex Ben😀1234567'
+      })
+    );
+  });
+
   test('prefills signup name and avatar from the saved user profile', async () => {
     ensureUserProfile.mockResolvedValue({
       user: {

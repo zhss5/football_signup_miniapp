@@ -4,13 +4,9 @@ const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
 const { nowIso } = require('./time');
-const { validateSignupPayload } = require('./validators');
+const { normalizeSignupName, validateSignupPayload } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
-
-function normalizeText(value) {
-  return String(value || '').trim();
-}
 
 function buildProxyUserOpenId(activityId, stamp, deps = {}) {
   const suffix =
@@ -35,7 +31,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const db = deps.db || cloud.database();
   const stamp = nowIso(deps.now);
-  const signupName = normalizeText(event.signupName);
+  const signupName = normalizeSignupName(event.signupName);
 
   return db.runTransaction(async transaction => {
     const activityRes = await transaction

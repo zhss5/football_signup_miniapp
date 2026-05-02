@@ -1338,3 +1338,26 @@ TODO:
 Verification:
 
 - documentation-only change; no runtime behavior changed.
+
+## 2026-05-02 - Signup Name Normalization
+
+Signup names now have consistent lightweight cleanup before storage.
+
+Delivered behavior:
+
+- signup names trim leading and trailing whitespace.
+- internal line breaks and repeated whitespace are collapsed into a single space.
+- names are limited to 16 Unicode code points.
+- emoji, Chinese names, English names, numbers, and common symbols remain allowed.
+- the active participant signup flow, organizer proxy signup flow, and local mock use the same normalization behavior.
+
+Why it matters:
+
+- participant names with emoji or common symbols remain usable.
+- copied rosters no longer get broken by embedded line breaks.
+- extremely long names are kept from pushing the roster layout too far.
+
+Verification:
+
+- targeted red/green coverage was added for the signup-name utility, Activity Join submit payload, `joinActivity`, `addProxyRegistration`, and the local mock.
+- full regression suite passed: `51` test suites, `294` tests.

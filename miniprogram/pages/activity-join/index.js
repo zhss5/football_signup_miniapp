@@ -11,6 +11,7 @@ const {
   buildPositionOptions,
   normalizePreferredPositions
 } = require('../../utils/positions');
+const { normalizeSignupName } = require('../../utils/signup-name');
 const {
   getAppLocale,
   getMessages,
@@ -186,7 +187,7 @@ Page({
 
   async onSubmit() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
-    const signupName = this.data.signupName.trim();
+    const signupName = normalizeSignupName(this.data.signupName);
 
     if (!signupName) {
       wx.showToast({ title: translate('errors.signupNameRequired'), icon: 'none' });
