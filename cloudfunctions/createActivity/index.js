@@ -77,6 +77,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     location: event.location || null,
     description: event.description || '',
     insuranceLink: String(event.insuranceLink || '').trim(),
+    notificationHint: String(event.notificationHint || '').trim(),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
     imageList,

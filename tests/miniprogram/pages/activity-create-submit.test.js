@@ -127,6 +127,18 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('{{i18n.activityCreate.insuranceLink}}');
   });
 
+  test('renders an optional notification hint field for confirmation notices', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('data-field="notificationHint"');
+    expect(wxml).toContain('{{i18n.activityCreate.notificationHint}}');
+  });
+
   test('onSubmit blocks users without create permission', async () => {
     const ctx = {
       data: {

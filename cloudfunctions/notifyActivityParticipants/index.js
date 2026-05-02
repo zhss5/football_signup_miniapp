@@ -31,12 +31,15 @@ function formatDateTime(value) {
 function buildMessageData(activity, notificationType) {
   const statusText =
     notificationType === 'proceeding' ? '\u786e\u8ba4\u4e3e\u884c' : '\u6d3b\u52a8\u53d6\u6d88';
+  const customHint = String(activity.notificationHint || '').trim();
   const location = clip(
     activity.addressName || activity.addressText || '\u6d3b\u52a8\u5730\u70b9',
     12
   );
   const reminder =
-    notificationType === 'proceeding'
+    notificationType === 'proceeding' && customHint
+      ? customHint
+      : notificationType === 'proceeding'
       ? `\u5730\u70b9\uff1a${location}\uff0c\u8bf7\u51c6\u65f6\u53c2\u52a0`
       : `\u5730\u70b9\uff1a${location}\uff0c\u6d3b\u52a8\u5df2\u53d6\u6d88`;
 

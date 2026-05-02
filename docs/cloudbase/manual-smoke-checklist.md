@@ -14,6 +14,7 @@
 - Confirm activity creation writes the related `activity_teams` documents
 - Confirm map-selected address fields are stored
 - Confirm optional insurance link is stored when entered
+- Confirm optional notification reminder is stored when entered
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
@@ -52,8 +53,10 @@
 - Confirm organizer/admin can copy all active participant names
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
+- Confirm confirmation notices use the optional notification reminder when the activity has one
 - Confirm `notification_logs` records proceeding notification send results for subscribed active participants
 - Confirm organizer cancel changes activity status to `cancelled`
+- Confirm cancellation notices use the default cancellation reminder instead of the confirmation reminder
 - Confirm organizer cancellation sends cancellation notices to subscribed active participants and logs the results
 - Confirm organizer soft delete is allowed only when `joinedCount = 0`
 - Confirm deleted activities remain visible to the organizer in Created history only

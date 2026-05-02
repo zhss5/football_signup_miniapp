@@ -34,6 +34,7 @@ test('local cloud client can create an activity and list it on home', async () =
     coverThumbImage: 'wxfile://cover-1-thumb.jpg',
     imageList: ['wxfile://cover-1.png'],
     insuranceLink: 'https://insurance.example.com/apply',
+    notificationHint: 'Bring both kits',
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
@@ -55,6 +56,7 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].imageList).toEqual(['wxfile://cover-1.png']);
   expect(list.items[0].coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
   expect(list.items[0].insuranceLink).toBe('https://insurance.example.com/apply');
+  expect(list.items[0].notificationHint).toBe('Bring both kits');
 });
 
 test('local cloud client blocks regular users from creating activities when roles are restricted', async () => {
@@ -135,6 +137,7 @@ test('local cloud client lets an organizer update an activity without changing r
     signupDeadlineAt: '2026-04-27T19:30:00.000Z',
     addressText: 'New Field',
     description: 'Updated notes',
+    notificationHint: 'Updated reminder',
     coverImage: '',
     imageList: [],
     signupLimitTotal: 16,
@@ -151,6 +154,7 @@ test('local cloud client lets an organizer update an activity without changing r
     title: 'Updated Saturday',
     addressText: 'New Field',
     signupLimitTotal: 16,
+    notificationHint: 'Updated reminder',
     joinedCount: 1,
     requirePhone: false
   });

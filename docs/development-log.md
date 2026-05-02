@@ -961,3 +961,32 @@ Verification:
 
 - added coverage for `buildMessageData` so the sender mapping is locked to the approved template fields
 - full regression suite passed: `50` test suites, `259` tests.
+
+## 2026-05-02 - Confirmation Notification Reminder Field
+
+Activity creation and editing added an optional notification reminder field.
+
+Decision:
+
+- organizers can enter a custom `notificationHint` when creating or editing an activity
+- confirmation/proceeding notices use the custom reminder when it is present
+- cancellation notices intentionally keep the default cancellation reminder text, so a reminder written for a normal activity is not reused for a cancellation
+
+Why it mattered:
+
+- lets organizers tailor the "activity will proceed" message without changing the WeChat subscription template
+- keeps the first cancellation flow predictable and avoids sending inappropriate custom text after cancellation
+- stores the reminder as normal activity data so notification sending can fill the approved template fields later
+
+Related:
+
+- `miniprogram/pages/activity-create/index.wxml`
+- `miniprogram/utils/activity-draft.js`
+- `cloudfunctions/createActivity/index.js`
+- `cloudfunctions/updateActivity/index.js`
+- `cloudfunctions/notifyActivityParticipants/index.js`
+
+Verification:
+
+- targeted red/green coverage was added for draft payloads, Create page rendering, create/update cloud functions, local mock storage, and notification message text.
+- full regression suite passed: `50` test suites, `261` tests.

@@ -54,6 +54,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - signup deadline date and time
 - invite code
 - optional insurance signup link
+- optional notification reminder for confirmation notices
 - description
 - total signup limit
 - dynamic team setup
@@ -209,8 +210,10 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - the new `recordNotificationSubscription` cloud function stores accepted or declined subscription choices in `notification_subscriptions`
 - Activity Detail shows `Confirm Activity` to organizers/admins while a published activity is unconfirmed
 - confirming an activity stores confirmation metadata, shows an in-app confirmed state, and sends proceeding notices to subscribed active participants
+- confirmation notices use the activity's optional `notificationHint` when present
 - confirmed activities remain joinable until normal signup rules close them
 - cancellation sends cancellation notices to subscribed active participants
+- cancellation notices keep the default cancellation reminder text instead of reusing the confirmation reminder
 - the new `notifyActivityParticipants` cloud function logs per-recipient results in `notification_logs` and skips duplicate sends for the same recipient/type
 - local mock mode implements the same subscription and notification summary behavior
 
@@ -236,6 +239,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activity creation now starts from one team instead of two
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
+- confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
 
 ## 4. Verification Status
 
@@ -243,7 +247,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `259` tests passed
+- result: `261` tests passed
 
 Covered areas include:
 
@@ -264,6 +268,7 @@ Covered areas include:
 - one-team default activity setup behavior
 - optional insurance-link create/edit/detail web-view opening behavior
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
+- notification reminder persistence and confirmation-message reminder behavior
 
 ## 4.1 Current Media Progress
 
@@ -344,6 +349,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: send cancellation notices when an organizer cancels an activity
 - completed in code: send only to active registrations that accepted the relevant subscription
 - completed in code: log per-recipient send results and prevent duplicate sends for the same notification type
+- completed in code: use an organizer-provided notification reminder for confirmation notices while keeping cancellation reminder text default
 - pending operation: configure the actual WeChat template ID and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 

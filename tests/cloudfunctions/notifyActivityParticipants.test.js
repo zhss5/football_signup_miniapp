@@ -81,6 +81,26 @@ test('buildMessageData maps activity data to the configured training reminder te
   });
 });
 
+test('buildMessageData uses the organizer notification hint for proceeding notices only', () => {
+  const activity = {
+    title: 'Saturday 8-10',
+    startAt: new Date(2026, 3, 26, 20, 0).toISOString(),
+    addressName: 'Half Stone',
+    notificationHint: '请提前10分钟到场，带深浅两套衣服'
+  };
+
+  expect(notifyActivityParticipants.buildMessageData(activity, 'proceeding')).toMatchObject({
+    thing7: {
+      value: '请提前10分钟到场，带深浅两套衣服'
+    }
+  });
+  expect(notifyActivityParticipants.buildMessageData(activity, 'cancelled')).toMatchObject({
+    thing7: {
+      value: '地点：Half Stone，活动已取消'
+    }
+  });
+});
+
 test('notifyActivityParticipants confirms the activity and sends proceeding notices to accepted joined users once', async () => {
   const fakeDb = createFakeDb({
     activities: {

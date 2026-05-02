@@ -32,6 +32,7 @@ The codebase supports:
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
 - optional activity insurance link creation, editing, and Activity Detail web-view opening
+- optional activity notification reminder creation and editing
 - activity confirmation state with organizer/admin-triggered `Confirm Activity`
 - signup subscription opt-in and cloud-function-backed notification records
 - organizer/admin-triggered proceeding and cancellation notices for subscribed active participants
@@ -85,10 +86,12 @@ Latest activity-notification change:
 - `createActivity` now initializes `confirmStatus: pending`, `confirmedAt: ''`, and `confirmedByOpenId: ''`.
 - successful signup requests the configured activity-notice subscription template and records the user choice through `recordNotificationSubscription`.
 - Activity Detail now shows `Confirm Activity` to organizers/admins for unconfirmed published activities.
+- Create/Edit Activity now stores an optional `notificationHint` for confirmation notices.
 - `notifyActivityParticipants` confirms or cancels the activity, sends subscribed active participants the relevant WeChat subscription message, and writes per-recipient logs.
+- proceeding notices use `notificationHint` when present; cancellation notices keep the default cancellation reminder text.
 - duplicate sends are skipped per `activityId + notificationType + recipientOpenId`.
 - configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only config before expecting real subscription prompts or sends.
-- deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`.
+- deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, `updateActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`.
 - upload a new mini program frontend build so the subscription prompt, confirmed banner, and organizer action are available on device.
 
 Earlier rollout reference:
@@ -213,9 +216,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `259` tests passed
+- `261` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -291,6 +294,7 @@ Current activity notification behavior:
 - confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.
 - cancellation closes signup and attempts to send cancellation notices to subscribed active participants.
 - notification attempts are logged in `notification_logs`; duplicate sends for the same notification type and recipient are skipped.
+- Create/Edit Activity can store a custom `notificationHint`; proceeding notices use it in the reminder field when present, while cancellation notices still use the default cancellation reminder.
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 
 Problems encountered during cover-display testing:
@@ -326,8 +330,8 @@ Continue in this order:
 10. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - add the real template ID to local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
-   - deploy `recordNotificationSubscription` and `notifyActivityParticipants`
-   - validate signup subscription prompt, confirmation notice, cancellation notice, and duplicate-send skipping on a real device
+   - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `updateActivity`
+   - validate signup subscription prompt, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 13. Plan later mini program backlog items:

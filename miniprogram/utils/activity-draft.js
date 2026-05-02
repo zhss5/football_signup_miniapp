@@ -48,6 +48,7 @@ function createDefaultActivityForm(options = {}) {
     location: null,
     description: '',
     insuranceLink: '',
+    notificationHint: '',
     coverImage: '',
     coverThumbImage: '',
     imageList: [],
@@ -98,6 +99,7 @@ function buildActivityPayload(form) {
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
     insuranceLink: String(form.insuranceLink || '').trim(),
+    notificationHint: String(form.notificationHint || '').trim(),
     coverImage,
     coverThumbImage,
     imageList
@@ -132,6 +134,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
     location: activity.location || null,
     description: activity.description || '',
     insuranceLink: activity.insuranceLink || '',
+    notificationHint: activity.notificationHint || '',
     coverImage: imageList[0] || activity.coverImage || '',
     coverThumbImage: activity.coverThumbImage || '',
     imageList,
