@@ -44,6 +44,7 @@ describe('activity card component', () => {
     expect(js).toContain('coverSourceIndex');
     expect(js).toContain('downloadFile');
     expect(js).toContain('resolveCoverCandidate');
+    expect(js).toContain('return tempFilePath || candidate');
     expect(js).toContain('onCoverError');
     expect(wxss).toContain('.cover-placeholder');
   });

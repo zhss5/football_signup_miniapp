@@ -1007,6 +1007,7 @@ Delivered behavior:
 - the accepted or declined subscription result is recorded only after signup succeeds
 - activity cards and Activity Detail keep multiple cover candidates, including resolved temporary URLs and direct CloudBase file IDs, and move to the next candidate when image loading fails
 - when a direct CloudBase file ID is the fallback candidate, the frontend now downloads it with `wx.cloud.downloadFile` and renders the local temporary file path
+- if that download fails, the frontend still tries the original `cloud://` file ID before giving up
 - no cloud function code change is required for this fix, but the frontend must be uploaded again; `recordNotificationSubscription` still needs to exist in CloudBase
 
 Verification:

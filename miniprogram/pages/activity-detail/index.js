@@ -132,7 +132,8 @@ async function resolveCoverCandidate(candidate) {
     return candidate || '';
   }
 
-  return downloadFile(candidate).catch(() => '');
+  const tempFilePath = await downloadFile(candidate).catch(() => '');
+  return tempFilePath || candidate;
 }
 
 Page({

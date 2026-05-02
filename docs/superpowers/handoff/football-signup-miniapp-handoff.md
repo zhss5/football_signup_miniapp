@@ -24,6 +24,7 @@ The codebase supports:
 - list pages prefer `coverThumbImage` and detail pages prefer `coverImage`, with mutual fallback when one display URL cannot be resolved
 - list cards and Activity Detail can retry direct CloudBase file IDs when temporary HTTPS cover URLs fail to load on real devices
 - fallback CloudBase file IDs are downloaded with `wx.cloud.downloadFile` and rendered from local temporary file paths
+- if fallback download fails, the original `cloud://` file ID is still attempted before the placeholder is shown
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -238,7 +239,7 @@ Current cover-display progress:
 - Activity card and detail templates render managed cover candidates instead of directly binding stored `cloud://` fields.
 - Home/My list cards resolve `coverThumbImage` first and fall back to `coverImage`.
 - Activity Detail resolves `coverImage` first and falls back to `coverThumbImage`.
-- If a resolved temporary HTTPS URL fails to load on a real device, list cards and Activity Detail download the fallback CloudBase file ID and render the returned local temporary file path before showing the placeholder.
+- If a resolved temporary HTTPS URL fails to load on a real device, list cards and Activity Detail download the fallback CloudBase file ID and render the returned local temporary file path; if the download fails, they still try the original `cloud://` file ID before showing the placeholder.
 - The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
 - Documentation records the CloudBase storage permission investigation and the CloudBase cost review checkpoint.
 

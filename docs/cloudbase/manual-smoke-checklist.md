@@ -19,7 +19,7 @@
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
 - Confirm newly uploaded cover thumbnails display on a real device, not only in the DevTools simulator
-- If a thumbnail URL fails on a real device, confirm the card/detail page downloads a fallback CloudBase cover source before showing the placeholder
+- If a thumbnail URL fails on a real device, confirm the card/detail page downloads a fallback CloudBase cover source, then tries the original `cloud://` file ID before showing the placeholder
 
 ## Signup Flow
 

@@ -195,7 +195,16 @@ function downloadFile(fileID) {
     return Promise.resolve('');
   }
 
-  return wxRuntime.cloud.downloadFile({ fileID }).then(res => (res && res.tempFilePath) || '');
+  return wxRuntime.cloud
+    .downloadFile({ fileID })
+    .then(res => (res && res.tempFilePath) || '')
+    .catch(error => {
+      logCloudDiagnostic('download-file:failure', {
+        errorText: formatErrorText(error),
+        error: summarizeError(error)
+      });
+      throw error;
+    });
 }
 
 function buildIdentityFileUrlMap(fileIds) {

@@ -20,5 +20,6 @@ describe('activity detail page hero', () => {
     );
     expect(js).toContain('downloadFile');
     expect(js).toContain('resolveCoverCandidate');
+    expect(js).toContain('return tempFilePath || candidate');
   });
 });

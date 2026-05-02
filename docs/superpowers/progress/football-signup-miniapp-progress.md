@@ -143,6 +143,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - Activity Detail prefers the full `coverImage` and falls back to `coverThumbImage`
 - list cards and Activity Detail retain direct CloudBase file IDs as backup image sources when temporary HTTPS cover URLs fail on real devices
 - CloudBase fallback file IDs are downloaded with `wx.cloud.downloadFile` and rendered as local temporary file paths
+- if fallback download fails, the original `cloud://` file ID is still attempted before the placeholder is shown
 - historical CloudBase cover backfill is deferred; current scope is new uploads only
 
 ### 2.13 Signup Phone Removal
