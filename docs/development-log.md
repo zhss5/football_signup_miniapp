@@ -1062,3 +1062,23 @@ Verification:
 
 - targeted red/green coverage was added for both notification cloud functions.
 - full regression suite passed: `50` test suites, `265` tests.
+
+## 2026-05-02 - Subscription Notification Timezone Fix
+
+Real-device notification testing showed the subscription-message appointment time was eight hours early.
+
+Root cause:
+
+- activity times are stored as ISO timestamps converted from China local time
+- the CloudBase cloud function runtime formatted `Date` values with the server timezone
+- in the UTC runtime, a China-time activity at `20:00` was formatted as `12:00`
+
+Delivered behavior:
+
+- `notifyActivityParticipants` now formats subscription-message time fields in China local time explicitly
+- the fix only changes the notification payload; stored activity times and signup/deadline checks remain unchanged
+
+Verification:
+
+- added a UTC-runtime regression test that expects `2026-05-03T12:00:00.000Z` to render as `2026-05-03 20:00`.
+- full regression suite passed: `50` test suites, `266` tests.

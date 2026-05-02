@@ -1,3 +1,4 @@
+const { execFileSync } = require('child_process');
 const notifyActivityParticipants = require('../../cloudfunctions/notifyActivityParticipants/index');
 
 function createCollection(dataByCollection, writes) {
@@ -79,6 +80,26 @@ test('buildMessageData maps activity data to the configured training reminder te
       value: '地点：Half Stone，请准时参加'
     }
   });
+});
+
+test('buildMessageData formats notification time in China local time under UTC runtime', () => {
+  const script = `
+    const notify = require('./cloudfunctions/notifyActivityParticipants/index');
+    const data = notify.buildMessageData({
+      title: 'May 3 training',
+      startAt: '2026-05-03T12:00:00.000Z',
+      addressName: 'Hongguan'
+    }, 'proceeding');
+    process.stdout.write(data.time2.value);
+  `;
+
+  const output = execFileSync(process.execPath, ['-e', script], {
+    cwd: process.cwd(),
+    env: { ...process.env, TZ: 'UTC' },
+    encoding: 'utf8'
+  });
+
+  expect(output).toBe('2026-05-03 20:00');
 });
 
 test('buildMessageData uses the organizer notification hint for proceeding notices only', () => {

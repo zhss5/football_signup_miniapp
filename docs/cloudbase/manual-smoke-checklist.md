@@ -59,6 +59,7 @@
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm confirmation notices use the optional notification reminder when the activity has one
+- Confirm the subscription notification appointment time matches the activity's China local start time
 - If confirmation fails with `DATABASE_COLLECTION_NOT_EXIST`, confirm `notifyActivityParticipants` was redeployed and both `notification_subscriptions` and `notification_logs` exist
 - Confirm `notification_logs` records proceeding notification send results for subscribed active participants
 - Confirm organizer cancel changes activity status to `cancelled`

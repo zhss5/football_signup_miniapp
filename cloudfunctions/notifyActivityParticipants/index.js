@@ -14,6 +14,7 @@ const NOTIFICATION_COLLECTIONS = [
   COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS,
   COLLECTIONS.NOTIFICATION_LOGS
 ];
+const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
 let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
@@ -31,7 +32,9 @@ function formatDateTime(value) {
     return '';
   }
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const chinaTime = new Date(date.getTime() + CHINA_TIME_OFFSET_MS);
+
+  return `${chinaTime.getUTCFullYear()}-${pad(chinaTime.getUTCMonth() + 1)}-${pad(chinaTime.getUTCDate())} ${pad(chinaTime.getUTCHours())}:${pad(chinaTime.getUTCMinutes())}`;
 }
 
 function buildMessageData(activity, notificationType) {

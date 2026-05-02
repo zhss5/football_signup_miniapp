@@ -320,6 +320,7 @@ Current activity notification behavior:
 - `notifyActivityParticipants` self-creates `notification_subscriptions` and `notification_logs` when possible before sending or logging notifications.
 - Create/Edit Activity can store a custom `notificationHint`; proceeding notices use it in the reminder field when present, while cancellation notices still use the default cancellation reminder.
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
+- `time2` is formatted explicitly as China local time so UTC CloudBase runtimes do not send activity times eight hours early.
 
 Problems encountered during cover-display testing:
 
