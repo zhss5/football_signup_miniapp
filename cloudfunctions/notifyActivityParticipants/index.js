@@ -29,27 +29,29 @@ function formatDateTime(value) {
 }
 
 function buildMessageData(activity, notificationType) {
-  const statusText = notificationType === 'proceeding' ? '确认举行' : '已取消';
-  const note =
+  const statusText =
+    notificationType === 'proceeding' ? '\u786e\u8ba4\u4e3e\u884c' : '\u6d3b\u52a8\u53d6\u6d88';
+  const location = clip(
+    activity.addressName || activity.addressText || '\u6d3b\u52a8\u5730\u70b9',
+    12
+  );
+  const reminder =
     notificationType === 'proceeding'
-      ? '活动已确认举行，请准时参加'
-      : '活动已取消，请留意后续安排';
+      ? `\u5730\u70b9\uff1a${location}\uff0c\u8bf7\u51c6\u65f6\u53c2\u52a0`
+      : `\u5730\u70b9\uff1a${location}\uff0c\u6d3b\u52a8\u5df2\u53d6\u6d88`;
 
   return {
-    thing1: {
-      value: clip(activity.title || '足球活动', 20)
-    },
     time2: {
       value: formatDateTime(activity.startAt)
     },
     thing3: {
-      value: clip(activity.addressName || activity.addressText || '活动地点', 20)
+      value: clip(activity.title || '\u8db3\u7403\u6d3b\u52a8', 20)
     },
-    phrase4: {
+    thing6: {
       value: clip(statusText, 5)
     },
-    thing5: {
-      value: clip(note, 20)
+    thing7: {
+      value: clip(reminder, 20)
     }
   };
 }

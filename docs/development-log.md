@@ -931,7 +931,7 @@ Delivered behavior:
 Operational notes:
 
 - configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only runtime config before expecting the subscription prompt and real sends
-- the template keywords used by the first sender are `thing1`, `time2`, `thing3`, `phrase4`, and `thing5`; choose a WeChat template that matches these fields or adjust the sender mapping deliberately
+- the sender is mapped to the approved `训练提醒` template fields: `time2` for appointment time, `thing3` for activity title, `thing6` for confirmation/cancellation note, and `thing7` for the location/reminder text
 - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`
 - `notifyActivityParticipants` includes `config.json` OpenAPI permission for `subscribeMessage.send`
 - no database permission broadening is required because reads/writes go through cloud functions
@@ -940,3 +940,24 @@ Verification:
 
 - targeted red/green coverage was added for the new cloud functions, local mock behavior, notification service adapter, signup subscription request, and Activity Detail organizer actions.
 - full regression suite passed: `50` test suites, `258` tests.
+
+## 2026-05-02 - Subscription Template Field Mapping Updated
+
+The notification sender was aligned to the approved WeChat `训练提醒` subscription template.
+
+Template mapping:
+
+- `time2`: activity start time
+- `thing3`: activity title
+- `thing6`: confirmation/cancellation note
+- `thing7`: location and reminder text
+
+Why it matters:
+
+- the previous generic sender fields did not match the approved template detail
+- using the exact template keyword names prevents send failures after the real template ID is configured
+
+Verification:
+
+- added coverage for `buildMessageData` so the sender mapping is locked to the approved template fields
+- full regression suite passed: `50` test suites, `259` tests.

@@ -213,7 +213,7 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `258` tests passed
+- `259` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -291,7 +291,7 @@ Current activity notification behavior:
 - confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.
 - cancellation closes signup and attempts to send cancellation notices to subscribed active participants.
 - notification attempts are logged in `notification_logs`; duplicate sends for the same notification type and recipient are skipped.
-- real sends require the WeChat subscription template to match the sender keyword mapping: `thing1`, `time2`, `thing3`, `phrase4`, `thing5`.
+- real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 
 Problems encountered during cover-display testing:
 

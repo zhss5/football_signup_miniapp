@@ -55,13 +55,39 @@ function createFakeDb(seed) {
   };
 }
 
+test('buildMessageData maps activity data to the configured training reminder template fields', () => {
+  expect(
+    notifyActivityParticipants.buildMessageData(
+      {
+        title: 'Saturday 8-10',
+        startAt: new Date(2026, 3, 26, 20, 0).toISOString(),
+        addressName: 'Half Stone'
+      },
+      'proceeding'
+    )
+  ).toEqual({
+    time2: {
+      value: '2026-04-26 20:00'
+    },
+    thing3: {
+      value: 'Saturday 8-10'
+    },
+    thing6: {
+      value: '确认举行'
+    },
+    thing7: {
+      value: '地点：Half Stone，请准时参加'
+    }
+  });
+});
+
 test('notifyActivityParticipants confirms the activity and sends proceeding notices to accepted joined users once', async () => {
   const fakeDb = createFakeDb({
     activities: {
       activity_1: {
         _id: 'activity_1',
         title: 'Saturday 8-10',
-        startAt: '2026-04-26T20:00:00.000Z',
+        startAt: new Date(2026, 3, 26, 20, 0).toISOString(),
         addressName: 'Half Stone',
         organizerOpenId: 'openid_owner',
         status: 'published',
@@ -131,7 +157,21 @@ test('notifyActivityParticipants confirms the activity and sends proceeding noti
   expect(sendSubscribeMessage).toHaveBeenCalledWith(
     expect.objectContaining({
       touser: 'openid_player',
-      templateId: 'tmpl_123'
+      templateId: 'tmpl_123',
+      data: {
+        time2: {
+          value: '2026-04-26 20:00'
+        },
+        thing3: {
+          value: 'Saturday 8-10'
+        },
+        thing6: {
+          value: '确认举行'
+        },
+        thing7: {
+          value: '地点：Half Stone，请准时参加'
+        }
+      }
     })
   );
   expect(result).toMatchObject({

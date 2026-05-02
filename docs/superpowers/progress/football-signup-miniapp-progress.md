@@ -243,7 +243,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `258` tests passed
+- result: `259` tests passed
 
 Covered areas include:
 
