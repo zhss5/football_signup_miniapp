@@ -12,6 +12,22 @@ const {
 } = require('../../utils/i18n');
 const { canCreateActivity } = require('../../utils/roles');
 
+function getCreatedAtTime(item = {}) {
+  const createdAt = Date.parse(item.createdAt || '');
+  return Number.isFinite(createdAt) ? createdAt : 0;
+}
+
+function compareCreatedDesc(left, right) {
+  return getCreatedAtTime(right) - getCreatedAtTime(left);
+}
+
+function prepareVisibleHomeActivities(items = [], translate) {
+  return items
+    .map(item => buildActivityCardVm(item, undefined, translate))
+    .filter(item => item.statusTone === 'joinable')
+    .sort(compareCreatedDesc);
+}
+
 Page({
   data: {
     items: [],
@@ -36,9 +52,10 @@ Page({
 
     try {
       const { items } = await listActivities({ scope: 'home', limit: 20 });
-      const itemsWithDisplayCovers = await resolveActivityCoverImages(items);
+      const visibleItems = prepareVisibleHomeActivities(items, translate);
+      const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems);
       this.setData({
-        items: itemsWithDisplayCovers.map(item => buildActivityCardVm(item, undefined, translate)),
+        items: itemsWithDisplayCovers,
         loading: false
       });
     } catch (error) {

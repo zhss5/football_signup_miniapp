@@ -1170,3 +1170,26 @@ Verification:
 
 - targeted red/green coverage was added for copied roster text with preferred positions.
 - full regression suite passed: `50` test suites, `273` tests.
+
+## 2026-05-02 - Home List and Creation UX Polish
+
+Several real-device UI issues were addressed after organizer testing.
+
+Delivered behavior:
+
+- Home now keeps only joinable activities in the public list.
+- Home sorts visible activities by activity creation time, newest first.
+- Home filters before resolving cover display URLs, so hidden closed/cancelled activities do not spend list-image work.
+- Create/Edit Activity now uses the cover preview frame itself as the image chooser entry point; the separate `Choose and crop image` / `Replace image` button was removed.
+- compact member action buttons remove the native mini program button pseudo-border and use explicit borders, so `Move` and `Remove` render as complete pills on real devices.
+
+Why it matters:
+
+- participants see only activities they can actually join on Home.
+- the image upload flow is less redundant because the visible `+` target is the action.
+- organizer member-management controls look stable in the narrow roster layout.
+
+Verification:
+
+- targeted red/green coverage was added for Home filtering/sorting, the cover-frame image chooser, and compact member action button borders.
+- full regression suite passed: `50` test suites, `277` tests.

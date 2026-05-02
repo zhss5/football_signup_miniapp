@@ -243,9 +243,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `273` tests passed
+- `277` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -265,6 +265,7 @@ Current cover-thumbnail progress:
 - create/edit activity uploads thumbnails to `activity-cover-thumbs/`
 - create/edit activity uploads mobile `http://tmp/...` crop outputs instead of storing them directly
 - `createActivity`, `updateActivity`, and the local mock persist `coverThumbImage`
+- Create/Edit Activity opens image selection from the cover preview frame itself; there is no separate choose/replace button
 - historical backfill is paused; do not deploy a backfill function for now
 
 Current permission conclusion:
@@ -304,6 +305,7 @@ Current organizer roster behavior:
 - Activity Detail shows `Copy participant names` to viewers with registration-management permission.
 - copied text is one participant per line in the current team/member display order, with preferred positions appended as `Name (Position / Position)` when available.
 - empty rosters show a toast and do not write an empty clipboard value.
+- compact move/remove/cancel member action buttons remove the native mini program pseudo-border and use explicit borders for complete pill rendering.
 - Activity Detail also lets organizers/admins add proxy participants to a selected team.
 - proxy participants use generated `proxy_...` user IDs and can be removed through the existing organizer/admin removal flow.
 - proxy participants show a small proxy badge only to organizers/admins; regular users see the same member name without the badge.
@@ -333,6 +335,12 @@ Current activity notification behavior:
 - Create/Edit Activity can store a custom `notificationHint`; proceeding notices use it in the reminder field when present, while cancellation notices still use the default cancellation reminder.
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 - `time2` is formatted explicitly as China local time so UTC CloudBase runtimes do not send activity times eight hours early.
+
+Current Home list behavior:
+
+- Home shows only activities whose card state is joinable.
+- Home sorts visible activities by `createdAt`, newest first.
+- hidden closed/cancelled/full/deadline-past activities are filtered before cover image URL resolution.
 
 Problems encountered during cover-display testing:
 

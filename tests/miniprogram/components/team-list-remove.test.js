@@ -91,6 +91,16 @@ describe('team-list member removal', () => {
     expect(wxss).toContain('.member-action-danger');
   });
 
+  test('removes the native mini program button pseudo-border from compact member actions', () => {
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxss).toContain('.member-action-button::after');
+    expect(wxss).toMatch(/\.member-action-button::after\s*{[^}]*border:\s*none;/);
+  });
+
   test('emits remove member identity when a manager taps remove', () => {
     const triggerEvent = jest.fn();
     const ctx = {

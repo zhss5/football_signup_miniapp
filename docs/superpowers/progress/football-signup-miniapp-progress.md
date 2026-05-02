@@ -77,6 +77,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - cropped output reused as the runtime cover image
 - new uploads now generate both a detail cover and a smaller `coverThumbImage` for activity cards
 - real-device `http://tmp/...` crop outputs are uploaded to CloudBase instead of being stored as temporary paths
+- the cover preview frame on Create/Edit Activity is the image chooser entry point; the separate choose/replace button is removed
 
 ### 2.6 Activity Detail and Signup
 
@@ -96,6 +97,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
   - `Signup Closed`
   - `Cancelled`
   - `Deleted`
+- Home only shows joinable activities and sorts them by creation time, newest first
 
 ### 2.8 Organizer Actions
 
@@ -244,6 +246,7 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can add proxy participants from Activity Detail
 - organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
 - organizers/admins can move participants between teams
+- compact member action buttons use explicit borders so move/remove controls render cleanly on real devices
 - activity creation now starts from one team instead of two
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
@@ -256,7 +259,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `273` tests passed
+- result: `277` tests passed
 
 Covered areas include:
 
@@ -269,6 +272,9 @@ Covered areas include:
 - organizer/admin activity edit permissions and update behavior
 - signup phone-removal behavior across frontend, mock, and cloud functions
 - cover display source preference and fallback behavior
+- Home filtering to joinable activities and newest-created sorting
+- direct cover-frame image choosing on Create/Edit Activity
+- compact member action button border rendering
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior
 - activity description display on Activity Detail

@@ -139,6 +139,75 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('{{i18n.activityCreate.notificationHint}}');
   });
 
+  test('lets the cover image frame open the chooser without a separate choose button', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('class="image-preview-frame"');
+    expect(wxml).toContain('bindtap="onChooseActivityImage"');
+    expect(wxml).not.toContain('chooseAndCropImage');
+    expect(wxml).not.toContain('replaceImage');
+  });
+
+  test('onChooseActivityImage chooses an image before opening the cropper', async () => {
+    global.wx.chooseMedia = jest.fn(({ success }) => {
+      success({
+        tempFiles: [
+          {
+            tempFilePath: 'wxfile://chosen-cover.jpg'
+          }
+        ]
+      });
+    });
+    global.wx.navigateTo = jest.fn(({ events, success }) => {
+      success({
+        eventChannel: {
+          emit: jest.fn()
+        }
+      });
+      events.coverCropped({
+        tempFilePath: 'wxfile://cropped-cover.jpg',
+        thumbTempFilePath: 'wxfile://cropped-thumb.jpg'
+      });
+    });
+
+    const ctx = {
+      data: {
+        form: {}
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+
+    await pageConfig.onChooseActivityImage.call(ctx);
+
+    expect(global.wx.chooseMedia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        count: 1,
+        mediaType: ['image']
+      })
+    );
+    expect(global.wx.navigateTo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringContaining('/pages/activity-cover-crop/index?imagePath=')
+      })
+    );
+    expect(ctx.data.form).toMatchObject({
+      coverImage: 'wxfile://cropped-cover.jpg',
+      coverThumbImage: 'wxfile://cropped-thumb.jpg',
+      imageList: ['wxfile://cropped-cover.jpg']
+    });
+  });
+
   test('onSubmit blocks users without create permission', async () => {
     const ctx = {
       data: {

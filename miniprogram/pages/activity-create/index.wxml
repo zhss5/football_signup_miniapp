@@ -133,11 +133,10 @@
   <view class="field">
     <text class="label">{{i18n.activityCreate.activityImage}}</text>
     <view class="upload-panel">
-      <view class="image-preview-frame">
+      <view class="image-preview-frame" bindtap="onChooseActivityImage">
         <image wx:if="{{form.coverImage}}" class="image-preview" src="{{form.coverImage}}" mode="aspectFill" />
         <view wx:else class="upload-placeholder">+</view>
       </view>
-      <button class="secondary-button" bindtap="onChooseActivityImage">{{form.coverImage ? i18n.activityCreate.replaceImage : i18n.activityCreate.chooseAndCropImage}}</button>
       <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">{{i18n.activityCreate.removeImage}}</button>
       <text class="hint">{{imageHintText}}</text>
     </view>

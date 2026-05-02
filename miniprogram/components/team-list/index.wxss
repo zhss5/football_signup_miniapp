@@ -85,13 +85,19 @@
   margin-left: 16rpx;
   min-width: 112rpx;
   height: 56rpx;
-  line-height: 56rpx;
+  line-height: 54rpx;
   padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid transparent;
   border-radius: 28rpx;
   font-size: 24rpx;
   font-weight: 600;
   color: #374151;
   background: #f9fafb;
+}
+
+.member-action-button::after {
+  border: none;
 }
 
 .member-action-move {

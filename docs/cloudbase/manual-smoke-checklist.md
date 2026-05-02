@@ -2,8 +2,9 @@
 
 ## Home and Listing
 
-- Confirm the home page loads published activities from CloudBase
-- Confirm deleted activities do not appear on Home
+- Confirm the home page loads only joinable activities from CloudBase
+- Confirm cancelled, full, deleted, and signup-closed activities do not appear on Home
+- Confirm Home activities are sorted by activity creation time, newest first
 - Confirm created and joined lists load correctly on the `My` page
 
 ## Activity Creation
@@ -16,6 +17,7 @@
 - Confirm optional insurance link is stored when entered
 - Confirm optional notification reminder is stored when entered
 - Confirm `signupDeadlineAt`, `startAt`, and `endAt` are stored correctly
+- Confirm tapping the cover `+` / preview frame opens image selection and crop without a separate choose button
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm newly created real-device activities add new files under `activity-covers/` and `activity-cover-thumbs/`
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
@@ -58,6 +60,7 @@
 - Confirm regular users cannot see other members' preferred positions
 - Confirm regular users can see the participant name but cannot see the proxy badge
 - Confirm organizer/admin can move a participant to another non-full team
+- Confirm move/remove member buttons render as complete pill buttons on a real device
 - Confirm regular users cannot see or use member move controls
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names, including preferred positions when available
