@@ -54,7 +54,7 @@
 - Confirm existing registrations remain attached to the same activity after edit
 - Confirm capacity cannot be reduced below joined players or existing regular team slots
 - Confirm regular users and non-owner organizers cannot edit another organizer's activity
-- Confirm organizer/admin can add a proxy participant to a selected team
+- Confirm organizer/admin can add a proxy participant from the selected team's header row
 - Confirm regular users cannot see or use proxy signup
 - Confirm organizer/admin can see the proxy badge on a proxy participant
 - Confirm organizer/admin can see member preferred positions on Activity Detail

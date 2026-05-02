@@ -182,6 +182,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - proxy registrations use generated `proxy_...` user IDs so one organizer can add multiple people
 - proxy registrations are marked with `proxyRegistration: true`, `source: proxy`, and `createdByOpenId`
 - proxy signup follows the same activity/team open, deadline, and capacity rules as normal signup
+- the proxy-signup action appears beside the target team name in the team header
 - existing organizer/admin removal can remove proxy participants
 - organizer/admin roster views mark proxy participants with a manager-only badge
 - regular users do not see whether a participant was added by proxy signup
@@ -261,7 +262,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `278` tests passed
+- result: `279` tests passed
 
 Covered areas include:
 
@@ -282,6 +283,7 @@ Covered areas include:
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
 - organizer proxy signup behavior
+- team-header proxy-signup button placement
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior
 - one-team default activity setup behavior
@@ -347,7 +349,8 @@ The MVP still has known non-blocking gaps:
 - completed in code: let organizers copy active participant names and preferred positions in one action
 - completed in code: move players between teams
 - promote bench players into regular teams
-- improve organizer action grouping on the detail page
+- completed in code: move the proxy-signup action into the selected team's header row
+- improve remaining organizer action grouping on the detail page
 
 ### Option B1: Simplify Signup Contact Fields
 

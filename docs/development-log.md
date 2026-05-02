@@ -1214,3 +1214,23 @@ Verification:
 
 - targeted red/green coverage was added for default team naming and same-row remove controls.
 - full regression suite passed: `50` test suites, `278` tests.
+
+## 2026-05-02 - Proxy Signup Header Placement
+
+Activity Detail team cards were adjusted so the organizer proxy-signup action is visually attached to the target team.
+
+Delivered behavior:
+
+- the manager-only `Proxy signup` / `代人报名` action now appears beside the team name in the team header.
+- the action keeps the existing organizer/admin visibility and team identity payload.
+- the large proxy-signup button was removed from the bottom of each team card.
+
+Why it matters:
+
+- organizers can tell immediately which team the proxy-signup action belongs to.
+- the roster area stays focused on participants and member-level actions.
+
+Verification:
+
+- targeted red/green coverage was added for the team-list template structure and compact header-button styling.
+- full regression suite passed: `50` test suites, `279` tests.

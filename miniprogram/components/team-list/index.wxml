@@ -2,7 +2,16 @@
   <block wx:for="{{teams}}" wx:key="_id">
     <view class="team-card">
       <view class="team-head">
-        <text>{{item.teamName}}</text>
+        <view class="team-title-row">
+          <text class="team-name">{{item.teamName}}</text>
+          <button
+            wx:if="{{item.canProxySignup}}"
+            class="proxy-signup-button"
+            data-team-id="{{item._id}}"
+            data-team-name="{{item.teamName}}"
+            bindtap="onProxySignupTap"
+          >{{item.proxySignupText}}</button>
+        </view>
         <text>{{item.joinedCount}} / {{item.maxMembers}}</text>
       </view>
       <view wx:if="{{item.members.length}}" class="member-list">
@@ -40,13 +49,6 @@
         </block>
       </view>
       <text wx:else class="empty-members">{{emptyText}}</text>
-      <button
-        wx:if="{{item.canProxySignup}}"
-        class="proxy-signup-button"
-        data-team-id="{{item._id}}"
-        data-team-name="{{item.teamName}}"
-        bindtap="onProxySignupTap"
-      >{{item.proxySignupText}}</button>
       <button data-team-id="{{item._id}}" bindtap="onJoinTap" disabled="{{item.joinDisabled}}">{{item.joinButtonText}}</button>
     </view>
   </block>

@@ -34,6 +34,25 @@ describe('team-list member removal', () => {
     expect(wxml).toContain('bindtap="onProxySignupTap"');
   });
 
+  test('keeps manager proxy signup beside the team name', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+    const titleRowMatch = wxml.match(/<view class="team-title-row">[\s\S]*?<\/view>/);
+    const titleRowBlock = titleRowMatch ? titleRowMatch[0] : '';
+
+    expect(titleRowMatch).not.toBeNull();
+    expect(titleRowBlock).toContain('class="team-name"');
+    expect(titleRowBlock).toContain('class="proxy-signup-button"');
+    expect(wxss).toContain('.team-title-row');
+    expect(wxss).toMatch(/\.proxy-signup-button\s*{[^}]*height:\s*56rpx;/);
+  });
+
   test('renders proxy member badge only from the prepared member view model flag', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
