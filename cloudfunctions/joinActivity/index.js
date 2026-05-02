@@ -55,6 +55,7 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
   const data = {
     preferredName: profile.signupName,
     profileSource: profile.profileSource,
+    preferredPositions: profile.preferredPositions,
     lastActiveAt: stamp,
     updatedAt: stamp
   };
@@ -77,6 +78,7 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
     preferredName: profile.signupName,
     avatarUrl: profile.avatarUrl || '',
     profileSource: profile.profileSource,
+    preferredPositions: profile.preferredPositions,
     roles: ['user'],
     createdAt: stamp,
     lastActiveAt: stamp,
@@ -143,7 +145,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         phone,
         phoneSource,
         avatarUrl,
-        profileSource
+        profileSource,
+        preferredPositions
       },
       stamp
     );

@@ -508,6 +508,7 @@ test('local cloud client stores signup profile metadata without phone fields', a
   const ownerDetailAfter = await ownerClient.call('getActivityDetail', {
     activityId: created.activityId
   });
+  const savedProfile = await participantClient.call('ensureUserProfile');
 
   expect(detailAfter.myRegistration).toEqual(expect.objectContaining({
     avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
@@ -526,6 +527,7 @@ test('local cloud client stores signup profile metadata without phone fields', a
   expect(ownerDetailAfter.teams[0].members[0]).toMatchObject({
     preferredPositions: ['前锋', '门将']
   });
+  expect(savedProfile.user.preferredPositions).toEqual(['前锋', '门将']);
 });
 
 test('local cloud client preserves optional phone fields when provided by a future signup flow', async () => {

@@ -173,6 +173,7 @@ test('joinActivity uses the document id and does not write phone data into regis
       preferredName: 'Alex',
       avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
       profileSource: 'wechat',
+      preferredPositions: ['前锋', '门将'],
       lastActiveAt: '2026-04-19T10:00:00.000Z'
     })
   });

@@ -63,6 +63,7 @@ async function prefillUserProfile(page) {
     const update = {};
     const preferredName = String(user.preferredName || '').trim();
     const avatarUrl = String(user.avatarUrl || '').trim();
+    const preferredPositions = normalizePreferredPositions(user.preferredPositions);
 
     if (!page.data.nameEdited && !page.data.signupName && preferredName) {
       update.signupName = preferredName;
@@ -72,6 +73,15 @@ async function prefillUserProfile(page) {
       update.avatarUrl = avatarUrl;
       update.avatarTempFilePath = '';
       update.profileSource = normalizeProfileSource(user.profileSource);
+    }
+
+    if (
+      !page.data.positionsEdited &&
+      normalizePreferredPositions(page.data.preferredPositions).length === 0 &&
+      preferredPositions.length > 0
+    ) {
+      update.preferredPositions = preferredPositions;
+      update.positionOptions = buildPositionOptions(preferredPositions);
     }
 
     if (Object.keys(update).length > 0) {
@@ -98,6 +108,7 @@ Page({
     profileSource: 'manual',
     preferredPositions: [],
     positionOptions: buildPositionOptions([]),
+    positionsEdited: false,
     submitting: false
   },
 
@@ -164,7 +175,8 @@ Page({
 
     this.setData({
       preferredPositions: next,
-      positionOptions: buildPositionOptions(next)
+      positionOptions: buildPositionOptions(next),
+      positionsEdited: true
     });
   },
 

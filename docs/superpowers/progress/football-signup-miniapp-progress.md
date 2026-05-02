@@ -161,8 +161,10 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - Activity Join loads `ensureUserProfile` when the page opens
 - saved `users.preferredName` prefills the signup name
 - saved `users.avatarUrl` prefills the avatar preview without re-uploading an existing CloudBase file
+- saved `users.preferredPositions` prefills the optional playing-position selector
 - manual name/avatar changes made while profile loading is still pending are preserved
-- `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, and the activity registration snapshot after signup
+- manual position changes made while profile loading is still pending are preserved
+- `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, `users.preferredPositions`, and the activity registration snapshot after signup
 
 ### 2.15 Organizer Participant Name Copy
 
@@ -246,7 +248,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
-- participants can optionally choose up to two preferred playing positions during signup, and organizers/admins can see those choices on Activity Detail
+- participants can optionally choose up to two preferred playing positions during signup, organizers/admins can see those choices on Activity Detail, and the participant's latest choices are prefilled on future signups
 
 ## 4. Verification Status
 
@@ -278,6 +280,7 @@ Covered areas include:
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
 - notification reminder persistence and confirmation-message reminder behavior
 - real-device subscription prompt timing and cover-image fallback candidates
+- preferred-position profile persistence and future-signup prefill behavior
 
 ## 4.1 Current Media Progress
 
@@ -370,6 +373,7 @@ The MVP still has known non-blocking gaps:
 - add optional Join page nickname/avatar selection and prefill from the user profile
 - completed in code: add activity/signup insurance-link display and detail-page web-view opening
 - completed in code: add preferred playing position selection as a participant signup refinement
+- completed in code: remember the participant's latest preferred position choices and prefill them on future signups
 - completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
 - polish empty states and activity status presentation
 - improve share metadata and visual card quality

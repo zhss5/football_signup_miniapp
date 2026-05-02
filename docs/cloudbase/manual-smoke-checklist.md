@@ -30,6 +30,7 @@
 - If the web-view page is blocked on a real device, confirm the insurance URL domain is configured as a mini program business domain
 - Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm the join page lets participants choose zero, one, or two preferred positions and blocks a third choice
+- Confirm the same participant's latest preferred positions are prefilled on a later signup and can still be changed before submitting
 - Confirm join flow writes `registrations._id = activityId_openid`
 - Confirm join flow stores selected positions in `registrations.preferredPositions`
 - Confirm the subscription prompt appears during signup on a real device when an activity-notice template ID is configured

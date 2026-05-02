@@ -118,6 +118,7 @@ function createLocalCloudClient(options = {}) {
       _id: openid,
       preferredName: '',
       avatarUrl: '',
+      preferredPositions: [],
       roles: defaultRoles.slice(),
       createdAt: stamp,
       lastActiveAt: stamp
@@ -537,6 +538,7 @@ function createLocalCloudClient(options = {}) {
       user.phoneSource = phoneSource;
     }
     user.profileSource = profileSource;
+    user.preferredPositions = preferredPositions;
     user.lastActiveAt = stamp;
     user.updatedAt = stamp;
 

@@ -1120,3 +1120,32 @@ Verification:
 
 - added coverage for join-page selection, cloud validation/storage, local mock storage, detail member visibility, and team-list rendering.
 - full regression suite passed: `50` test suites, `273` tests.
+
+## 2026-05-02 - Preferred Position Profile Prefill
+
+The signup flow now remembers a participant's previous preferred position choices.
+
+Delivered behavior:
+
+- `joinActivity` saves the latest selected `preferredPositions` to the user's profile document.
+- Activity Join reads `users.preferredPositions` through `ensureUserProfile` and preselects those positions on future signups.
+- participants can still manually change or clear the prefilled positions before submitting.
+- if profile loading finishes after the participant has already edited positions, the async profile result does not overwrite the manual choice.
+- local mock mode mirrors the same user-profile persistence and prefill behavior.
+
+Why it matters:
+
+- repeat participants do not need to choose the same positions every time.
+- organizers still receive an activity-specific snapshot on each registration.
+- the behavior keeps the signup profile loop consistent with saved name and avatar prefill.
+
+Operational notes:
+
+- deploy `joinActivity` after running `npm run copy:cloud-shared` so CloudBase saves the latest position choices to `users.preferredPositions`.
+- upload a new mini program frontend build so Activity Join can prefill and protect manually edited position choices.
+- `ensureUserProfile` does not need a code change for this behavior because it already returns the user document.
+
+Verification:
+
+- targeted red/green coverage was added for Activity Join prefill, delayed-profile non-overwrite behavior, CloudBase profile updates, and local mock profile updates.
+- full regression suite passed: `50` test suites, `273` tests.

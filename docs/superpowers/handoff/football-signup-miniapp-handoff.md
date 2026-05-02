@@ -44,7 +44,7 @@ The codebase supports:
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
-- signup profile prefill from saved `users.preferredName/avatarUrl`
+- signup profile prefill from saved `users.preferredName/avatarUrl/preferredPositions`
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -105,6 +105,14 @@ Latest real-device subscription and cover-display fix:
 - upload a new mini program frontend build so signup requests subscription consent before the `joinActivity` cloud call.
 - upload a new mini program frontend build so list cards and Activity Detail can download fallback CloudBase cover sources when the first image URL fails.
 - keep `recordNotificationSubscription` deployed; the frontend still records accepted/declined subscription choices through that function after signup succeeds.
+
+Latest preferred-position prefill change:
+
+- `joinActivity` now saves the latest selected positions to `users.preferredPositions`.
+- Activity Join now preselects saved positions on future signups and preserves manual edits if profile loading finishes late.
+- redeploy `joinActivity` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the prefill behavior is available on devices.
+- `ensureUserProfile` does not require a code change for this behavior because it already returns the user document.
 
 Latest mobile cover-upload fix:
 
@@ -237,7 +245,7 @@ Latest result:
 - `50` test suites passed
 - `273` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -285,8 +293,9 @@ Current signup profile behavior:
 - Activity Join loads the current user profile through `ensureUserProfile`.
 - saved `users.preferredName` prefills the signup name field.
 - saved `users.avatarUrl` prefills the avatar preview without re-uploading the existing CloudBase file.
-- manual name/avatar edits made before profile loading finishes are preserved.
-- `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl` after signup.
+- saved `users.preferredPositions` prefills the optional playing-position selector.
+- manual name/avatar/position edits made before profile loading finishes are preserved.
+- `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl/preferredPositions` after signup.
 - Activity Join lets participants optionally select up to two preferred positions from `前锋`, `中场`, `边锋`, `后腰`, `中卫`, `边卫`, and `门将`.
 - `joinActivity` validates and stores selected positions as `registrations.preferredPositions`.
 
@@ -355,19 +364,20 @@ Continue in this order:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
 9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, and organizer team reassignment after CloudBase deployment.
-10. Configure and validate participant notification subscriptions using:
+10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
+11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - add the real template ID to local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `updateActivity`
    - validate signup subscription prompt, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
-11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
-12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
-13. Keep the future operations/backend backlog visible but deferred:
+12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
+13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
+14. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-14. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-15. Push local commits if they should be shared:
+15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+16. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

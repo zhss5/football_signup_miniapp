@@ -185,7 +185,8 @@ describe('activity join page', () => {
       user: {
         preferredName: 'Saved Alex',
         avatarUrl: 'cloud://prod-env-123/user-avatars/saved-alex.jpg',
-        profileSource: 'wechat'
+        profileSource: 'wechat',
+        preferredPositions: ['中场', '门将']
       }
     });
 
@@ -210,6 +211,13 @@ describe('activity join page', () => {
     expect(ctx.data.avatarUrl).toBe('cloud://prod-env-123/user-avatars/saved-alex.jpg');
     expect(ctx.data.avatarTempFilePath).toBe('');
     expect(ctx.data.profileSource).toBe('wechat');
+    expect(ctx.data.preferredPositions).toEqual(['中场', '门将']);
+    expect(ctx.data.positionOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: '中场', selected: true }),
+        expect.objectContaining({ value: '门将', selected: true })
+      ])
+    );
   });
 
   test('does not overwrite manually entered profile fields when profile loading finishes later', async () => {
@@ -246,12 +254,20 @@ describe('activity join page', () => {
         avatarUrl: 'wxfile://manual-avatar.jpg'
       }
     });
+    pageConfig.onPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '前锋'
+        }
+      }
+    });
 
     resolveProfile({
       user: {
         preferredName: 'Saved Alex',
         avatarUrl: 'cloud://prod-env-123/user-avatars/saved-alex.jpg',
-        profileSource: 'wechat'
+        profileSource: 'wechat',
+        preferredPositions: ['门将']
       }
     });
     await loadPromise;
@@ -260,6 +276,7 @@ describe('activity join page', () => {
     expect(ctx.data.avatarUrl).toBe('wxfile://manual-avatar.jpg');
     expect(ctx.data.avatarTempFilePath).toBe('wxfile://manual-avatar.jpg');
     expect(ctx.data.profileSource).toBe('wechat');
+    expect(ctx.data.preferredPositions).toEqual(['前锋']);
   });
 
   test('renders WeChat profile entry points without any phone collection UI', () => {
