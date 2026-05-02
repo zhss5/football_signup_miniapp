@@ -103,6 +103,19 @@ describe('team-list member removal', () => {
     expect(wxss).toContain('.member-position-text');
   });
 
+  test('renders team names heavier than participant names', () => {
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+    const teamNameWeightMatch = wxss.match(/\.team-name\s*{[^}]*font-weight:\s*(\d+);/);
+    const memberNameWeightMatch = wxss.match(/\.member-name\s*{[^}]*font-weight:\s*(\d+);/);
+
+    expect(teamNameWeightMatch).not.toBeNull();
+    expect(memberNameWeightMatch).not.toBeNull();
+    expect(Number(teamNameWeightMatch[1])).toBeGreaterThan(Number(memberNameWeightMatch[1]));
+  });
+
   test('renders manager move member controls', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
