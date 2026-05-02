@@ -28,6 +28,8 @@
 ## Signup Flow
 
 - Confirm the activity detail page shows team counts and member names
+- Confirm available teams show a compact `Join` / `报名` action in the team header instead of a full-width team button below the roster
+- Confirm the team header `Join` / `报名` action hides after the current user joins
 - Confirm the activity detail share card shows the insurance purchase link only for activities with an insurance link
 - Confirm tapping the insurance purchase link opens the insurance URL in the mini program web-view
 - If the web-view page is blocked on a real device, confirm the insurance URL domain is configured as a mini program business domain
@@ -65,6 +67,7 @@
 - Confirm regular users cannot see or use member move controls
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names, including preferred positions when available
+- Confirm organizer actions are ordered copy participant names, edit activity, confirm activity, cancel activity
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm confirmation notices use the optional notification reminder when the activity has one

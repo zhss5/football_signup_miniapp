@@ -68,16 +68,16 @@
       {{i18n.activity.actions.copyParticipantNames}}
     </button>
 
+    <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
+      {{i18n.activity.actions.edit}}
+    </button>
+
     <button
       wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
       class="action-button confirm-action-button"
       bindtap="onConfirmActivityProceeding"
     >
       {{i18n.activity.actions.confirmProceeding}}
-    </button>
-
-    <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
-      {{i18n.activity.actions.edit}}
     </button>
 
     <button wx:if="{{viewer.canCancelActivity}}" class="action-button danger-action-button" bindtap="onCancelActivity">

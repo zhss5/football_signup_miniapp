@@ -83,8 +83,10 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 - cover hero on detail page
 - team member list with avatar placeholder and signup name
+- team header exposes the compact signup action when that team can be joined
+- team join actions are hidden after the current user has joined instead of showing disabled joined buttons
 - join sheet shows the selected team name
-- once joined, all join buttons become disabled
+- once joined, other team signup actions stay unavailable until the user cancels first
 - user must cancel before joining another team
 
 ### 2.7 Deadline and Status Rules
@@ -250,6 +252,7 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can distinguish proxy participants on Activity Detail, while regular users cannot
 - organizers/admins can move participants between teams
 - compact member action buttons use explicit borders so move/remove controls render cleanly on real devices
+- Activity Detail organizer action buttons are ordered copy, edit, confirm, cancel
 - activity creation now starts from one team instead of two
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
@@ -262,7 +265,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `279` tests passed
+- result: `282` tests passed
 
 Covered areas include:
 
@@ -284,6 +287,8 @@ Covered areas include:
 - activity description display on Activity Detail
 - organizer proxy signup behavior
 - team-header proxy-signup button placement
+- team-header join button rendering and joined-state hiding
+- organizer action button ordering
 - manager-only proxy participant badge behavior
 - organizer team reassignment behavior
 - one-team default activity setup behavior

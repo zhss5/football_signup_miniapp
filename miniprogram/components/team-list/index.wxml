@@ -11,8 +11,14 @@
             data-team-name="{{item.teamName}}"
             bindtap="onProxySignupTap"
           >{{item.proxySignupText}}</button>
+          <button
+            wx:if="{{item.joinActionVisible}}"
+            class="join-button"
+            data-team-id="{{item._id}}"
+            bindtap="onJoinTap"
+          >{{item.joinActionText}}</button>
         </view>
-        <text>{{item.joinedCount}} / {{item.maxMembers}}</text>
+        <text class="team-count">{{item.joinedCount}} / {{item.maxMembers}}</text>
       </view>
       <view wx:if="{{item.members.length}}" class="member-list">
         <block wx:for="{{item.members}}" wx:key="userOpenId" wx:for-item="member">
@@ -49,7 +55,6 @@
         </block>
       </view>
       <text wx:else class="empty-members">{{emptyText}}</text>
-      <button data-team-id="{{item._id}}" bindtap="onJoinTap" disabled="{{item.joinDisabled}}">{{item.joinButtonText}}</button>
     </view>
   </block>
 </view>

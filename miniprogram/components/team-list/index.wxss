@@ -22,10 +22,15 @@
 }
 
 .team-name {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.team-count {
+  flex: 0 0 auto;
 }
 
 .member-list {
@@ -159,5 +164,25 @@
 }
 
 .proxy-signup-button::after {
+  border: none;
+}
+
+.join-button {
+  flex: 0 0 auto;
+  margin: 0;
+  min-width: 104rpx;
+  height: 56rpx;
+  line-height: 54rpx;
+  padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #16a34a;
+  border-radius: 28rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.join-button::after {
   border: none;
 }

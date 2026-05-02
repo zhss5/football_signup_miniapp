@@ -1234,3 +1234,25 @@ Verification:
 
 - targeted red/green coverage was added for the team-list template structure and compact header-button styling.
 - full regression suite passed: `50` test suites, `279` tests.
+
+## 2026-05-02 - Detail Team Action Layout Polish
+
+Activity Detail team and organizer actions were tightened for mobile readability.
+
+Delivered behavior:
+
+- the regular `Join` / `报名` action now appears in the team header beside the team name and manager proxy-signup action.
+- the old full-width per-team `Joinable` / `Joined` button below each roster was removed.
+- once the current user has joined the activity, header join actions are hidden instead of showing disabled joined buttons.
+- organizer actions are ordered from top to bottom as: copy participant names, edit activity, confirm activity, cancel activity.
+
+Why it matters:
+
+- participants can see the team-level signup action without scrolling past roster content.
+- after signup, the current user's state is represented by the member-row cancel action rather than a duplicate disabled team button.
+- organizer controls now follow a stable operation order from lower-risk to destructive action.
+
+Verification:
+
+- targeted red/green coverage was added for header join rendering, joined-state join hiding, and organizer action ordering.
+- full regression suite passed: `50` test suites, `282` tests.

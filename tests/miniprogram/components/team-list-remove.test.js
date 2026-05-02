@@ -53,6 +53,26 @@ describe('team-list member removal', () => {
     expect(wxss).toMatch(/\.proxy-signup-button\s*{[^}]*height:\s*56rpx;/);
   });
 
+  test('renders join action in the team header instead of below the roster', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+    const teamHeadMatch = wxml.match(/<view class="team-head">[\s\S]*?<\/view>/);
+    const teamHeadBlock = teamHeadMatch ? teamHeadMatch[0] : '';
+
+    expect(teamHeadMatch).not.toBeNull();
+    expect(teamHeadBlock).toContain('class="join-button"');
+    expect(teamHeadBlock).toContain('wx:if="{{item.joinActionVisible}}"');
+    expect(wxml).not.toContain('disabled="{{item.joinDisabled}}"');
+    expect(wxss).toContain('.join-button');
+    expect(wxss).toMatch(/\.join-button\s*{[^}]*height:\s*56rpx;/);
+  });
+
   test('renders proxy member badge only from the prepared member view model flag', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),

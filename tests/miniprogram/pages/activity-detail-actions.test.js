@@ -55,4 +55,21 @@ describe('activity detail actions', () => {
     expect(wxss).toContain('.location-row');
     expect(wxss).toContain('max-width: 100%');
   });
+
+  test('orders organizer actions from copy to edit to confirm to cancel', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    const copyIndex = wxml.indexOf('bindtap="onCopyParticipantNames"');
+    const editIndex = wxml.indexOf('bindtap="openEditActivity"');
+    const confirmIndex = wxml.indexOf('bindtap="onConfirmActivityProceeding"');
+    const cancelIndex = wxml.indexOf('bindtap="onCancelActivity"');
+
+    expect(copyIndex).toBeGreaterThanOrEqual(0);
+    expect(editIndex).toBeGreaterThan(copyIndex);
+    expect(confirmIndex).toBeGreaterThan(editIndex);
+    expect(cancelIndex).toBeGreaterThan(confirmIndex);
+  });
 });

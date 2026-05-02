@@ -33,6 +33,7 @@ The codebase supports:
 - organizer/admin one-tap participant name copy from Activity Detail
 - organizer/admin proxy signup through the `addProxyRegistration` cloud function
 - organizer/admin proxy signup is exposed beside the selected team name in the team header
+- compact team-header signup actions replace the old full-width per-team join buttons
 - organizer/admin-only proxy participant badge in Activity Detail rosters
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
@@ -244,9 +245,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `279` tests passed
+- `282` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -306,6 +307,7 @@ Current signup profile behavior:
 Current organizer roster behavior:
 
 - Activity Detail shows `Copy participant names` to viewers with registration-management permission.
+- Activity Detail orders organizer buttons as copy participant names, edit activity, confirm activity, then cancel activity.
 - copied text is one participant per line in the current team/member display order, with preferred positions appended as `Name (Position / Position)` when available.
 - empty rosters show a toast and do not write an empty clipboard value.
 - compact move/remove/cancel member action buttons remove the native mini program pseudo-border and use explicit borders for complete pill rendering.

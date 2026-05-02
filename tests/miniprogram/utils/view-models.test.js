@@ -107,17 +107,55 @@ test('buildTeamListVm disables all join buttons after signup and prepares member
 
   expect(teams[0]).toMatchObject({
     joinDisabled: true,
-    joinButtonText: 'Joined'
+    joinButtonText: 'Joined',
+    joinActionVisible: false,
+    joinActionText: ''
   });
   expect(teams[1]).toMatchObject({
     joinDisabled: true,
-    joinButtonText: 'Joined'
+    joinButtonText: 'Joined',
+    joinActionVisible: false,
+    joinActionText: ''
   });
   expect(teams[0].members[0]).toMatchObject({
     signupName: 'Alex',
     avatarText: 'A'
   });
   expect(DEFAULT_MEMBER_AVATAR_TEXT).toBe('#');
+});
+
+test('buildTeamListVm exposes a compact join action only while a team can be joined', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_red',
+        teamName: 'Red',
+        joinedCount: 0,
+        maxMembers: 6,
+        members: []
+      },
+      {
+        _id: 'team_blue',
+        teamName: 'Blue',
+        joinedCount: 6,
+        maxMembers: 6,
+        members: []
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    }
+  );
+
+  expect(teams[0]).toMatchObject({
+    joinActionVisible: true,
+    joinActionText: 'Join'
+  });
+  expect(teams[1]).toMatchObject({
+    joinActionVisible: false,
+    joinActionText: ''
+  });
 });
 
 test('buildTeamListVm marks the current user member row with cancel signup action', () => {

@@ -49,6 +49,7 @@ module.exports = {
     },
     actions: {
       copyParticipantNames: '复制报名名单',
+      join: '报名',
       proxySignup: '代人报名',
       edit: '编辑活动',
       cancelActivity: '取消活动',

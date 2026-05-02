@@ -148,6 +148,7 @@ function buildTeamListVm(
       joinButtonText = translate('activity.status.joined');
     }
 
+    const joinActionVisible = !joinDisabled;
     const canProxySignup = Boolean(
       options.canManageRegistrations && signupState.joinEnabled && !isFull
     );
@@ -156,6 +157,8 @@ function buildTeamListVm(
       ...team,
       joinDisabled,
       joinButtonText,
+      joinActionVisible,
+      joinActionText: joinActionVisible ? translate('activity.actions.join') : '',
       canProxySignup,
       proxySignupText: canProxySignup ? translate('activity.actions.proxySignup') : '',
       members: Array.isArray(team.members)

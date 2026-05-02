@@ -50,6 +50,7 @@ module.exports = {
     descriptionTitle: 'Description',
     actions: {
       edit: 'Edit',
+      join: 'Join',
       copyParticipantNames: 'Copy participant names',
       proxySignup: 'Add participant',
       confirmProceeding: 'Confirm Activity',
