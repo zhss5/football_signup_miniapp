@@ -51,12 +51,13 @@ Component({
         return;
       }
 
-      const prefix = this.properties.labels.teamNamePrefix || 'Team';
+      const prefix = this.properties.labels.teamNamePrefix || '';
+      const defaultTeam = buildDefaultTeam(this.properties.teams.length);
       const teams = [
         ...this.properties.teams,
         {
-          ...buildDefaultTeam(this.properties.teams.length),
-          teamName: `${prefix} ${this.properties.teams.length + 1}`
+          ...defaultTeam,
+          teamName: prefix ? `${prefix}${this.properties.teams.length + 1}` : defaultTeam.teamName
         }
       ];
       this.emitTeams(teams);

@@ -32,7 +32,7 @@ function createDefaultActivityForm(options = {}) {
   const defaultTeams = Array.isArray(options.defaultTeams) && options.defaultTeams.length
     ? options.defaultTeams
     : [
-        { teamName: 'White', maxMembers: 12 }
+        { teamName: '队伍1', maxMembers: 12 }
       ];
   const defaultDate = getTomorrowDateInputValue(options.now);
 

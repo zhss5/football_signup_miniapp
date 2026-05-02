@@ -197,9 +197,11 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 ### 2.18 One-Team Activity Default
 
 - new activity forms start with one editable team by default
-- the default team uses the localized `White` team name and `12` slots
+- the default team uses `队伍1` in the Chinese UI and `12` slots
 - organizers can add teams up to the existing four-team maximum
-- team rows can be removed down to one team, but the final team cannot be removed
+- added teams continue the numbered team-name pattern
+- team rows keep their remove action on the same row as the team name and capacity fields
+- teams can be removed down to one team, but the final team cannot be removed
 - create/update validation continues to require at least one team
 
 ### 2.19 Activity Insurance Link
@@ -259,7 +261,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `277` tests passed
+- result: `278` tests passed
 
 Covered areas include:
 
@@ -274,6 +276,7 @@ Covered areas include:
 - cover display source preference and fallback behavior
 - Home filtering to joinable activities and newest-created sorting
 - direct cover-frame image choosing on Create/Edit Activity
+- default team naming and same-row team remove controls
 - compact member action button border rendering
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior

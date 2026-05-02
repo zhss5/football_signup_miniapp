@@ -9,7 +9,8 @@
 
 ## Activity Creation
 
-- Confirm a new activity starts with one default team
+- Confirm a new activity starts with one default team named `队伍1`
+- Confirm adding another team creates the next numbered team name and keeps each remove button on the same row as that team
 - Confirm the final remaining team cannot be removed
 - Confirm activity creation writes one `activities` document
 - Confirm activity creation writes the related `activity_teams` documents

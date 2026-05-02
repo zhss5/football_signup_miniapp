@@ -4,12 +4,14 @@
 
 .team-fields {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
   padding: 12rpx 0;
 }
 
 .team-input {
-  width: 68%;
+  flex: 1 1 auto;
+  min-width: 0;
   box-sizing: border-box;
   display: block;
   height: 88rpx;
@@ -20,12 +22,17 @@
 }
 
 .team-capacity {
-  width: 28%;
+  flex: 0 0 116rpx;
   text-align: center;
 }
 
 .remove-button {
-  margin-top: 12rpx;
+  flex: 0 0 132rpx;
+  margin: 0;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .add-button {

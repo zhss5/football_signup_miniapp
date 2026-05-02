@@ -161,7 +161,7 @@ module.exports = {
     addTeam: 'Add Team',
     remove: 'Remove',
     upToTeams: 'Up to {{count}} teams',
-    teamNamePrefix: 'Team',
+    teamNamePrefix: 'Team ',
     whiteTeam: 'White',
     redTeam: 'Red'
   },

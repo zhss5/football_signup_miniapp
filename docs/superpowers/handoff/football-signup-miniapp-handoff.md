@@ -243,9 +243,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `277` tests passed
+- `278` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -285,8 +285,10 @@ Current signup simplification:
 Current activity creation team defaults:
 
 - New activity forms start with one editable team.
-- The default team uses the localized `White` team name and `12` slots.
+- The default team uses `队伍1` in the Chinese UI and `12` slots.
 - Organizers can add teams up to the existing four-team maximum.
+- Added teams continue the numbered team-name pattern.
+- Team rows keep their remove action on the same row as the team name and capacity fields.
 - Team rows can be removed down to one team; the final remaining team cannot be removed.
 
 Current signup profile behavior:

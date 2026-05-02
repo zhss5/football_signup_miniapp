@@ -198,8 +198,12 @@ Page({
     const locale = getAppLocale();
     const i18n = getMessages(locale);
     const translate = makeTranslator(locale);
+    const defaultTeamNamePrefix = i18n.teamEditor.teamNamePrefix || '';
+    const defaultTeamName = defaultTeamNamePrefix
+      ? `${defaultTeamNamePrefix}1`
+      : translate('teamEditor.whiteTeam');
     const defaultTeams = [
-      { teamName: translate('teamEditor.whiteTeam'), maxMembers: 12 }
+      { teamName: defaultTeamName, maxMembers: 12 }
     ];
     const form = resetForm ? createDefaultActivityForm({ defaultTeams }) : this.data.form;
 

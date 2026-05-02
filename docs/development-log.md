@@ -1193,3 +1193,24 @@ Verification:
 
 - targeted red/green coverage was added for Home filtering/sorting, the cover-frame image chooser, and compact member action button borders.
 - full regression suite passed: `50` test suites, `277` tests.
+
+## 2026-05-02 - Team Editor Row Polish
+
+Activity creation team setup was adjusted to make team actions easier to read on mobile.
+
+Delivered behavior:
+
+- new activity forms default to one team named `队伍1` with `12` slots.
+- newly added teams continue the same naming pattern, such as `队伍2`.
+- the team editor keeps each team's `Remove` action on the same row as that team's name and capacity fields.
+- the final remaining team still cannot be removed.
+
+Why it matters:
+
+- organizers can immediately understand which team a remove button belongs to.
+- the default team name is neutral and works better for one-list signup activities than `White`.
+
+Verification:
+
+- targeted red/green coverage was added for default team naming and same-row remove controls.
+- full regression suite passed: `50` test suites, `278` tests.

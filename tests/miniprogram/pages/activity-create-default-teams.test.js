@@ -22,7 +22,7 @@ describe('activity create default teams', () => {
     });
     global.getApp = jest.fn(() => ({
       globalData: {
-        locale: 'en-US'
+        locale: 'zh-CN'
       }
     }));
     global.wx = {
@@ -52,7 +52,7 @@ describe('activity create default teams', () => {
 
     expect(ctx.data.form.teams).toEqual([
       {
-        teamName: 'White',
+        teamName: '队伍1',
         maxMembers: 12
       }
     ]);
