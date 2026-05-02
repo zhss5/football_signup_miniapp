@@ -1317,3 +1317,24 @@ Verification:
 
 - targeted red/green coverage was added for the Activity Detail confirmed-banner condition.
 - full regression suite passed: `50` test suites, `285` tests.
+
+## 2026-05-02 - Activity List Pagination TODO
+
+The project captured a future pagination/infinite-scroll TODO for activity lists.
+
+Current behavior:
+
+- Home and My activity pages load one batch of activities.
+- the frontend can only sort and filter the activities returned by the current `listActivities` call.
+- if activity volume grows beyond the cloud function's single-query return range, older activities may not appear.
+
+TODO:
+
+- update `listActivities` to support explicit pagination with `limit` plus `skip` or a cursor.
+- apply stable cloud-side sorting for each scope before pagination, for example `startAt` descending for My and the selected Home sort key for Home.
+- add page-level `onReachBottom` loading for Home and My.
+- preserve current Home filtering to joinable activities and My filtering tabs while loading additional pages.
+
+Verification:
+
+- documentation-only change; no runtime behavior changed.

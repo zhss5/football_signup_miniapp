@@ -358,6 +358,12 @@ Current Home list behavior:
 - Home sorts visible activities by `createdAt`, newest first.
 - hidden closed/cancelled/full/deadline-past activities are filtered before cover image URL resolution.
 
+Current My list behavior:
+
+- My loads one batch each for created activities and joined activities.
+- My sorts the returned activities by `startAt`, newest first.
+- TODO: add real pagination to `listActivities` and Home/My `onReachBottom` loading before activity volume regularly exceeds one returned batch.
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -396,12 +402,16 @@ Continue in this order:
    - validate signup subscription prompt, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
-14. Keep the future operations/backend backlog visible but deferred:
+14. Add activity-list pagination when activity volume exceeds one returned batch:
+   - make `listActivities` accept a stable `limit` plus `skip` or cursor
+   - sort cloud-side before pagination
+   - add `onReachBottom` loading to Home and My while preserving current filters
+15. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-15. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-16. Push local commits if they should be shared:
+16. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+17. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

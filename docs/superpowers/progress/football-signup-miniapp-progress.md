@@ -340,6 +340,7 @@ The MVP still has known non-blocking gaps:
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 - invite-code enforcement is not implemented yet; keep the field hidden until signup entry, backend validation, and Home visibility rules are designed
+- activity lists do not have real pagination yet; add `listActivities` pagination and page-level `onReachBottom` loading before activity volume regularly exceeds one returned batch
 
 ## 6. Recommended Next Steps
 
@@ -393,6 +394,7 @@ The MVP still has known non-blocking gaps:
 
 ### Option C: Media and UX Polish
 
+- TODO: add paginated activity-list loading for Home and My once activity volume exceeds one returned batch
 - keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen
 - replace slider-based cropping with gesture-based dragging and zooming
 - add optional Join page nickname/avatar selection and prefill from the user profile
