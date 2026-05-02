@@ -86,6 +86,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     inviteCode: event.inviteCode || '',
     feeMode: 'free',
     status: 'published',
+    confirmStatus: 'pending',
+    confirmedAt: '',
+    confirmedByOpenId: '',
     createdAt: stamp,
     updatedAt: stamp
   };

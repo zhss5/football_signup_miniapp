@@ -15,14 +15,20 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildTeamListVm: jest.fn((teams) => teams)
 }));
 
+jest.mock('../../../miniprogram/services/notification-service', () => ({
+  notifyActivityParticipants: jest.fn()
+}));
+
 describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
+  let cancelActivity;
   let addProxyRegistration;
   let moveRegistration;
   let removeRegistration;
   let buildTeamListVm;
   let resolveActivityCoverImage;
+  let notifyActivityParticipants;
 
   beforeEach(() => {
     pageConfig = null;
@@ -40,11 +46,17 @@ describe('activity detail page', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
+    ({ cancelActivity } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
+    ({ notifyActivityParticipants } = require('../../../miniprogram/services/notification-service'));
+    notifyActivityParticipants.mockResolvedValue({
+      sent: 0,
+      failed: 0
+    });
   });
 
   test('openSignup stores the selected team name so the sheet can show which team is being joined', () => {
@@ -314,6 +326,38 @@ describe('activity detail page', () => {
     expect(ctx.data.locationMapMarkers).toEqual([]);
   });
 
+  test('onConfirmActivityProceeding confirms the activity, notifies subscribers, and reloads detail', async () => {
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true });
+    });
+    notifyActivityParticipants.mockResolvedValue({
+      sent: 1,
+      failed: 0
+    });
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onConfirmActivityProceeding.call(ctx);
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Confirm Activity',
+        content: 'Mark this activity as confirmed and notify subscribed participants?'
+      })
+    );
+    expect(notifyActivityParticipants).toHaveBeenCalledWith('activity_123', 'proceeding');
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Activity confirmed',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
+  });
+
   test('openEditActivity navigates to the create page in edit mode for the current activity', () => {
     const ctx = {
       data: {
@@ -579,6 +623,38 @@ describe('activity detail page', () => {
         encodeURIComponent('https://insurance.example.com/apply?activity=abc&team=white')
     });
     expect(global.wx.setClipboardData).not.toHaveBeenCalled();
+  });
+
+  test('onCancelActivity cancels the activity, sends cancellation notices, and reloads detail', async () => {
+    cancelActivity.mockResolvedValue({
+      status: 'cancelled'
+    });
+    notifyActivityParticipants.mockResolvedValue({
+      sent: 1,
+      failed: 0
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true });
+    });
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onCancelActivity.call(ctx);
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Cancel Activity',
+        content: 'This will stop new signups and notify subscribed participants.'
+      })
+    );
+    expect(cancelActivity).toHaveBeenCalledWith('activity_123');
+    expect(notifyActivityParticipants).toHaveBeenCalledWith('activity_123', 'cancelled');
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('onShareAppMessage shares the current activity detail page', () => {

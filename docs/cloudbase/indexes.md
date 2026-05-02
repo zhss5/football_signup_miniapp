@@ -6,3 +6,5 @@
 - registrations: activityId + status
 - registrations: userOpenId + updatedAt
 - activity_logs: activityId + createdAt
+- notification_subscriptions: activityId + templateKey + status
+- notification_logs: activityId + notificationType + recipientOpenId + status

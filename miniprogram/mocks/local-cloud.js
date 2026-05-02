@@ -29,7 +29,9 @@ function createDefaultState() {
     activities: {},
     teams: {},
     registrations: {},
-    activityLogs: []
+    activityLogs: [],
+    notificationSubscriptions: {},
+    notificationLogs: []
   };
 }
 
@@ -191,6 +193,9 @@ function createLocalCloudClient(options = {}) {
       inviteCode: payload.inviteCode || '',
       feeMode: 'free',
       status: 'published',
+      confirmStatus: 'pending',
+      confirmedAt: '',
+      confirmedByOpenId: '',
       createdAt: stamp,
       updatedAt: stamp
     };
@@ -825,6 +830,148 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function normalizeSubscriptionStatus(value) {
+    return value === 'accept' || value === 'accepted' ? 'accepted' : 'declined';
+  }
+
+  function recordNotificationSubscription(payload) {
+    if (!payload.activityId) {
+      throw new Error('activityId is required');
+    }
+
+    if (!payload.templateId) {
+      throw new Error('templateId is required');
+    }
+
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const templateKey = String(payload.templateKey || 'activity_notice').trim() || 'activity_notice';
+    const status = normalizeSubscriptionStatus(payload.status);
+    const subscriptionId = `${payload.activityId}_${openid}_${templateKey}`;
+
+    state.notificationSubscriptions[subscriptionId] = {
+      _id: subscriptionId,
+      activityId: payload.activityId,
+      userOpenId: openid,
+      templateKey,
+      templateId: String(payload.templateId).trim(),
+      status,
+      subscribed: status === 'accepted',
+      updatedAt: stamp
+    };
+
+    writeState(state);
+    return {
+      activityId: payload.activityId,
+      templateKey,
+      status,
+      subscribed: status === 'accepted'
+    };
+  }
+
+  function hasNotificationLog(state, activityId, notificationType, userOpenId) {
+    return state.notificationLogs.some(
+      item =>
+        item.activityId === activityId &&
+        item.notificationType === notificationType &&
+        item.recipientOpenId === userOpenId &&
+        item.status === 'sent'
+    );
+  }
+
+  function notifyActivityParticipants(payload) {
+    if (!payload.activityId) {
+      throw new Error('activityId is required');
+    }
+
+    if (!['proceeding', 'cancelled'].includes(payload.notificationType)) {
+      throw new Error('Unsupported notification type');
+    }
+
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const activity = state.activities[payload.activityId];
+    const actor = state.users[openid] || buildDefaultUser(openid, stamp);
+
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+
+    if (!canEditActivity(activity, actor, openid)) {
+      throw new Error('Only the organizer or an admin can notify participants');
+    }
+
+    if (payload.notificationType === 'proceeding') {
+      if (activity.status !== 'published') {
+        throw new Error('Only published activities can be confirmed');
+      }
+
+      activity.confirmStatus = 'confirmed';
+      activity.confirmedAt = stamp;
+      activity.confirmedByOpenId = openid;
+      activity.updatedAt = stamp;
+    } else {
+      activity.status = 'cancelled';
+      activity.cancelledAt = stamp;
+      activity.cancelledByOpenId = openid;
+      activity.updatedAt = stamp;
+    }
+
+    const joinedOpenIds = new Set(
+      Object.values(state.registrations)
+        .filter(item => item.activityId === payload.activityId && item.status === 'joined')
+        .map(item => item.userOpenId)
+    );
+    const subscriptions = Object.values(state.notificationSubscriptions).filter(
+      item =>
+        item.activityId === payload.activityId &&
+        item.templateKey === 'activity_notice' &&
+        item.status === 'accepted' &&
+        joinedOpenIds.has(item.userOpenId)
+    );
+    let sent = 0;
+    let skipped = 0;
+
+    subscriptions.forEach(subscription => {
+      if (
+        hasNotificationLog(
+          state,
+          payload.activityId,
+          payload.notificationType,
+          subscription.userOpenId
+        )
+      ) {
+        skipped += 1;
+        return;
+      }
+
+      state.notificationLogs.push({
+        _id: nextId(state, 'notification_log'),
+        activityId: payload.activityId,
+        recipientOpenId: subscription.userOpenId,
+        notificationType: payload.notificationType,
+        templateId: subscription.templateId,
+        status: 'sent',
+        createdAt: stamp
+      });
+      sent += 1;
+    });
+
+    writeState(state);
+    return {
+      activityId: payload.activityId,
+      notificationType: payload.notificationType,
+      confirmed: payload.notificationType === 'proceeding',
+      cancelled: payload.notificationType === 'cancelled',
+      totalRecipients: subscriptions.length,
+      sent,
+      failed: 0,
+      skipped
+    };
+  }
+
   function deleteActivity(payload) {
     const state = readState();
     const openid = getOpenId();
@@ -894,6 +1041,8 @@ function createLocalCloudClient(options = {}) {
     cancelRegistration,
     removeRegistration,
     moveRegistration,
+    recordNotificationSubscription,
+    notifyActivityParticipants,
     cancelActivity,
     deleteActivity,
     getActivityStats

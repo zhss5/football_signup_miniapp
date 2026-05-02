@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-05-01
+- Date: 2026-05-02
 - Branch: `main`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -11,7 +11,7 @@ The repository is on `main`.
 
 `origin/main` may be behind the local branch. Push local commits when they are ready to share.
 
-Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, notification roadmap documentation, activity editing roadmap documentation, the first organizer/admin activity editing implementation, initial cover loading optimization notes, and a captured post-MVP backlog.
+Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, activity editing, media optimization, organizer roster tools, insurance links, and the first activity confirmation/notification implementation.
 
 The codebase supports:
 
@@ -32,6 +32,9 @@ The codebase supports:
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
 - optional activity insurance link creation, editing, and Activity Detail web-view opening
+- activity confirmation state with organizer/admin-triggered `Confirm Activity`
+- signup subscription opt-in and cloud-function-backed notification records
+- organizer/admin-triggered proceeding and cancellation notices for subscribed active participants
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -56,6 +59,8 @@ Deployable cloud functions currently include:
 - `getActivityStats`
 - `removeRegistration`
 - `moveRegistration`
+- `recordNotificationSubscription`
+- `notifyActivityParticipants`
 
 Legacy note:
 
@@ -74,6 +79,17 @@ Latest insurance-link change:
 - upload a new mini program frontend build so the Create/Edit field and the Activity Detail share-card insurance purchase link are available.
 - redeploy `createActivity` and `updateActivity` after running `npm run copy:cloud-shared` before testing this feature on CloudBase.
 - configure the insurance URL domain in the mini program business-domain settings before expecting the external page to open on real devices.
+
+Latest activity-notification change:
+
+- `createActivity` now initializes `confirmStatus: pending`, `confirmedAt: ''`, and `confirmedByOpenId: ''`.
+- successful signup requests the configured activity-notice subscription template and records the user choice through `recordNotificationSubscription`.
+- Activity Detail now shows `Confirm Activity` to organizers/admins for unconfirmed published activities.
+- `notifyActivityParticipants` confirms or cancels the activity, sends subscribed active participants the relevant WeChat subscription message, and writes per-recipient logs.
+- duplicate sends are skipped per `activityId + notificationType + recipientOpenId`.
+- configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only config before expecting real subscription prompts or sends.
+- deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the subscription prompt, confirmed banner, and organizer action are available on device.
 
 Earlier rollout reference:
 
@@ -127,6 +143,8 @@ If startup timeout appears again, recommended actions:
    - `activity_teams`
    - `registrations`
    - `activity_logs`
+   - `notification_subscriptions`
+   - `notification_logs`
 
 WeChat verification note:
 
@@ -169,7 +187,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -194,10 +212,10 @@ npm test
 
 Latest result:
 
-- `47` test suites passed
-- `241` tests passed
+- `50` test suites passed
+- `258` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -264,6 +282,17 @@ Current insurance-link behavior:
 - tapping the insurance purchase link opens the URL through `pages/insurance-webview/index`.
 - the external insurance domain must be configured as a mini program business domain; otherwise WeChat can block the web-view page on real devices.
 
+Current activity notification behavior:
+
+- new activities carry a separate confirmation state: `confirmStatus: pending/confirmed`.
+- signup requests a subscription only when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured.
+- subscription choices are stored in `notification_subscriptions`; declined choices are stored too, but only accepted active registrations are notified.
+- organizers/admins can confirm a published activity from Activity Detail.
+- confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.
+- cancellation closes signup and attempts to send cancellation notices to subscribed active participants.
+- notification attempts are logged in `notification_logs`; duplicate sends for the same notification type and recipient are skipped.
+- real sends require the WeChat subscription template to match the sender keyword mapping: `thing1`, `time2`, `thing3`, `phrase4`, `thing5`.
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -294,12 +323,11 @@ Continue in this order:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
 9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, and organizer team reassignment after CloudBase deployment.
-10. Implement participant notification subscriptions first, then organizer-triggered notifications using:
+10. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-   - first version keeps `status: published/cancelled/deleted`
-   - first version adds `confirmStatus: pending/confirmed`
-   - confirming an activity will proceed does not close signup
-   - late joiners see the confirmed state in-app but do not receive the already-sent proceeding notification
+   - add the real template ID to local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
+   - deploy `recordNotificationSubscription` and `notifyActivityParticipants`
+   - validate signup subscription prompt, confirmation notice, cancellation notice, and duplicate-send skipping on a real device
 11. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 12. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 13. Plan later mini program backlog items:
@@ -319,12 +347,15 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspaces/football_signup_miniapp/README.md`
 - `D:/workspaces/football_signup_miniapp/miniprogram/services/cloud.js`
 - `D:/workspaces/football_signup_miniapp/miniprogram/services/activity-service.js`
+- `D:/workspaces/football_signup_miniapp/miniprogram/services/notification-service.js`
 - `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-create/index.js`
 - `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-detail/index.js`
 - `D:/workspaces/football_signup_miniapp/miniprogram/config/env.js`
 - `D:/workspaces/football_signup_miniapp/cloudfunctions/ensureUserProfile/index.js`
 - `D:/workspaces/football_signup_miniapp/cloudfunctions/createActivity/index.js`
 - `D:/workspaces/football_signup_miniapp/cloudfunctions/updateActivity/index.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/recordNotificationSubscription/index.js`
+- `D:/workspaces/football_signup_miniapp/cloudfunctions/notifyActivityParticipants/index.js`
 - `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/database.js`
 - `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/roles.js`
 - `D:/workspaces/football_signup_miniapp/miniprogram/utils/roles.js`

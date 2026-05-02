@@ -32,7 +32,8 @@ module.exports = {
       cancelled: 'Cancelled',
       deleted: 'Deleted',
       ended: 'Ended',
-      joined: 'Joined'
+      joined: 'Joined',
+      confirmed: 'Confirmed'
     },
     share: {
       publishedTitle: 'Activity published',
@@ -50,6 +51,7 @@ module.exports = {
       edit: 'Edit',
       copyParticipantNames: 'Copy participant names',
       proxySignup: 'Add participant',
+      confirmProceeding: 'Confirm Activity',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
       moveMember: 'Move',
@@ -159,7 +161,11 @@ module.exports = {
   modal: {
     cancelActivity: {
       title: 'Cancel Activity',
-      content: 'This will stop new signups and mark the activity as cancelled.'
+      content: 'This will stop new signups and notify subscribed participants.'
+    },
+    confirmProceeding: {
+      title: 'Confirm Activity',
+      content: 'Mark this activity as confirmed and notify subscribed participants?'
     },
     deleteActivity: {
       title: 'Delete Activity',
@@ -188,7 +194,9 @@ module.exports = {
     noParticipantsToCopy: 'No participants to copy',
     proxySignupSuccess: 'Participant added',
     moveRegistrationSuccess: 'Participant moved',
-    noMoveTargetTeam: 'No available target team'
+    noMoveTargetTeam: 'No available target team',
+    activityConfirmed: 'Activity confirmed',
+    notificationFailed: 'Notification failed'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',

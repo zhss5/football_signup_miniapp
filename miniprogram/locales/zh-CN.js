@@ -225,3 +225,15 @@ module.exports = {
     deleteOnlyEmpty: '只有无人报名的活动才可以删除'
   }
 };
+
+module.exports.activity.status.confirmed = '\u5df2\u786e\u8ba4\u4e3e\u884c';
+module.exports.activity.actions.confirmProceeding = '\u786e\u8ba4\u4e3e\u884c';
+module.exports.modal.cancelActivity.content =
+  '\u6b64\u64cd\u4f5c\u4f1a\u505c\u6b62\u65b0\u7684\u62a5\u540d\uff0c\u5e76\u901a\u77e5\u5df2\u8ba2\u9605\u7684\u53c2\u4e0e\u8005\u3002';
+module.exports.modal.confirmProceeding = {
+  title: '\u786e\u8ba4\u4e3e\u884c',
+  content:
+    '\u5c06\u6d3b\u52a8\u6807\u8bb0\u4e3a\u786e\u8ba4\u4e3e\u884c\uff0c\u5e76\u901a\u77e5\u5df2\u8ba2\u9605\u7684\u53c2\u4e0e\u8005\uff1f'
+};
+module.exports.toast.activityConfirmed = '\u6d3b\u52a8\u5df2\u786e\u8ba4';
+module.exports.toast.notificationFailed = '\u901a\u77e5\u53d1\u9001\u5931\u8d25';

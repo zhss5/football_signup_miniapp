@@ -26,6 +26,8 @@
 - If the web-view page is blocked on a real device, confirm the insurance URL domain is configured as a mini program business domain
 - Confirm the join page does not show phone input or WeChat phone authorization
 - Confirm join flow writes `registrations._id = activityId_openid`
+- Confirm the post-signup subscription prompt appears after a successful signup when an activity-notice template ID is configured
+- Confirm `notification_subscriptions` records the user's accepted or declined choice
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
 - Confirm only one active signup per activity is allowed
 - Confirm signup is blocked after `signupDeadlineAt`
@@ -48,7 +50,11 @@
 - Confirm regular users cannot see or use member move controls
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names
+- Confirm organizer/admin can tap `Confirm Activity` on a published activity
+- Confirm the confirmed state appears on Activity Detail after confirmation
+- Confirm `notification_logs` records proceeding notification send results for subscribed active participants
 - Confirm organizer cancel changes activity status to `cancelled`
+- Confirm organizer cancellation sends cancellation notices to subscribed active participants and logs the results
 - Confirm organizer soft delete is allowed only when `joinedCount = 0`
 - Confirm deleted activities remain visible to the organizer in Created history only
 

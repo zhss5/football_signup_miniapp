@@ -911,3 +911,32 @@ Verification:
 
 - targeted red/green coverage was added for draft payloads, create/update cloud functions, local mock storage, Create page rendering, Activity Detail rendering, and web-view opening.
 - full regression suite passed: `47` test suites, `241` tests after adding the dedicated insurance web-view page.
+
+## 2026-05-02 - Activity Confirmation and Notification V1 Implemented
+
+The first activity notification loop is now implemented in code.
+
+Delivered behavior:
+
+- new activities start with `confirmStatus: pending`, `confirmedAt: ''`, and `confirmedByOpenId: ''`
+- successful signup requests the configured activity-notice subscription template and records the user's accepted or declined choice
+- subscriptions are stored in `notification_subscriptions` through the new `recordNotificationSubscription` cloud function
+- Activity Detail shows `Confirm Activity` to organizers/admins while a published activity is still unconfirmed
+- confirming an activity sets `confirmStatus: confirmed`, stores confirmation metadata, and sends proceeding notices to subscribed active participants
+- confirmed activities remain joinable until the normal signup rules close them
+- cancelling an activity sends cancellation notices to subscribed active participants and logs results
+- notification send results are stored in `notification_logs` and duplicate sends for the same notification type and recipient are skipped
+- local mock mode implements the same subscription, confirmation, cancellation, and notification-summary behavior
+
+Operational notes:
+
+- configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only runtime config before expecting the subscription prompt and real sends
+- the template keywords used by the first sender are `thing1`, `time2`, `thing3`, `phrase4`, and `thing5`; choose a WeChat template that matches these fields or adjust the sender mapping deliberately
+- deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`
+- `notifyActivityParticipants` includes `config.json` OpenAPI permission for `subscribeMessage.send`
+- no database permission broadening is required because reads/writes go through cloud functions
+
+Verification:
+
+- targeted red/green coverage was added for the new cloud functions, local mock behavior, notification service adapter, signup subscription request, and Activity Detail organizer actions.
+- full regression suite passed: `50` test suites, `258` tests.

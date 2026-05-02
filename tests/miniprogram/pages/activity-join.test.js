@@ -13,11 +13,16 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
   ensureUserProfile: jest.fn()
 }));
 
+jest.mock('../../../miniprogram/services/notification-service', () => ({
+  requestActivityNotificationSubscription: jest.fn()
+}));
+
 describe('activity join page', () => {
   let pageConfig;
   let joinActivity;
   let uploadFile;
   let ensureUserProfile;
+  let requestActivityNotificationSubscription;
   let openerEventChannel;
 
   beforeEach(() => {
@@ -42,7 +47,12 @@ describe('activity join page', () => {
     ({ joinActivity } = require('../../../miniprogram/services/registration-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
+    ({ requestActivityNotificationSubscription } = require('../../../miniprogram/services/notification-service'));
     ensureUserProfile.mockResolvedValue({ user: {} });
+    requestActivityNotificationSubscription.mockResolvedValue({
+      configured: true,
+      status: 'accepted'
+    });
   });
 
   afterEach(() => {
@@ -98,6 +108,7 @@ describe('activity join page', () => {
       profileSource: 'wechat',
       source: 'share'
     });
+    expect(requestActivityNotificationSubscription).toHaveBeenCalledWith('activity_123');
     expect(openerEventChannel.emit).toHaveBeenCalledWith('signupSuccess');
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup successful',
@@ -108,6 +119,38 @@ describe('activity join page', () => {
 
     expect(global.wx.navigateBack).toHaveBeenCalledWith({
       delta: 1
+    });
+  });
+
+  test('keeps signup successful when notification subscription request fails', async () => {
+    joinActivity.mockResolvedValue({ status: 'joined' });
+    requestActivityNotificationSubscription.mockRejectedValue(new Error('subscribe failed'));
+
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onLoad.call(ctx, {
+      activityId: 'activity_123',
+      teamId: 'team_red',
+      teamName: 'Red'
+    });
+    ctx.setData({
+      signupName: 'Alex'
+    });
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(joinActivity).toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Signup successful',
+      icon: 'success'
     });
   });
 

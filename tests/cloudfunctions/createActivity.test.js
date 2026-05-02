@@ -127,6 +127,11 @@ test('createActivity stores map location, deadline, image list, and auto generat
     signupLimitTotal: 20,
     requirePhone: false
   });
+  expect(writes[0].data).toMatchObject({
+    confirmStatus: 'pending',
+    confirmedAt: '',
+    confirmedByOpenId: ''
+  });
 
   const teamWrites = writes.filter(item => item.name === 'activity_teams');
   expect(teamWrites).toHaveLength(3);

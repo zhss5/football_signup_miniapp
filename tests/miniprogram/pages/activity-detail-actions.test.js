@@ -13,6 +13,9 @@ describe('activity detail actions', () => {
     expect(wxml).toContain('{{i18n.activity.actions.edit}}');
     expect(wxml).toContain('{{i18n.activity.actions.copyParticipantNames}}');
     expect(wxml).toContain('bindtap="onCopyParticipantNames"');
+    expect(wxml).toContain('{{i18n.activity.status.confirmed}}');
+    expect(wxml).toContain('bindtap="onConfirmActivityProceeding"');
+    expect(wxml).toContain('{{i18n.activity.actions.confirmProceeding}}');
     expect(wxml).toContain('{{i18n.activity.actions.cancelActivity}}');
     expect(wxml).toContain('bind:proxysignup="onProxySignup"');
     expect(wxml).toContain('bind:removemember="onRemoveRegistration"');

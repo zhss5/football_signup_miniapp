@@ -149,6 +149,17 @@
   box-sizing: border-box;
 }
 
+.confirmed-banner {
+  display: inline-flex;
+  margin-top: 18rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
 .action-panel {
   display: flex;
   flex-direction: column;
@@ -165,4 +176,9 @@
 
 .danger-action-button {
   color: #b91c1c;
+}
+
+.confirm-action-button {
+  color: #166534;
+  background: #ecfdf5;
 }

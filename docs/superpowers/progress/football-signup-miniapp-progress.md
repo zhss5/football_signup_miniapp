@@ -1,6 +1,6 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-05-01
+- Date: 2026-05-02
 - Status: In active MVP iteration
 - Active branch: `main`
 - Main workspace: `D:/workspaces/football_signup_miniapp`
@@ -25,7 +25,7 @@ The latest CloudBase work has already:
 - validated the role-gated `createActivity` flow in CloudBase after deployment
 - added `updateActivity` for organizer/admin edits; deploy this function before real-device edit testing
 
-The current focus is shifting from CloudBase bring-up to real-device validation, media performance, participant communication, and operations polish.
+The current focus is shifting from CloudBase bring-up to real-device validation, media performance, participant communication, and operations polish. Notification V1 is now implemented in code, but still needs a real WeChat subscription template ID and CloudBase deployment before real-device validation.
 
 ## 2. Completed Features
 
@@ -202,6 +202,18 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - tapping the insurance purchase link opens the URL in a dedicated mini program `web-view` page
 - real-device opening requires the insurance URL domain to be configured as a mini program business domain
 
+### 2.20 Activity Confirmation and Notification V1
+
+- new activities store `confirmStatus: pending`, `confirmedAt`, and `confirmedByOpenId`
+- successful signup requests the configured activity-notice subscription template
+- the new `recordNotificationSubscription` cloud function stores accepted or declined subscription choices in `notification_subscriptions`
+- Activity Detail shows `Confirm Activity` to organizers/admins while a published activity is unconfirmed
+- confirming an activity stores confirmation metadata, shows an in-app confirmed state, and sends proceeding notices to subscribed active participants
+- confirmed activities remain joinable until normal signup rules close them
+- cancellation sends cancellation notices to subscribed active participants
+- the new `notifyActivityParticipants` cloud function logs per-recipient results in `notification_logs` and skips duplicate sends for the same recipient/type
+- local mock mode implements the same subscription and notification summary behavior
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -223,14 +235,15 @@ The current implementation differs from the original early MVP assumptions in th
 - organizers/admins can move participants between teams
 - activity creation now starts from one team instead of two
 - activities can include an optional insurance signup link
+- activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
 
 ## 4. Verification Status
 
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `47` test suites passed
-- result: `241` tests passed
+- result: `50` test suites passed
+- result: `258` tests passed
 
 Covered areas include:
 
@@ -250,6 +263,7 @@ Covered areas include:
 - organizer team reassignment behavior
 - one-team default activity setup behavior
 - optional insurance-link create/edit/detail web-view opening behavior
+- activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
 
 ## 4.1 Current Media Progress
 
@@ -279,7 +293,8 @@ The MVP still has known non-blocking gaps:
 - a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
 - a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
 - bench promotion is not implemented as a dedicated workflow yet; organizers can move participants manually between non-full teams
-- participant subscription notifications are not implemented yet; first version should request subscription after signup and let organizers manually notify subscribed participants
+- real WeChat subscription-message template configuration and real-device notification smoke testing are still pending
+- automatic pre-activity reminders are still deferred until manual notifications are stable
 - restore-from-delete flow is not implemented yet
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
@@ -319,17 +334,17 @@ The MVP still has known non-blocking gaps:
 
 ### Option B2: Participant Notifications
 
-- implement WeChat subscription request after successful signup before notification sending
-- prefer one generic activity-notification template if the WeChat template library supports it
-- use separate reminder and cancellation templates only if a generic template is unavailable
-- add organizer-triggered `Confirm activity will proceed` before automatic reminders
-- store confirmation as `confirmStatus: pending/confirmed` while keeping `status: published/cancelled/deleted`
-- keep confirmed activities joinable until normal signup rules close them
-- show an in-app confirmed state to participants who join after confirmation
-- do not backfill the already-sent proceeding notification to late joiners in the first version
-- send cancellation notices when an organizer cancels an activity and closes signup
-- send only to active registrations that accepted the relevant subscription
-- log per-recipient send results and prevent duplicate sends for the same notification type
+- completed in code: request WeChat subscription after successful signup when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured
+- completed in code: use one generic activity-notice template slot for proceeding and cancellation notices
+- completed in code: organizer/admin-triggered `Confirm Activity`
+- completed in code: store confirmation as `confirmStatus: pending/confirmed` while keeping `status: published/cancelled/deleted`
+- completed in code: keep confirmed activities joinable until normal signup rules close them
+- completed in code: show an in-app confirmed state to participants who join after confirmation
+- completed in code: do not backfill the already-sent proceeding notification to late joiners
+- completed in code: send cancellation notices when an organizer cancels an activity
+- completed in code: send only to active registrations that accepted the relevant subscription
+- completed in code: log per-recipient send results and prevent duplicate sends for the same notification type
+- pending operation: configure the actual WeChat template ID and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 
 ### Option C: Media and UX Polish

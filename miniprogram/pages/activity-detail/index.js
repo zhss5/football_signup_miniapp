@@ -9,6 +9,7 @@ const {
   moveRegistration,
   removeRegistration
 } = require('../../services/registration-service');
+const { notifyActivityParticipants } = require('../../services/notification-service');
 const { buildTeamListVm } = require('../../utils/formatters');
 const {
   getAppLocale,
@@ -328,6 +329,32 @@ Page({
     }
   },
 
+  async onConfirmActivityProceeding() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const confirmed = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.confirmProceeding.title'),
+        content: translate('modal.confirmProceeding.content'),
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await notifyActivityParticipants(this.data.activityId, 'proceeding');
+      wx.showToast({
+        title: translate('toast.activityConfirmed'),
+        icon: 'success'
+      });
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
   onCopyParticipantNames() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const names = buildParticipantNameList(this.data.teams);
@@ -380,6 +407,14 @@ Page({
 
     try {
       await cancelActivity(this.data.activityId);
+      try {
+        await notifyActivityParticipants(this.data.activityId, 'cancelled');
+      } catch (notifyError) {
+        wx.showToast({
+          title: translate('toast.notificationFailed'),
+          icon: 'none'
+        });
+      }
       await this.reload();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });

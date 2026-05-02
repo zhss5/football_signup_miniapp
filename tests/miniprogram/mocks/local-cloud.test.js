@@ -1018,3 +1018,84 @@ test('local cloud client keeps phone authorization available for future extensio
     phoneSource: 'wechat'
   });
 });
+
+test('local cloud client records subscriptions and lets organizers confirm or cancel with notification summaries', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+  await participantClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'activity_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+
+  await expect(
+    ownerClient.call('notifyActivityParticipants', {
+      activityId: created.activityId,
+      notificationType: 'proceeding'
+    })
+  ).resolves.toMatchObject({
+    confirmed: true,
+    sent: 1
+  });
+  const confirmedDetail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(confirmedDetail.activity).toMatchObject({
+    confirmStatus: 'confirmed',
+    confirmedByOpenId: 'openid_owner'
+  });
+
+  await expect(
+    ownerClient.call('notifyActivityParticipants', {
+      activityId: created.activityId,
+      notificationType: 'cancelled'
+    })
+  ).resolves.toMatchObject({
+    cancelled: true,
+    sent: 1
+  });
+  const cancelledDetail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(cancelledDetail.activity.status).toBe('cancelled');
+});

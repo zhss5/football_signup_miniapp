@@ -1,5 +1,6 @@
 const { joinActivity } = require('../../services/registration-service');
 const { uploadFile } = require('../../services/cloud');
+const { requestActivityNotificationSubscription } = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const {
   getAppLocale,
@@ -159,6 +160,7 @@ Page({
       });
 
       markActivityDetailForRefresh(this.data.activityId);
+      await requestActivityNotificationSubscription(this.data.activityId).catch(() => null);
 
       if (this.openerEventChannel && typeof this.openerEventChannel.emit === 'function') {
         this.openerEventChannel.emit('signupSuccess');

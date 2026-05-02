@@ -28,6 +28,9 @@
         </map>
       </view>
     </view>
+    <view wx:if="{{activity.confirmStatus === 'confirmed'}}" class="confirmed-banner">
+      <text>{{i18n.activity.status.confirmed}}</text>
+    </view>
   </view>
 
   <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
@@ -52,6 +55,14 @@
   <view wx:if="{{viewer && (viewer.canManageRegistrations || viewer.canEditActivity || viewer.canCancelActivity)}}" class="action-panel">
     <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
       {{i18n.activity.actions.copyParticipantNames}}
+    </button>
+
+    <button
+      wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
+      class="action-button confirm-action-button"
+      bindtap="onConfirmActivityProceeding"
+    >
+      {{i18n.activity.actions.confirmProceeding}}
     </button>
 
     <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">

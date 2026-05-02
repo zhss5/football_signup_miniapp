@@ -12,7 +12,10 @@ describe('env config', () => {
       USE_LOCAL_MOCK: true,
       CLOUD_ENV_ID: '',
       LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
-      ENABLE_CLOUD_DIAGNOSTICS: false
+      ENABLE_CLOUD_DIAGNOSTICS: false,
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        activityNotice: ''
+      }
     });
   });
 
@@ -28,7 +31,10 @@ describe('env config', () => {
       USE_LOCAL_MOCK: false,
       CLOUD_ENV_ID: 'prod-env-123',
       LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
-      ENABLE_CLOUD_DIAGNOSTICS: false
+      ENABLE_CLOUD_DIAGNOSTICS: false,
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        activityNotice: ''
+      }
     });
   });
 });
