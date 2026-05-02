@@ -34,7 +34,7 @@
         </map>
       </view>
     </view>
-    <view wx:if="{{activity.confirmStatus === 'confirmed'}}" class="confirmed-banner">
+    <view wx:if="{{activity.status === 'published' && activity.confirmStatus === 'confirmed'}}" class="confirmed-banner">
       <text>{{i18n.activity.status.confirmed}}</text>
     </view>
   </view>

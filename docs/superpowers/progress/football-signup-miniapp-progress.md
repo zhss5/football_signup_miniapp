@@ -225,6 +225,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - the subscription choice is recorded only after the signup cloud call succeeds
 - Activity Detail shows `Confirm Activity` to organizers/admins while a published activity is unconfirmed
 - confirming an activity stores confirmation metadata, shows an in-app confirmed state, and sends proceeding notices to subscribed active participants
+- the in-app confirmed state is shown only while the activity remains published
 - confirmation notices use the activity's optional `notificationHint` when present
 - confirmed activities remain joinable until normal signup rules close them
 - cancellation sends cancellation notices to subscribed active participants
@@ -257,6 +258,7 @@ The current implementation differs from the original early MVP assumptions in th
 - the reserved invite-code field is hidden until invite-code signup enforcement is implemented
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
+- cancelled activities suppress the previous confirmed-state banner on Activity Detail
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
 - participants can optionally choose up to two preferred playing positions during signup, organizers/admins can see those choices on Activity Detail, and the participant's latest choices are prefilled on future signups
 
@@ -266,7 +268,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `284` tests passed
+- result: `285` tests passed
 
 Covered areas include:
 
@@ -297,6 +299,7 @@ Covered areas include:
 - one-team default activity setup behavior
 - optional insurance-link create/edit/detail web-view opening behavior
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
+- cancelled activity confirmation-banner suppression
 - notification reminder persistence and confirmation-message reminder behavior
 - real-device subscription prompt timing and cover-image fallback candidates
 - preferred-position profile persistence and future-signup prefill behavior

@@ -1297,3 +1297,23 @@ Verification:
 
 - targeted red/green coverage was added to ensure the Create/Edit Activity template does not render the reserved invite-code input.
 - full regression suite passed: `50` test suites, `284` tests.
+
+## 2026-05-02 - Cancelled Activity Confirmation Banner Fix
+
+Activity Detail now suppresses the confirmed-state banner after a confirmed activity is cancelled.
+
+Delivered behavior:
+
+- the `Confirmed` / `已确认举行` banner is shown only when the activity is still `published` and `confirmStatus` is `confirmed`.
+- cancelled activities no longer show the confirmed-state banner even if their historical confirmation metadata remains in the document.
+- no cloud-function data migration is required for existing activities.
+
+Why it matters:
+
+- activity status presentation now prioritizes cancellation over a previous confirmation.
+- organizers can confirm and later cancel an activity without leaving contradictory detail-page messaging.
+
+Verification:
+
+- targeted red/green coverage was added for the Activity Detail confirmed-banner condition.
+- full regression suite passed: `50` test suites, `285` tests.

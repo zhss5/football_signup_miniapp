@@ -72,4 +72,15 @@ describe('activity detail actions', () => {
     expect(confirmIndex).toBeGreaterThan(editIndex);
     expect(cancelIndex).toBeGreaterThan(confirmIndex);
   });
+
+  test('shows the confirmed banner only while the activity remains published', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain(
+      'wx:if="{{activity.status === \'published\' && activity.confirmStatus === \'confirmed\'}}"'
+    );
+  });
 });

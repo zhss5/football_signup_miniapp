@@ -248,9 +248,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `284` tests passed
+- `285` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -343,7 +343,8 @@ Current activity notification behavior:
 - subscription choices are stored in `notification_subscriptions`; declined choices are stored too, but only accepted active registrations are notified.
 - `recordNotificationSubscription` self-creates `notification_subscriptions` when possible so older CloudBase environments can recover from missing notification collections.
 - organizers/admins can confirm a published activity from Activity Detail.
-- confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.
+- confirming does not close signup; late joiners see the in-app confirmed state while the activity remains published, but do not receive the already-sent proceeding notice.
+- cancelling a previously confirmed activity hides the confirmed-state banner on Activity Detail; historical `confirmStatus` metadata can remain on the document.
 - cancellation closes signup and attempts to send cancellation notices to subscribed active participants.
 - notification attempts are logged in `notification_logs`; duplicate sends for the same notification type and recipient are skipped.
 - `notifyActivityParticipants` self-creates `notification_subscriptions` and `notification_logs` when possible before sending or logging notifications.
