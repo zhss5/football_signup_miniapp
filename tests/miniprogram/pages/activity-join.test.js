@@ -357,6 +357,17 @@ describe('activity join page', () => {
     expect(wxml).toContain('bindtap="onPositionTap"');
   });
 
+  test('removes native mini program button borders from position options', () => {
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-join/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxss).toContain('.position-option::after');
+    expect(wxss).toMatch(/\.position-option::after\s*{[^}]*border:\s*none;/);
+    expect(wxss).toMatch(/\.position-option\s*{[^}]*box-sizing:\s*border-box;/);
+  });
+
   test('requires only a signup name before submitting', async () => {
     const ctx = {
       data: {},

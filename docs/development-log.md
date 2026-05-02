@@ -1256,3 +1256,23 @@ Verification:
 
 - targeted red/green coverage was added for header join rendering, joined-state join hiding, and organizer action ordering.
 - full regression suite passed: `50` test suites, `282` tests.
+
+## 2026-05-02 - Join Position Button Border Fix
+
+Activity Join preferred-position chips were adjusted for real-device button rendering.
+
+Delivered behavior:
+
+- preferred-position options now remove the native mini program `button::after` pseudo-border.
+- the chips use an explicit transparent border in the normal state and a complete green border when selected.
+- chip sizing uses `box-sizing: border-box`, so border rendering does not change the layout.
+
+Why it matters:
+
+- WeChat's native button pseudo-border could show as a partial outline on rounded position chips.
+- participants get stable, complete-looking position buttons on the signup page.
+
+Verification:
+
+- targeted red/green coverage was added for preferred-position chip border styling.
+- full regression suite passed: `50` test suites, `283` tests.

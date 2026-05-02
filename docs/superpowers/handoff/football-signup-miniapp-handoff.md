@@ -47,6 +47,7 @@ The codebase supports:
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
 - signup profile prefill from saved `users.preferredName/avatarUrl/preferredPositions`
+- Activity Join preferred-position chips remove native button pseudo-borders for stable real-device rendering
 - dedicated activity creation, detail, signup, and `My` page flows
 - multi-language UI support
 
@@ -245,9 +246,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `282` tests passed
+- `283` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -302,6 +303,7 @@ Current signup profile behavior:
 - manual name/avatar/position edits made before profile loading finishes are preserved.
 - `joinActivity` updates both the registration snapshot and `users.preferredName/avatarUrl/preferredPositions` after signup.
 - Activity Join lets participants optionally select up to two preferred positions from `前锋`, `中场`, `边锋`, `后腰`, `中卫`, `边卫`, and `门将`.
+- preferred-position chips clear the native mini program button pseudo-border and render their own complete border.
 - `joinActivity` validates and stores selected positions as `registrations.preferredPositions`.
 
 Current organizer roster behavior:

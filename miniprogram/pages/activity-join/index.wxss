@@ -103,15 +103,22 @@
   line-height: 64rpx;
   margin: 0;
   padding: 0 22rpx;
+  box-sizing: border-box;
+  border: 1rpx solid transparent;
   border-radius: 32rpx;
   color: #374151;
   background: #f9fafb;
   font-size: 24rpx;
 }
 
+.position-option::after {
+  border: none;
+}
+
 .position-option-selected {
   color: #166534;
   background: #dcfce7;
+  border-color: #bbf7d0;
   font-weight: 700;
 }
 

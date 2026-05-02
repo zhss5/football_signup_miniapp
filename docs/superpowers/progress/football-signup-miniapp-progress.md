@@ -166,6 +166,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - saved `users.preferredName` prefills the signup name
 - saved `users.avatarUrl` prefills the avatar preview without re-uploading an existing CloudBase file
 - saved `users.preferredPositions` prefills the optional playing-position selector
+- preferred-position chips remove the native mini program pseudo-border and use explicit borders for complete real-device rendering
 - manual name/avatar changes made while profile loading is still pending are preserved
 - manual position changes made while profile loading is still pending are preserved
 - `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, `users.preferredPositions`, and the activity registration snapshot after signup
@@ -265,7 +266,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `282` tests passed
+- result: `283` tests passed
 
 Covered areas include:
 
@@ -282,6 +283,7 @@ Covered areas include:
 - direct cover-frame image choosing on Create/Edit Activity
 - default team naming and same-row team remove controls
 - compact member action button border rendering
+- preferred-position chip border rendering
 - signup profile prefill from saved user profile data
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
