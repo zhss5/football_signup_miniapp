@@ -1,10 +1,15 @@
 const { MAX_TEAMS } = require('../../utils/constants');
 
-function buildDefaultTeam(index) {
+function buildDefaultTeam(index, maxMembers = 0) {
   return {
     teamName: `Team ${index + 1}`,
-    maxMembers: 0
+    maxMembers
   };
+}
+
+function getPreviousTeamCapacity(teams) {
+  const previousTeam = teams[teams.length - 1];
+  return previousTeam ? Number(previousTeam.maxMembers) || 0 : 0;
 }
 
 Component({
@@ -52,7 +57,8 @@ Component({
       }
 
       const prefix = this.properties.labels.teamNamePrefix || '';
-      const defaultTeam = buildDefaultTeam(this.properties.teams.length);
+      const previousCapacity = getPreviousTeamCapacity(this.properties.teams);
+      const defaultTeam = buildDefaultTeam(this.properties.teams.length, previousCapacity);
       const teams = [
         ...this.properties.teams,
         {

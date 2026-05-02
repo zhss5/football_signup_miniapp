@@ -68,4 +68,38 @@ describe('team editor minimum team count', () => {
 
     expect(triggerEvent).not.toHaveBeenCalled();
   });
+
+  test('copies the previous team capacity when adding a team', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      properties: {
+        teams: [
+          {
+            teamName: '队伍1',
+            maxMembers: 8
+          }
+        ],
+        labels: {
+          teamNamePrefix: '队伍'
+        }
+      },
+      triggerEvent,
+      emitTeams: componentConfig.methods.emitTeams
+    };
+
+    componentConfig.methods.onAddTeam.call(ctx);
+
+    expect(triggerEvent).toHaveBeenCalledWith('change', {
+      teams: [
+        {
+          teamName: '队伍1',
+          maxMembers: 8
+        },
+        {
+          teamName: '队伍2',
+          maxMembers: 8
+        }
+      ]
+    });
+  });
 });
