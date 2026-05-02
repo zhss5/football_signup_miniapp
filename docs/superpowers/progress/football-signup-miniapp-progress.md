@@ -142,6 +142,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - Home/My/activity cards prefer thumbnails through `coverDisplayImage` and fall back to `coverImage`
 - Activity Detail prefers the full `coverImage` and falls back to `coverThumbImage`
 - list cards and Activity Detail retain direct CloudBase file IDs as backup image sources when temporary HTTPS cover URLs fail on real devices
+- CloudBase fallback file IDs are downloaded with `wx.cloud.downloadFile` and rendered as local temporary file paths
 - historical CloudBase cover backfill is deferred; current scope is new uploads only
 
 ### 2.13 Signup Phone Removal
@@ -250,7 +251,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `263` tests passed
+- result: `264` tests passed
 
 Covered areas include:
 

@@ -244,6 +244,36 @@ describe('cloud service runtime', () => {
     });
   });
 
+  test('downloads one CloudBase file id for image fallback rendering', async () => {
+    const downloadFile = jest.fn().mockResolvedValue({
+      tempFilePath: 'wxfile://downloaded_cover.jpg'
+    });
+
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      USE_LOCAL_MOCK: false,
+      CLOUD_ENV_ID: 'prod-env-123',
+      LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+    }));
+
+    global.wx = {
+      cloud: {
+        init: jest.fn(),
+        callFunction: jest.fn(),
+        downloadFile
+      }
+    };
+
+    const cloud = require('../../../miniprogram/services/cloud');
+
+    await expect(
+      cloud.downloadFile('cloud://prod-env-123/activity-covers/cover.jpg')
+    ).resolves.toBe('wxfile://downloaded_cover.jpg');
+
+    expect(downloadFile).toHaveBeenCalledWith({
+      fileID: 'cloud://prod-env-123/activity-covers/cover.jpg'
+    });
+  });
+
   test('logs unresolved CloudBase files when neither temp urls nor downloads are available', async () => {
     const info = jest.spyOn(console, 'info').mockImplementation(() => {});
     const getTempFileURL = jest.fn().mockResolvedValue({

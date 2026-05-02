@@ -10,6 +10,7 @@ const {
   removeRegistration
 } = require('../../services/registration-service');
 const { notifyActivityParticipants } = require('../../services/notification-service');
+const { downloadFile } = require('../../services/cloud');
 const { buildTeamListVm } = require('../../utils/formatters');
 const {
   getAppLocale,
@@ -122,6 +123,18 @@ function buildCoverCandidates(activity = {}) {
   return [activity.coverDisplayImage].filter(Boolean);
 }
 
+function isCloudFileId(value) {
+  return typeof value === 'string' && value.startsWith('cloud://');
+}
+
+async function resolveCoverCandidate(candidate) {
+  if (!isCloudFileId(candidate)) {
+    return candidate || '';
+  }
+
+  return downloadFile(candidate).catch(() => '');
+}
+
 Page({
   data: {
     activityId: '',
@@ -198,13 +211,23 @@ Page({
     });
   },
 
-  onActivityCoverError() {
+  async onActivityCoverError() {
     const nextIndex = this.data.activityCoverSourceIndex + 1;
     const nextCoverImage = this.data.activityCoverCandidates[nextIndex] || '';
 
     if (nextCoverImage) {
+      const resolvedCoverImage = await resolveCoverCandidate(nextCoverImage);
+
+      if (!resolvedCoverImage) {
+        this.setData({
+          activityCoverSourceIndex: nextIndex
+        });
+        this.onActivityCoverError();
+        return;
+      }
+
       this.setData({
-        activityCoverImage: nextCoverImage,
+        activityCoverImage: resolvedCoverImage,
         activityCoverSourceIndex: nextIndex
       });
       return;

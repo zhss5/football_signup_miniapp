@@ -1006,9 +1006,10 @@ Delivered behavior:
 - signup now requests subscription consent immediately in the submit tap flow, before avatar upload and the `joinActivity` cloud call
 - the accepted or declined subscription result is recorded only after signup succeeds
 - activity cards and Activity Detail keep multiple cover candidates, including resolved temporary URLs and direct CloudBase file IDs, and move to the next candidate when image loading fails
+- when a direct CloudBase file ID is the fallback candidate, the frontend now downloads it with `wx.cloud.downloadFile` and renders the local temporary file path
 - no cloud function code change is required for this fix, but the frontend must be uploaded again; `recordNotificationSubscription` still needs to exist in CloudBase
 
 Verification:
 
 - targeted red/green coverage was added for consent-before-signup order and cover-image fallback candidates.
-- full regression suite passed: `50` test suites, `263` tests.
+- full regression suite passed: `50` test suites, `264` tests.

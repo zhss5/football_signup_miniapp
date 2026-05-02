@@ -42,6 +42,8 @@ describe('activity card component', () => {
     expect(wxml).toContain('coverLoadFailed');
     expect(js).toContain('coverCandidates');
     expect(js).toContain('coverSourceIndex');
+    expect(js).toContain('downloadFile');
+    expect(js).toContain('resolveCoverCandidate');
     expect(js).toContain('onCoverError');
     expect(wxss).toContain('.cover-placeholder');
   });

@@ -23,6 +23,7 @@ The codebase supports:
 - automatic cover thumbnail upload to `coverThumbImage` for new/edited covers
 - list pages prefer `coverThumbImage` and detail pages prefer `coverImage`, with mutual fallback when one display URL cannot be resolved
 - list cards and Activity Detail can retry direct CloudBase file IDs when temporary HTTPS cover URLs fail to load on real devices
+- fallback CloudBase file IDs are downloaded with `wx.cloud.downloadFile` and rendered from local temporary file paths
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -100,7 +101,7 @@ Latest real-device subscription and cover-display fix:
 
 - no cloud function code changed for this fix.
 - upload a new mini program frontend build so signup requests subscription consent before the `joinActivity` cloud call.
-- upload a new mini program frontend build so list cards and Activity Detail can retry fallback cover sources when the first image URL fails.
+- upload a new mini program frontend build so list cards and Activity Detail can download fallback CloudBase cover sources when the first image URL fails.
 - keep `recordNotificationSubscription` deployed; the frontend still records accepted/declined subscription choices through that function after signup succeeds.
 
 Earlier rollout reference:
@@ -225,7 +226,7 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `263` tests passed
+- `264` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, highlighted signup status view models, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, manager-only proxy participant badge behavior, organizer team reassignment, signup profile fields without phone collection, signup profile prefill, optional insurance-link persistence and detail-page web-view opening, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -237,7 +238,7 @@ Current cover-display progress:
 - Activity card and detail templates render managed cover candidates instead of directly binding stored `cloud://` fields.
 - Home/My list cards resolve `coverThumbImage` first and fall back to `coverImage`.
 - Activity Detail resolves `coverImage` first and falls back to `coverThumbImage`.
-- If a resolved temporary HTTPS URL fails to load on a real device, list cards and Activity Detail retry the direct CloudBase file ID before showing the placeholder.
+- If a resolved temporary HTTPS URL fails to load on a real device, list cards and Activity Detail download the fallback CloudBase file ID and render the returned local temporary file path before showing the placeholder.
 - The map preview markup was adjusted so the native `map` is wrapped by a normal `view`, with only the tap `cover-view` nested inside the map.
 - Documentation records the CloudBase storage permission investigation and the CloudBase cost review checkpoint.
 

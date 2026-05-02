@@ -1,9 +1,23 @@
+const { downloadFile } = require('../../services/cloud');
+
 function buildCoverCandidates(item = {}) {
   if (Array.isArray(item.coverImageSources) && item.coverImageSources.length > 0) {
     return item.coverImageSources.filter(Boolean);
   }
 
   return [item.coverDisplayImage].filter(Boolean);
+}
+
+function isCloudFileId(value) {
+  return typeof value === 'string' && value.startsWith('cloud://');
+}
+
+async function resolveCoverCandidate(candidate) {
+  if (!isCloudFileId(candidate)) {
+    return candidate || '';
+  }
+
+  return downloadFile(candidate).catch(() => '');
 }
 
 Component({
@@ -35,13 +49,23 @@ Component({
   },
 
   methods: {
-    onCoverError() {
+    async onCoverError() {
       const nextIndex = this.data.coverSourceIndex + 1;
       const nextCoverImage = this.data.coverCandidates[nextIndex] || '';
 
       if (nextCoverImage) {
+        const resolvedCoverImage = await resolveCoverCandidate(nextCoverImage);
+
+        if (!resolvedCoverImage) {
+          this.setData({
+            coverSourceIndex: nextIndex
+          });
+          this.onCoverError();
+          return;
+        }
+
         this.setData({
-          activeCoverImage: nextCoverImage,
+          activeCoverImage: resolvedCoverImage,
           coverSourceIndex: nextIndex
         });
         return;

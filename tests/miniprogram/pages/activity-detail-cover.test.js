@@ -13,5 +13,12 @@ describe('activity detail page hero', () => {
     expect(wxml).toContain('src="{{activityCoverImage}}"');
     expect(wxml).toContain('binderror="onActivityCoverError"');
     expect(wxml).not.toContain('src="{{activity.coverDisplayImage || activity.coverImage}}"');
+
+    const js = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.js'),
+      'utf8'
+    );
+    expect(js).toContain('downloadFile');
+    expect(js).toContain('resolveCoverCandidate');
   });
 });

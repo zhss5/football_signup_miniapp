@@ -182,6 +182,22 @@ function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
 
+function downloadFile(fileID) {
+  if (!fileID || !isCloudFileId(fileID) || USE_LOCAL_MOCK) {
+    return Promise.resolve(fileID || '');
+  }
+
+  initializeCloudRuntime();
+
+  const wxRuntime = getWxRuntime();
+
+  if (!wxRuntime || !wxRuntime.cloud || typeof wxRuntime.cloud.downloadFile !== 'function') {
+    return Promise.resolve('');
+  }
+
+  return wxRuntime.cloud.downloadFile({ fileID }).then(res => (res && res.tempFilePath) || '');
+}
+
 function buildIdentityFileUrlMap(fileIds) {
   return fileIds.reduce((acc, fileId) => {
     if (fileId) {
@@ -311,6 +327,7 @@ async function resolveFileUrls(fileIds = []) {
 
 module.exports = {
   call,
+  downloadFile,
   initializeCloudRuntime,
   resolveFileUrls,
   uploadFile
