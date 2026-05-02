@@ -16,6 +16,21 @@ const {
 } = require('../../utils/i18n');
 const { formatRoles } = require('../../utils/roles');
 
+function getActivityStartTime(item = {}) {
+  const startAt = Date.parse(item.startAt || '');
+  return Number.isFinite(startAt) ? startAt : 0;
+}
+
+function compareStartDesc(left, right) {
+  return getActivityStartTime(right) - getActivityStartTime(left);
+}
+
+function prepareMyActivityItems(items = [], translate) {
+  return items
+    .map(item => buildActivityCardVm(item, undefined, translate))
+    .sort(compareStartDesc);
+}
+
 Page({
   data: {
     locale: '',
@@ -68,13 +83,11 @@ Page({
       resolveActivityCoverImages(joined.items)
     ]);
 
-    const createdItemsAll = createdItemsWithCovers.map(item =>
-      buildActivityCardVm(item, undefined, translate)
-    );
+    const createdItemsAll = prepareMyActivityItems(createdItemsWithCovers, translate);
 
     this.setData({
       createdItemsAll,
-      joinedItems: joinedItemsWithCovers.map(item => buildActivityCardVm(item, undefined, translate))
+      joinedItems: prepareMyActivityItems(joinedItemsWithCovers, translate)
     });
     this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
     await profilePromise;

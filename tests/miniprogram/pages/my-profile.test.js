@@ -12,7 +12,9 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildActivityCardVm: jest.fn(item => ({
     id: item._id,
-    title: item.title
+    title: item.title,
+    startAt: item.startAt,
+    status: item.status
   }))
 }));
 
@@ -110,5 +112,69 @@ describe('my page profile marker', () => {
       data: 'openid_owner',
       success: expect.any(Function)
     });
+  });
+
+  test('sorts created and joined activities by newest start time first', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user']
+      }
+    });
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'created_old',
+              title: 'Created Old',
+              startAt: '2026-05-01T12:00:00.000Z',
+              status: 'published'
+            },
+            {
+              _id: 'created_new',
+              title: 'Created New',
+              startAt: '2026-05-03T12:00:00.000Z',
+              status: 'published'
+            }
+          ]
+        });
+      }
+
+      return Promise.resolve({
+        items: [
+          {
+            _id: 'joined_old',
+            title: 'Joined Old',
+            startAt: '2026-05-02T12:00:00.000Z',
+            status: 'published'
+          },
+          {
+            _id: 'joined_new',
+            title: 'Joined New',
+            startAt: '2026-05-04T12:00:00.000Z',
+            status: 'published'
+          }
+        ]
+      });
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_new', 'created_old']);
+    expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_new', 'joined_old']);
   });
 });
