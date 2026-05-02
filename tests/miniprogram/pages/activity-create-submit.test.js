@@ -127,6 +127,19 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('{{i18n.activityCreate.insuranceLink}}');
   });
 
+  test('hides the reserved invite code field until invite-code enforcement is implemented', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).not.toContain('data-field="inviteCode"');
+    expect(wxml).not.toContain('{{i18n.activityCreate.inviteCode}}');
+    expect(wxml).not.toContain('{{i18n.activityCreate.inviteCodePlaceholder}}');
+  });
+
   test('renders an optional notification hint field for confirmation notices', () => {
     const fs = require('fs');
     const path = require('path');

@@ -1276,3 +1276,24 @@ Verification:
 
 - targeted red/green coverage was added for preferred-position chip border styling.
 - full regression suite passed: `50` test suites, `283` tests.
+
+## 2026-05-02 - Invite Code UI Hidden
+
+The reserved invite-code field was hidden until the real invite-code flow is implemented.
+
+Delivered behavior:
+
+- Create/Edit Activity no longer shows the invite-code input.
+- existing invite-code draft/payload/storage mapping remains in place as a future extension point.
+- TODO: implement invite-code enforcement before showing the field again.
+
+Future invite-code scope:
+
+- require invite-code entry before signup when an activity has an invite code.
+- validate the submitted code inside `joinActivity`, not only in the frontend.
+- decide later whether invite-code activities should still appear on Home.
+
+Verification:
+
+- targeted red/green coverage was added to ensure the Create/Edit Activity template does not render the reserved invite-code input.
+- full regression suite passed: `50` test suites, `284` tests.

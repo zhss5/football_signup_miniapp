@@ -37,6 +37,7 @@ The codebase supports:
 - organizer/admin-only proxy participant badge in Activity Detail rosters
 - organizer/admin team reassignment through the `moveRegistration` cloud function
 - one-team activity creation default with add/remove team controls up to four named teams
+- reserved invite-code UI is hidden until invite-code signup enforcement is implemented
 - optional activity insurance link creation, editing, and Activity Detail web-view opening
 - optional activity notification reminder creation and editing
 - activity confirmation state with organizer/admin-triggered `Confirm Activity`
@@ -154,6 +155,7 @@ The latest visible client-side issues were:
 
 - WeChat DevTools simulator may flicker when opening Activity Detail with the native `map` preview; real-device testing passed, so this is recorded as a non-blocking simulator issue.
 - uploaded preview builds can load historical activity cover images slowly when the stored CloudBase file is large; new uploads now generate `coverThumbImage`, while old cover backfill is deferred.
+- invite-code enforcement is not implemented yet; the Create/Edit Activity invite-code field is intentionally hidden until signup entry, backend validation, and Home visibility rules are designed.
 - participant phone collection has been removed from the active signup flow; optional phone fields remain supported for future extensions.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
 - The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
@@ -246,9 +248,9 @@ npm test
 Latest result:
 
 - `50` test suites passed
-- `283` tests passed
+- `284` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -293,6 +295,12 @@ Current activity creation team defaults:
 - Added teams continue the numbered team-name pattern.
 - Team rows keep their remove action on the same row as the team name and capacity fields.
 - Team rows can be removed down to one team; the final remaining team cannot be removed.
+
+Current invite-code status:
+
+- invite-code storage fields still exist in draft/payload/cloud-function paths as a future extension point.
+- Create/Edit Activity intentionally hides the invite-code input.
+- TODO: before re-exposing invite codes, add signup-time invite-code entry, `joinActivity` backend validation, and a Home visibility decision for invite-only activities.
 
 Current signup profile behavior:
 

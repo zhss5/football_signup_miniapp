@@ -65,17 +65,6 @@
   </view>
 
   <view class="field">
-    <text class="label">{{i18n.activityCreate.inviteCode}}</text>
-    <input
-      class="input"
-      placeholder="{{i18n.activityCreate.inviteCodePlaceholder}}"
-      data-field="inviteCode"
-      value="{{form.inviteCode}}"
-      bindinput="onFieldInput"
-    />
-  </view>
-
-  <view class="field">
     <text class="label">{{i18n.activityCreate.insuranceLink}}</text>
     <input
       class="input"

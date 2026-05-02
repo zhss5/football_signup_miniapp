@@ -52,7 +52,6 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - start time
 - end time
 - signup deadline date and time
-- invite code
 - optional insurance signup link
 - optional notification reminder for confirmation notices
 - description
@@ -134,7 +133,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 
 - Activity Detail shows `Edit` to the original organizer or `admin`
 - `pages/activity-create` supports edit mode for existing activities
-- organizers/admins can update title, date/time, signup deadline, location, description, cover image, total capacity, and invite code
+- organizers/admins can update title, date/time, signup deadline, location, description, cover image, and total capacity
 - existing `activityId`, registrations, organizer, joined count, and created timestamp are preserved
 - `updateActivity` enforces permission, deleted-activity, validation, and capacity rules
 - total capacity cannot be reduced below joined players or below existing regular team slots
@@ -255,6 +254,7 @@ The current implementation differs from the original early MVP assumptions in th
 - compact member action buttons use explicit borders so move/remove controls render cleanly on real devices
 - Activity Detail organizer action buttons are ordered copy, edit, confirm, cancel
 - activity creation now starts from one team instead of two
+- the reserved invite-code field is hidden until invite-code signup enforcement is implemented
 - activities can include an optional insurance signup link
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
@@ -266,7 +266,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `50` test suites passed
-- result: `283` tests passed
+- result: `284` tests passed
 
 Covered areas include:
 
@@ -281,6 +281,7 @@ Covered areas include:
 - cover display source preference and fallback behavior
 - Home filtering to joinable activities and newest-created sorting
 - direct cover-frame image choosing on Create/Edit Activity
+- hidden reserved invite-code field on Create/Edit Activity
 - default team naming and same-row team remove controls
 - compact member action button border rendering
 - preferred-position chip border rendering
@@ -335,6 +336,7 @@ The MVP still has known non-blocking gaps:
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
+- invite-code enforcement is not implemented yet; keep the field hidden until signup entry, backend validation, and Home visibility rules are designed
 
 ## 6. Recommended Next Steps
 
@@ -358,6 +360,7 @@ The MVP still has known non-blocking gaps:
 - promote bench players into regular teams
 - completed in code: move the proxy-signup action into the selected team's header row
 - improve remaining organizer action grouping on the detail page
+- TODO: implement invite-code signup gating before re-exposing the Create/Edit invite-code field
 
 ### Option B1: Simplify Signup Contact Fields
 
