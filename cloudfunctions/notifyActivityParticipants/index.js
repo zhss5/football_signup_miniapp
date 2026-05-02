@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
 const { COLLECTIONS } = require('./collections');
+const { ensureCloudCollections } = require('./database');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
 const { nowIso } = require('./time');
@@ -9,6 +10,11 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const TEMPLATE_KEY = 'activity_notice';
 const NOTIFICATION_TYPES = new Set(['proceeding', 'cancelled']);
+const NOTIFICATION_COLLECTIONS = [
+  COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS,
+  COLLECTIONS.NOTIFICATION_LOGS
+];
+let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
   const text = String(value || '').trim();
@@ -57,6 +63,21 @@ function buildMessageData(activity, notificationType) {
       value: clip(reminder, 20)
     }
   };
+}
+
+function ensureNotificationCollections(db, deps = {}) {
+  if (deps.ensureNotificationCollections) {
+    return deps.ensureNotificationCollections(db);
+  }
+
+  if (!collectionBootstrapPromise) {
+    collectionBootstrapPromise = ensureCloudCollections(db, NOTIFICATION_COLLECTIONS).catch(error => {
+      collectionBootstrapPromise = null;
+      throw error;
+    });
+  }
+
+  return collectionBootstrapPromise;
 }
 
 async function getCurrentUser(db, openid) {
@@ -245,6 +266,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const db = deps.db || cloud.database();
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+
+  await ensureNotificationCollections(db, deps);
+
   const activityRes = await db.collection(COLLECTIONS.ACTIVITIES).doc(event.activityId).get();
   const activity = activityRes.data;
 
@@ -294,5 +318,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
 module.exports = {
   buildMessageData,
+  ensureNotificationCollections,
   main
 };

@@ -357,6 +357,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: send only to active registrations that accepted the relevant subscription
 - completed in code: log per-recipient send results and prevent duplicate sends for the same notification type
 - completed in code: use an organizer-provided notification reminder for confirmation notices while keeping cancellation reminder text default
+- completed in code: notification cloud functions self-bootstrap `notification_subscriptions` and `notification_logs` for older CloudBase environments
 - pending operation: configure the actual WeChat template ID and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 

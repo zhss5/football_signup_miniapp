@@ -1036,3 +1036,29 @@ Verification:
 
 - added coverage for mobile HTTP temp cover paths.
 - full regression suite passed: `50` test suites, `265` tests.
+
+## 2026-05-02 - Notification Collection Bootstrap Fix
+
+Confirming an activity exposed an old-environment CloudBase setup gap.
+
+Root cause:
+
+- the notification feature added two new collections: `notification_subscriptions` and `notification_logs`
+- existing CloudBase environments already had the original `users` collection, so `ensureUserProfile` did not run the full first-time collection bootstrap again
+- `recordNotificationSubscription` attempted to write to `notification_subscriptions` before that collection existed, causing `DATABASE_COLLECTION_NOT_EXIST`
+
+Delivered behavior:
+
+- `recordNotificationSubscription` now ensures `notification_subscriptions` exists before recording a subscription choice
+- `notifyActivityParticipants` now ensures `notification_subscriptions` and `notification_logs` exist before confirmation/cancellation notification work
+- the fix keeps database permissions restricted; no client-side database read/write broadening is required
+
+Operational notes:
+
+- run `npm run copy:cloud-shared`, then deploy `recordNotificationSubscription` and `notifyActivityParticipants`
+- manual CloudBase recovery is still simple: create `notification_subscriptions` and `notification_logs` in the database if an already-deployed function fails before the new code is uploaded
+
+Verification:
+
+- targeted red/green coverage was added for both notification cloud functions.
+- full regression suite passed: `50` test suites, `265` tests.

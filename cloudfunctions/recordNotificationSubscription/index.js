@@ -1,10 +1,14 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
 const { COLLECTIONS } = require('./collections');
+const { ensureCloudCollections } = require('./database');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+
+const NOTIFICATION_COLLECTIONS = [COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS];
+let collectionBootstrapPromise = null;
 
 function normalizeStatus(value) {
   return value === 'accept' || value === 'accepted' ? 'accepted' : 'declined';
@@ -12,6 +16,21 @@ function normalizeStatus(value) {
 
 function normalizeTemplateKey(value) {
   return String(value || 'activity_notice').trim() || 'activity_notice';
+}
+
+function ensureNotificationCollections(db, deps = {}) {
+  if (deps.ensureNotificationCollections) {
+    return deps.ensureNotificationCollections(db);
+  }
+
+  if (!collectionBootstrapPromise) {
+    collectionBootstrapPromise = ensureCloudCollections(db, NOTIFICATION_COLLECTIONS).catch(error => {
+      collectionBootstrapPromise = null;
+      throw error;
+    });
+  }
+
+  return collectionBootstrapPromise;
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -29,6 +48,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const status = normalizeStatus(event.status);
   const stamp = nowIso(deps.now);
   const documentId = `${event.activityId}_${openid}_${templateKey}`;
+
+  await ensureNotificationCollections(db, deps);
 
   await db.collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS).doc(documentId).set({
     data: {
@@ -50,4 +71,4 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   };
 }
 
-module.exports = { main };
+module.exports = { ensureNotificationCollections, main };

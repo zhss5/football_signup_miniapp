@@ -32,6 +32,7 @@
 - Confirm join flow writes `registrations._id = activityId_openid`
 - Confirm the subscription prompt appears during signup on a real device when an activity-notice template ID is configured
 - Confirm the signup still succeeds if the user declines the subscription prompt
+- If signup subscription recording fails with `DATABASE_COLLECTION_NOT_EXIST`, confirm `recordNotificationSubscription` was redeployed and `notification_subscriptions` exists
 - Confirm `notification_subscriptions` records the user's accepted or declined choice
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
 - Confirm only one active signup per activity is allowed
@@ -58,6 +59,7 @@
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm confirmation notices use the optional notification reminder when the activity has one
+- If confirmation fails with `DATABASE_COLLECTION_NOT_EXIST`, confirm `notifyActivityParticipants` was redeployed and both `notification_subscriptions` and `notification_logs` exist
 - Confirm `notification_logs` records proceeding notification send results for subscribed active participants
 - Confirm organizer cancel changes activity status to `cancelled`
 - Confirm cancellation notices use the default cancellation reminder instead of the confirmation reminder

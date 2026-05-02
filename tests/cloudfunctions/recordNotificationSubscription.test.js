@@ -2,6 +2,7 @@ const recordNotificationSubscription = require('../../cloudfunctions/recordNotif
 
 test('recordNotificationSubscription upserts the current user subscription choice', async () => {
   const setSubscription = jest.fn().mockResolvedValue({});
+  const ensureNotificationCollections = jest.fn().mockResolvedValue({});
   let subscriptionDocumentId = '';
   const fakeDb = {
     collection: jest.fn(name => {
@@ -30,10 +31,12 @@ test('recordNotificationSubscription upserts the current user subscription choic
     { OPENID: 'openid_player' },
     {
       db: fakeDb,
-      now: '2026-04-19T10:00:00.000Z'
+      now: '2026-04-19T10:00:00.000Z',
+      ensureNotificationCollections
     }
   );
 
+  expect(ensureNotificationCollections).toHaveBeenCalledWith(fakeDb);
   expect(subscriptionDocumentId).toBe('activity_1_openid_player_activity_notice');
   expect(setSubscription).toHaveBeenCalledWith({
     data: {

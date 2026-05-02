@@ -150,6 +150,7 @@ test('notifyActivityParticipants confirms the activity and sends proceeding noti
     }
   });
   const sendSubscribeMessage = jest.fn().mockResolvedValue({ errCode: 0 });
+  const ensureNotificationCollections = jest.fn().mockResolvedValue({});
 
   const result = await notifyActivityParticipants.main(
     {
@@ -160,10 +161,12 @@ test('notifyActivityParticipants confirms the activity and sends proceeding noti
     {
       db: fakeDb,
       now: '2026-04-19T10:00:00.000Z',
-      sendSubscribeMessage
+      sendSubscribeMessage,
+      ensureNotificationCollections
     }
   );
 
+  expect(ensureNotificationCollections).toHaveBeenCalledWith(fakeDb);
   expect(fakeDb.writes.updates).toContainEqual({
     id: 'activity_1',
     data: {

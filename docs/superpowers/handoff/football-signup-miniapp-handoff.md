@@ -312,10 +312,12 @@ Current activity notification behavior:
 - signup requests a subscription only when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured.
 - signup requests subscription consent before the signup cloud call to preserve WeChat's user-tap requirement; recording the choice still happens after signup succeeds.
 - subscription choices are stored in `notification_subscriptions`; declined choices are stored too, but only accepted active registrations are notified.
+- `recordNotificationSubscription` self-creates `notification_subscriptions` when possible so older CloudBase environments can recover from missing notification collections.
 - organizers/admins can confirm a published activity from Activity Detail.
 - confirming does not close signup; late joiners see the in-app confirmed state but do not receive the already-sent proceeding notice.
 - cancellation closes signup and attempts to send cancellation notices to subscribed active participants.
 - notification attempts are logged in `notification_logs`; duplicate sends for the same notification type and recipient are skipped.
+- `notifyActivityParticipants` self-creates `notification_subscriptions` and `notification_logs` when possible before sending or logging notifications.
 - Create/Edit Activity can store a custom `notificationHint`; proceeding notices use it in the reminder field when present, while cancellation notices still use the default cancellation reminder.
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 
@@ -338,7 +340,7 @@ Sensitive-file check before push:
 Continue in this order:
 
 1. Confirm CloudBase storage permissions allow mini-program client reads for both `activity-covers/` and `activity-cover-thumbs/`.
-2. Confirm all five database collections exist.
+2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
 4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6.
 5. Apply indexes from:
