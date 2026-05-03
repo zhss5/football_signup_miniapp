@@ -1361,3 +1361,25 @@ Verification:
 
 - targeted red/green coverage was added for the signup-name utility, Activity Join submit payload, `joinActivity`, `addProxyRegistration`, and the local mock.
 - full regression suite passed: `51` test suites, `294` tests.
+
+## 2026-05-03 - Overdue Unresolved Activity TODO
+
+The project captured a future TODO for activities that pass their end time without being confirmed or cancelled.
+
+Current behavior:
+
+- activities are not automatically confirmed when time passes.
+- activities are not automatically cancelled when time passes.
+- a published activity can remain `confirmStatus: pending` after its end time.
+- organizers can still manually confirm or cancel while the activity remains published.
+
+TODO:
+
+- after `endAt` passes, show an overdue unresolved state such as `Expired / unresolved` or `已过期 / 未处理` when `status` is still `published` and `confirmStatus` is still `pending`.
+- remind organizers to manually confirm or cancel the activity.
+- avoid sending automatic proceeding notifications unless the organizer explicitly confirms the activity.
+- keep automatic confirmation disabled by default.
+
+Verification:
+
+- documentation-only change; no runtime behavior changed.

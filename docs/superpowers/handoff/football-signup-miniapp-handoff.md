@@ -353,6 +353,8 @@ Current activity notification behavior:
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 - `time2` is formatted explicitly as China local time so UTC CloudBase runtimes do not send activity times eight hours early.
 
+- TODO: after `endAt` passes, show an overdue unresolved state for activities that are still `published` and `confirmStatus: pending`, and remind organizers to confirm or cancel manually without automatic confirmation.
+
 Current Home list behavior:
 
 - Home shows only activities whose card state is joinable.
@@ -407,12 +409,17 @@ Continue in this order:
    - make `listActivities` accept a stable `limit` plus `skip` or cursor
    - sort cloud-side before pagination
    - add `onReachBottom` loading to Home and My while preserving current filters
-15. Keep the future operations/backend backlog visible but deferred:
+15. Add an overdue unresolved activity state:
+   - detect `published` plus `confirmStatus: pending` after `endAt`
+   - show a clear participant-facing unresolved/expired state
+   - remind organizers to confirm or cancel manually
+   - keep automatic confirmation disabled by default
+16. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-16. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-17. Push local commits if they should be shared:
+17. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+18. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First

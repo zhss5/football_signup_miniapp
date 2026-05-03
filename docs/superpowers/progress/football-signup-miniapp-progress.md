@@ -335,6 +335,7 @@ The MVP still has known non-blocking gaps:
 - bench promotion is not implemented as a dedicated workflow yet; organizers can move participants manually between non-full teams
 - real WeChat subscription-message template configuration and real-device notification smoke testing are still pending
 - automatic pre-activity reminders are still deferred until manual notifications are stable
+- overdue unresolved activities are not called out yet; add a future state for published/pending activities whose `endAt` has passed, and remind organizers to confirm or cancel manually
 - restore-from-delete flow is not implemented yet
 - historical activity cover thumbnails are deferred; older activities can keep falling back to `coverImage`
 - CloudBase storage permissions have been a previous blocker; if covers return 403 again, verify `activity-covers/` and `activity-cover-thumbs/` client read rules first
@@ -392,6 +393,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: subscription notification times are formatted explicitly as China local time under UTC CloudBase runtimes
 - pending operation: configure the actual WeChat template ID and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
+- TODO: after `endAt` passes, show an overdue unresolved state for still-published pending activities and remind organizers to confirm or cancel without automatically confirming
 
 ### Option C: Media and UX Polish
 
