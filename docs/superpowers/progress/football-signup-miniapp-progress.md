@@ -118,6 +118,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
   - `Cancelled`
   - `Deleted`
 - deleted activities remain visible only to the organizer in Created history
+- the Active/Published created filter excludes published activities whose `endAt` has passed
 - current user ID can be copied from My page to support manual organizer role grants
 - My page shows a readable role summary
 
@@ -268,7 +269,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `51` test suites passed
-- result: `294` tests passed
+- result: `295` tests passed
 
 Covered areas include:
 
@@ -289,6 +290,7 @@ Covered areas include:
 - preferred-position chip border rendering
 - signup profile prefill from saved user profile data
 - signup-name normalization for emoji/special-character names, embedded line breaks, and length limits
+- My page active filter exclusion for expired published activities
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
 - organizer proxy signup behavior

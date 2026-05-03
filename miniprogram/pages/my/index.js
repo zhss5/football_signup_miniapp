@@ -21,6 +21,32 @@ function getActivityStartTime(item = {}) {
   return Number.isFinite(startAt) ? startAt : 0;
 }
 
+function getActivityEndTime(item = {}) {
+  const endAt = Date.parse(item.endAt || '');
+  return Number.isFinite(endAt) ? endAt : 0;
+}
+
+function isActiveCreatedActivity(item = {}, now = Date.now()) {
+  if (item.status !== 'published') {
+    return false;
+  }
+
+  const endAt = getActivityEndTime(item);
+  return !endAt || endAt >= now;
+}
+
+function matchesCreatedFilter(item, filterKey) {
+  if (filterKey === 'all') {
+    return true;
+  }
+
+  if (filterKey === 'published') {
+    return isActiveCreatedActivity(item);
+  }
+
+  return item.status === filterKey;
+}
+
 function compareStartDesc(left, right) {
   return getActivityStartTime(right) - getActivityStartTime(left);
 }
@@ -125,8 +151,7 @@ Page({
   },
 
   applyCreatedFilter(filterKey, items = this.data.createdItemsAll) {
-    const createdItems =
-      filterKey === 'all' ? items : items.filter(item => item.status === filterKey);
+    const createdItems = items.filter(item => matchesCreatedFilter(item, filterKey));
 
     this.setData({
       createdFilter: filterKey,

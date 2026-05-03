@@ -14,6 +14,7 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
     id: item._id,
     title: item.title,
     startAt: item.startAt,
+    endAt: item.endAt,
     status: item.status
   }))
 }));
@@ -62,6 +63,10 @@ describe('my page profile marker', () => {
     require('../../../miniprogram/pages/my/index');
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ listActivities } = require('../../../miniprogram/services/activity-service'));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('onShow exposes a copyable user id and readable role summary', async () => {
@@ -176,5 +181,64 @@ describe('my page profile marker', () => {
 
     expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_new', 'created_old']);
     expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_new', 'joined_old']);
+  });
+
+  test('excludes expired published activities from the active created filter', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user']
+      }
+    });
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'expired_published',
+              title: 'Expired Published',
+              startAt: '2026-05-01T12:00:00.000Z',
+              endAt: '2026-05-01T14:00:00.000Z',
+              status: 'published'
+            },
+            {
+              _id: 'future_published',
+              title: 'Future Published',
+              startAt: '2026-05-04T12:00:00.000Z',
+              endAt: '2026-05-04T14:00:00.000Z',
+              status: 'published'
+            },
+            {
+              _id: 'cancelled',
+              title: 'Cancelled',
+              startAt: '2026-05-05T12:00:00.000Z',
+              endAt: '2026-05-05T14:00:00.000Z',
+              status: 'cancelled'
+            }
+          ]
+        });
+      }
+
+      return Promise.resolve({ items: [] });
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data,
+        createdFilter: 'published'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual(['future_published']);
   });
 });

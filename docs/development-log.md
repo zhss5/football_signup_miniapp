@@ -1383,3 +1383,24 @@ TODO:
 Verification:
 
 - documentation-only change; no runtime behavior changed.
+
+## 2026-05-03 - My Active Filter Excludes Expired Activities
+
+The My page no longer shows expired created activities under the Active / Published filter.
+
+Delivered behavior:
+
+- created activities still appear in the `All` filter.
+- the `Active` / `Published` filter now includes only `status: published` activities whose `endAt` has not passed.
+- published activities with missing or invalid `endAt` remain visible in `Active` to avoid hiding malformed historical data unexpectedly.
+- cancelled and deleted filters keep their previous status-only behavior.
+
+Why it matters:
+
+- organizers no longer see old ended activities mixed into the current in-progress list.
+- this is a frontend filtering change only; no data migration or cloud-function deployment is required.
+
+Verification:
+
+- targeted red/green coverage was added for the My page Active filter.
+- full regression suite passed: `51` test suites, `295` tests.
