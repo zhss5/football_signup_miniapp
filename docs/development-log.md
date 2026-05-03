@@ -1404,3 +1404,23 @@ Verification:
 
 - targeted red/green coverage was added for the My page Active filter.
 - full regression suite passed: `51` test suites, `295` tests.
+
+## 2026-05-03 - Native Tab Bar Visibility Stabilized
+
+Home and My now keep the native bottom tab bar visually stable on long lists.
+
+Delivered behavior:
+
+- the native `tabBar` now has explicit text color, selected color, white background, and border style.
+- Home and My page content reserve bottom space above the native tab bar and device safe area.
+- long activity lists no longer need to be scrolled to the bottom before the Home/My tab labels are visible.
+
+Why it matters:
+
+- the issue was layout-related, not a cloud-function or data-loading failure.
+- users can switch tabs immediately after entering Home or My.
+
+Verification:
+
+- targeted red/green coverage was added for tab bar style and tab-page bottom spacing.
+- full regression suite passed: `52` test suites, `297` tests.

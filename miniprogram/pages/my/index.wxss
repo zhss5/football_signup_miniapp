@@ -1,5 +1,6 @@
 .page {
   padding: 24rpx;
+  padding-bottom: calc(144rpx + env(safe-area-inset-bottom));
 }
 
 .utility-row {

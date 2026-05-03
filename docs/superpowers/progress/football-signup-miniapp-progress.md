@@ -32,6 +32,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 ### 2.1 Core App Structure
 
 - native WeChat mini program project created
+- native Home/My tab bar uses explicit colors/background and tab pages reserve bottom safe spacing
 - local mock runtime added for DevTools debugging
 - local-only `env.local.js` override support added for real CloudBase wiring
 - CloudBase runtime initialization now validates `CLOUD_ENV_ID` and initializes once per session
@@ -268,8 +269,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `51` test suites passed
-- result: `295` tests passed
+- result: `52` test suites passed
+- result: `297` tests passed
 
 Covered areas include:
 
@@ -291,6 +292,7 @@ Covered areas include:
 - signup profile prefill from saved user profile data
 - signup-name normalization for emoji/special-character names, embedded line breaks, and length limits
 - My page active filter exclusion for expired published activities
+- native Home/My tab bar style and bottom spacing
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
 - organizer proxy signup behavior
