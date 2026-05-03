@@ -446,14 +446,14 @@ function createLocalCloudClient(options = {}) {
               avatarUrl:
                 item.avatarUrl ||
                 (state.users[item.userOpenId] && state.users[item.userOpenId].avatarUrl) ||
-                ''
+                '',
+              preferredPositions: Array.isArray(item.preferredPositions)
+                ? item.preferredPositions.filter(Boolean)
+                : []
             };
 
             if (canManageRegistrations) {
               member.proxyRegistration = Boolean(item.proxyRegistration);
-              member.preferredPositions = Array.isArray(item.preferredPositions)
-                ? item.preferredPositions.filter(Boolean)
-                : [];
             }
 
             return member;

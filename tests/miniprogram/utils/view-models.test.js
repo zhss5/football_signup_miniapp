@@ -346,7 +346,7 @@ test('buildTeamListVm marks proxy members for managers only', () => {
   });
 });
 
-test('buildTeamListVm shows preferred positions to managers only', () => {
+test('buildTeamListVm shows preferred positions to regular users and managers', () => {
   const teams = [
     {
       _id: 'team_red',
@@ -377,8 +377,8 @@ test('buildTeamListVm shows preferred positions to managers only', () => {
     preferredPositionsText: '前锋 / 门将'
   });
   expect(regularVm[0].members[0]).toMatchObject({
-    preferredPositionsVisible: false,
-    preferredPositionsText: ''
+    preferredPositionsVisible: true,
+    preferredPositionsText: managerVm[0].members[0].preferredPositionsText
   });
 });
 

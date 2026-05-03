@@ -1108,8 +1108,8 @@ Delivered behavior:
 - supported positions are forward, midfield, wing, defensive midfield, center back, fullback, and goalkeeper, shown in Chinese in the UI
 - `joinActivity` validates the submitted positions and stores them on the registration document as `preferredPositions`
 - local mock mode mirrors the cloud-function behavior
-- Activity Detail exposes member preferred positions only to organizers/admins through the manager-only member view model
-- regular participants do not see other members' preferred positions in the team list
+- Activity Detail exposes member preferred positions in the team list when they are available
+- regular participants can see other members' preferred positions, while proxy-signup badges remain manager-only
 
 Operational notes:
 
@@ -1159,7 +1159,7 @@ Delivered behavior:
 - `Copy participant names` still copies one participant per line in the current team/member order.
 - participants with preferred positions are copied as `Name (Position / Position)`.
 - participants without preferred positions are copied as plain names.
-- position text remains manager-only because the copy action is available only to organizers/admins, and regular participant detail data does not expose other members' positions.
+- copying remains manager-only because the copy action is available only to organizers/admins.
 
 Why it matters:
 
@@ -1423,4 +1423,30 @@ Why it matters:
 Verification:
 
 - targeted red/green coverage was added for tab bar style and tab-page bottom spacing.
+- full regression suite passed: `52` test suites, `297` tests.
+
+## 2026-05-03 - Participant Positions Visible To Everyone
+
+Activity Detail now treats preferred playing positions as shared team information.
+
+Delivered behavior:
+
+- all viewers can see a member's preferred positions in the team list when that member selected positions.
+- members without preferred positions still render without extra position text.
+- organizers/admins can still copy rosters with preferred positions.
+- proxy-signup badges remain visible only to organizers/admins.
+
+Why it matters:
+
+- participants can see whether the activity is missing common roles such as goalkeeper, defender, or midfielder.
+- the privacy boundary is now clearer: position preference is shared team context; proxy-management metadata stays private to managers.
+
+Deployment note:
+
+- redeploy `getActivityDetail` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the updated team-list view model is available on devices.
+
+Verification:
+
+- targeted red/green coverage was updated for CloudBase `getActivityDetail`, local mock detail data, and team-list view models.
 - full regression suite passed: `52` test suites, `297` tests.

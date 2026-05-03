@@ -88,14 +88,14 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       const member = {
         userOpenId: registration.userOpenId,
         signupName: registration.signupName,
-        avatarUrl: registration.avatarUrl || user.avatarUrl || ''
+        avatarUrl: registration.avatarUrl || user.avatarUrl || '',
+        preferredPositions: Array.isArray(registration.preferredPositions)
+          ? registration.preferredPositions.filter(Boolean)
+          : []
       };
 
       if (canManageRegistrations) {
         member.proxyRegistration = Boolean(registration.proxyRegistration);
-        member.preferredPositions = Array.isArray(registration.preferredPositions)
-          ? registration.preferredPositions.filter(Boolean)
-          : [];
       }
 
       acc[registration.teamId].push(member);

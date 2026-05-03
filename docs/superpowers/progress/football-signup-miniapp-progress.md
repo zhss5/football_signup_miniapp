@@ -171,6 +171,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - manual name/avatar changes made while profile loading is still pending are preserved
 - manual position changes made while profile loading is still pending are preserved
 - `joinActivity` continues to update `users.preferredName`, `users.avatarUrl`, `users.preferredPositions`, and the activity registration snapshot after signup
+- Activity Detail shows submitted preferred positions to all viewers when positions are present
 
 ### 2.15 Organizer Participant Name Copy
 
@@ -262,7 +263,7 @@ The current implementation differs from the original early MVP assumptions in th
 - activities now have a separate confirmation state before cancellation/deletion, and organizers/admins can notify subscribed participants
 - cancelled activities suppress the previous confirmed-state banner on Activity Detail
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
-- participants can optionally choose up to two preferred playing positions during signup, organizers/admins can see those choices on Activity Detail, and the participant's latest choices are prefilled on future signups
+- participants can optionally choose up to two preferred playing positions during signup, all viewers can see submitted position choices on Activity Detail, and the participant's latest choices are prefilled on future signups
 
 ## 4. Verification Status
 
@@ -293,6 +294,7 @@ Covered areas include:
 - signup-name normalization for emoji/special-character names, embedded line breaks, and length limits
 - My page active filter exclusion for expired published activities
 - native Home/My tab bar style and bottom spacing
+- participant preferred-position visibility for regular users while keeping proxy badges manager-only
 - organizer participant-name copy behavior
 - activity description display on Activity Detail
 - organizer proxy signup behavior

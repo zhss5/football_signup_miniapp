@@ -144,8 +144,10 @@ test('getActivityDetail groups joined members under each team', async () => {
     { db: fakeDb }
   );
 
+  expect(regularResult.teams[0].members[0]).toMatchObject({
+    preferredPositions: result.teams[0].members[0].preferredPositions
+  });
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
-  expect(regularResult.teams[0].members[0]).not.toHaveProperty('preferredPositions');
 });
 
 test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {

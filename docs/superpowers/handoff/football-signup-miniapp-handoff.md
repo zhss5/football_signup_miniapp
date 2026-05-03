@@ -119,6 +119,13 @@ Latest preferred-position prefill change:
 - upload a new mini program frontend build so the prefill behavior is available on devices.
 - `ensureUserProfile` does not require a code change for this behavior because it already returns the user document.
 
+Latest preferred-position visibility change:
+
+- `getActivityDetail` now returns member `preferredPositions` to all viewers, not only organizers/admins.
+- proxy-registration metadata remains manager-only.
+- redeploy `getActivityDetail` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so regular users can see position text in Activity Detail.
+
 Latest mobile cover-upload fix:
 
 - mobile crop output may be `http://tmp/...`; it must be treated as a temporary local file, not a persistent cover URL.
@@ -251,7 +258,7 @@ Latest result:
 - `52` test suites passed
 - `297` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -328,7 +335,7 @@ Current organizer roster behavior:
 - proxy participants show a small proxy badge only to organizers/admins; regular users see the same member name without the badge.
 - Activity Detail lets organizers/admins move active participants to another non-full team.
 - moving a participant keeps the activity joined count unchanged while updating source and target team counts.
-- organizers/admins can see each member's preferred positions on Activity Detail; regular participants cannot see other members' position choices.
+- all viewers can see each member's preferred positions on Activity Detail when positions are present.
 
 Current insurance-link behavior:
 

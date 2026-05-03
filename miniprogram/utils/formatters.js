@@ -95,9 +95,7 @@ function buildMemberVm(member, context = {}) {
   const preferredPositions = Array.isArray(member.preferredPositions)
     ? member.preferredPositions.filter(Boolean)
     : [];
-  const preferredPositionsVisible = Boolean(
-    context.canManageRegistrations && preferredPositions.length > 0
-  );
+  const preferredPositionsVisible = preferredPositions.length > 0;
 
   return {
     ...member,

@@ -519,11 +519,13 @@ test('local cloud client stores signup profile metadata without phone fields', a
     phoneSnapshot: expect.anything(),
     phoneSource: expect.anything()
   }));
-  expect(detailAfter.teams[0].members[0]).toMatchObject({
-    signupName: 'Alex',
-    avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg'
-  });
-  expect(detailAfter.teams[0].members[0]).not.toHaveProperty('preferredPositions');
+  expect(detailAfter.teams[0].members[0]).toEqual(
+    expect.objectContaining({
+      signupName: 'Alex',
+      avatarUrl: 'cloud://prod-env-123/user-avatars/alex.jpg',
+      preferredPositions: ownerDetailAfter.teams[0].members[0].preferredPositions
+    })
+  );
   expect(ownerDetailAfter.teams[0].members[0]).toMatchObject({
     preferredPositions: ['前锋', '门将']
   });
