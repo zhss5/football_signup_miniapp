@@ -95,21 +95,7 @@ describe('activity detail page', () => {
 
   test('onTeamColorTap lets managers choose a color and reloads detail', async () => {
     updateTeamColor.mockResolvedValue({ updated: true });
-    global.wx.showActionSheet = jest.fn(({ itemList, success }) => {
-      expect(itemList).toEqual([
-        'Green',
-        'White',
-        'Red',
-        'Blue',
-        'Black',
-        'Yellow',
-        'Orange',
-        'Purple',
-        'Gray',
-        'Pink'
-      ]);
-      success({ tapIndex: 6 });
-    });
+    global.wx.showActionSheet = jest.fn();
 
     const ctx = {
       data: {
@@ -125,7 +111,13 @@ describe('activity detail page', () => {
           }
         ]
       },
-      reload: jest.fn().mockResolvedValue()
+      reload: jest.fn().mockResolvedValue(),
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
     };
 
     await pageConfig.onTeamColorTap.call(ctx, {
@@ -134,8 +126,65 @@ describe('activity detail page', () => {
       }
     });
 
+    expect(ctx.data.colorPaletteVisible).toBe(true);
+    expect(ctx.data.colorPaletteTeamId).toBe('team_white');
+    expect(ctx.data.colorPaletteOptions.map(item => item.key)).toEqual([
+      'green',
+      'white',
+      'red',
+      'blue',
+      'black',
+      'yellow',
+      'orange',
+      'purple',
+      'gray',
+      'pink'
+    ]);
+    expect(global.wx.showActionSheet).not.toHaveBeenCalled();
+    expect(updateTeamColor).not.toHaveBeenCalled();
+    expect(ctx.reload).not.toHaveBeenCalled();
+  });
+
+  test('onColorPaletteSelect updates the selected team color and reloads detail', async () => {
+    updateTeamColor.mockResolvedValue({ updated: true });
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        colorPaletteTeamId: 'team_white',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue(),
+      closeColorPalette: pageConfig.closeColorPalette,
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onColorPaletteSelect.call(ctx, {
+      currentTarget: {
+        dataset: {
+          colorKey: 'orange'
+        }
+      }
+    });
+
     expect(updateTeamColor).toHaveBeenCalledWith('activity_123', 'team_white', 'orange');
+    expect(ctx.data.colorPaletteVisible).toBe(false);
     expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('activity detail renders a custom team color palette', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{colorPaletteVisible}}"');
+    expect(wxml).toContain('wx:for="{{colorPaletteOptions}}"');
+    expect(wxml).toContain('bindtap="onColorPaletteSelect"');
   });
 
   test('onShow reloads detail after returning from a successful join flow', async () => {

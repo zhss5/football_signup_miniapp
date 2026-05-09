@@ -13,7 +13,7 @@ const {
 const { notifyActivityParticipants } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
 const { buildTeamListVm } = require('../../utils/formatters');
-const { TEAM_COLOR_OPTIONS } = require('../../utils/team-colors');
+const { TEAM_COLOR_OPTIONS, isTeamColorKey } = require('../../utils/team-colors');
 const {
   getAppLocale,
   getMessages,
@@ -150,6 +150,13 @@ function getShareImageUrl(activity = {}) {
   return activity.shareDisplayImage || activity.coverDisplayImage || activity.coverImage || undefined;
 }
 
+function buildColorPaletteOptions(translate) {
+  return TEAM_COLOR_OPTIONS.map(option => ({
+    ...option,
+    label: translate(option.labelKey)
+  }));
+}
+
 function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
@@ -180,7 +187,10 @@ Page({
     activityCoverImage: '',
     activityCoverLoadFailed: false,
     activityCoverSourceIndex: 0,
-    activityDescriptionText: ''
+    activityDescriptionText: '',
+    colorPaletteVisible: false,
+    colorPaletteTeamId: '',
+    colorPaletteOptions: []
   },
 
   async onLoad(query) {
@@ -292,7 +302,7 @@ Page({
     });
   },
 
-  async onTeamColorTap(event) {
+  onTeamColorTap(event) {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const viewer = this.data.viewer || {};
 
@@ -305,25 +315,43 @@ Page({
       return;
     }
 
-    const tapIndex = await new Promise(resolve => {
-      wx.showActionSheet({
-        itemList: TEAM_COLOR_OPTIONS.map(option => translate(option.labelKey)),
-        success: result => resolve(result.tapIndex),
-        fail: () => resolve(-1)
-      });
+    this.setData({
+      colorPaletteVisible: true,
+      colorPaletteTeamId: teamId,
+      colorPaletteOptions: buildColorPaletteOptions(translate)
     });
+  },
 
-    if (tapIndex < 0 || !TEAM_COLOR_OPTIONS[tapIndex]) {
+  async onColorPaletteSelect(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const colorKey = String(event.currentTarget.dataset.colorKey || '').trim();
+    const teamId = this.data.colorPaletteTeamId;
+
+    if (!teamId || !isTeamColorKey(colorKey)) {
       return;
     }
 
     try {
-      await updateTeamColor(this.data.activityId, teamId, TEAM_COLOR_OPTIONS[tapIndex].key);
+      this.closeColorPalette();
+      await updateTeamColor(this.data.activityId, teamId, colorKey);
       await this.reload();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },
+
+  closeColorPalette() {
+    this.setData({
+      colorPaletteVisible: false,
+      colorPaletteTeamId: ''
+    });
+  },
+
+  onColorPaletteCancel() {
+    this.closeColorPalette();
+  },
+
+  noop() {},
 
   async onCancelSignup() {
     const translate = makeTranslator(this.data.locale || getAppLocale());

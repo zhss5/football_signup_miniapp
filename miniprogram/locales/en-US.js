@@ -77,6 +77,7 @@ module.exports = {
     teamList: {
       empty: 'No players yet'
     },
+    teamColorTitle: 'Team color',
     member: {
       proxySignup: 'Proxy'
     },
@@ -177,6 +178,7 @@ module.exports = {
     remove: 'Remove',
     upToTeams: 'Up to {{count}} teams',
     teamNamePrefix: 'Team ',
+    colorPaletteTitle: 'Team color',
     whiteTeam: 'White',
     redTeam: 'Red'
   },

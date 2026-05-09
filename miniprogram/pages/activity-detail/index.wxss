@@ -206,3 +206,130 @@
   color: #166534;
   background: #ecfdf5;
 }
+
+.color-palette-backdrop {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.36);
+}
+
+.color-palette-panel {
+  width: 100%;
+  max-width: 640rpx;
+  padding: 28rpx;
+  box-sizing: border-box;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.color-palette-title {
+  display: block;
+  margin-bottom: 18rpx;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.color-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+}
+
+.color-palette-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12rpx;
+  height: 72rpx;
+  margin: 0;
+  padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #111827;
+  font-size: 24rpx;
+  line-height: 72rpx;
+  text-align: left;
+}
+
+.color-palette-option::after {
+  border: none;
+}
+
+.color-palette-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.color-palette-option .team-color-chip {
+  flex: 0 0 32rpx;
+  width: 32rpx;
+  height: 32rpx;
+  min-width: 32rpx;
+  margin: 0;
+  padding: 0;
+  border: 2rpx solid transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  line-height: 32rpx;
+}
+
+.color-palette-option .team-color-chip::after {
+  border: none;
+}
+
+.team-color-green {
+  background: #16a34a;
+}
+
+.team-color-white {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.team-color-red {
+  background: #dc2626;
+}
+
+.team-color-blue {
+  background: #2563eb;
+}
+
+.team-color-black {
+  background: #111827;
+}
+
+.team-color-yellow {
+  background: #facc15;
+  border-color: #d97706;
+}
+
+.team-color-orange {
+  background: #f97316;
+}
+
+.team-color-purple {
+  background: #7c3aed;
+}
+
+.team-color-gray {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.team-color-pink {
+  background: #f9a8d4;
+  border-color: #db2777;
+}

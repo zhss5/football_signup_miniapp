@@ -28,4 +28,22 @@
     </view>
   </block>
   <button wx:if="{{teams.length < 4}}" class="add-button" bindtap="onAddTeam">{{labels.addTeam || 'Add Team'}}</button>
+
+  <view wx:if="{{paletteVisible}}" class="color-palette-backdrop" catchtap="onPaletteCancel">
+    <view class="color-palette-panel" catchtap="noop">
+      <text class="color-palette-title">{{labels.colorPaletteTitle || 'Team color'}}</text>
+      <view class="color-palette-grid">
+        <button
+          wx:for="{{paletteOptions}}"
+          wx:key="key"
+          class="color-palette-option"
+          data-color-key="{{item.key}}"
+          bindtap="onPaletteColorTap"
+        >
+          <view class="team-color-chip {{item.className}}"></view>
+          <text class="color-palette-label">{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+  </view>
 </view>

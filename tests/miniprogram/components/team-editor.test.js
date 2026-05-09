@@ -55,24 +55,22 @@ describe('team editor minimum team count', () => {
     expect(wxml).toContain('data-field="colorKey"');
   });
 
+  test('renders an in-component color palette instead of relying on action sheet', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-editor/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{paletteVisible}}"');
+    expect(wxml).toContain('wx:for="{{paletteOptions}}"');
+    expect(wxml).toContain('data-color-key="{{item.key}}"');
+    expect(wxml).not.toContain('showActionSheet');
+  });
+
   test('opens a ten-color palette when the color chip is tapped', async () => {
     const triggerEvent = jest.fn();
-    global.wx.showActionSheet.mockImplementation(({ itemList, success }) => {
-      expect(itemList).toEqual([
-        'Green',
-        'White',
-        'Red',
-        'Blue',
-        'Black',
-        'Yellow',
-        'Orange',
-        'Purple',
-        'Gray',
-        'Pink'
-      ]);
-      success({ tapIndex: 6 });
-    });
     const ctx = {
+      data: {},
       properties: {
         teams: [
           {
@@ -97,7 +95,13 @@ describe('team editor minimum team count', () => {
         }
       },
       triggerEvent,
-      emitTeams: componentConfig.methods.emitTeams
+      emitTeams: componentConfig.methods.emitTeams,
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
     };
 
     await componentConfig.methods.onTeamColorTap.call(ctx, {
@@ -108,16 +112,67 @@ describe('team editor minimum team count', () => {
       }
     });
 
-    expect(triggerEvent).toHaveBeenCalledWith('change', {
-      teams: [
+    expect(ctx.data.paletteVisible).toBe(true);
+    expect(ctx.data.paletteTeamIndex).toBe(0);
+    expect(ctx.data.paletteOptions.map(item => item.key)).toEqual([
+      'green',
+      'white',
+      'red',
+      'blue',
+      'black',
+      'yellow',
+      'orange',
+      'purple',
+      'gray',
+      'pink'
+    ]);
+    expect(global.wx.showActionSheet).not.toHaveBeenCalled();
+    expect(triggerEvent).not.toHaveBeenCalled();
+  });
+
+  test('chooses a team color from the custom palette', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      data: {
+        paletteTeamIndex: 0
+      },
+      properties: {
+        teams: [
           {
             teamName: 'White',
             maxMembers: 8,
-            colorKey: 'orange'
+            colorKey: 'green'
           }
         ]
-      });
-    expect(global.wx.showActionSheet).toHaveBeenCalled();
+      },
+      triggerEvent,
+      emitTeams: componentConfig.methods.emitTeams,
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    componentConfig.methods.onPaletteColorTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          colorKey: 'orange'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('change', {
+      teams: [
+        {
+          teamName: 'White',
+          maxMembers: 8,
+          colorKey: 'orange'
+        }
+      ]
+    });
+    expect(ctx.data.paletteVisible).toBe(false);
   });
 
   test('assigns the next default color when adding a team', () => {

@@ -378,6 +378,7 @@ Current activity experience polish:
 - Teams have semantic color keys and historical fallback colors by sort order.
 - Team color keys now cover ten common kit colors: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
 - The create-activity team editor and Activity Detail manager flow both use the same preset color palette.
+- The palette is custom in-app UI, not `wx.showActionSheet`, because WeChat action sheets only support up to 6 items.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
 - Detail gallery images and organizer/admin registration-change notifications remain deferred to later phases.
 

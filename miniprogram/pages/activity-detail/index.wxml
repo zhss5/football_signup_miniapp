@@ -64,6 +64,24 @@
     bind:cancelsignup="onCancelSignup"
   />
 
+  <view wx:if="{{colorPaletteVisible}}" class="color-palette-backdrop" catchtap="onColorPaletteCancel">
+    <view class="color-palette-panel" catchtap="noop">
+      <text class="color-palette-title">{{i18n.activity.teamColorTitle || 'Team color'}}</text>
+      <view class="color-palette-grid">
+        <button
+          wx:for="{{colorPaletteOptions}}"
+          wx:key="key"
+          class="color-palette-option"
+          data-color-key="{{item.key}}"
+          bindtap="onColorPaletteSelect"
+        >
+          <view class="team-color-chip {{item.className}}"></view>
+          <text class="color-palette-label">{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{viewer && (viewer.canManageRegistrations || viewer.canEditActivity || viewer.canCancelActivity)}}" class="action-panel">
     <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
       {{i18n.activity.actions.copyParticipantNames}}

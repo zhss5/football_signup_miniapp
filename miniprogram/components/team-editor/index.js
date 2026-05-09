@@ -1,5 +1,9 @@
 const { MAX_TEAMS } = require('../../utils/constants');
-const { TEAM_COLOR_OPTIONS, normalizeTeamColorKey } = require('../../utils/team-colors');
+const {
+  TEAM_COLOR_OPTIONS,
+  isTeamColorKey,
+  normalizeTeamColorKey
+} = require('../../utils/team-colors');
 
 function buildColorLabels(labels = {}) {
   if (
@@ -12,19 +16,12 @@ function buildColorLabels(labels = {}) {
   return TEAM_COLOR_OPTIONS.map(option => option.key);
 }
 
-function chooseColorIndex(itemList, fallbackIndex) {
-  return new Promise(resolve => {
-    if (typeof wx === 'undefined' || typeof wx.showActionSheet !== 'function') {
-      resolve(fallbackIndex);
-      return;
-    }
-
-    wx.showActionSheet({
-      itemList,
-      success: result => resolve(Number(result.tapIndex)),
-      fail: () => resolve(-1)
-    });
-  });
+function buildPaletteOptions(labels = {}) {
+  const colorLabels = buildColorLabels(labels);
+  return TEAM_COLOR_OPTIONS.map((option, index) => ({
+    ...option,
+    label: colorLabels[index] || option.key
+  }));
 }
 
 function buildDefaultTeam(index, maxMembers = 0) {
@@ -50,6 +47,12 @@ Component({
       type: Object,
       value: {}
     }
+  },
+
+  data: {
+    paletteVisible: false,
+    paletteTeamIndex: -1,
+    paletteOptions: []
   },
 
   methods: {
@@ -97,7 +100,7 @@ Component({
       this.emitTeams(teams);
     },
 
-    async onTeamColorTap(event) {
+    onTeamColorTap(event) {
       const index = Number(event.currentTarget.dataset.index);
       const currentTeam = this.properties.teams[index];
 
@@ -105,16 +108,18 @@ Component({
         return;
       }
 
-      const currentKey = normalizeTeamColorKey(currentTeam.colorKey, index);
-      const currentOptionIndex = TEAM_COLOR_OPTIONS.findIndex(item => item.key === currentKey);
-      const fallbackIndex = (currentOptionIndex + 1) % TEAM_COLOR_OPTIONS.length;
-      const selectedIndex = await chooseColorIndex(
-        buildColorLabels(this.properties.labels),
-        fallbackIndex
-      );
-      const selectedOption = TEAM_COLOR_OPTIONS[selectedIndex];
+      this.setData({
+        paletteVisible: true,
+        paletteTeamIndex: index,
+        paletteOptions: buildPaletteOptions(this.properties.labels)
+      });
+    },
 
-      if (!selectedOption) {
+    onPaletteColorTap(event) {
+      const colorKey = String(event.currentTarget.dataset.colorKey || '').trim();
+      const index = Number(this.data.paletteTeamIndex);
+
+      if (!isTeamColorKey(colorKey) || index < 0 || !this.properties.teams[index]) {
         return;
       }
 
@@ -122,13 +127,26 @@ Component({
         currentIndex === index
           ? {
               ...team,
-              colorKey: selectedOption.key
+              colorKey
             }
           : team
       );
 
+      this.setData({
+        paletteVisible: false,
+        paletteTeamIndex: -1
+      });
       this.emitTeams(teams);
     },
+
+    onPaletteCancel() {
+      this.setData({
+        paletteVisible: false,
+        paletteTeamIndex: -1
+      });
+    },
+
+    noop() {},
 
     onRemoveTeam(event) {
       if (this.properties.teams.length <= 1) {

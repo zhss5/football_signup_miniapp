@@ -231,6 +231,7 @@ Page({
         remove: i18n.teamEditor.remove,
         upToTeams: translate('teamEditor.upToTeams', { count: MAX_TEAMS }),
         teamNamePrefix: i18n.teamEditor.teamNamePrefix,
+        colorPaletteTitle: i18n.teamEditor.colorPaletteTitle,
         colorOptions: TEAM_COLOR_OPTIONS.map(option => translate(option.labelKey))
       }
     });

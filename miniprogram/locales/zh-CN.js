@@ -75,6 +75,7 @@ module.exports = {
     teamList: {
       empty: '暂无报名成员'
     },
+    teamColorTitle: '队伍颜色',
     member: {
       proxySignup: '代报名'
     },
@@ -167,6 +168,7 @@ module.exports = {
     remove: '移除',
     upToTeams: '最多支持 {{count}} 支队伍',
     teamNamePrefix: '队伍',
+    colorPaletteTitle: '队伍颜色',
     whiteTeam: '白队',
     redTeam: '红队'
   },

@@ -1428,6 +1428,12 @@ Verification:
 
 - targeted red/green coverage was updated for team-color utilities, team editor palette selection, Activity Detail manager color editing, `updateTeamColor`, cover-ratio styles, crop math, and crop export dimensions.
 
+Follow-up bug fix:
+
+- The first ten-color implementation used `wx.showActionSheet`, but that API only supports up to 6 items, so tapping a team color could appear to do nothing.
+- The create-activity team editor and Activity Detail manager color edit flow now use an in-app custom ten-color palette instead of `wx.showActionSheet`.
+- Regression coverage now verifies the custom palette renders and selects colors without calling `wx.showActionSheet`.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.
