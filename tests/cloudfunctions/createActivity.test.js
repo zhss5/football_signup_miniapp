@@ -187,3 +187,31 @@ test('createActivity rejects more than five detail images', async () => {
 
   expect(writes).toEqual([]);
 });
+
+test('createActivity rejects activity descriptions longer than 2000 characters', async () => {
+  const writes = [];
+  const fakeDb = createFakeDbWithUserRoles(['organizer'], writes);
+
+  await expect(
+    createActivity.main(
+      {
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        description: 'a'.repeat(2001),
+        signupLimitTotal: 12,
+        imageList: ['cloud://football/cover-1.png'],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      },
+      { OPENID: 'openid_a' },
+      { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Activity description supports up to 2000 characters');
+
+  expect(writes).toEqual([]);
+});

@@ -1,4 +1,9 @@
-const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES, MAX_TEAMS } = require('./constants');
+const {
+  MAX_ACTIVITY_DESCRIPTION_LENGTH,
+  MAX_ACTIVITY_IMAGES,
+  MAX_DETAIL_IMAGES,
+  MAX_TEAMS
+} = require('./constants');
 const { t: translateText } = require('./i18n');
 
 function buildValidationError(field, key, translate = null) {
@@ -26,6 +31,10 @@ function validateActivityDraft(draft, translate = null) {
 
   if (!draft.addressText || !draft.addressText.trim()) {
     throw buildValidationError('addressText', 'errors.activityAddressRequired', translate);
+  }
+
+  if (Array.from(String(draft.description || '')).length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {
+    throw buildValidationError('description', 'errors.activityDescriptionTooLong', translate);
   }
 
   if (!Array.isArray(draft.teams) || draft.teams.length === 0) {

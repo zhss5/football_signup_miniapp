@@ -1,4 +1,5 @@
 const MAX_ACTIVITY_IMAGES = 1;
+const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_DETAIL_IMAGES = 5;
 const MAX_SIGNUP_NAME_LENGTH = 16;
 
@@ -28,6 +29,10 @@ function validateActivityDraft(draft) {
 
   if (!draft.addressText || !draft.addressText.trim()) {
     throw new Error('Activity address is required');
+  }
+
+  if (Array.from(String(draft.description || '')).length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {
+    throw new Error('Activity description supports up to 2000 characters');
   }
 
   if (!Array.isArray(draft.teams) || draft.teams.length === 0) {

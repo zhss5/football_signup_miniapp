@@ -248,6 +248,7 @@ module.exports.activity.descriptionTitle = '\u6d3b\u52a8\u8bf4\u660e';
 module.exports.activity.activityImagesTitle = '\u6d3b\u52a8\u56fe\u7247';
 module.exports.activity.actions.confirmProceeding = '\u786e\u8ba4\u4e3e\u884c';
 module.exports.activityCreate.notificationHint = '\u901a\u77e5\u6e29\u99a8\u63d0\u793a';
+module.exports.errors.activityDescriptionTooLong = '\u6d3b\u52a8\u8bf4\u660e\u6700\u591a\u652f\u6301 2000 \u5b57';
 module.exports.activityCreate.notificationHintPlaceholder =
   '\u53ef\u9009\uff0c\u7528\u4e8e\u786e\u8ba4\u4e3e\u884c\u901a\u77e5';
 module.exports.activityCreate.notificationHintHint =

@@ -698,4 +698,17 @@ describe('activity create submit flow', () => {
     expect(previewRule).not.toBeNull();
     expect(previewRule[0]).not.toContain('border-radius');
   });
+
+  test('activity description textarea accepts up to 2000 characters', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+    const textareaRule = Array.from(wxml.matchAll(/<textarea[\s\S]*?\/>/g))
+      .map(match => match[0])
+      .find(markup => markup.includes('data-field="description"'));
+
+    expect(textareaRule).toBeDefined();
+    expect(textareaRule).toContain('maxlength="2000"');
+  });
 });

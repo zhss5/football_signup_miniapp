@@ -1462,6 +1462,26 @@ Verification:
 
 - targeted red/green coverage was added for draft payloads, validators, create/update cloud functions, local mock storage, detail-image upload, detail image URL resolution, Activity Detail gallery rendering, Activity Detail section ordering, and square-corner detail images.
 
+## 2026-05-09 - Activity Description Length
+
+Activity descriptions now support longer organizer notes.
+
+Delivered behavior:
+
+- Create/Edit Activity sets the description `textarea` limit to 2000 characters.
+- Frontend draft validation rejects descriptions longer than 2000 characters.
+- Cloud function shared validation also rejects descriptions longer than 2000 characters so client bypasses cannot write over-limit descriptions.
+
+Deployment notes:
+
+- Run `npm run copy:cloud-shared` before deploying cloud functions.
+- Redeploy `createActivity` and `updateActivity` so server-side description validation matches the frontend.
+- Upload a new mini program frontend build so the 2000-character textarea limit is available on devices.
+
+Verification:
+
+- targeted red/green coverage was added for the Create/Edit WXML `maxlength`, frontend validator, `createActivity`, and `updateActivity`.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.

@@ -113,4 +113,42 @@ describe('validateActivityDraft', () => {
       })
     ).toThrow('Up to five detail images are supported');
   });
+
+  test('rejects activity descriptions longer than 2000 characters', () => {
+    expect(() =>
+      validateActivityDraft({
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        description: 'a'.repeat(2001),
+        signupLimitTotal: 12,
+        imageList: [],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      })
+    ).toThrow('Activity description supports up to 2000 characters');
+  });
+
+  test('accepts activity descriptions at the 2000 character limit', () => {
+    expect(
+      validateActivityDraft({
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        description: 'a'.repeat(2000),
+        signupLimitTotal: 12,
+        imageList: [],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      })
+    ).toBe(true);
+  });
 });

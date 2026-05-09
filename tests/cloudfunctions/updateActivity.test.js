@@ -356,3 +356,13 @@ test('updateActivity rejects deleted activities and capacity below existing regi
     )
   ).rejects.toThrow('Total signup limit cannot be lower than joined players');
 });
+
+test('updateActivity rejects activity descriptions longer than 2000 characters', async () => {
+  await expect(
+    updateActivity.main(
+      buildUpdatePayload({ description: 'a'.repeat(2001) }),
+      { OPENID: 'openid_owner' },
+      { db: createFakeDb(), now: '2026-04-20T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Activity description supports up to 2000 characters');
+});

@@ -235,6 +235,7 @@ module.exports = {
     signupDeadlineRequired: 'Signup deadline is required',
     activityEndTimeOrder: 'Activity end time must be later than start time',
     signupDeadlineOrder: 'Signup deadline must be earlier than or equal to activity start time',
+    activityDescriptionTooLong: 'Activity description supports up to 2000 characters',
     totalSignupLimitRequired: 'Total signup limit is required',
     onlyOneActivityImage: 'Only one activity image is supported right now',
     tooManyDetailImages: 'Up to five detail images are supported',

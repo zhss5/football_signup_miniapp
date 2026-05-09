@@ -115,6 +115,7 @@
       placeholder="{{i18n.activityCreate.descriptionPlaceholder}}"
       data-field="description"
       value="{{form.description}}"
+      maxlength="2000"
       bindinput="onFieldInput"
     />
   </view>

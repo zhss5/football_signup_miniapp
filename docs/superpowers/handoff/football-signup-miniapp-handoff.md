@@ -381,6 +381,7 @@ Current activity experience polish:
 - The palette is custom in-app UI, not `wx.showActionSheet`, because WeChat action sheets only support up to 6 items.
 - Team color markers use shared kit-shaped WXSS icons instead of circular dots.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
+- Activity creation/editing supports activity descriptions up to 2000 characters, enforced by the textarea, frontend validator, and CloudBase shared validator.
 - Activity creation/editing supports up to five separate detail images stored in `activities.detailImages` and uploaded under `activity-detail-images/`.
 - Detail images are direct uploads with no app-level compression, resizing, or crop step.
 - Activity Detail section order is hero, share card, signup teams, description, then detail image gallery.
