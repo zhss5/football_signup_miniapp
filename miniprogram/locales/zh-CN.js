@@ -19,6 +19,8 @@ module.exports = {
     joinTeam: '报名 {{teamName}}'
   },
   home: {
+    emptyTitle: '\u6682\u65e0\u6d3b\u52a8\u5b89\u6392',
+    emptyCopy: '\u6709\u65b0\u53ef\u62a5\u540d\u6d3b\u52a8\u65f6\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002',
     createActivity: '创建活动'
   },
   activityCard: {

@@ -6,4 +6,9 @@
       <activity-card item="{{item}}" bind:tapcard="goDetail" />
     </block>
   </view>
+
+  <view wx:if="{{emptyVisible}}" class="empty-state">
+    <text class="empty-title">{{i18n.home.emptyTitle}}</text>
+    <text class="empty-copy">{{i18n.home.emptyCopy}}</text>
+  </view>
 </view>

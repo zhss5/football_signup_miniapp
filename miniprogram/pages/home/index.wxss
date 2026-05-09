@@ -11,3 +11,25 @@
   background: #15803d;
   color: #ffffff;
 }
+
+.empty-state {
+  min-height: 720rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 32rpx 140rpx;
+  color: #8a94a6;
+  text-align: center;
+}
+
+.empty-title {
+  color: #2f3542;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.empty-copy {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+}

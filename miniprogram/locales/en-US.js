@@ -18,7 +18,9 @@ module.exports = {
     joinActivity: 'Join Activity'
   },
   home: {
-    createActivity: 'Create Activity'
+    createActivity: 'Create Activity',
+    emptyTitle: 'No activities scheduled',
+    emptyCopy: 'New joinable activities will appear here.'
   },
   activityCard: {
     start: 'Start: {{value}}',

@@ -32,6 +32,7 @@ Page({
   data: {
     items: [],
     loading: false,
+    emptyVisible: false,
     canCreateActivity: false,
     locale: '',
     i18n: {}
@@ -56,10 +57,14 @@ Page({
       const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems);
       this.setData({
         items: itemsWithDisplayCovers,
-        loading: false
+        loading: false,
+        emptyVisible: itemsWithDisplayCovers.length === 0
       });
     } catch (error) {
-      this.setData({ loading: false });
+      this.setData({
+        loading: false,
+        emptyVisible: this.data.items.length === 0
+      });
 
       if (typeof wx !== 'undefined' && typeof wx.showToast === 'function') {
         wx.showToast({

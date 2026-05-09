@@ -181,6 +181,57 @@ describe('home page', () => {
     expect(ctx.data.items.map(item => item.id)).toEqual(['new_joinable', 'old_joinable']);
   });
 
+  test('shows the empty state after loading when no joinable activities are visible', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user']
+      }
+    });
+    listActivities.mockResolvedValue({
+      items: [
+        {
+          _id: 'closed_activity',
+          title: 'Closed',
+          statusTone: 'disabled'
+        }
+      ]
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        items: [],
+        loading: false,
+        emptyVisible: false,
+        canCreateActivity: false
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+
+    expect(ctx.data.items).toEqual([]);
+    expect(ctx.data.loading).toBe(false);
+    expect(ctx.data.emptyVisible).toBe(true);
+  });
+
+  test('home template renders an empty activity message only when the empty state is visible', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/home/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{emptyVisible}}"');
+    expect(wxml).toContain('{{i18n.home.emptyTitle}}');
+  });
+
   test('keeps the home page usable when create permission refresh fails', async () => {
     ensureUserProfile.mockRejectedValue(new Error('timeout'));
     listActivities.mockResolvedValue({
