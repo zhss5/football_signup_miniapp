@@ -532,6 +532,34 @@ describe('activity detail page', () => {
     expect(wxml).toContain('bindtap="onPreviewDetailImage"');
   });
 
+  test('renders share and signup sections before description and detail images', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    const shareIndex = wxml.indexOf('class="share-card');
+    const teamListIndex = wxml.indexOf('<team-list');
+    const descriptionIndex = wxml.indexOf('class="description-card"');
+    const detailImagesIndex = wxml.indexOf('class="detail-images-card"');
+
+    expect(shareIndex).toBeGreaterThan(-1);
+    expect(teamListIndex).toBeGreaterThan(shareIndex);
+    expect(descriptionIndex).toBeGreaterThan(teamListIndex);
+    expect(detailImagesIndex).toBeGreaterThan(descriptionIndex);
+  });
+
+  test('detail gallery images render without rounded corners', () => {
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+    const detailImageRule = wxss.match(/\.detail-image\s*{[^}]*}/);
+
+    expect(detailImageRule).not.toBeNull();
+    expect(detailImageRule[0]).not.toContain('border-radius');
+  });
+
   test('onConfirmActivityProceeding confirms the activity, notifies subscribers, and reloads detail', async () => {
     global.wx.showModal.mockImplementation(({ success }) => {
       success({ confirm: true });

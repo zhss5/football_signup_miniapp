@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   createActivity: jest.fn(),
   getActivityDetail: jest.fn(),
@@ -683,5 +686,16 @@ describe('activity create submit flow', () => {
       title: 'Activity address is required',
       icon: 'none'
     });
+  });
+
+  test('detail image upload previews render without rounded corners', () => {
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxss'),
+      'utf8'
+    );
+    const previewRule = wxss.match(/\.detail-image-preview\s*{[^}]*}/);
+
+    expect(previewRule).not.toBeNull();
+    expect(previewRule[0]).not.toContain('border-radius');
   });
 });

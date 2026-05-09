@@ -130,7 +130,6 @@
 .detail-image {
   display: block;
   width: 100%;
-  border-radius: 16rpx;
   background: #f3f4f6;
 }
 

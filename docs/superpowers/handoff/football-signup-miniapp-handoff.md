@@ -382,7 +382,9 @@ Current activity experience polish:
 - Team color markers use shared kit-shaped WXSS icons instead of circular dots.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
 - Activity creation/editing supports up to five separate detail images stored in `activities.detailImages` and uploaded under `activity-detail-images/`.
-- Activity Detail resolves and renders the detail image gallery below the description.
+- Detail images are direct uploads with no app-level compression, resizing, or crop step.
+- Activity Detail section order is hero, share card, signup teams, description, then detail image gallery.
+- Activity Detail resolves and renders the detail image gallery below the description, and detail images render without rounded corners.
 - Organizer/admin registration-change notifications remain deferred to later phases.
 
 Current My list behavior:

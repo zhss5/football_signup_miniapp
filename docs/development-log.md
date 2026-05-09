@@ -1445,7 +1445,10 @@ Delivered behavior:
 - `activities.detailImages` stores up to five non-cover activity images.
 - Create/Edit Activity keeps the cover image as a separate 5:4 cropped asset and adds a separate detail-image uploader below it.
 - Detail images upload to `activity-detail-images/` and are persisted by `createActivity`, `updateActivity`, and local mock mode.
-- Activity Detail resolves CloudBase detail image file IDs into display URLs and renders them below the activity description.
+- Detail images are direct uploads with no app-level compression, resizing, or crop step.
+- Activity Detail orders the participant workflow before long-form content: hero, share card, signup teams, description, then detail images.
+- Activity Detail resolves CloudBase detail image file IDs into display URLs and renders them after the activity description.
+- Detail gallery images and Create/Edit detail-image previews render without rounded corners.
 - Detail images are not resolved on Home/My list cards, so list loading stays focused on thumbnails and cover images.
 
 Deployment notes:
@@ -1457,7 +1460,7 @@ Deployment notes:
 
 Verification:
 
-- targeted red/green coverage was added for draft payloads, validators, create/update cloud functions, local mock storage, detail-image upload, detail image URL resolution, and Activity Detail gallery rendering.
+- targeted red/green coverage was added for draft payloads, validators, create/update cloud functions, local mock storage, detail-image upload, detail image URL resolution, Activity Detail gallery rendering, Activity Detail section ordering, and square-corner detail images.
 
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
