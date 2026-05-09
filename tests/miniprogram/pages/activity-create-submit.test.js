@@ -801,4 +801,16 @@ describe('activity create submit flow', () => {
     expect(textareaRule).toBeDefined();
     expect(textareaRule).toContain('maxlength="2000"');
   });
+
+  test('cover image upload appears before the activity description field', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+    const coverIndex = wxml.indexOf('{{i18n.activityCreate.coverImage}}');
+    const descriptionIndex = wxml.indexOf('{{i18n.activityCreate.description}}');
+
+    expect(coverIndex).toBeGreaterThan(-1);
+    expect(descriptionIndex).toBeGreaterThan(coverIndex);
+  });
 });

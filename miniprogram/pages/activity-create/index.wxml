@@ -109,18 +109,6 @@
   </view>
 
   <view class="field">
-    <text class="label">{{i18n.activityCreate.description}}</text>
-    <textarea
-      class="textarea"
-      placeholder="{{i18n.activityCreate.descriptionPlaceholder}}"
-      data-field="description"
-      value="{{form.description}}"
-      maxlength="2000"
-      bindinput="onFieldInput"
-    />
-  </view>
-
-  <view class="field">
     <text class="label">{{i18n.activityCreate.coverImage}}</text>
     <view class="upload-panel">
       <view class="image-preview-frame" bindtap="onChooseActivityImage">
@@ -130,6 +118,18 @@
       <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">{{i18n.activityCreate.removeImage}}</button>
       <text class="hint">{{imageHintText}}</text>
     </view>
+  </view>
+
+  <view class="field">
+    <text class="label">{{i18n.activityCreate.description}}</text>
+    <textarea
+      class="textarea"
+      placeholder="{{i18n.activityCreate.descriptionPlaceholder}}"
+      data-field="description"
+      value="{{form.description}}"
+      maxlength="2000"
+      bindinput="onFieldInput"
+    />
   </view>
 
   <view class="field">

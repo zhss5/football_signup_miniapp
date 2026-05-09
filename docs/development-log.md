@@ -1502,6 +1502,19 @@ Verification:
 
 - targeted red/green coverage was added for Create Activity `onTeamsChange` add/remove behavior.
 
+## 2026-05-09 - Create Activity Field Order
+
+The Create/Edit Activity form now asks for the cover image before the long activity description.
+
+Why it matters:
+
+- organizers can set the primary share/list image before writing longer notes.
+- the detail-image uploader remains after the description because those images are supporting content rather than the main activity card image.
+
+Verification:
+
+- targeted red/green coverage was added for the Create/Edit WXML field order.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.
