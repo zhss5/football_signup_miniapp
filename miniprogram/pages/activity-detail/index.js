@@ -251,6 +251,7 @@ Page({
         translate,
         {
           canCancelSignup: Boolean(detail.viewer && detail.viewer.canCancelSignup),
+          canEditTeamColor: Boolean(detail.viewer && detail.viewer.canEditActivity),
           canManageRegistrations: Boolean(detail.viewer && detail.viewer.canManageRegistrations)
         }
       )

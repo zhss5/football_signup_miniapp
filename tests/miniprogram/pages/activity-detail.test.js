@@ -360,6 +360,7 @@ describe('activity detail page', () => {
       myRegistration: null,
       viewer: {
         canCancelSignup: true,
+        canEditActivity: true,
         canManageRegistrations: true
       }
     });
@@ -386,6 +387,7 @@ describe('activity detail page', () => {
       undefined,
       expect.any(Function),
       expect.objectContaining({
+        canEditTeamColor: true,
         canManageRegistrations: true,
         canCancelSignup: true
       })

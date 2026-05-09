@@ -4,6 +4,7 @@
       <view class="team-head">
         <view class="team-title-row">
           <button
+            wx:if="{{item.canEditColor}}"
             class="team-kit-button"
             data-team-id="{{item._id}}"
             bindtap="onTeamColorTap"
@@ -14,11 +15,20 @@
               <view class="team-kit-sleeve team-kit-sleeve-right"></view>
             </view>
           </button>
+          <view wx:else class="team-kit-button">
+            <view class="team-kit-icon {{item.teamColorClass}}">
+              <view class="team-kit-sleeve team-kit-sleeve-left"></view>
+              <view class="team-kit-body"></view>
+              <view class="team-kit-sleeve team-kit-sleeve-right"></view>
+            </view>
+          </view>
           <text
+            wx:if="{{item.canEditColor}}"
             class="team-name {{item.teamColorClass}}-text"
             data-team-id="{{item._id}}"
             bindtap="onTeamColorTap"
           >{{item.teamName}}</text>
+          <text wx:else class="team-name {{item.teamColorClass}}-text">{{item.teamName}}</text>
           <button
             wx:if="{{item.canProxySignup}}"
             class="proxy-signup-button"

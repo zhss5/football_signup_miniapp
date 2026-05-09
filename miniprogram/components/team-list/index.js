@@ -34,8 +34,15 @@ Component({
     },
 
     onTeamColorTap(event) {
+      const teamId = event.currentTarget.dataset.teamId;
+      const targetTeam = this.properties.teams.find(item => item._id === teamId);
+
+      if (!targetTeam || !targetTeam.canEditColor) {
+        return;
+      }
+
       this.triggerEvent('teamcolortap', {
-        teamId: event.currentTarget.dataset.teamId
+        teamId
       });
     },
 

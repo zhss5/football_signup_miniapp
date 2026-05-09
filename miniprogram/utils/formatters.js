@@ -158,6 +158,7 @@ function buildTeamListVm(
       teamColorKey: colorOption.key,
       teamColorClass: colorOption.className,
       teamColorRequiresBorder: colorOption.requiresBorder,
+      canEditColor: Boolean(options.canEditTeamColor),
       joinDisabled,
       joinButtonText,
       joinActionVisible,

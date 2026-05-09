@@ -1515,6 +1515,27 @@ Verification:
 
 - targeted red/green coverage was added for the Create/Edit WXML field order.
 
+## 2026-05-09 - Team Color Edit Permission UI
+
+Activity Detail now hides team color edit affordances from regular viewers.
+
+Delivered behavior:
+
+- `buildTeamListVm` marks teams as color-editable only when Activity Detail passes `viewer.canEditActivity`.
+- Activity Detail passes that permission into the team list view model.
+- Team List renders static jersey icons and static team names for regular viewers.
+- Team List ignores color-tap events for non-editable teams as a component-level guard.
+- The existing Activity Detail parent handler still keeps its `viewer.canEditActivity` guard.
+
+Why it matters:
+
+- regular participants can no longer open the jersey color palette from Activity Detail.
+- organizer/admin color editing remains available through the same Activity Detail palette.
+
+Verification:
+
+- targeted red/green coverage was added for the view model flag, team-list rendering/event guard, and Activity Detail permission propagation.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.

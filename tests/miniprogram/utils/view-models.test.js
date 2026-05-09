@@ -193,6 +193,32 @@ test('buildTeamListVm exposes team color display fields with fallback by sort or
   });
 });
 
+test('buildTeamListVm exposes team color editing only when allowed', () => {
+  const teams = [
+    {
+      _id: 'team_one',
+      teamName: 'Team 1',
+      joinedCount: 0,
+      maxMembers: 12,
+      members: []
+    }
+  ];
+  const regularVm = buildTeamListVm(teams, null, { status: 'published' });
+  const managerVm = buildTeamListVm(
+    teams,
+    null,
+    { status: 'published' },
+    undefined,
+    undefined,
+    {
+      canEditTeamColor: true
+    }
+  );
+
+  expect(regularVm[0].canEditColor).toBe(false);
+  expect(managerVm[0].canEditColor).toBe(true);
+});
+
 test('buildTeamListVm marks the current user member row with cancel signup action', () => {
   const teams = buildTeamListVm(
     [

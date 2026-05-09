@@ -381,6 +381,7 @@ Current activity experience polish:
 - The palette is custom in-app UI, not `wx.showActionSheet`, because WeChat action sheets only support up to 6 items.
 - Team color markers use shared kit-shaped WXSS icons instead of circular dots.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
+- Regular Activity Detail viewers see static jersey icons and cannot open the team color palette; the team list also guards against non-editable color tap events.
 - Create Activity adjusts `signupLimitTotal` by the team capacity delta when teams are added or removed, preserving extra bench slots and keeping the total at least equal to regular-team capacity.
 - Create/Edit Activity field order places the cover image upload before the long activity description; detail images remain after the description.
 - Activity creation/editing supports activity descriptions up to 2000 characters, enforced by the textarea, frontend validator, and CloudBase shared validator.
