@@ -153,6 +153,208 @@ test('joinActivity rejects rejoin after three prior cancellations or removals', 
   jest.dontMock('wx-server-sdk');
 });
 
+test('joinActivity lets the activity organizer rejoin without the repeat-exit limit', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const updateUser = jest.fn().mockResolvedValue({});
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                organizerOpenId: 'openid_owner',
+                status: 'published',
+                signupDeadlineAt: '2026-04-20T10:00:00.000Z',
+                joinedCount: 0,
+                signupLimitTotal: 10
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 0,
+                maxMembers: 6
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'cancelled',
+                cancelCount: 3,
+                removedCount: 2
+              }
+            }),
+            set: setRegistration
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                preferredName: '',
+                roles: ['user']
+              }
+            }),
+            update: updateUser
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_owner' })),
+    database: jest.fn(() => ({
+      runTransaction: callback => callback(transaction)
+    }))
+  }));
+
+  const isolatedJoinActivity = require('../../cloudfunctions/joinActivity/index');
+
+  await expect(
+    isolatedJoinActivity.main(
+      {
+        activityId: 'activity_1',
+        teamId: 'team_white',
+        signupName: 'Owner'
+      },
+      {},
+      { now: '2026-04-19T10:00:00.000Z' }
+    )
+  ).resolves.toMatchObject({
+    status: 'joined'
+  });
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      cancelCount: 3,
+      removedCount: 2
+    })
+  });
+
+  jest.dontMock('wx-server-sdk');
+});
+
+test('joinActivity lets an admin rejoin without the repeat-exit limit', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const updateUser = jest.fn().mockResolvedValue({});
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                organizerOpenId: 'openid_owner',
+                status: 'published',
+                signupDeadlineAt: '2026-04-20T10:00:00.000Z',
+                joinedCount: 0,
+                signupLimitTotal: 10
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 0,
+                maxMembers: 6
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'cancelled',
+                cancelCount: 3,
+                removedCount: 2
+              }
+            }),
+            set: setRegistration
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                preferredName: '',
+                roles: ['admin']
+              }
+            }),
+            update: updateUser
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_admin' })),
+    database: jest.fn(() => ({
+      runTransaction: callback => callback(transaction)
+    }))
+  }));
+
+  const isolatedJoinActivity = require('../../cloudfunctions/joinActivity/index');
+
+  await expect(
+    isolatedJoinActivity.main(
+      {
+        activityId: 'activity_1',
+        teamId: 'team_white',
+        signupName: 'Admin'
+      },
+      {},
+      { now: '2026-04-19T10:00:00.000Z' }
+    )
+  ).resolves.toMatchObject({
+    status: 'joined'
+  });
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      cancelCount: 3,
+      removedCount: 2
+    })
+  });
+
+  jest.dontMock('wx-server-sdk');
+});
+
 test('joinActivity uses the document id and does not write phone data into registration records', async () => {
   jest.resetModules();
 

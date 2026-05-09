@@ -597,7 +597,10 @@ function createLocalCloudClient(options = {}) {
       throw new Error('You already joined this activity');
     }
 
-    if (getRepeatExitCount(current) >= MAX_REPEAT_EXIT_COUNT) {
+    if (
+      !canEditActivity(activity, state.users[openid], openid) &&
+      getRepeatExitCount(current) >= MAX_REPEAT_EXIT_COUNT
+    ) {
       throw new Error(CONTACT_ORGANIZER_MESSAGE);
     }
 

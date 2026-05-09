@@ -1686,7 +1686,8 @@ Delivered behavior:
 
 - `cancelRegistration` increments `cancelCount` on the user's same activity registration record.
 - `removeRegistration` increments `removedCount` when an organizer/admin removes a joined member.
-- `joinActivity` rejects another signup when `cancelCount + removedCount >= 3` for that same activity/user registration.
+- `joinActivity` rejects another regular-user signup when `cancelCount + removedCount >= 3` for that same activity/user registration.
+- the activity organizer and `admin` users are exempt from this rejoin block; manager removal actions themselves are not rate-limited.
 - the mini program maps the backend message `Please contact the organizer` to `请联系组织者` in Chinese UI.
 - the local mock mirrors the CloudBase behavior so DevTools and real cloud tests stay aligned.
 
@@ -1694,6 +1695,7 @@ Why it matters:
 
 - normal users can still cancel/rejoin a small number of times.
 - repeated self-cancellation or organizer removal no longer allows unlimited re-entry into the same activity.
+- organizers and admins can still test or manage their own signup state without being blocked by the abuse guard.
 - the rule is scoped to one activity and one WeChat OpenID; other activities are unaffected.
 
 Deployment note:
@@ -1703,5 +1705,5 @@ Deployment note:
 
 Verification:
 
-- targeted red/green coverage was added for CloudBase join/cancel/remove functions, local mock behavior, and i18n translation.
-- full regression suite passed: `56` test suites, `367` tests.
+- targeted red/green coverage was added for CloudBase join/cancel/remove functions, organizer/admin rejoin exemption, local mock behavior, and i18n translation.
+- full regression suite passed: `56` test suites, `371` tests.

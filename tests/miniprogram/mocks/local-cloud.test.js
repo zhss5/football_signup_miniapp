@@ -850,6 +850,122 @@ test('local cloud client asks repeat removed or cancelled participants to contac
   );
 });
 
+test('local cloud client lets the organizer rejoin without the repeat-exit limit', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const teamId = detail.teams[0]._id;
+  const joinPayload = {
+    activityId: created.activityId,
+    teamId,
+    signupName: 'Owner',
+    source: 'share'
+  };
+
+  await ownerClient.call('joinActivity', joinPayload);
+  await ownerClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+  await ownerClient.call('joinActivity', joinPayload);
+  await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: 'openid_owner'
+  });
+  await ownerClient.call('joinActivity', joinPayload);
+  await ownerClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+
+  await expect(ownerClient.call('joinActivity', joinPayload)).resolves.toMatchObject({
+    status: 'joined'
+  });
+});
+
+test('local cloud client lets an admin rejoin without the repeat-exit limit', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const adminClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_admin',
+    defaultRoles: ['user', 'admin']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const teamId = detail.teams[0]._id;
+  const joinPayload = {
+    activityId: created.activityId,
+    teamId,
+    signupName: 'Admin',
+    source: 'share'
+  };
+
+  await adminClient.call('joinActivity', joinPayload);
+  await adminClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+  await adminClient.call('joinActivity', joinPayload);
+  await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: 'openid_admin'
+  });
+  await adminClient.call('joinActivity', joinPayload);
+  await adminClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+
+  await expect(adminClient.call('joinActivity', joinPayload)).resolves.toMatchObject({
+    status: 'joined'
+  });
+});
+
 test('local cloud client blocks regular users from removing members', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

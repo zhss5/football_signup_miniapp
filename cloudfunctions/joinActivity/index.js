@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
 const { normalizeSignupName, validateSignupPayload } = require('./validators');
 const { businessError } = require('./errors');
+const { canEditActivity } = require('./roles');
 const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -130,6 +131,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     const activityRes = await transaction.collection('activities').doc(event.activityId).get();
     const teamRes = await transaction.collection('activity_teams').doc(event.teamId).get();
     const registrationRes = await transaction.collection('registrations').doc(registrationId).get().catch(() => ({ data: null }));
+    const userRes = await transaction
+      .collection('users')
+      .doc(openid)
+      .get()
+      .catch(() => ({ data: null }));
 
     if (activityRes.data.status !== 'published') {
       throw businessError('Activity is not open for signup');
@@ -152,7 +158,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('You already joined this activity');
     }
 
-    if (getRepeatExitCount(registrationRes.data) >= MAX_REPEAT_EXIT_COUNT) {
+    if (
+      !canEditActivity(activityRes.data, userRes.data, openid) &&
+      getRepeatExitCount(registrationRes.data) >= MAX_REPEAT_EXIT_COUNT
+    ) {
       throw businessError(CONTACT_ORGANIZER_MESSAGE);
     }
 
