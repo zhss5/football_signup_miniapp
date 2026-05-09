@@ -485,6 +485,112 @@ test('joinActivity uses the document id and does not write phone data into regis
   jest.dontMock('wx-server-sdk');
 });
 
+test('joinActivity notifies managers when a regular participant joins', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const updateUser = jest.fn().mockResolvedValue({});
+  const fakeDb = {
+    runTransaction: callback => callback(transaction)
+  };
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                organizerOpenId: 'openid_owner',
+                title: 'May 9 training',
+                status: 'published',
+                signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+                startAt: '2026-05-09T20:00:00.000Z',
+                joinedCount: 0,
+                signupLimitTotal: 12
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 0,
+                maxMembers: 6
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({ data: null }),
+            set: setRegistration
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                roles: ['user']
+              }
+            }),
+            update: updateUser
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+  const notifyActivityManagers = jest.fn().mockResolvedValue({ sent: 1 });
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_player' })),
+    database: jest.fn(() => fakeDb)
+  }));
+
+  const isolatedJoinActivity = require('../../cloudfunctions/joinActivity/index');
+
+  await isolatedJoinActivity.main(
+    {
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      signupName: 'Alex'
+    },
+    {},
+    {
+      now: '2026-05-09T10:00:00.000Z',
+      notifyActivityManagers
+    }
+  );
+
+  expect(notifyActivityManagers).toHaveBeenCalledWith(
+    fakeDb,
+    expect.objectContaining({
+      activity: expect.objectContaining({
+        _id: 'activity_1',
+        organizerOpenId: 'openid_owner'
+      }),
+      actorOpenId: 'openid_player',
+      actorName: 'Alex',
+      changeType: 'registration_joined',
+      stamp: '2026-05-09T10:00:00.000Z'
+    }),
+    expect.any(Object)
+  );
+
+  jest.dontMock('wx-server-sdk');
+});
+
 test('joinActivity rejects more than two preferred positions', async () => {
   await expect(
     joinActivity.main(

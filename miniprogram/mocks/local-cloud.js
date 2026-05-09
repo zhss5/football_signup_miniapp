@@ -646,6 +646,18 @@ function createLocalCloudClient(options = {}) {
     activity.joinedCount += 1;
     activity.updatedAt = stamp;
     team.joinedCount += 1;
+
+    if (!canEditActivity(activity, user, openid)) {
+      recordManagerRegistrationNotifications(
+        state,
+        activity,
+        openid,
+        signupName,
+        'registration_joined',
+        stamp
+      );
+    }
+
     writeState(state);
 
     return {
@@ -772,6 +784,17 @@ function createLocalCloudClient(options = {}) {
     activity.joinedCount = Math.max(activity.joinedCount - 1, 0);
     activity.updatedAt = stamp;
     team.joinedCount = Math.max(team.joinedCount - 1, 0);
+
+    if (!canEditActivity(activity, state.users[openid], openid)) {
+      recordManagerRegistrationNotifications(
+        state,
+        activity,
+        openid,
+        current.signupName,
+        'registration_cancelled',
+        stamp
+      );
+    }
 
     writeState(state);
     return {
@@ -987,6 +1010,46 @@ function createLocalCloudClient(options = {}) {
         item.recipientOpenId === userOpenId &&
         item.status === 'sent'
     );
+  }
+
+  function getAcceptedManagerSubscriptions(state, activity, actorOpenId) {
+    return Object.values(state.notificationSubscriptions).filter(item => {
+      if (
+        item.activityId !== activity._id ||
+        item.templateKey !== 'activity_notice' ||
+        item.status !== 'accepted' ||
+        !item.userOpenId ||
+        !item.templateId ||
+        item.userOpenId === actorOpenId
+      ) {
+        return false;
+      }
+
+      return canEditActivity(activity, state.users[item.userOpenId], item.userOpenId);
+    });
+  }
+
+  function recordManagerRegistrationNotifications(
+    state,
+    activity,
+    actorOpenId,
+    actorName,
+    notificationType,
+    stamp
+  ) {
+    getAcceptedManagerSubscriptions(state, activity, actorOpenId).forEach(subscription => {
+      state.notificationLogs.push({
+        _id: nextId(state, 'notification_log'),
+        activityId: activity._id,
+        actorOpenId,
+        actorName: actorName || '',
+        recipientOpenId: subscription.userOpenId,
+        notificationType,
+        templateId: subscription.templateId,
+        status: 'sent',
+        createdAt: stamp
+      });
+    });
   }
 
   function notifyActivityParticipants(payload) {

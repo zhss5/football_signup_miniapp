@@ -255,10 +255,10 @@ node scripts/copy-cloud-shared.mjs && node node_modules/jest/bin/jest.js --runIn
 
 Latest result:
 
-- `56` test suites passed
-- `371` tests passed
+- `57` test suites passed
+- `380` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, manager signup-change notification behavior, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -360,6 +360,10 @@ Current activity notification behavior:
 - Create/Edit Activity can store a custom `notificationHint`; proceeding notices use it in the reminder field when present, while cancellation notices still use the default cancellation reminder.
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 - `time2` is formatted explicitly as China local time so UTC CloudBase runtimes do not send activity times eight hours early.
+- Activity Detail has a manager-only action to subscribe the current organizer/admin to signup-change notices for that activity.
+- accepted manager subscriptions are notified only when a regular participant joins through `joinActivity` or self-cancels through `cancelRegistration`.
+- organizer/admin self signup, organizer/admin self cancellation, and organizer/admin removal of another participant intentionally do not send manager notices.
+- manager notification failures are caught after the registration write, so signup and self-cancellation are not blocked by notification delivery problems.
 
 - TODO: after `endAt` passes, show an overdue unresolved state for activities that are still `published` and `confirmStatus: pending`, and remind organizers to confirm or cancel manually without automatic confirmation.
 
@@ -392,7 +396,7 @@ Current activity experience polish:
 - Published activities whose `endAt` has passed now show an explicit red `Expired` / `活动已过期` badge on Home/My activity cards and in the Activity Detail hero.
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Same-activity repeat exits are guarded for regular participants: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration. The activity organizer and `admin` users are exempt from this rejoin block, and manager removal actions are not rate-limited.
-- Organizer/admin registration-change notifications remain deferred to later phases.
+- Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
 
 Current My list behavior:
 
@@ -430,13 +434,13 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits for regular participants, organizer/admin repeat-signup exemption, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
+9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits for regular participants, organizer/admin repeat-signup exemption, manager signup-change notification opt-in, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - add the real template ID to local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
-   - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, and `updateActivity`
-   - validate signup subscription prompt, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
+   - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
+   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 14. Add activity-list pagination when activity volume exceeds one returned batch:

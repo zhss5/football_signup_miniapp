@@ -21,7 +21,8 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
-  notifyActivityParticipants: jest.fn()
+  notifyActivityParticipants: jest.fn(),
+  requestActivityNotificationSubscription: jest.fn()
 }));
 
 const fs = require('fs');
@@ -38,6 +39,7 @@ describe('activity detail page', () => {
   let buildTeamListVm;
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
+  let requestActivityNotificationSubscription;
 
   beforeEach(() => {
     pageConfig = null;
@@ -62,10 +64,17 @@ describe('activity detail page', () => {
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
-    ({ notifyActivityParticipants } = require('../../../miniprogram/services/notification-service'));
+    ({
+      notifyActivityParticipants,
+      requestActivityNotificationSubscription
+    } = require('../../../miniprogram/services/notification-service'));
     notifyActivityParticipants.mockResolvedValue({
       sent: 0,
       failed: 0
+    });
+    requestActivityNotificationSubscription.mockResolvedValue({
+      configured: true,
+      status: 'accepted'
     });
   });
 
@@ -629,6 +638,33 @@ describe('activity detail page', () => {
       icon: 'success'
     });
     expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('activity detail template renders manager subscription action', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('bindtap="onSubscribeRegistrationNotifications"');
+    expect(wxml).toContain('{{i18n.activity.actions.subscribeRegistrationNotifications}}');
+  });
+
+  test('onSubscribeRegistrationNotifications records manager notification consent', async () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      }
+    };
+
+    await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
+
+    expect(requestActivityNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Signup notifications enabled',
+      icon: 'success'
+    });
   });
 
   test('openEditActivity navigates to the create page in edit mode for the current activity', () => {

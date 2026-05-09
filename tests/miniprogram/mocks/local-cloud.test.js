@@ -1346,3 +1346,108 @@ test('local cloud client records subscriptions and lets organizers confirm or ca
 
   expect(cancelledDetail.activity.status).toBe('cancelled');
 });
+
+test('local cloud client records manager notifications only for regular self joins and cancels', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const adminClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T10:00:00.000Z',
+    openid: 'openid_admin',
+    defaultRoles: ['user', 'admin']
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T11:00:00.000Z',
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'May 9 training',
+    startAt: '2026-05-09T20:00:00.000Z',
+    endAt: '2026-05-09T22:00:00.000Z',
+    signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  await adminClient.call('ensureUserProfile', {});
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'activity_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+  await adminClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'activity_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+
+  const detailBefore = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+  await participantClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+  await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: 'openid_player'
+  });
+
+  const state = storage.getItem('football-signup-local-cloud-v1');
+  const managerNotifications = state.notificationLogs.filter(item =>
+    item.notificationType.startsWith('registration_')
+  );
+
+  expect(managerNotifications.map(item => item.notificationType)).toEqual([
+    'registration_joined',
+    'registration_joined',
+    'registration_cancelled',
+    'registration_cancelled',
+    'registration_joined',
+    'registration_joined'
+  ]);
+  expect(
+    managerNotifications.map(item => item.recipientOpenId).sort()
+  ).toEqual([
+    'openid_admin',
+    'openid_admin',
+    'openid_admin',
+    'openid_owner',
+    'openid_owner',
+    'openid_owner'
+  ]);
+  expect(
+    managerNotifications.some(
+      item => item.notificationType === 'registration_cancelled' && item.actorOpenId === 'openid_owner'
+    )
+  ).toBe(false);
+});

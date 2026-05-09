@@ -68,6 +68,7 @@ module.exports = {
       edit: 'Edit',
       join: 'Join',
       copyParticipantNames: 'Copy participant names',
+      subscribeRegistrationNotifications: 'Subscribe signup notices',
       proxySignup: 'Add participant',
       confirmProceeding: 'Confirm Activity',
       cancelActivity: 'Cancel Activity',
@@ -226,7 +227,9 @@ module.exports = {
     moveRegistrationSuccess: 'Participant moved',
     noMoveTargetTeam: 'No available target team',
     activityConfirmed: 'Activity confirmed',
-    notificationFailed: 'Notification failed'
+    notificationFailed: 'Notification failed',
+    registrationNotificationSubscribed: 'Signup notifications enabled',
+    registrationNotificationNotEnabled: 'Signup notifications not enabled'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',

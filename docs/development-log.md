@@ -1707,3 +1707,34 @@ Verification:
 
 - targeted red/green coverage was added for CloudBase join/cancel/remove functions, organizer/admin rejoin exemption, local mock behavior, and i18n translation.
 - full regression suite passed: `56` test suites, `371` tests.
+
+## 2026-05-09 - Manager Signup-Change Notifications
+
+Organizer/admin signup-change notifications are now implemented for regular participant self-service changes.
+
+Delivered behavior:
+
+- Activity Detail shows a manager-only action to subscribe to signup-change notices for the current activity.
+- the subscription action reuses the configured `activity_notice` subscription template and stores the choice through `recordNotificationSubscription`.
+- `joinActivity` attempts to notify subscribed activity managers when a regular participant joins.
+- `cancelRegistration` attempts to notify subscribed activity managers when a regular participant cancels their own signup.
+- organizer/admin self signup or self cancellation does not notify managers.
+- organizer/admin removal of another participant does not notify managers.
+- notification send failures are caught after the registration write, so signup and cancellation remain successful even if notification sending fails.
+- local mock mode mirrors the manager-notification logging behavior for DevTools testing.
+
+Why it matters:
+
+- organizers can opt into lightweight operational alerts without turning every manager action into extra notification noise.
+- the notification rule stays intentionally narrow: only regular user self-join and self-cancel events produce manager notices.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `joinActivity`, `cancelRegistration`, and `recordNotificationSubscription`.
+- upload a new mini program frontend build so the manager subscription action is available on Activity Detail.
+- `joinActivity` and `cancelRegistration` now include `subscribeMessage.send` OpenAPI permissions for manager notification sends.
+
+Verification:
+
+- targeted red/green coverage was added for the shared manager-notification helper, `joinActivity`, `cancelRegistration`, local mock behavior, and Activity Detail subscription UI.
+- full regression suite passed: `57` test suites, `380` tests.

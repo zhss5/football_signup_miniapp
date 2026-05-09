@@ -121,3 +121,197 @@ test('cancelRegistration increments the participant cancellation count', async (
 
   jest.dontMock('wx-server-sdk');
 });
+
+test('cancelRegistration notifies managers when a regular participant cancels', async () => {
+  jest.resetModules();
+
+  const updateRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const fakeDb = {
+    runTransaction: callback => callback(transaction)
+  };
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'joined',
+                teamId: 'team_white',
+                signupName: 'Alex',
+                cancelCount: 0
+              }
+            }),
+            update: updateRegistration
+          };
+        }
+
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                organizerOpenId: 'openid_owner',
+                title: 'May 9 training',
+                status: 'published',
+                signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+                startAt: '2026-05-09T20:00:00.000Z',
+                joinedCount: 1
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 1
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                roles: ['user']
+              }
+            })
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+  const notifyActivityManagers = jest.fn().mockResolvedValue({ sent: 1 });
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_player' })),
+    database: jest.fn(() => fakeDb)
+  }));
+
+  const isolatedCancelRegistration = require('../../cloudfunctions/cancelRegistration/index');
+
+  await isolatedCancelRegistration.main(
+    { activityId: 'activity_1' },
+    {},
+    {
+      now: '2026-05-09T10:00:00.000Z',
+      notifyActivityManagers
+    }
+  );
+
+  expect(notifyActivityManagers).toHaveBeenCalledWith(
+    fakeDb,
+    expect.objectContaining({
+      activity: expect.objectContaining({
+        _id: 'activity_1',
+        organizerOpenId: 'openid_owner'
+      }),
+      actorOpenId: 'openid_player',
+      actorName: 'Alex',
+      changeType: 'registration_cancelled',
+      stamp: '2026-05-09T10:00:00.000Z'
+    }),
+    expect.any(Object)
+  );
+
+  jest.dontMock('wx-server-sdk');
+});
+
+test('cancelRegistration does not notify managers when an admin cancels their own signup', async () => {
+  jest.resetModules();
+
+  const updateRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const updateTeam = jest.fn().mockResolvedValue({});
+  const fakeDb = {
+    runTransaction: callback => callback(transaction)
+  };
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      doc: jest.fn(() => {
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'joined',
+                teamId: 'team_white',
+                signupName: 'Admin'
+              }
+            }),
+            update: updateRegistration
+          };
+        }
+
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                organizerOpenId: 'openid_owner',
+                status: 'published',
+                signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+                joinedCount: 1
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                joinedCount: 1
+              }
+            }),
+            update: updateTeam
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                roles: ['admin']
+              }
+            })
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+  const notifyActivityManagers = jest.fn();
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_admin' })),
+    database: jest.fn(() => fakeDb)
+  }));
+
+  const isolatedCancelRegistration = require('../../cloudfunctions/cancelRegistration/index');
+
+  await isolatedCancelRegistration.main(
+    { activityId: 'activity_1' },
+    {},
+    {
+      now: '2026-05-09T10:00:00.000Z',
+      notifyActivityManagers
+    }
+  );
+
+  expect(notifyActivityManagers).not.toHaveBeenCalled();
+
+  jest.dontMock('wx-server-sdk');
+});

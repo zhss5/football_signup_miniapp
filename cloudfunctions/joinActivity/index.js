@@ -3,6 +3,7 @@ const { resolveOpenId } = require('./auth');
 const { normalizeSignupName, validateSignupPayload } = require('./validators');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
+const { notifyActivityManagers } = require('./manager-notifications');
 const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -109,6 +110,14 @@ async function syncUserProfile(transaction, openid, profile, stamp) {
   await userRef.set({ data: newUserData });
 }
 
+async function readTransactionDocument(transaction, collectionName, documentId) {
+  try {
+    return await transaction.collection(collectionName).doc(documentId).get();
+  } catch (error) {
+    return { data: null };
+  }
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
   const preferredPositions = validatePreferredPositions(event.preferredPositions);
@@ -127,15 +136,16 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const avatarUrl = normalizeText(event.avatarUrl);
   const profileSource = avatarUrl ? normalizeSource(event.profileSource) : 'manual';
 
-  return db.runTransaction(async transaction => {
+  const transactionResult = await db.runTransaction(async transaction => {
     const activityRes = await transaction.collection('activities').doc(event.activityId).get();
     const teamRes = await transaction.collection('activity_teams').doc(event.teamId).get();
-    const registrationRes = await transaction.collection('registrations').doc(registrationId).get().catch(() => ({ data: null }));
-    const userRes = await transaction
-      .collection('users')
-      .doc(openid)
-      .get()
-      .catch(() => ({ data: null }));
+    const registrationRes = await readTransactionDocument(
+      transaction,
+      'registrations',
+      registrationId
+    );
+    const userRes = await readTransactionDocument(transaction, 'users', openid);
+    const actorCanEditActivity = canEditActivity(activityRes.data, userRes.data, openid);
 
     if (activityRes.data.status !== 'published') {
       throw businessError('Activity is not open for signup');
@@ -159,7 +169,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }
 
     if (
-      !canEditActivity(activityRes.data, userRes.data, openid) &&
+      !actorCanEditActivity &&
       getRepeatExitCount(registrationRes.data) >= MAX_REPEAT_EXIT_COUNT
     ) {
       throw businessError(CONTACT_ORGANIZER_MESSAGE);
@@ -220,9 +230,30 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     return {
       registrationId,
       teamId: event.teamId,
-      status: 'joined'
+      status: 'joined',
+      managerNotification: actorCanEditActivity
+        ? null
+        : {
+            activity: {
+              ...activityRes.data,
+              _id: event.activityId
+            },
+            actorOpenId: openid,
+            actorName: signupName,
+            changeType: 'registration_joined',
+            stamp
+          }
     };
   });
+
+  const { managerNotification, ...response } = transactionResult;
+
+  if (managerNotification) {
+    const notify = deps.notifyActivityManagers || notifyActivityManagers;
+    await notify(db, managerNotification, { ...deps, cloud }).catch(() => null);
+  }
+
+  return response;
 }
 
 module.exports = { main, normalizePreferredPositions, validatePreferredPositions };

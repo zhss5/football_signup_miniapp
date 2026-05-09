@@ -10,7 +10,10 @@ const {
   moveRegistration,
   removeRegistration
 } = require('../../services/registration-service');
-const { notifyActivityParticipants } = require('../../services/notification-service');
+const {
+  notifyActivityParticipants,
+  requestActivityNotificationSubscription
+} = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
 const { buildTeamListVm, isActivityExpired } = require('../../utils/formatters');
 const { TEAM_COLOR_OPTIONS, isTeamColorKey } = require('../../utils/team-colors');
@@ -531,6 +534,27 @@ Page({
         });
       }
     });
+  },
+
+  async onSubscribeRegistrationNotifications() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+
+    try {
+      const result = await requestActivityNotificationSubscription(this.data.activityId);
+      const accepted = result && (result.status === 'accepted' || result.subscribed);
+
+      wx.showToast({
+        title: accepted
+          ? translate('toast.registrationNotificationSubscribed')
+          : translate('toast.registrationNotificationNotEnabled'),
+        icon: accepted ? 'success' : 'none'
+      });
+    } catch (error) {
+      wx.showToast({
+        title: translate('toast.notificationFailed'),
+        icon: 'none'
+      });
+    }
   },
 
   onOpenInsuranceLink() {

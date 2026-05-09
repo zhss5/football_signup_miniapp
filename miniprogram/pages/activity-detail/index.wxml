@@ -111,6 +111,10 @@
       {{i18n.activity.actions.copyParticipantNames}}
     </button>
 
+    <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onSubscribeRegistrationNotifications">
+      {{i18n.activity.actions.subscribeRegistrationNotifications}}
+    </button>
+
     <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
       {{i18n.activity.actions.edit}}
     </button>
