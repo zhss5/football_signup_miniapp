@@ -69,8 +69,8 @@ test('createActivity stores activity and teams', async () => {
       requirePhone: false,
       imageList: [],
       teams: [
-        { teamName: 'White', maxMembers: 6 },
-        { teamName: 'Red', maxMembers: 6 }
+        { teamName: 'White', maxMembers: 6, colorKey: 'green' },
+        { teamName: 'Red', maxMembers: 6, colorKey: 'red' }
       ]
     },
     { OPENID: 'openid_a' },
@@ -79,6 +79,10 @@ test('createActivity stores activity and teams', async () => {
 
   expect(result.activityId).toBe('activity_1');
   expect(writes.filter(item => item.name === 'activity_teams')).toHaveLength(2);
+  expect(writes.filter(item => item.name === 'activity_teams').map(item => item.data.colorKey)).toEqual([
+    'green',
+    'red'
+  ]);
 });
 
 test('createActivity stores map location, deadline, image list, and auto generates a bench team', async () => {

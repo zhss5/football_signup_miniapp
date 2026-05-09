@@ -14,12 +14,21 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
   expect(form.teams).toEqual([
     {
       teamName: '队伍1',
-      maxMembers: 12
+      maxMembers: 12,
+      colorKey: 'green'
     }
   ]);
   expect(form.insuranceLink).toBe('');
   expect(form.notificationHint).toBe('');
   expect(form).not.toHaveProperty('requirePhone');
+});
+
+test('default teams include default color keys', () => {
+  const form = createDefaultActivityForm();
+
+  expect(form.teams[0]).toMatchObject({
+    colorKey: 'green'
+  });
 });
 
 test('buildActivityPayload composes activity times and keeps a single uploaded image list', () => {
@@ -57,6 +66,23 @@ test('buildActivityPayload preserves a generated cover thumbnail', () => {
 
   expect(payload.coverImage).toBe('wxfile://cover-1.jpg');
   expect(payload.coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
+});
+
+test('buildActivityPayload preserves team color keys', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    teams: [
+      {
+        teamName: 'Team A',
+        maxMembers: 12,
+        colorKey: 'blue'
+      }
+    ]
+  });
+
+  expect(payload.teams[0]).toMatchObject({
+    colorKey: 'blue'
+  });
 });
 
 test('buildActivityEditForm maps an existing activity detail into the create form shape', () => {

@@ -1,4 +1,5 @@
 const { MAX_ACTIVITY_IMAGES } = require('./constants');
+const { normalizeTeamColorKey } = require('./team-colors');
 
 function resolveNow(nowOption) {
   return typeof nowOption === 'function' ? nowOption() : new Date();
@@ -34,6 +35,10 @@ function createDefaultActivityForm(options = {}) {
     : [
         { teamName: '队伍1', maxMembers: 12 }
       ];
+  const teams = defaultTeams.map((team, index) => ({
+    ...team,
+    colorKey: normalizeTeamColorKey(team.colorKey, index)
+  }));
   const defaultDate = getTomorrowDateInputValue(options.now);
 
   return {
@@ -54,7 +59,7 @@ function createDefaultActivityForm(options = {}) {
     imageList: [],
     signupLimitTotal: 12,
     inviteCode: '',
-    teams: defaultTeams
+    teams
   };
 }
 
@@ -92,9 +97,16 @@ function buildActivityPayload(form) {
   const imageList = normalizeImageList(form);
   const coverImage = imageList[0] || form.coverImage || '';
   const coverThumbImage = coverImage ? form.coverThumbImage || '' : '';
+  const teams = (Array.isArray(form.teams) ? form.teams : []).map((team, index) => ({
+    ...team,
+    teamName: String(team.teamName || '').trim(),
+    maxMembers: Number(team.maxMembers) || 0,
+    colorKey: normalizeTeamColorKey(team.colorKey, index)
+  }));
 
   return {
     ...payloadBase,
+    teams,
     startAt: combineDateAndTime(form.activityDate, form.startTime),
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
@@ -117,9 +129,10 @@ function buildActivityEditForm(activity = {}, teams = []) {
       : [];
   const editableTeams = teams
     .filter(team => team.status !== 'inactive' && team.teamType !== 'bench')
-    .map(team => ({
+    .map((team, index) => ({
       teamName: team.teamName,
-      maxMembers: Number(team.maxMembers) || 0
+      maxMembers: Number(team.maxMembers) || 0,
+      colorKey: normalizeTeamColorKey(team.colorKey, index)
     }));
 
   return {
