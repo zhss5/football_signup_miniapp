@@ -1662,3 +1662,18 @@ Verification:
 
 - targeted red/green coverage was added for activity card view models, team-list join state, detail-page reload state, card/detail templates, and Chinese i18n.
 - full regression suite passed: `56` test suites, `363` tests.
+
+## 2026-05-09 - Oversized Expired Stamp On Detail
+
+Activity Detail now uses a louder stamp-style expired marker.
+
+Delivered behavior:
+
+- the detail-page expired marker is now a large red rotated stamp positioned in the hero area.
+- the list-card expired badge remains compact, so dense activity lists stay readable.
+- the stamp uses pointer-pass-through styling so it should not intentionally become an interactive target.
+
+Verification:
+
+- targeted template/style coverage was updated for the stamp structure and visual treatment.
+- full regression suite passed: `56` test suites, `363` tests.

@@ -8,6 +8,7 @@
 }
 
 .hero {
+  position: relative;
   padding: 24rpx;
   box-sizing: border-box;
   width: 100%;
@@ -202,8 +203,7 @@
   margin-top: 18rpx;
 }
 
-.confirmed-banner,
-.expired-banner {
+.confirmed-banner {
   display: inline-flex;
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
@@ -216,10 +216,29 @@
   color: #166534;
 }
 
-.expired-banner {
-  margin-left: auto;
-  background: #fee2e2;
-  color: #b91c1c;
+.expired-stamp {
+  position: absolute;
+  right: 28rpx;
+  bottom: 30rpx;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 244rpx;
+  height: 94rpx;
+  box-sizing: border-box;
+  border: 6rpx solid #dc2626;
+  border-radius: 18rpx;
+  background: rgba(254, 242, 242, 0.82);
+  color: #dc2626;
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1;
+  transform: rotate(-12deg);
+  transform-origin: center;
+  box-shadow: inset 0 0 0 3rpx rgba(220, 38, 38, 0.18),
+    0 6rpx 18rpx rgba(220, 38, 38, 0.14);
+  pointer-events: none;
 }
 
 .action-panel {

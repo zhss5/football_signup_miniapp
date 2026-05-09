@@ -84,7 +84,7 @@ describe('activity detail actions', () => {
     );
   });
 
-  test('renders an expired activity banner in the hero status row', () => {
+  test('renders an oversized stamp-style expired marker in the hero', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxml'),
       'utf8'
@@ -96,7 +96,11 @@ describe('activity detail actions', () => {
 
     expect(wxml).toContain('class="hero-status-row"');
     expect(wxml).toContain('wx:if="{{activityExpiredVisible}}"');
+    expect(wxml).toContain('class="expired-stamp"');
     expect(wxml).toContain('{{i18n.activity.status.expired}}');
-    expect(wxss).toContain('.expired-banner');
+    expect(wxss).toContain('.expired-stamp');
+    expect(wxss).toContain('transform: rotate(-12deg)');
+    expect(wxss).toContain('border: 6rpx solid #dc2626');
+    expect(wxss).toContain('font-size: 42rpx');
   });
 });

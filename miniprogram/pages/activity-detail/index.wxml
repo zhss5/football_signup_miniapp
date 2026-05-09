@@ -34,16 +34,13 @@
         </map>
       </view>
     </view>
-    <view
-      wx:if="{{(activity.status === 'published' && activity.confirmStatus === 'confirmed') || activityExpiredVisible}}"
-      class="hero-status-row"
-    >
+    <view wx:if="{{activity.status === 'published' && activity.confirmStatus === 'confirmed'}}" class="hero-status-row">
       <view wx:if="{{activity.status === 'published' && activity.confirmStatus === 'confirmed'}}" class="confirmed-banner">
         <text>{{i18n.activity.status.confirmed}}</text>
       </view>
-      <view wx:if="{{activityExpiredVisible}}" class="expired-banner">
-        <text>{{i18n.activity.status.expired}}</text>
-      </view>
+    </view>
+    <view wx:if="{{activityExpiredVisible}}" class="expired-stamp">
+      <text>{{i18n.activity.status.expired}}</text>
     </view>
   </view>
 
