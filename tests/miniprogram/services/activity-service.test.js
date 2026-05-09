@@ -100,6 +100,48 @@ describe('activity service cover display urls', () => {
     ]);
   });
 
+  test('resolves detail page gallery images without adding them to list-card resolution', async () => {
+    resolveFileUrls.mockResolvedValue({
+      'cloud://prod-env-123/activity-covers/cover.jpg': 'https://tmp.example.com/cover.jpg',
+      'cloud://prod-env-123/activity-detail-images/detail-1.jpg':
+        'https://tmp.example.com/detail-1.jpg',
+      'cloud://prod-env-123/activity-detail-images/detail-2.jpg':
+        'https://tmp.example.com/detail-2.jpg'
+    });
+
+    const [listActivity] = await activityService.resolveActivityCoverImages([
+      {
+        _id: 'activity_1',
+        coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+        detailImages: ['cloud://prod-env-123/activity-detail-images/detail-1.jpg']
+      }
+    ]);
+
+    expect(resolveFileUrls).toHaveBeenLastCalledWith([
+      'cloud://prod-env-123/activity-covers/cover.jpg'
+    ]);
+    expect(listActivity).not.toHaveProperty('detailDisplayImages');
+
+    const detailActivity = await activityService.resolveActivityCoverImage({
+      _id: 'activity_1',
+      coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+      detailImages: [
+        'cloud://prod-env-123/activity-detail-images/detail-1.jpg',
+        'cloud://prod-env-123/activity-detail-images/detail-2.jpg'
+      ]
+    });
+
+    expect(resolveFileUrls).toHaveBeenLastCalledWith([
+      'cloud://prod-env-123/activity-covers/cover.jpg',
+      'cloud://prod-env-123/activity-detail-images/detail-1.jpg',
+      'cloud://prod-env-123/activity-detail-images/detail-2.jpg'
+    ]);
+    expect(detailActivity.detailDisplayImages).toEqual([
+      'https://tmp.example.com/detail-1.jpg',
+      'https://tmp.example.com/detail-2.jpg'
+    ]);
+  });
+
   test('falls back to thumbnail for detail pages when original cover cannot be resolved', async () => {
     resolveFileUrls.mockResolvedValue({
       'cloud://prod-env-123/activity-covers/cover.jpg':

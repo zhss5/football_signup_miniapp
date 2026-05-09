@@ -33,6 +33,7 @@ test('local cloud client can create an activity and list it on home', async () =
     coverImage: 'wxfile://cover-1.png',
     coverThumbImage: 'wxfile://cover-1-thumb.jpg',
     imageList: ['wxfile://cover-1.png'],
+    detailImages: ['wxfile://detail-1.jpg', 'wxfile://detail-2.jpg'],
     insuranceLink: 'https://insurance.example.com/apply',
     notificationHint: 'Bring both kits',
     signupLimitTotal: 12,
@@ -54,6 +55,7 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].title).toBe('Saturday 8-10');
   expect(list.items[0].signupDeadlineAt).toBe('2026-04-26T19:30:00.000Z');
   expect(list.items[0].imageList).toEqual(['wxfile://cover-1.png']);
+  expect(list.items[0].detailImages).toEqual(['wxfile://detail-1.jpg', 'wxfile://detail-2.jpg']);
   expect(list.items[0].coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
   expect(list.items[0].insuranceLink).toBe('https://insurance.example.com/apply');
   expect(list.items[0].notificationHint).toBe('Bring both kits');

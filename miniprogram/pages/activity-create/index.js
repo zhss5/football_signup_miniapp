@@ -5,7 +5,7 @@ const {
 } = require('../../services/activity-service');
 const { uploadFile } = require('../../services/cloud');
 const { ensureUserProfile } = require('../../services/user-service');
-const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('../../utils/constants');
+const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES, MAX_TEAMS } = require('../../utils/constants');
 const {
   buildActivityEditForm,
   buildActivityPayload,
@@ -33,6 +33,20 @@ function getImagePath(result) {
   }
 
   return '';
+}
+
+function getImagePaths(result) {
+  if (Array.isArray(result.tempFiles)) {
+    return result.tempFiles
+      .map(file => file.tempFilePath || file.path || '')
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(result.tempFilePaths)) {
+    return result.tempFilePaths.filter(Boolean);
+  }
+
+  return [];
 }
 
 function openCoverCropper(imagePath) {
@@ -100,6 +114,13 @@ function buildShareImageCloudPath(filePath) {
   return `activity-share-images/${Date.now()}-${suffix}${extension}`;
 }
 
+function buildDetailImageCloudPath(filePath) {
+  const extension = getCoverFileExtension(filePath);
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  return `activity-detail-images/${Date.now()}-${suffix}${extension}`;
+}
+
 function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
@@ -109,11 +130,20 @@ async function uploadActivityCover(payload) {
     payload.coverImage || (Array.isArray(payload.imageList) ? payload.imageList[0] : '');
   const coverThumbImage = payload.coverThumbImage || '';
   const shareImage = payload.shareImage || '';
+  const detailImages = Array.isArray(payload.detailImages)
+    ? payload.detailImages.filter(Boolean).slice(0, MAX_DETAIL_IMAGES)
+    : [];
+  const uploadedDetailImages = await Promise.all(
+    detailImages.map(image =>
+      isCloudFileId(image) ? image : uploadFile(image, buildDetailImageCloudPath(image))
+    )
+  );
 
   if (!coverImage) {
     return {
       ...payload,
-      shareImage: ''
+      shareImage: '',
+      detailImages: uploadedDetailImages
     };
   }
 
@@ -132,7 +162,8 @@ async function uploadActivityCover(payload) {
     coverImage: fileId,
     coverThumbImage: thumbFileId || '',
     shareImage: shareFileId || '',
-    imageList: [fileId]
+    imageList: [fileId],
+    detailImages: uploadedDetailImages
   };
 }
 
@@ -174,6 +205,7 @@ Page({
     submitting: false,
     maxTeams: MAX_TEAMS,
     maxActivityImages: MAX_ACTIVITY_IMAGES,
+    maxDetailImages: MAX_DETAIL_IMAGES,
     namedTeamSlots: 12,
     benchSlots: 0,
     overCapacity: false,
@@ -181,6 +213,7 @@ Page({
     namedTeamsSlotsText: '',
     benchSlotsText: '',
     imageHintText: '',
+    detailImageHintText: '',
     selectedPinText: '',
     authorizationChecked: false,
     canCreateActivity: false,
@@ -226,6 +259,7 @@ Page({
       locale,
       i18n,
       imageHintText: translate('activityCreate.imageHint', { count: MAX_ACTIVITY_IMAGES }),
+      detailImageHintText: translate('activityCreate.detailImageHint', { count: MAX_DETAIL_IMAGES }),
       teamEditorLabels: {
         addTeam: i18n.teamEditor.addTeam,
         remove: i18n.teamEditor.remove,
@@ -448,6 +482,78 @@ Page({
         icon: 'none'
       });
     }
+  },
+
+  async onChooseDetailImages() {
+    const currentImages = Array.isArray(this.data.form.detailImages)
+      ? this.data.form.detailImages.filter(Boolean)
+      : [];
+    const remaining = MAX_DETAIL_IMAGES - currentImages.length;
+
+    if (remaining <= 0) {
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('errors.tooManyDetailImages'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      const result = await new Promise((resolve, reject) => {
+        if (typeof wx.chooseMedia === 'function') {
+          wx.chooseMedia({
+            count: remaining,
+            mediaType: ['image'],
+            sourceType: ['album', 'camera'],
+            success: resolve,
+            fail: reject
+          });
+          return;
+        }
+
+        wx.chooseImage({
+          count: remaining,
+          sourceType: ['album', 'camera'],
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      const selectedImages = getImagePaths(result);
+      if (selectedImages.length === 0) {
+        return;
+      }
+
+      const form = {
+        ...this.data.form,
+        detailImages: currentImages.concat(selectedImages).slice(0, MAX_DETAIL_IMAGES)
+      };
+
+      this.syncDerivedState(form);
+    } catch (error) {
+      if (error && error.errMsg && error.errMsg.includes('cancel')) {
+        return;
+      }
+
+      wx.showToast({
+        title: makeTranslator(this.data.locale || getAppLocale())('toast.chooseImageFailed'),
+        icon: 'none'
+      });
+    }
+  },
+
+  onRemoveDetailImage(event) {
+    const removeIndex = Number(event.currentTarget.dataset.index);
+    const detailImages = Array.isArray(this.data.form.detailImages)
+      ? this.data.form.detailImages.filter(Boolean)
+      : [];
+
+    const form = {
+      ...this.data.form,
+      detailImages: detailImages.filter((_, index) => index !== removeIndex)
+    };
+
+    this.syncDerivedState(form);
   },
 
   onRemoveActivityImage() {

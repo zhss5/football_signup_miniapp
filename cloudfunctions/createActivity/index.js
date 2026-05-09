@@ -68,6 +68,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     : event.coverImage
       ? [event.coverImage]
       : [];
+  const detailImages = Array.isArray(event.detailImages)
+    ? event.detailImages.filter(Boolean)
+    : [];
 
   const activityData = {
     title: event.title.trim(),
@@ -85,6 +88,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     coverThumbImage: event.coverThumbImage || '',
     shareImage: event.shareImage || '',
     imageList,
+    detailImages,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
     joinedCount: 0,
     requirePhone: false,

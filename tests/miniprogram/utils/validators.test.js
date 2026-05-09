@@ -87,4 +87,30 @@ describe('validateActivityDraft', () => {
       })
     ).toThrow('Only one activity image is supported right now');
   });
+
+  test('rejects more than five detail images', () => {
+    expect(() =>
+      validateActivityDraft({
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        signupLimitTotal: 12,
+        imageList: ['wxfile://cover-1.png'],
+        detailImages: [
+          'wxfile://detail-1.png',
+          'wxfile://detail-2.png',
+          'wxfile://detail-3.png',
+          'wxfile://detail-4.png',
+          'wxfile://detail-5.png',
+          'wxfile://detail-6.png'
+        ],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      })
+    ).toThrow('Up to five detail images are supported');
+  });
 });

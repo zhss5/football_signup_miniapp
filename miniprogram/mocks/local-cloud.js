@@ -181,6 +181,9 @@ function createLocalCloudClient(options = {}) {
       : payload.coverImage
         ? [payload.coverImage]
         : [];
+    const detailImages = Array.isArray(payload.detailImages)
+      ? payload.detailImages.filter(Boolean)
+      : [];
 
     if (benchSlots > 0) {
       regularTeams.push({
@@ -214,6 +217,7 @@ function createLocalCloudClient(options = {}) {
       coverThumbImage: payload.coverThumbImage || '',
       shareImage: payload.shareImage || '',
       imageList,
+      detailImages,
       signupLimitTotal: Number(payload.signupLimitTotal) || 0,
       joinedCount: 0,
       requirePhone: false,
@@ -341,6 +345,9 @@ function createLocalCloudClient(options = {}) {
       : payload.coverImage
         ? [payload.coverImage]
         : [];
+    const detailImages = Array.isArray(payload.detailImages)
+      ? payload.detailImages.filter(Boolean)
+      : [];
     const title = String(payload.title || '').trim();
     const addressText = String(payload.addressText || '').trim();
     const addressName = String(payload.addressName || '').trim();
@@ -367,6 +374,7 @@ function createLocalCloudClient(options = {}) {
       coverThumbImage: payload.coverThumbImage || '',
       shareImage: payload.shareImage || '',
       imageList,
+      detailImages,
       signupLimitTotal: Number(payload.signupLimitTotal) || 0,
       requirePhone: false,
       inviteCode: payload.inviteCode || '',

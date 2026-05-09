@@ -62,6 +62,7 @@ module.exports = {
       copyAction: 'Insurance purchase link \ud83d\udd17'
     },
     descriptionTitle: 'Description',
+    activityImagesTitle: 'Activity images',
     actions: {
       edit: 'Edit',
       join: 'Join',
@@ -111,6 +112,10 @@ module.exports = {
     overCapacity: 'Total signup limit must cover all named team slots.',
     description: 'Description',
     descriptionPlaceholder: 'Description',
+    coverImage: 'Cover image',
+    detailImages: 'Detail images',
+    detailImageHint: 'Upload up to {{count}} extra images for the activity detail page.',
+    addDetailImages: 'Add detail images',
     activityImage: 'Activity image',
     imageHint:
       'Currently supports {{count}} image. It will be cropped to the shared 5:4 cover frame used on Home, Activity Detail, and WeChat shares. The data model already reserves imageList for future multi-image support.',
@@ -232,6 +237,7 @@ module.exports = {
     signupDeadlineOrder: 'Signup deadline must be earlier than or equal to activity start time',
     totalSignupLimitRequired: 'Total signup limit is required',
     onlyOneActivityImage: 'Only one activity image is supported right now',
+    tooManyDetailImages: 'Up to five detail images are supported',
     atLeastOneTeamRequired: 'At least one team is required',
     tooManyTeams: 'Too many teams',
     teamNameRequired: 'Team name is required',

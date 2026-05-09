@@ -22,6 +22,8 @@
 - Confirm tapping the cover `+` / preview frame opens image selection and crop without a separate choose button
 - Confirm newly uploaded covers store both `coverImage` and `coverThumbImage`
 - Confirm newly created real-device activities add new files under `activity-covers/` and `activity-cover-thumbs/`
+- Confirm adding detail images uploads files under `activity-detail-images/` and stores them in `activities.detailImages`
+- Confirm Activity Detail renders uploaded detail images below the description
 - Confirm Home/My activity cards load the thumbnail without 403 image errors
 - Confirm newly uploaded cover thumbnails display on a real device, not only in the DevTools simulator
 - If a thumbnail URL fails on a real device, confirm the card/detail page downloads a fallback CloudBase cover source, then tries the original `cloud://` file ID before showing the placeholder
@@ -53,7 +55,7 @@
 - Confirm participant cancellation works before the deadline
 - Confirm participant cancellation is blocked after the deadline
 - Confirm organizer can open Activity Detail and navigate to `Edit`
-- Confirm organizer edit updates title, time, deadline, location, description, cover image, and total capacity in place
+- Confirm organizer edit updates title, time, deadline, location, description, cover image, detail images, and total capacity in place
 - Confirm organizer edit can add, change, and clear the optional insurance link
 - Confirm existing registrations remain attached to the same activity after edit
 - Confirm capacity cannot be reduced below joined players or existing regular team slots

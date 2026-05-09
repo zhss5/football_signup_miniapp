@@ -44,6 +44,21 @@
     <text class="description-copy">{{activityDescriptionText}}</text>
   </view>
 
+  <view wx:if="{{activityDetailImages.length}}" class="detail-images-card">
+    <text class="description-title">{{i18n.activity.activityImagesTitle}}</text>
+    <view class="detail-images-list">
+      <image
+        wx:for="{{activityDetailImages}}"
+        wx:key="*this"
+        class="detail-image"
+        src="{{item}}"
+        mode="widthFix"
+        data-index="{{index}}"
+        bindtap="onPreviewDetailImage"
+      />
+    </view>
+  </view>
+
   <view wx:if="{{activity.status === 'published'}}" class="share-card {{shareHintVisible ? 'share-card-highlight' : ''}}">
     <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onOpenInsuranceLink">
       {{i18n.activity.insurance.copyAction}}

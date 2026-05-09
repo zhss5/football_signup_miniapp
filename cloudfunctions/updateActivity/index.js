@@ -28,6 +28,10 @@ function normalizeImageList(event) {
   return event.coverImage ? [event.coverImage] : [];
 }
 
+function normalizeDetailImages(event) {
+  return Array.isArray(event.detailImages) ? event.detailImages.filter(Boolean) : [];
+}
+
 function getRegularTeams(teams) {
   return teams
     .filter(team => team.status !== 'inactive' && team.teamType !== 'bench')
@@ -64,6 +68,7 @@ function resolveAddressName(event, activity, addressText) {
 
 function buildActivityUpdateData(event, activity, stamp) {
   const imageList = normalizeImageList(event);
+  const detailImages = normalizeDetailImages(event);
   const title = String(event.title || '').trim();
   const addressText = String(event.addressText || '').trim();
 
@@ -82,6 +87,7 @@ function buildActivityUpdateData(event, activity, stamp) {
     coverThumbImage: event.coverThumbImage || '',
     shareImage: event.shareImage || '',
     imageList,
+    detailImages,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
     requirePhone: false,
     inviteCode: event.inviteCode || '',

@@ -120,7 +120,7 @@
   </view>
 
   <view class="field">
-    <text class="label">{{i18n.activityCreate.activityImage}}</text>
+    <text class="label">{{i18n.activityCreate.coverImage}}</text>
     <view class="upload-panel">
       <view class="image-preview-frame" bindtap="onChooseActivityImage">
         <image wx:if="{{form.coverImage}}" class="image-preview" src="{{form.coverImage}}" mode="aspectFill" />
@@ -128,6 +128,28 @@
       </view>
       <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">{{i18n.activityCreate.removeImage}}</button>
       <text class="hint">{{imageHintText}}</text>
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">{{i18n.activityCreate.detailImages}}</text>
+    <view class="upload-panel">
+      <view wx:if="{{form.detailImages.length}}" class="detail-images-grid">
+        <view wx:for="{{form.detailImages}}" wx:key="*this" class="detail-image-cell">
+          <image class="detail-image-preview" src="{{item}}" mode="aspectFill" />
+          <button
+            class="detail-image-remove"
+            data-index="{{index}}"
+            bindtap="onRemoveDetailImage"
+          >{{i18n.activityCreate.removeImage}}</button>
+        </view>
+      </view>
+      <button
+        wx:if="{{form.detailImages.length < maxDetailImages}}"
+        class="secondary-button"
+        bindtap="onChooseDetailImages"
+      >{{i18n.activityCreate.addDetailImages}}</button>
+      <text class="hint">{{detailImageHintText}}</text>
     </view>
   </view>
 

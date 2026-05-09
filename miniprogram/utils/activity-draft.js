@@ -1,4 +1,4 @@
-const { MAX_ACTIVITY_IMAGES } = require('./constants');
+const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES } = require('./constants');
 const { normalizeTeamColorKey } = require('./team-colors');
 
 function resolveNow(nowOption) {
@@ -58,6 +58,7 @@ function createDefaultActivityForm(options = {}) {
     coverThumbImage: '',
     shareImage: '',
     imageList: [],
+    detailImages: [],
     signupLimitTotal: 12,
     inviteCode: '',
     teams
@@ -93,9 +94,15 @@ function normalizeImageList(form) {
   return form.coverImage ? [form.coverImage] : [];
 }
 
+function normalizeDetailImages(form) {
+  const images = Array.isArray(form.detailImages) ? form.detailImages.filter(Boolean) : [];
+  return images.slice(0, MAX_DETAIL_IMAGES);
+}
+
 function buildActivityPayload(form) {
   const { requirePhone, ...payloadBase } = form;
   const imageList = normalizeImageList(form);
+  const detailImages = normalizeDetailImages(form);
   const coverImage = imageList[0] || form.coverImage || '';
   const coverThumbImage = coverImage ? form.coverThumbImage || '' : '';
   const teams = (Array.isArray(form.teams) ? form.teams : []).map((team, index) => ({
@@ -116,7 +123,8 @@ function buildActivityPayload(form) {
     coverImage,
     coverThumbImage,
     shareImage: coverImage ? form.shareImage || '' : '',
-    imageList
+    imageList,
+    detailImages
   };
 }
 
@@ -129,6 +137,9 @@ function buildActivityEditForm(activity = {}, teams = []) {
     : activity.coverImage
       ? [activity.coverImage]
       : [];
+  const detailImages = Array.isArray(activity.detailImages)
+    ? activity.detailImages.filter(Boolean).slice(0, MAX_DETAIL_IMAGES)
+    : [];
   const editableTeams = teams
     .filter(team => team.status !== 'inactive' && team.teamType !== 'bench')
     .map((team, index) => ({
@@ -154,6 +165,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
     coverThumbImage: activity.coverThumbImage || '',
     shareImage: activity.shareImage || '',
     imageList,
+    detailImages,
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
     inviteCode: activity.inviteCode || '',
     teams: editableTeams

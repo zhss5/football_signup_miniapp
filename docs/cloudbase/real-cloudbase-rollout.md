@@ -137,7 +137,7 @@ Apply the database rule baseline from:
 
 ## Storage Permission Setup
 
-Activity covers are stored under `activity-covers/`, generated thumbnails are stored under `activity-cover-thumbs/`, and share-card-safe images are stored under `activity-share-images/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for those paths.
+Activity covers are stored under `activity-covers/`, generated thumbnails are stored under `activity-cover-thumbs/`, share-card-safe images are stored under `activity-share-images/`, and activity detail gallery images are stored under `activity-detail-images/` as CloudBase file IDs. Mini-program clients cannot render those files unless CloudBase storage rules allow client reads for those paths.
 
 Database permissions and storage permissions are intentionally different:
 
@@ -149,12 +149,12 @@ Recommended storage rule:
 
 ```json
 {
-  "read": "/^activity-covers\\//.test(resource.path) || /^activity-cover-thumbs\\//.test(resource.path) || /^activity-share-images\\//.test(resource.path)",
+  "read": "/^activity-covers\\//.test(resource.path) || /^activity-cover-thumbs\\//.test(resource.path) || /^activity-share-images\\//.test(resource.path) || /^activity-detail-images\\//.test(resource.path)",
   "write": "auth != null"
 }
 ```
 
-If the environment already has a stricter rule, merge the `activity-covers/`, `activity-cover-thumbs/`, and `activity-share-images/` read conditions into the existing `read` expression instead of overwriting unrelated permissions.
+If the environment already has a stricter rule, merge the `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/` read conditions into the existing `read` expression instead of overwriting unrelated permissions.
 
 Notes:
 
@@ -204,7 +204,7 @@ If CloudBase mode fails, check these items first:
 - `database collection not exists`: create the missing collection manually or let `ensureUserProfile` bootstrap the required collections.
 - `Error: timeout` during first launch: the first collection bootstrap may exceed the default 3-second function timeout. Increase `ensureUserProfile` to 20-60 seconds in CloudBase function settings, or create the collections manually and retry.
 - Sharing is blocked with an unverified-account message: complete WeChat verification in the WeChat Official Accounts Platform. Adding experience members only grants access to the experience version; it does not replace verification.
-- `STORAGE_EXCEED_AUTHORITY` when resolving an activity cover, thumbnail, or share image file ID: update CloudBase storage rules so mini-program clients can read `activity-covers/`, `activity-cover-thumbs/`, and `activity-share-images/`. If the console says the free-trial package has expired, upgrade or renew the environment before changing permissions.
+- `STORAGE_EXCEED_AUTHORITY` when resolving an activity cover, thumbnail, share image, or detail image file ID: update CloudBase storage rules so mini-program clients can read `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`. If the console says the free-trial package has expired, upgrade or renew the environment before changing permissions.
 
 ## Related Docs
 

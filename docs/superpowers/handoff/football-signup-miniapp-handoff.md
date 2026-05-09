@@ -166,7 +166,7 @@ The latest visible client-side issues were:
 - invite-code enforcement is not implemented yet; the Create/Edit Activity invite-code field is intentionally hidden until signup entry, backend validation, and Home visibility rules are designed.
 - participant phone collection has been removed from the active signup flow; optional phone fields remain supported for future extensions.
 - CloudBase storage returned `STORAGE_EXCEED_AUTHORITY` for an existing activity cover because the client-side storage rule does not allow mini-program reads for that file path.
-- The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if covers return 403 again, verify both `activity-covers/` and `activity-cover-thumbs/` rules.
+- The CloudBase environment has been upgraded to a personal plan and storage reads were changed to allow client access; if images return 403 again, verify `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/` rules.
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control needs become materially higher than the benefit of integrated WeChat hosting.
 
 Resolved/mitigated:
@@ -250,15 +250,15 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 Latest verified command:
 
 ```bash
-npm test
+node scripts/copy-cloud-shared.mjs && node node_modules/jest/bin/jest.js --runInBand
 ```
 
 Latest result:
 
-- `52` test suites passed
-- `297` tests passed
+- `55` test suites passed
+- `341` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -284,7 +284,7 @@ Current cover-thumbnail progress:
 Current permission conclusion:
 
 - database collections can stay restricted because the mini program reads business data through cloud functions
-- storage rules must allow client reads for `activity-covers/` and `activity-cover-thumbs/` because covers are rendered by the client `<image>` component after resolving file IDs to temporary HTTPS URLs
+- storage rules must allow client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/` because images are rendered by the client `<image>` component after resolving file IDs to temporary HTTPS URLs
 - if images fail with `403` or `STORAGE_EXCEED_AUTHORITY`, check storage rules before database permissions
 
 Current signup simplification:
@@ -381,7 +381,9 @@ Current activity experience polish:
 - The palette is custom in-app UI, not `wx.showActionSheet`, because WeChat action sheets only support up to 6 items.
 - Team color markers use shared kit-shaped WXSS icons instead of circular dots.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
-- Detail gallery images and organizer/admin registration-change notifications remain deferred to later phases.
+- Activity creation/editing supports up to five separate detail images stored in `activities.detailImages` and uploaded under `activity-detail-images/`.
+- Activity Detail resolves and renders the detail image gallery below the description.
+- Organizer/admin registration-change notifications remain deferred to later phases.
 
 Current My list behavior:
 
@@ -408,7 +410,7 @@ Sensitive-file check before push:
 
 Continue in this order:
 
-1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, and `activity-share-images/`.
+1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
 4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6.
@@ -419,7 +421,7 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate `5:4` cover image loading, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
+9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`

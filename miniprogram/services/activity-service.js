@@ -83,6 +83,10 @@ function dedupeSources(sources) {
   return Array.from(new Set(sources.filter(Boolean)));
 }
 
+function getActivityDetailImageSources(activity = {}) {
+  return Array.isArray(activity.detailImages) ? activity.detailImages.filter(Boolean) : [];
+}
+
 function getActivityMediaSources(activity = {}, preferredCover = 'thumb') {
   return dedupeSources([
     ...getActivityCoverSources(activity, preferredCover),
@@ -107,6 +111,14 @@ function getResolvedCoverImageSources(coverSources, urlByFileId) {
 
       return sources;
     }, [])
+  );
+}
+
+function getResolvedDetailImages(detailImages, urlByFileId) {
+  return dedupeSources(
+    detailImages
+      .map(image => getResolvedCoverUrl(image, urlByFileId))
+      .filter(Boolean)
   );
 }
 
@@ -142,10 +154,25 @@ async function resolveActivityCoverImage(activity) {
     return activity;
   }
 
-  const [resolvedActivity] = await resolveActivityCoverImages([activity], {
-    preferredCover: 'cover'
-  });
-  return resolvedActivity;
+  const preferredCover = 'cover';
+  const detailImages = getActivityDetailImageSources(activity);
+  const mediaSources = dedupeSources([
+    ...getActivityMediaSources(activity, preferredCover),
+    ...detailImages
+  ]);
+  const urlByFileId = await resolveFileUrls(mediaSources);
+  const coverSourceCandidates = getActivityCoverSources(activity, preferredCover);
+  const coverImageSources = getResolvedCoverImageSources(coverSourceCandidates, urlByFileId);
+
+  return {
+    ...activity,
+    coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId),
+    coverImageSources,
+    ...(activity.shareImage
+      ? { shareDisplayImage: getResolvedCoverUrl(activity.shareImage, urlByFileId) }
+      : {}),
+    detailDisplayImages: getResolvedDetailImages(detailImages, urlByFileId)
+  };
 }
 
 module.exports = {

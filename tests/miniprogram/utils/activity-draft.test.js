@@ -30,6 +30,7 @@ test('default teams include default color keys', () => {
     colorKey: 'green'
   });
   expect(form.shareImage).toBe('');
+  expect(form.detailImages).toEqual([]);
 });
 
 test('buildActivityPayload composes activity times and keeps a single uploaded image list', () => {
@@ -83,6 +84,32 @@ test('buildActivityPayload preserves a generated share image separately from the
   expect(payload.shareImage).toBe('wxfile://cover-1-share.jpg');
 });
 
+test('buildActivityPayload keeps up to five detail images separate from the cover', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    coverImage: 'wxfile://cover-1.jpg',
+    imageList: ['wxfile://cover-1.jpg'],
+    detailImages: [
+      'wxfile://detail-1.jpg',
+      '',
+      'wxfile://detail-2.jpg',
+      'wxfile://detail-3.jpg',
+      'wxfile://detail-4.jpg',
+      'wxfile://detail-5.jpg',
+      'wxfile://detail-6.jpg'
+    ]
+  });
+
+  expect(payload.imageList).toEqual(['wxfile://cover-1.jpg']);
+  expect(payload.detailImages).toEqual([
+    'wxfile://detail-1.jpg',
+    'wxfile://detail-2.jpg',
+    'wxfile://detail-3.jpg',
+    'wxfile://detail-4.jpg',
+    'wxfile://detail-5.jpg'
+  ]);
+});
+
 test('buildActivityPayload preserves team color keys', () => {
   const payload = buildActivityPayload({
     ...createDefaultActivityForm(),
@@ -122,6 +149,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
       notificationHint: 'Bring both kits',
       coverImage: 'cloud://cover-a',
       coverThumbImage: 'cloud://cover-a-thumb',
+      detailImages: ['cloud://detail-a', 'cloud://detail-b'],
       imageList: ['cloud://cover-a'],
       signupLimitTotal: 20,
       requirePhone: true,
@@ -148,6 +176,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     notificationHint: 'Bring both kits',
     coverImage: 'cloud://cover-a',
     coverThumbImage: 'cloud://cover-a-thumb',
+    detailImages: ['cloud://detail-a', 'cloud://detail-b'],
     imageList: ['cloud://cover-a'],
     signupLimitTotal: 20,
     inviteCode: 'ABC',

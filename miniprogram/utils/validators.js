@@ -1,4 +1,4 @@
-const { MAX_ACTIVITY_IMAGES, MAX_TEAMS } = require('./constants');
+const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES, MAX_TEAMS } = require('./constants');
 const { t: translateText } = require('./i18n');
 
 function buildValidationError(field, key, translate = null) {
@@ -79,6 +79,14 @@ function validateActivityDraft(draft, translate = null) {
 
   if (imageList.length > MAX_ACTIVITY_IMAGES) {
     throw buildValidationError('imageList', 'errors.onlyOneActivityImage', translate);
+  }
+
+  const detailImages = Array.isArray(draft.detailImages)
+    ? draft.detailImages.filter(Boolean)
+    : [];
+
+  if (detailImages.length > MAX_DETAIL_IMAGES) {
+    throw buildValidationError('detailImages', 'errors.tooManyDetailImages', translate);
   }
 
   const teamSlots = draft.teams.reduce((sum, team) => {

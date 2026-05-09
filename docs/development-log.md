@@ -1436,6 +1436,29 @@ Follow-up bug fix:
 - Team color markers now render as kit-shaped icons instead of circular dots, using shared WXSS across the team editor, team list, and Activity Detail palette.
 - Regression coverage now verifies the shared kit icon markup and color styles.
 
+## 2026-05-09 - Activity Detail Images
+
+Activity creation/editing now supports extra detail-page images in addition to the cover image.
+
+Delivered behavior:
+
+- `activities.detailImages` stores up to five non-cover activity images.
+- Create/Edit Activity keeps the cover image as a separate 5:4 cropped asset and adds a separate detail-image uploader below it.
+- Detail images upload to `activity-detail-images/` and are persisted by `createActivity`, `updateActivity`, and local mock mode.
+- Activity Detail resolves CloudBase detail image file IDs into display URLs and renders them below the activity description.
+- Detail images are not resolved on Home/My list cards, so list loading stays focused on thumbnails and cover images.
+
+Deployment notes:
+
+- Run `npm run copy:cloud-shared` before deploying cloud functions.
+- Redeploy `createActivity` and `updateActivity`.
+- Ensure CloudBase storage rules allow mini-program client reads for `activity-detail-images/` in addition to cover, thumbnail, and share-image paths.
+- Upload a new mini program build so the detail-image uploader and detail gallery are available on devices.
+
+Verification:
+
+- targeted red/green coverage was added for draft payloads, validators, create/update cloud functions, local mock storage, detail-image upload, detail image URL resolution, and Activity Detail gallery rendering.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.

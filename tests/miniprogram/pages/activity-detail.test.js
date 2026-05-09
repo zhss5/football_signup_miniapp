@@ -461,6 +461,54 @@ describe('activity detail page', () => {
     expect(ctx.data.activityDescriptionText).toBe('Bring both kits and arrive 15 minutes early.');
   });
 
+  test('reload exposes resolved detail gallery images for rendering', async () => {
+    resolveActivityCoverImage.mockImplementation(activity =>
+      Promise.resolve({
+        ...activity,
+        detailDisplayImages: [
+          'https://tmp.example.com/detail-1.jpg',
+          'https://tmp.example.com/detail-2.jpg'
+        ]
+      })
+    );
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        detailImages: [
+          'cloud://prod-env-123/activity-detail-images/detail-1.jpg',
+          'cloud://prod-env-123/activity-detail-images/detail-2.jpg'
+        ],
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.activityDetailImages).toEqual([
+      'https://tmp.example.com/detail-1.jpg',
+      'https://tmp.example.com/detail-2.jpg'
+    ]);
+  });
+
   test('activity detail template renders the activity description card', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
@@ -470,6 +518,18 @@ describe('activity detail page', () => {
     expect(wxml).toContain('wx:if="{{activityDescriptionText}}"');
     expect(wxml).toContain('{{i18n.activity.descriptionTitle}}');
     expect(wxml).toContain('{{activityDescriptionText}}');
+  });
+
+  test('activity detail template renders detail gallery images', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{activityDetailImages.length}}"');
+    expect(wxml).toContain('wx:for="{{activityDetailImages}}"');
+    expect(wxml).toContain('src="{{item}}"');
+    expect(wxml).toContain('bindtap="onPreviewDetailImage"');
   });
 
   test('onConfirmActivityProceeding confirms the activity, notifies subscribers, and reloads detail', async () => {

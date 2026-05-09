@@ -1,4 +1,5 @@
 const MAX_ACTIVITY_IMAGES = 1;
+const MAX_DETAIL_IMAGES = 5;
 const MAX_SIGNUP_NAME_LENGTH = 16;
 
 function normalizeSignupName(value) {
@@ -58,6 +59,14 @@ function validateActivityDraft(draft) {
 
   if (imageList.length > MAX_ACTIVITY_IMAGES) {
     throw new Error('Only one activity image is supported right now');
+  }
+
+  const detailImages = Array.isArray(draft.detailImages)
+    ? draft.detailImages.filter(Boolean)
+    : [];
+
+  if (detailImages.length > MAX_DETAIL_IMAGES) {
+    throw new Error('Up to five detail images are supported');
   }
 
   const teamSlots = draft.teams.reduce((sum, team) => {

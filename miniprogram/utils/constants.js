@@ -13,5 +13,6 @@ module.exports = {
   },
   MAX_TEAMS: 4,
   MAX_ACTIVITY_IMAGES: 1,
+  MAX_DETAIL_IMAGES: 5,
   BENCH_TEAM_NAME: '\u66ff\u8865'
 };

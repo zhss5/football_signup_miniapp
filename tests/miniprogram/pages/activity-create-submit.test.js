@@ -35,6 +35,7 @@ jest.mock('../../../miniprogram/utils/validators', () => ({
 
 jest.mock('../../../miniprogram/utils/constants', () => ({
   MAX_ACTIVITY_IMAGES: 1,
+  MAX_DETAIL_IMAGES: 5,
   MAX_TEAMS: 4
 }));
 
@@ -166,6 +167,21 @@ describe('activity create submit flow', () => {
     expect(wxml).not.toContain('replaceImage');
   });
 
+  test('renders a separate detail image uploader capped at five images', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('{{i18n.activityCreate.coverImage}}');
+    expect(wxml).toContain('{{i18n.activityCreate.detailImages}}');
+    expect(wxml).toContain('wx:for="{{form.detailImages}}"');
+    expect(wxml).toContain('bindtap="onChooseDetailImages"');
+    expect(wxml).toContain('bindtap="onRemoveDetailImage"');
+  });
+
   test('onChooseActivityImage chooses an image before opening the cropper', async () => {
     global.wx.chooseMedia = jest.fn(({ success }) => {
       success({
@@ -221,6 +237,87 @@ describe('activity create submit flow', () => {
       shareImage: 'wxfile://cropped-share.jpg',
       imageList: ['wxfile://cropped-cover.jpg']
     });
+  });
+
+  test('onChooseDetailImages appends selected images without opening the cover cropper', async () => {
+    global.wx.chooseMedia = jest.fn(({ success }) => {
+      success({
+        tempFiles: [
+          {
+            tempFilePath: 'wxfile://detail-3.jpg'
+          },
+          {
+            tempFilePath: 'wxfile://detail-4.jpg'
+          }
+        ]
+      });
+    });
+    global.wx.navigateTo = jest.fn();
+
+    const ctx = {
+      data: {
+        form: {
+          detailImages: ['wxfile://detail-1.jpg', 'wxfile://detail-2.jpg']
+        }
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+
+    await pageConfig.onChooseDetailImages.call(ctx);
+
+    expect(global.wx.chooseMedia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        count: 3,
+        mediaType: ['image']
+      })
+    );
+    expect(global.wx.navigateTo).not.toHaveBeenCalled();
+    expect(ctx.data.form.detailImages).toEqual([
+      'wxfile://detail-1.jpg',
+      'wxfile://detail-2.jpg',
+      'wxfile://detail-3.jpg',
+      'wxfile://detail-4.jpg'
+    ]);
+  });
+
+  test('onRemoveDetailImage removes the selected detail image', () => {
+    const ctx = {
+      data: {
+        form: {
+          detailImages: [
+            'wxfile://detail-1.jpg',
+            'wxfile://detail-2.jpg',
+            'wxfile://detail-3.jpg'
+          ]
+        }
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+
+    pageConfig.onRemoveDetailImage.call(ctx, {
+      currentTarget: {
+        dataset: {
+          index: 1
+        }
+      }
+    });
+
+    expect(ctx.data.form.detailImages).toEqual([
+      'wxfile://detail-1.jpg',
+      'wxfile://detail-3.jpg'
+    ]);
   });
 
   test('onSubmit blocks users without create permission', async () => {
@@ -449,6 +546,60 @@ describe('activity create submit flow', () => {
         coverThumbImage: 'cloud://prod-env-123/activity-cover-thumbs/cover-thumb.jpg',
         shareImage: 'cloud://prod-env-123/activity-share-images/cover-share.jpg',
         imageList: ['cloud://prod-env-123/activity-covers/cover.jpg']
+      })
+    );
+  });
+
+  test('onSubmit uploads selected detail images before creating the activity', async () => {
+    uploadFile.mockImplementation((filePath, cloudPath) => {
+      if (cloudPath.startsWith('activity-detail-images/')) {
+        return Promise.resolve(`cloud://prod-env-123/${cloudPath}`);
+      }
+
+      return Promise.resolve('cloud://prod-env-123/activity-covers/cover.jpg');
+    });
+    createActivity.mockResolvedValue({ activityId: 'activity_123' });
+
+    const ctx = {
+      data: {
+        form: {
+          title: 'Thursday Match',
+          coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
+          imageList: ['cloud://prod-env-123/activity-covers/cover.jpg'],
+          detailImages: [
+            'wxfile://detail-1.jpg',
+            'wxfile://detail-2.jpg',
+            'cloud://prod-env-123/activity-detail-images/existing.jpg'
+          ]
+        },
+        canCreateActivity: true
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(uploadFile).toHaveBeenCalledWith(
+      'wxfile://detail-1.jpg',
+      expect.stringMatching(/^activity-detail-images\/.+\.jpg$/)
+    );
+    expect(uploadFile).toHaveBeenCalledWith(
+      'wxfile://detail-2.jpg',
+      expect.stringMatching(/^activity-detail-images\/.+\.jpg$/)
+    );
+    expect(createActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detailImages: [
+          expect.stringMatching(/^cloud:\/\/prod-env-123\/activity-detail-images\/.+\.jpg$/),
+          expect.stringMatching(/^cloud:\/\/prod-env-123\/activity-detail-images\/.+\.jpg$/),
+          'cloud://prod-env-123/activity-detail-images/existing.jpg'
+        ]
       })
     );
   });

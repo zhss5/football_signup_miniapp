@@ -246,6 +246,7 @@ function translateErrorMessage(error, translate) {
     'Signup deadline must be earlier than or equal to activity start time': 'errors.signupDeadlineOrder',
     'Total signup limit is required': 'errors.totalSignupLimitRequired',
     'Only one activity image is supported right now': 'errors.onlyOneActivityImage',
+    'Up to five detail images are supported': 'errors.tooManyDetailImages',
     'At least one team is required': 'errors.atLeastOneTeamRequired',
     'Too many teams': 'errors.tooManyTeams',
     'Team name is required': 'errors.teamNameRequired',

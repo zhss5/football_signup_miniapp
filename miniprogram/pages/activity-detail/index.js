@@ -188,6 +188,7 @@ Page({
     activityCoverLoadFailed: false,
     activityCoverSourceIndex: 0,
     activityDescriptionText: '',
+    activityDetailImages: [],
     colorPaletteVisible: false,
     colorPaletteTeamId: '',
     colorPaletteOptions: []
@@ -229,6 +230,9 @@ Page({
     const activityWithDisplayCover = await resolveActivityCoverImage(detail.activity);
     const activityCoverCandidates = buildCoverCandidates(activityWithDisplayCover);
     const activityDescriptionText = String(activityWithDisplayCover.description || '').trim();
+    const activityDetailImages = Array.isArray(activityWithDisplayCover.detailDisplayImages)
+      ? activityWithDisplayCover.detailDisplayImages.filter(Boolean)
+      : [];
     this.setData({
       ...detail,
       activity: activityWithDisplayCover,
@@ -238,6 +242,7 @@ Page({
       activityCoverLoadFailed: false,
       activityCoverSourceIndex: 0,
       ...buildLocationMapState(activityWithDisplayCover),
+      activityDetailImages,
       teams: buildTeamListVm(
         detail.teams,
         detail.myRegistration,
@@ -535,6 +540,20 @@ Page({
 
     wx.navigateTo({
       url: `/pages/insurance-webview/index?url=${encodeURIComponent(insuranceLink)}`
+    });
+  },
+
+  onPreviewDetailImage(event) {
+    const index = Number(event.currentTarget.dataset.index) || 0;
+    const urls = this.data.activityDetailImages || [];
+
+    if (urls.length === 0) {
+      return;
+    }
+
+    wx.previewImage({
+      current: urls[index] || urls[0],
+      urls
     });
   },
 
