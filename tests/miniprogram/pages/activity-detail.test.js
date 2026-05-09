@@ -185,6 +185,8 @@ describe('activity detail page', () => {
     expect(wxml).toContain('wx:if="{{colorPaletteVisible}}"');
     expect(wxml).toContain('wx:for="{{colorPaletteOptions}}"');
     expect(wxml).toContain('bindtap="onColorPaletteSelect"');
+    expect(wxml).toContain('class="team-kit-icon {{item.className}}"');
+    expect(wxml).toContain('team-kit-body');
   });
 
   test('onShow reloads detail after returning from a successful join flow', async () => {

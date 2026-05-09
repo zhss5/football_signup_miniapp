@@ -3,11 +3,17 @@
     <view class="team-row">
       <view class="team-fields">
         <button
-          class="team-color-chip team-color-{{item.colorKey || 'green'}}"
+          class="team-kit-button"
           data-index="{{index}}"
           data-field="colorKey"
           bindtap="onTeamColorTap"
-        ></button>
+        >
+          <view class="team-kit-icon team-color-{{item.colorKey || 'green'}}">
+            <view class="team-kit-sleeve team-kit-sleeve-left"></view>
+            <view class="team-kit-body"></view>
+            <view class="team-kit-sleeve team-kit-sleeve-right"></view>
+          </view>
+        </button>
         <input
           class="team-input"
           value="{{item.teamName}}"
@@ -40,7 +46,11 @@
           data-color-key="{{item.key}}"
           bindtap="onPaletteColorTap"
         >
-          <view class="team-color-chip {{item.className}}"></view>
+          <view class="team-kit-icon {{item.className}}">
+            <view class="team-kit-sleeve team-kit-sleeve-left"></view>
+            <view class="team-kit-body"></view>
+            <view class="team-kit-sleeve team-kit-sleeve-right"></view>
+          </view>
           <text class="color-palette-label">{{item.label}}</text>
         </button>
       </view>

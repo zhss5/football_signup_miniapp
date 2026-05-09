@@ -37,21 +37,28 @@ describe('team editor minimum team count', () => {
       path.join(__dirname, '../../../miniprogram/components/team-editor/index.wxss'),
       'utf8'
     );
-    const teamFieldsBlock = wxml.match(/<view class="team-fields">[\s\S]*?<\/view>/)[0];
+    const teamFieldsStart = wxml.indexOf('<view class="team-fields">');
+    const addButtonStart = wxml.indexOf('<button wx:if="{{teams.length < 4}}"', teamFieldsStart);
+    const removeButtonStart = wxml.indexOf('class="remove-button"', teamFieldsStart);
 
-    expect(teamFieldsBlock).toContain('class="remove-button"');
+    expect(teamFieldsStart).toBeGreaterThanOrEqual(0);
+    expect(removeButtonStart).toBeGreaterThan(teamFieldsStart);
+    expect(removeButtonStart).toBeLessThan(addButtonStart);
     expect(wxss).toContain('.team-fields');
     expect(wxss).toMatch(/\.team-fields\s*{[^}]*align-items:\s*center;/);
     expect(wxss).toMatch(/\.remove-button\s*{[^}]*flex:/);
   });
 
-  test('renders a team color chip in the team editor row', () => {
+  test('renders a team kit icon in the team editor row', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-editor/index.wxml'),
       'utf8'
     );
 
-    expect(wxml).toContain('class="team-color-chip');
+    expect(wxml).toContain('class="team-kit-button"');
+    expect(wxml).toContain('class="team-kit-icon team-color-{{item.colorKey || \'green\'}}"');
+    expect(wxml).toContain('team-kit-body');
+    expect(wxml).toContain('team-kit-sleeve-left');
     expect(wxml).toContain('data-field="colorKey"');
   });
 
@@ -64,6 +71,7 @@ describe('team editor minimum team count', () => {
     expect(wxml).toContain('wx:if="{{paletteVisible}}"');
     expect(wxml).toContain('wx:for="{{paletteOptions}}"');
     expect(wxml).toContain('data-color-key="{{item.key}}"');
+    expect(wxml).toContain('class="team-kit-icon {{item.className}}"');
     expect(wxml).not.toContain('showActionSheet');
   });
 

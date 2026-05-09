@@ -75,7 +75,11 @@
           data-color-key="{{item.key}}"
           bindtap="onColorPaletteSelect"
         >
-          <view class="team-color-chip {{item.className}}"></view>
+          <view class="team-kit-icon {{item.className}}">
+            <view class="team-kit-sleeve team-kit-sleeve-left"></view>
+            <view class="team-kit-body"></view>
+            <view class="team-kit-sleeve team-kit-sleeve-right"></view>
+          </view>
           <text class="color-palette-label">{{item.label}}</text>
         </button>
       </view>

@@ -43,10 +43,14 @@ describe('team-list member removal', () => {
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
       'utf8'
     );
-    const titleRowMatch = wxml.match(/<view class="team-title-row">[\s\S]*?<\/view>/);
-    const titleRowBlock = titleRowMatch ? titleRowMatch[0] : '';
+    const titleRowStart = wxml.indexOf('<view class="team-title-row">');
+    const teamCountStart = wxml.indexOf('<text class="team-count"', titleRowStart);
+    const titleRowBlock = titleRowStart >= 0 && teamCountStart > titleRowStart
+      ? wxml.slice(titleRowStart, teamCountStart)
+      : '';
 
-    expect(titleRowMatch).not.toBeNull();
+    expect(titleRowStart).toBeGreaterThanOrEqual(0);
+    expect(teamCountStart).toBeGreaterThan(titleRowStart);
     expect(titleRowBlock).toContain('class="team-name {{item.teamColorClass}}-text"');
     expect(titleRowBlock).toContain('class="proxy-signup-button"');
     expect(wxss).toContain('.team-title-row');
@@ -62,10 +66,14 @@ describe('team-list member removal', () => {
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
       'utf8'
     );
-    const teamHeadMatch = wxml.match(/<view class="team-head">[\s\S]*?<\/view>/);
-    const teamHeadBlock = teamHeadMatch ? teamHeadMatch[0] : '';
+    const teamHeadStart = wxml.indexOf('<view class="team-head">');
+    const teamCountStart = wxml.indexOf('<text class="team-count"', teamHeadStart);
+    const teamHeadBlock = teamHeadStart >= 0 && teamCountStart > teamHeadStart
+      ? wxml.slice(teamHeadStart, teamCountStart)
+      : '';
 
-    expect(teamHeadMatch).not.toBeNull();
+    expect(teamHeadStart).toBeGreaterThanOrEqual(0);
+    expect(teamCountStart).toBeGreaterThan(teamHeadStart);
     expect(teamHeadBlock).toContain('class="join-button"');
     expect(teamHeadBlock).toContain('wx:if="{{item.joinActionVisible}}"');
     expect(wxml).not.toContain('disabled="{{item.joinDisabled}}"');
@@ -122,7 +130,9 @@ describe('team-list member removal', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('team-color-chip');
+    expect(wxml).toContain('team-kit-button');
+    expect(wxml).toContain('team-kit-icon');
+    expect(wxml).toContain('team-kit-body');
     expect(wxml).toContain('{{item.teamColorClass}}');
   });
 

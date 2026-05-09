@@ -1,0 +1,167 @@
+.team-kit-button {
+  flex: 0 0 52rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52rpx;
+  height: 52rpx;
+  min-width: 52rpx;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 1;
+}
+
+.team-kit-button::after {
+  border: none;
+}
+
+.team-kit-icon {
+  position: relative;
+  display: block;
+  flex: 0 0 44rpx;
+  width: 44rpx;
+  height: 40rpx;
+}
+
+.team-kit-body,
+.team-kit-sleeve {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+}
+
+.team-kit-body {
+  left: 11rpx;
+  top: 7rpx;
+  z-index: 2;
+  width: 22rpx;
+  height: 29rpx;
+  border-radius: 4rpx 4rpx 6rpx 6rpx;
+}
+
+.team-kit-body::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2rpx;
+  width: 10rpx;
+  height: 8rpx;
+  transform: translateX(-50%);
+  border-radius: 0 0 8rpx 8rpx;
+  background: #f3f4f6;
+}
+
+.team-kit-sleeve {
+  top: 9rpx;
+  z-index: 1;
+  width: 15rpx;
+  height: 18rpx;
+}
+
+.team-kit-sleeve-left {
+  left: 1rpx;
+  transform: rotate(18deg);
+  border-radius: 5rpx 2rpx 5rpx 4rpx;
+}
+
+.team-kit-sleeve-right {
+  right: 1rpx;
+  transform: rotate(-18deg);
+  border-radius: 2rpx 5rpx 4rpx 5rpx;
+}
+
+.team-color-green .team-kit-body,
+.team-color-green .team-kit-sleeve {
+  background: #16a34a;
+}
+
+.team-color-white .team-kit-body,
+.team-color-white .team-kit-sleeve {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.team-color-red .team-kit-body,
+.team-color-red .team-kit-sleeve {
+  background: #dc2626;
+}
+
+.team-color-blue .team-kit-body,
+.team-color-blue .team-kit-sleeve {
+  background: #2563eb;
+}
+
+.team-color-black .team-kit-body,
+.team-color-black .team-kit-sleeve {
+  background: #111827;
+}
+
+.team-color-yellow .team-kit-body,
+.team-color-yellow .team-kit-sleeve {
+  background: #facc15;
+  border-color: #d97706;
+}
+
+.team-color-orange .team-kit-body,
+.team-color-orange .team-kit-sleeve {
+  background: #f97316;
+}
+
+.team-color-purple .team-kit-body,
+.team-color-purple .team-kit-sleeve {
+  background: #7c3aed;
+}
+
+.team-color-gray .team-kit-body,
+.team-color-gray .team-kit-sleeve {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.team-color-pink .team-kit-body,
+.team-color-pink .team-kit-sleeve {
+  background: #f9a8d4;
+  border-color: #db2777;
+}
+
+.team-color-green-text {
+  color: #166534;
+}
+
+.team-color-white-text {
+  color: #334155;
+}
+
+.team-color-red-text {
+  color: #991b1b;
+}
+
+.team-color-blue-text {
+  color: #1d4ed8;
+}
+
+.team-color-black-text {
+  color: #111827;
+}
+
+.team-color-yellow-text {
+  color: #92400e;
+}
+
+.team-color-orange-text {
+  color: #c2410c;
+}
+
+.team-color-purple-text {
+  color: #6d28d9;
+}
+
+.team-color-gray-text {
+  color: #4b5563;
+}
+
+.team-color-pink-text {
+  color: #be185d;
+}

@@ -4,10 +4,16 @@
       <view class="team-head">
         <view class="team-title-row">
           <button
-            class="team-color-chip {{item.teamColorClass}}"
+            class="team-kit-button"
             data-team-id="{{item._id}}"
             bindtap="onTeamColorTap"
-          ></button>
+          >
+            <view class="team-kit-icon {{item.teamColorClass}}">
+              <view class="team-kit-sleeve team-kit-sleeve-left"></view>
+              <view class="team-kit-body"></view>
+              <view class="team-kit-sleeve team-kit-sleeve-right"></view>
+            </view>
+          </button>
           <text
             class="team-name {{item.teamColorClass}}-text"
             data-team-id="{{item._id}}"

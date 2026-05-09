@@ -1433,6 +1433,8 @@ Follow-up bug fix:
 - The first ten-color implementation used `wx.showActionSheet`, but that API only supports up to 6 items, so tapping a team color could appear to do nothing.
 - The create-activity team editor and Activity Detail manager color edit flow now use an in-app custom ten-color palette instead of `wx.showActionSheet`.
 - Regression coverage now verifies the custom palette renders and selects colors without calling `wx.showActionSheet`.
+- Team color markers now render as kit-shaped icons instead of circular dots, using shared WXSS across the team editor, team list, and Activity Detail palette.
+- Regression coverage now verifies the shared kit icon markup and color styles.
 
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 

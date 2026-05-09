@@ -1,3 +1,5 @@
+@import "../../styles/team-kit.wxss";
+
 .team-row {
   margin-bottom: 16rpx;
 }
@@ -19,67 +21,6 @@
   padding: 0 18rpx;
   border-radius: 24rpx;
   background: #ffffff;
-}
-
-.team-color-chip {
-  flex: 0 0 40rpx;
-  width: 40rpx;
-  height: 40rpx;
-  min-width: 40rpx;
-  margin: 0;
-  padding: 0;
-  border: 2rpx solid transparent;
-  border-radius: 50%;
-  box-sizing: border-box;
-  line-height: 40rpx;
-}
-
-.team-color-chip::after {
-  border: none;
-}
-
-.team-color-green {
-  background: #16a34a;
-}
-
-.team-color-white {
-  background: #ffffff;
-  border-color: #cbd5e1;
-}
-
-.team-color-red {
-  background: #dc2626;
-}
-
-.team-color-blue {
-  background: #2563eb;
-}
-
-.team-color-black {
-  background: #111827;
-}
-
-.team-color-yellow {
-  background: #facc15;
-  border-color: #d97706;
-}
-
-.team-color-orange {
-  background: #f97316;
-}
-
-.team-color-purple {
-  background: #7c3aed;
-}
-
-.team-color-gray {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.team-color-pink {
-  background: #f9a8d4;
-  border-color: #db2777;
 }
 
 .team-capacity {

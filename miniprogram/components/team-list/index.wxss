@@ -1,3 +1,5 @@
+@import "../../styles/team-kit.wxss";
+
 .team-card {
   background: #ffffff;
   border-radius: 24rpx;
@@ -28,107 +30,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 700;
-}
-
-.team-color-chip {
-  flex: 0 0 32rpx;
-  width: 32rpx;
-  height: 32rpx;
-  min-width: 32rpx;
-  margin: 0;
-  padding: 0;
-  border: 2rpx solid transparent;
-  border-radius: 50%;
-  box-sizing: border-box;
-  line-height: 32rpx;
-}
-
-.team-color-chip::after {
-  border: none;
-}
-
-.team-color-green {
-  background: #16a34a;
-}
-
-.team-color-white {
-  background: #ffffff;
-  border-color: #cbd5e1;
-}
-
-.team-color-red {
-  background: #dc2626;
-}
-
-.team-color-blue {
-  background: #2563eb;
-}
-
-.team-color-black {
-  background: #111827;
-}
-
-.team-color-yellow {
-  background: #facc15;
-  border-color: #d97706;
-}
-
-.team-color-orange {
-  background: #f97316;
-}
-
-.team-color-purple {
-  background: #7c3aed;
-}
-
-.team-color-gray {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.team-color-pink {
-  background: #f9a8d4;
-  border-color: #db2777;
-}
-
-.team-color-green-text {
-  color: #166534;
-}
-
-.team-color-white-text {
-  color: #334155;
-}
-
-.team-color-red-text {
-  color: #991b1b;
-}
-
-.team-color-blue-text {
-  color: #1d4ed8;
-}
-
-.team-color-black-text {
-  color: #111827;
-}
-
-.team-color-yellow-text {
-  color: #92400e;
-}
-
-.team-color-orange-text {
-  color: #c2410c;
-}
-
-.team-color-purple-text {
-  color: #6d28d9;
-}
-
-.team-color-gray-text {
-  color: #4b5563;
-}
-
-.team-color-pink-text {
-  color: #be185d;
 }
 
 .team-count {
