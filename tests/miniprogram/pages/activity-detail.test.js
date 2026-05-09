@@ -757,6 +757,27 @@ describe('activity detail page', () => {
     });
   });
 
+  test('onShareAppMessage prefers the share display image over the cover image', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        activity: {
+          title: 'Thursday Match',
+          shareDisplayImage: 'https://tmp.example.com/share.jpg',
+          coverDisplayImage: 'https://tmp.example.com/cover.jpg',
+          coverImage: 'cloud://cover-image'
+        },
+        locale: 'en'
+      }
+    };
+
+    expect(pageConfig.onShareAppMessage.call(ctx)).toEqual({
+      title: 'Thursday Match',
+      imageUrl: 'https://tmp.example.com/share.jpg',
+      path: '/pages/activity-detail/index?activityId=activity_123'
+    });
+  });
+
   test('onShareTimeline shares the current activity id in the timeline query', () => {
     const ctx = {
       data: {

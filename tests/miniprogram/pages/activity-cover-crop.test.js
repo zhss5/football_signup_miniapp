@@ -55,4 +55,51 @@ describe('activity cover crop flow', () => {
     expect(pageJs).toContain('COVER_THUMB_OUTPUT_WIDTH');
     expect(pageJs).toContain('COVER_THUMB_OUTPUT_HEIGHT');
   });
+
+  test('confirm emits a share image path with the cropped cover result', async () => {
+    let pageConfig;
+    const emitted = {};
+    global.Page = jest.fn(config => {
+      pageConfig = config;
+    });
+    global.wx = {
+      navigateBack: jest.fn()
+    };
+
+    jest.resetModules();
+    require('../../../miniprogram/pages/activity-cover-crop/index');
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ready: true,
+        processing: false
+      },
+      openerEventChannel: {
+        emit: jest.fn((name, payload) => {
+          emitted[name] = payload;
+        })
+      },
+      exportCroppedImages: jest.fn().mockResolvedValue({
+        tempFilePath: 'wxfile://cover.jpg',
+        thumbTempFilePath: 'wxfile://thumb.jpg',
+        shareTempFilePath: 'wxfile://share.jpg'
+      }),
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onConfirm.call(ctx);
+
+    expect(emitted.coverCropped).toMatchObject({
+      tempFilePath: 'wxfile://cover.jpg',
+      thumbTempFilePath: 'wxfile://thumb.jpg',
+      shareTempFilePath: 'wxfile://share.jpg',
+      imageList: ['wxfile://cover.jpg']
+    });
+  });
 });

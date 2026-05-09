@@ -5,6 +5,9 @@ const {
   COVER_THUMB_OUTPUT_HEIGHT,
   COVER_THUMB_OUTPUT_QUALITY,
   COVER_THUMB_OUTPUT_WIDTH,
+  SHARE_OUTPUT_HEIGHT,
+  SHARE_OUTPUT_QUALITY,
+  SHARE_OUTPUT_WIDTH,
   MAX_ZOOM_PERCENT,
   MIN_ZOOM_PERCENT,
   buildCropRect,
@@ -155,12 +158,13 @@ Page({
 
     try {
       this.setData({ processing: true });
-      const { tempFilePath, thumbTempFilePath } = await this.exportCroppedImages();
+      const { tempFilePath, thumbTempFilePath, shareTempFilePath } = await this.exportCroppedImages();
       this.resultDelivered = true;
       if (this.openerEventChannel) {
         this.openerEventChannel.emit('coverCropped', {
           tempFilePath,
           thumbTempFilePath,
+          shareTempFilePath,
           imageList: [tempFilePath]
         });
       }
@@ -205,7 +209,7 @@ Page({
 
     return new Promise((resolve, reject) => {
       const context = wx.createCanvasContext('coverCropCanvas', this);
-      context.clearRect(0, 0, COVER_OUTPUT_WIDTH, COVER_OUTPUT_HEIGHT);
+      context.clearRect(0, 0, COVER_OUTPUT_WIDTH, SHARE_OUTPUT_HEIGHT);
       context.drawImage(
         imagePath,
         cropRect.x,
@@ -230,9 +234,39 @@ Page({
             quality: COVER_THUMB_OUTPUT_QUALITY
           });
 
-          resolve({
-            tempFilePath,
-            thumbTempFilePath
+          context.clearRect(0, 0, SHARE_OUTPUT_WIDTH, SHARE_OUTPUT_HEIGHT);
+          context.setFillStyle('#f3f6fa');
+          context.fillRect(0, 0, SHARE_OUTPUT_WIDTH, SHARE_OUTPUT_HEIGHT);
+          const shareCoverWidth = SHARE_OUTPUT_WIDTH;
+          const shareCoverHeight = SHARE_OUTPUT_WIDTH / 2;
+          const shareCoverTop = Math.round((SHARE_OUTPUT_HEIGHT - shareCoverHeight) / 2);
+          context.drawImage(
+            imagePath,
+            cropRect.x,
+            cropRect.y,
+            cropRect.width,
+            cropRect.height,
+            0,
+            shareCoverTop,
+            shareCoverWidth,
+            shareCoverHeight
+          );
+          context.draw(false, async () => {
+            try {
+              const shareTempFilePath = await this.exportCanvasImage({
+                destWidth: SHARE_OUTPUT_WIDTH,
+                destHeight: SHARE_OUTPUT_HEIGHT,
+                quality: SHARE_OUTPUT_QUALITY
+              });
+
+              resolve({
+                tempFilePath,
+                thumbTempFilePath,
+                shareTempFilePath
+              });
+            } catch (shareError) {
+              reject(shareError);
+            }
           });
         } catch (error) {
           reject(error);

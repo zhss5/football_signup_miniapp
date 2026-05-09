@@ -29,6 +29,7 @@ test('default teams include default color keys', () => {
   expect(form.teams[0]).toMatchObject({
     colorKey: 'green'
   });
+  expect(form.shareImage).toBe('');
 });
 
 test('buildActivityPayload composes activity times and keeps a single uploaded image list', () => {
@@ -66,6 +67,20 @@ test('buildActivityPayload preserves a generated cover thumbnail', () => {
 
   expect(payload.coverImage).toBe('wxfile://cover-1.jpg');
   expect(payload.coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
+});
+
+test('buildActivityPayload preserves a generated share image separately from the cover', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    coverImage: 'wxfile://cover-1.jpg',
+    coverThumbImage: 'wxfile://cover-1-thumb.jpg',
+    shareImage: 'wxfile://cover-1-share.jpg',
+    imageList: ['wxfile://cover-1.jpg']
+  });
+
+  expect(payload.coverImage).toBe('wxfile://cover-1.jpg');
+  expect(payload.coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
+  expect(payload.shareImage).toBe('wxfile://cover-1-share.jpg');
 });
 
 test('buildActivityPayload preserves team color keys', () => {

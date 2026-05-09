@@ -83,6 +83,13 @@ function dedupeSources(sources) {
   return Array.from(new Set(sources.filter(Boolean)));
 }
 
+function getActivityMediaSources(activity = {}, preferredCover = 'thumb') {
+  return dedupeSources([
+    ...getActivityCoverSources(activity, preferredCover),
+    activity.shareImage || ''
+  ]);
+}
+
 function getResolvedCoverImageSources(coverSources, urlByFileId) {
   const orderedSources = Array.isArray(coverSources) ? coverSources : [coverSources];
 
@@ -108,7 +115,7 @@ async function resolveActivityCoverImages(items = [], options = {}) {
   const coverSources = Array.from(
     new Set(
       items.reduce(
-        (sources, item) => sources.concat(getActivityCoverSources(item, preferredCover)),
+        (sources, item) => sources.concat(getActivityMediaSources(item, preferredCover)),
         []
       )
     )
@@ -122,7 +129,10 @@ async function resolveActivityCoverImages(items = [], options = {}) {
     return {
       ...item,
       coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId),
-      coverImageSources
+      coverImageSources,
+      ...(item.shareImage
+        ? { shareDisplayImage: getResolvedCoverUrl(item.shareImage, urlByFileId) }
+        : {})
     };
   });
 }

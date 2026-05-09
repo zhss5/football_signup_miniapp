@@ -56,6 +56,7 @@ function createDefaultActivityForm(options = {}) {
     notificationHint: '',
     coverImage: '',
     coverThumbImage: '',
+    shareImage: '',
     imageList: [],
     signupLimitTotal: 12,
     inviteCode: '',
@@ -114,6 +115,7 @@ function buildActivityPayload(form) {
     notificationHint: String(form.notificationHint || '').trim(),
     coverImage,
     coverThumbImage,
+    shareImage: coverImage ? form.shareImage || '' : '',
     imageList
   };
 }
@@ -150,6 +152,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
     notificationHint: activity.notificationHint || '',
     coverImage: imageList[0] || activity.coverImage || '',
     coverThumbImage: activity.coverThumbImage || '',
+    shareImage: activity.shareImage || '',
     imageList,
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
     inviteCode: activity.inviteCode || '',

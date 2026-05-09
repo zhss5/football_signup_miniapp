@@ -80,6 +80,7 @@ function buildActivityUpdateData(event, activity, stamp) {
     notificationHint: String(event.notificationHint || '').trim(),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
+    shareImage: event.shareImage || '',
     imageList,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
     requirePhone: false,

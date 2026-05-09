@@ -83,6 +83,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     notificationHint: String(event.notificationHint || '').trim(),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
+    shareImage: event.shareImage || '',
     imageList,
     signupLimitTotal: Number(event.signupLimitTotal) || 0,
     joinedCount: 0,

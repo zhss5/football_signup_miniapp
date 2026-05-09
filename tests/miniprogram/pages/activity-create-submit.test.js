@@ -184,7 +184,8 @@ describe('activity create submit flow', () => {
       });
       events.coverCropped({
         tempFilePath: 'wxfile://cropped-cover.jpg',
-        thumbTempFilePath: 'wxfile://cropped-thumb.jpg'
+        thumbTempFilePath: 'wxfile://cropped-thumb.jpg',
+        shareTempFilePath: 'wxfile://cropped-share.jpg'
       });
     });
 
@@ -217,6 +218,7 @@ describe('activity create submit flow', () => {
     expect(ctx.data.form).toMatchObject({
       coverImage: 'wxfile://cropped-cover.jpg',
       coverThumbImage: 'wxfile://cropped-thumb.jpg',
+      shareImage: 'wxfile://cropped-share.jpg',
       imageList: ['wxfile://cropped-cover.jpg']
     });
   });
@@ -395,6 +397,10 @@ describe('activity create submit flow', () => {
 
   test('onSubmit uploads a selected cover before creating the activity', async () => {
     uploadFile.mockImplementation((filePath, cloudPath) => {
+      if (cloudPath.startsWith('activity-share-images/')) {
+        return Promise.resolve('cloud://prod-env-123/activity-share-images/cover-share.jpg');
+      }
+
       if (cloudPath.startsWith('activity-cover-thumbs/')) {
         return Promise.resolve('cloud://prod-env-123/activity-cover-thumbs/cover-thumb.jpg');
       }
@@ -409,6 +415,7 @@ describe('activity create submit flow', () => {
           title: 'Thursday Match',
           coverImage: 'wxfile://tmp_cover.jpg',
           coverThumbImage: 'wxfile://tmp_cover_thumb.jpg',
+          shareImage: 'wxfile://tmp_cover_share.jpg',
           imageList: ['wxfile://tmp_cover.jpg']
         },
         canCreateActivity: true
@@ -432,10 +439,15 @@ describe('activity create submit flow', () => {
       'wxfile://tmp_cover_thumb.jpg',
       expect.stringMatching(/^activity-cover-thumbs\/.+\.jpg$/)
     );
+    expect(uploadFile).toHaveBeenCalledWith(
+      'wxfile://tmp_cover_share.jpg',
+      expect.stringMatching(/^activity-share-images\/.+\.jpg$/)
+    );
     expect(createActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         coverImage: 'cloud://prod-env-123/activity-covers/cover.jpg',
         coverThumbImage: 'cloud://prod-env-123/activity-cover-thumbs/cover-thumb.jpg',
+        shareImage: 'cloud://prod-env-123/activity-share-images/cover-share.jpg',
         imageList: ['cloud://prod-env-123/activity-covers/cover.jpg']
       })
     );

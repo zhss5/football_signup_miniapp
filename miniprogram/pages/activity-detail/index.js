@@ -146,6 +146,10 @@ function buildCoverCandidates(activity = {}) {
   return [activity.coverDisplayImage].filter(Boolean);
 }
 
+function getShareImageUrl(activity = {}) {
+  return activity.shareDisplayImage || activity.coverDisplayImage || activity.coverImage || undefined;
+}
+
 function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
@@ -563,7 +567,7 @@ Page({
 
     return {
       title: activity.title || translate('nav.home'),
-      imageUrl: activity.coverImage || undefined,
+      imageUrl: getShareImageUrl(activity),
       path: `/pages/activity-detail/index?activityId=${this.data.activityId}`
     };
   },
@@ -574,7 +578,7 @@ Page({
 
     return {
       title: activity.title || translate('nav.home'),
-      imageUrl: activity.coverImage || undefined,
+      imageUrl: getShareImageUrl(activity),
       query: `activityId=${this.data.activityId}`
     };
   }

@@ -166,6 +166,27 @@ describe('activity service cover display urls', () => {
     ]);
   });
 
+  test('resolves a dedicated share display image without changing the stored file id', async () => {
+    resolveFileUrls.mockResolvedValue({
+      'cloud://prod-env-123/activity-share-images/share.jpg': 'https://tmp.example.com/share.jpg'
+    });
+
+    const [activity] = await activityService.resolveActivityCoverImages([
+      {
+        _id: 'activity_1',
+        shareImage: 'cloud://prod-env-123/activity-share-images/share.jpg'
+      }
+    ]);
+
+    expect(activity).toMatchObject({
+      shareImage: 'cloud://prod-env-123/activity-share-images/share.jpg',
+      shareDisplayImage: 'https://tmp.example.com/share.jpg'
+    });
+    expect(resolveFileUrls).toHaveBeenCalledWith([
+      'cloud://prod-env-123/activity-share-images/share.jpg'
+    ]);
+  });
+
   test('updateTeamColor delegates to the CloudBase service', async () => {
     const cloud = require('../../../miniprogram/services/cloud');
     cloud.call.mockResolvedValue({

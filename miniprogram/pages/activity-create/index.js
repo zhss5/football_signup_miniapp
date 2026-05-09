@@ -92,6 +92,13 @@ function buildCoverThumbCloudPath(filePath) {
   return `activity-cover-thumbs/${Date.now()}-${suffix}${extension}`;
 }
 
+function buildShareImageCloudPath(filePath) {
+  const extension = getCoverFileExtension(filePath);
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  return `activity-share-images/${Date.now()}-${suffix}${extension}`;
+}
+
 function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
@@ -100,24 +107,30 @@ async function uploadActivityCover(payload) {
   const coverImage =
     payload.coverImage || (Array.isArray(payload.imageList) ? payload.imageList[0] : '');
   const coverThumbImage = payload.coverThumbImage || '';
+  const shareImage = payload.shareImage || '';
 
   if (!coverImage) {
-    return payload;
+    return {
+      ...payload,
+      shareImage: ''
+    };
   }
 
-  if (isCloudFileId(coverImage)) {
-    return payload;
-  }
-
-  const fileId = await uploadFile(coverImage, buildCoverCloudPath(coverImage));
+  const fileId = isCloudFileId(coverImage)
+    ? coverImage
+    : await uploadFile(coverImage, buildCoverCloudPath(coverImage));
   const thumbFileId = coverThumbImage && !isCloudFileId(coverThumbImage)
     ? await uploadFile(coverThumbImage, buildCoverThumbCloudPath(coverThumbImage))
     : coverThumbImage;
+  const shareFileId = shareImage && !isCloudFileId(shareImage)
+    ? await uploadFile(shareImage, buildShareImageCloudPath(shareImage))
+    : shareImage;
 
   return {
     ...payload,
     coverImage: fileId,
     coverThumbImage: thumbFileId || '',
+    shareImage: shareFileId || '',
     imageList: [fileId]
   };
 }
@@ -417,6 +430,7 @@ Page({
         ...this.data.form,
         coverImage: cropResult.tempFilePath,
         coverThumbImage: cropResult.thumbTempFilePath || '',
+        shareImage: cropResult.shareTempFilePath || '',
         imageList: cropResult.imageList || [cropResult.tempFilePath]
       };
 
@@ -438,6 +452,7 @@ Page({
       ...this.data.form,
       coverImage: '',
       coverThumbImage: '',
+      shareImage: '',
       imageList: []
     };
 
