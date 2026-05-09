@@ -1450,3 +1450,37 @@ Verification:
 
 - targeted red/green coverage was updated for CloudBase `getActivityDetail`, local mock detail data, and team-list view models.
 - full regression suite passed: `52` test suites, `297` tests.
+
+## 2026-05-09 - Activity Experience Polish Plan
+
+New product requirements were analyzed and captured in a design plan.
+
+Requested scope:
+
+- prevent forwarded share cards from cropping the current `2:1` activity cover awkwardly
+- notify organizers/admins when participants join or self-cancel
+- add team color labels with the default cycle green, white, red, blue, black, yellow
+- let organizers/admins manually change team colors from the team name/color UI
+- support up to five extra detail images in addition to the activity cover
+- show `暂无活动安排` on Home when no joinable activities are visible
+
+Implementation recommendation:
+
+- phase 1: Home empty state, share-image stabilization, and default team color display
+- phase 2: detail-image upload/display as a separate `detailImages` field, not by overloading cover-oriented `imageList`
+- phase 3: manager registration-change notifications after subscription-template and real-device behavior are confirmed
+
+Why it matters:
+
+- the existing cover pipeline is optimized for 2:1 list/detail display, while WeChat share cards need a share-specific image ratio
+- notification-to-manager behavior depends on WeChat subscription consent and should not block signup/cancellation if sending fails
+- team color changes are best isolated in a focused `updateTeamColor` cloud function instead of overloading activity editing
+- extra detail images are content images, so they should remain separate from cover, thumbnail, and share-image assets
+
+Related:
+
+- `docs/superpowers/specs/2026-05-09-activity-experience-polish-design.md`
+
+Verification:
+
+- documentation-only change; no runtime behavior changed.
