@@ -53,7 +53,8 @@ describe('activity create default teams', () => {
     expect(ctx.data.form.teams).toEqual([
       {
         teamName: '队伍1',
-        maxMembers: 12
+        maxMembers: 12,
+        colorKey: 'green'
       }
     ]);
     expect(ctx.data.namedTeamSlots).toBe(12);
