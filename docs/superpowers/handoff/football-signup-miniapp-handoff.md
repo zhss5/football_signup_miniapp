@@ -368,6 +368,15 @@ Current Home list behavior:
 - Home shows only activities whose card state is joinable.
 - Home sorts visible activities by `createdAt`, newest first.
 - hidden closed/cancelled/full/deadline-past activities are filtered before cover image URL resolution.
+- Home shows an empty state when there are no joinable activities.
+
+Current activity experience polish:
+
+- Activity sharing uses `shareImage` / `shareDisplayImage` before falling back to cover display images.
+- New cover uploads create separate cover, thumbnail, and share-card-safe image assets.
+- Teams have semantic color keys and historical fallback colors by sort order.
+- Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
+- Detail gallery images and organizer/admin registration-change notifications remain deferred to later phases.
 
 Current My list behavior:
 
@@ -394,7 +403,7 @@ Sensitive-file check before push:
 
 Continue in this order:
 
-1. Confirm CloudBase storage permissions allow mini-program client reads for both `activity-covers/` and `activity-cover-thumbs/`.
+1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, and `activity-share-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
 4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6.

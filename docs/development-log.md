@@ -1384,6 +1384,27 @@ Verification:
 
 - documentation-only change; no runtime behavior changed.
 
+## 2026-05-09 - Activity Experience Polish Phase 1
+
+Delivered behavior:
+
+- Home shows an empty state when no joinable activities are visible.
+- Activity image cropping now produces a cover image, thumbnail image, and share-card-safe `shareImage`.
+- Activity sharing prefers resolved `shareDisplayImage` before falling back to cover display images.
+- Team labels use semantic color keys with the default cycle green, white, red, blue, black, yellow.
+- Organizers/admins can update team colors from Activity Detail through the new `updateTeamColor` cloud function.
+
+Deployment notes:
+
+- Run `npm run copy:cloud-shared` before deploying cloud functions.
+- Deploy `updateTeamColor`, `createActivity`, `updateActivity`, and `getActivityDetail` for the new color and share-image behavior.
+- Ensure CloudBase storage rules allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, and `activity-share-images/`.
+
+Verification:
+
+- targeted red/green coverage was added for Home empty state, team colors, manager color editing, and share-safe image handling.
+- full regression verification is recorded with the implementation branch.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.
