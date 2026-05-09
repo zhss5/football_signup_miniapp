@@ -59,6 +59,55 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].notificationHint).toBe('Bring both kits');
 });
 
+test('local cloud client lets an organizer update a team color', async () => {
+  const storage = createMemoryStorage();
+  const client = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await client.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detailBefore = await client.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await expect(
+    client.call('updateTeamColor', {
+      activityId: created.activityId,
+      teamId: detailBefore.teams[0]._id,
+      colorKey: 'blue'
+    })
+  ).resolves.toMatchObject({
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    colorKey: 'blue',
+    updated: true
+  });
+
+  const detailAfter = await client.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.teams[0].colorKey).toBe('blue');
+});
+
 test('local cloud client blocks regular users from creating activities when roles are restricted', async () => {
   const client = createLocalCloudClient({
     storage: createMemoryStorage(),

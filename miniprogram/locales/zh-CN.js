@@ -23,6 +23,14 @@ module.exports = {
     emptyCopy: '\u6709\u65b0\u53ef\u62a5\u540d\u6d3b\u52a8\u65f6\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002',
     createActivity: '创建活动'
   },
+  teamColors: {
+    green: '\u7eff\u8272',
+    white: '\u767d\u8272',
+    red: '\u7ea2\u8272',
+    blue: '\u84dd\u8272',
+    black: '\u9ed1\u8272',
+    yellow: '\u9ec4\u8272'
+  },
   activityCard: {
     start: '开始时间：{{value}}',
     joinedCapacity: '已报名 {{joined}} / {{total}}'

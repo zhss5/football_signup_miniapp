@@ -1,6 +1,7 @@
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   getActivityDetail: jest.fn(),
   cancelActivity: jest.fn(),
+  updateTeamColor: jest.fn(),
   resolveActivityCoverImage: jest.fn(activity => Promise.resolve(activity))
 }));
 
@@ -26,6 +27,7 @@ describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
   let cancelActivity;
+  let updateTeamColor;
   let addProxyRegistration;
   let moveRegistration;
   let removeRegistration;
@@ -50,6 +52,7 @@ describe('activity detail page', () => {
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ cancelActivity } = require('../../../miniprogram/services/activity-service'));
+    ({ updateTeamColor } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
@@ -88,6 +91,37 @@ describe('activity detail page', () => {
         signupSuccess: expect.any(Function)
       }
     });
+  });
+
+  test('onTeamColorTap lets managers choose a color and reloads detail', async () => {
+    updateTeamColor.mockResolvedValue({ updated: true });
+    global.wx.showActionSheet = jest.fn(({ success }) => success({ tapIndex: 2 }));
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        viewer: {
+          canEditActivity: true
+        },
+        teams: [
+          {
+            _id: 'team_white',
+            teamName: 'White'
+          }
+        ]
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onTeamColorTap.call(ctx, {
+      detail: {
+        teamId: 'team_white'
+      }
+    });
+
+    expect(updateTeamColor).toHaveBeenCalledWith('activity_123', 'team_white', 'red');
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('onShow reloads detail after returning from a successful join flow', async () => {

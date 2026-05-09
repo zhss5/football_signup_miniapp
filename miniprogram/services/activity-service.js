@@ -8,6 +8,14 @@ function updateActivity(payload) {
   return call('updateActivity', payload);
 }
 
+function updateTeamColor(activityId, teamId, colorKey) {
+  return call('updateTeamColor', {
+    activityId,
+    teamId,
+    colorKey
+  });
+}
+
 function cancelActivity(activityId) {
   return call('cancelActivity', { activityId });
 }
@@ -139,5 +147,6 @@ module.exports = {
   getActivityStats,
   resolveActivityCoverImage,
   resolveActivityCoverImages,
-  updateActivity
+  updateActivity,
+  updateTeamColor
 };

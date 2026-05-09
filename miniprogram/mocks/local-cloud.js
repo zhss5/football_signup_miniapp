@@ -6,7 +6,7 @@ const {
 } = require('../utils/positions');
 const { canCreateActivity, canEditActivity } = require('../utils/roles');
 const { normalizeSignupName } = require('../utils/signup-name');
-const { normalizeTeamColorKey } = require('../utils/team-colors');
+const { isTeamColorKey, normalizeTeamColorKey } = require('../utils/team-colors');
 const { validateActivityDraft } = require('../utils/validators');
 
 function validateSignupPayload(payload) {
@@ -382,6 +382,43 @@ function createLocalCloudClient(options = {}) {
     writeState(state);
     return {
       activityId: payload.activityId,
+      updated: true
+    };
+  }
+
+  function updateTeamColor(payload) {
+    const state = readState();
+    const stamp = now();
+    const openid = getOpenId();
+    const activity = state.activities[payload.activityId];
+    const team = state.teams[payload.teamId];
+    const user = state.users[openid] || buildDefaultUser(openid, stamp);
+    const colorKey = String(payload.colorKey || '').trim();
+
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+
+    if (!canEditActivity(activity, user, openid)) {
+      throw new Error('Only the organizer or an admin can update team colors');
+    }
+
+    if (!team || team.activityId !== payload.activityId || team.status === 'inactive') {
+      throw new Error('Team not found');
+    }
+
+    if (!isTeamColorKey(colorKey)) {
+      throw new Error('Unsupported team color');
+    }
+
+    team.colorKey = colorKey;
+    team.updatedAt = stamp;
+    writeState(state);
+
+    return {
+      activityId: payload.activityId,
+      teamId: payload.teamId,
+      colorKey: team.colorKey,
       updated: true
     };
   }
@@ -1068,6 +1105,7 @@ function createLocalCloudClient(options = {}) {
     ensureUserProfile,
     createActivity,
     updateActivity,
+    updateTeamColor,
     listActivities,
     getActivityDetail,
     joinActivity,

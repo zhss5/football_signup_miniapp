@@ -22,6 +22,14 @@ module.exports = {
     emptyTitle: 'No activities scheduled',
     emptyCopy: 'New joinable activities will appear here.'
   },
+  teamColors: {
+    green: 'Green',
+    white: 'White',
+    red: 'Red',
+    blue: 'Blue',
+    black: 'Black',
+    yellow: 'Yellow'
+  },
   activityCard: {
     start: 'Start: {{value}}',
     joinedCapacity: 'Joined {{joined}} / {{total}}'

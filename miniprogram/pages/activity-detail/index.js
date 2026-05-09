@@ -1,6 +1,7 @@
 const {
   getActivityDetail,
   cancelActivity,
+  updateTeamColor,
   resolveActivityCoverImage
 } = require('../../services/activity-service');
 const {
@@ -12,6 +13,7 @@ const {
 const { notifyActivityParticipants } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
 const { buildTeamListVm } = require('../../utils/formatters');
+const { TEAM_COLOR_OPTIONS } = require('../../utils/team-colors');
 const {
   getAppLocale,
   getMessages,
@@ -284,6 +286,39 @@ Page({
     wx.navigateTo({
       url: `/pages/activity-create/index?mode=edit&activityId=${this.data.activityId}`
     });
+  },
+
+  async onTeamColorTap(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const viewer = this.data.viewer || {};
+
+    if (!viewer.canEditActivity) {
+      return;
+    }
+
+    const teamId = event.detail && event.detail.teamId;
+    if (!teamId) {
+      return;
+    }
+
+    const tapIndex = await new Promise(resolve => {
+      wx.showActionSheet({
+        itemList: TEAM_COLOR_OPTIONS.map(option => translate(option.labelKey)),
+        success: result => resolve(result.tapIndex),
+        fail: () => resolve(-1)
+      });
+    });
+
+    if (tapIndex < 0 || !TEAM_COLOR_OPTIONS[tapIndex]) {
+      return;
+    }
+
+    try {
+      await updateTeamColor(this.data.activityId, teamId, TEAM_COLOR_OPTIONS[tapIndex].key);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
   },
 
   async onCancelSignup() {

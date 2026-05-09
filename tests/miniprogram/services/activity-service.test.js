@@ -165,4 +165,21 @@ describe('activity service cover display urls', () => {
       'cloud://prod-env-123/activity-covers/cover.jpg'
     ]);
   });
+
+  test('updateTeamColor delegates to the CloudBase service', async () => {
+    const cloud = require('../../../miniprogram/services/cloud');
+    cloud.call.mockResolvedValue({
+      updated: true
+    });
+
+    await expect(activityService.updateTeamColor('activity_1', 'team_1', 'red')).resolves.toEqual({
+      updated: true
+    });
+
+    expect(cloud.call).toHaveBeenCalledWith('updateTeamColor', {
+      activityId: 'activity_1',
+      teamId: 'team_1',
+      colorKey: 'red'
+    });
+  });
 });
