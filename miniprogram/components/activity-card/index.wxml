@@ -13,6 +13,8 @@
   <text class="title">{{item.title}}</text>
   <text wx:if="{{item.startDisplayText}}" class="meta">{{item.startPrefixText}}</text>
   <text class="meta">{{item.addressText}}</text>
-  <text class="meta">{{item.capacityText}}</text>
-  <text class="status status-{{item.statusTone}}">{{item.statusText}}</text>
+  <view class="activity-card-footer">
+    <text class="meta capacity-text">{{item.capacityText}}</text>
+    <text class="status status-{{item.statusTone}}">{{item.statusText}}</text>
+  </view>
 </view>

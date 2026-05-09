@@ -59,6 +59,22 @@ describe('activity card component', () => {
     expect(wxml).toContain('{{item.capacityText}}');
   });
 
+  test('renders card status as a footer badge with an expired tone style', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('class="activity-card-footer"');
+    expect(wxml).toContain('status-{{item.statusTone}}');
+    expect(wxss).toContain('.activity-card-footer');
+    expect(wxss).toContain('.status-expired');
+  });
+
   test('supports embedded rendering when a parent card owns the outer frame', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),

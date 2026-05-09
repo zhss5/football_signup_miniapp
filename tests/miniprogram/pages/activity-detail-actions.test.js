@@ -83,4 +83,20 @@ describe('activity detail actions', () => {
       'wx:if="{{activity.status === \'published\' && activity.confirmStatus === \'confirmed\'}}"'
     );
   });
+
+  test('renders an expired activity banner in the hero status row', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('class="hero-status-row"');
+    expect(wxml).toContain('wx:if="{{activityExpiredVisible}}"');
+    expect(wxml).toContain('{{i18n.activity.status.expired}}');
+    expect(wxss).toContain('.expired-banner');
+  });
 });

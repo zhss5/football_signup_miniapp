@@ -23,45 +23,91 @@ function defaultTranslate(key, params) {
   return translateText(key, params, 'en-US');
 }
 
+function isActivityExpired(activity = {}, nowProvider) {
+  const endAt = Date.parse(activity.endAt || '');
+  return (
+    activity.status === 'published' &&
+    Number.isFinite(endAt) &&
+    resolveNow(nowProvider) > endAt
+  );
+}
+
 function getActivitySignupState(activity = {}, nowProvider, translate = defaultTranslate) {
   const now = resolveNow(nowProvider);
   const deadline = Date.parse(activity.signupDeadlineAt || '');
   const isDeleted = activity.status === 'deleted';
   const isCancelled = activity.status === 'cancelled';
   const isPublished = activity.status === 'published';
+  const isExpired = isActivityExpired(activity, () => now);
   const isFull = Number(activity.joinedCount) >= Number(activity.signupLimitTotal);
   const isSignupClosed = Number.isFinite(deadline) && now > deadline;
 
   if (isDeleted) {
-    return { statusText: translate('activity.status.deleted'), joinEnabled: false };
+    return {
+      statusText: translate('activity.status.deleted'),
+      joinEnabled: false,
+      isExpired: false
+    };
   }
 
   if (isCancelled) {
-    return { statusText: translate('activity.status.cancelled'), joinEnabled: false };
+    return {
+      statusText: translate('activity.status.cancelled'),
+      joinEnabled: false,
+      isExpired: false
+    };
+  }
+
+  if (isExpired) {
+    return {
+      statusText: translate('activity.status.expired'),
+      joinEnabled: false,
+      isExpired: true
+    };
   }
 
   if (isFull) {
-    return { statusText: translate('activity.status.full'), joinEnabled: false };
+    return {
+      statusText: translate('activity.status.full'),
+      joinEnabled: false,
+      isExpired: false
+    };
   }
 
   if (isPublished && isSignupClosed) {
-    return { statusText: translate('activity.status.signupClosed'), joinEnabled: false };
+    return {
+      statusText: translate('activity.status.signupClosed'),
+      joinEnabled: false,
+      isExpired: false
+    };
   }
 
   if (isPublished) {
-    return { statusText: translate('activity.status.joinable'), joinEnabled: true };
+    return {
+      statusText: translate('activity.status.joinable'),
+      joinEnabled: true,
+      isExpired: false
+    };
   }
 
-  return { statusText: translate('activity.status.ended'), joinEnabled: false };
+  return {
+    statusText: translate('activity.status.ended'),
+    joinEnabled: false,
+    isExpired: false
+  };
 }
 
 function buildActivityCardVm(activity, nowProvider, translate = defaultTranslate) {
-  const { statusText, joinEnabled } = getActivitySignupState(activity, nowProvider, translate);
+  const { statusText, joinEnabled, isExpired } = getActivitySignupState(
+    activity,
+    nowProvider,
+    translate
+  );
 
   return {
     ...activity,
     statusText,
-    statusTone: joinEnabled ? 'joinable' : 'disabled',
+    statusTone: isExpired ? 'expired' : joinEnabled ? 'joinable' : 'disabled',
     startDisplayText: formatDateTime(activity.startAt),
     capacityText: translate('activityCard.joinedCapacity', {
       joined: activity.joinedCount || 0,
@@ -177,5 +223,6 @@ module.exports = {
   buildActivityCardVm,
   buildTeamListVm,
   formatDateTime,
-  getActivitySignupState
+  getActivitySignupState,
+  isActivityExpired
 };

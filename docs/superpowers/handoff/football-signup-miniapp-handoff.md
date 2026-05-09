@@ -389,13 +389,15 @@ Current activity experience polish:
 - Detail images are direct uploads with no app-level compression, resizing, or crop step.
 - Activity Detail section order is hero, share card, signup teams, description, then detail image gallery.
 - Activity Detail resolves and renders the detail image gallery below the description, and detail images render without rounded corners.
+- Published activities whose `endAt` has passed now show an explicit red `Expired` / `活动已过期` badge on Home/My activity cards and in the Activity Detail hero.
+- Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Organizer/admin registration-change notifications remain deferred to later phases.
 
 Current My list behavior:
 
 - My loads one batch each for created activities and joined activities.
 - My sorts the returned activities by `startAt`, newest first.
-- My `Active` / `Published` created filter excludes published activities whose `endAt` has passed; those activities remain visible in `All`.
+- My `Active` / `Published` created filter excludes published activities whose `endAt` has passed; those activities remain visible in `All` with a red expired badge.
 - TODO: add real pagination to `listActivities` and Home/My `onReachBottom` loading before activity volume regularly exceeds one returned batch.
 
 Problems encountered during cover-display testing:
@@ -440,9 +442,8 @@ Continue in this order:
    - make `listActivities` accept a stable `limit` plus `skip` or cursor
    - sort cloud-side before pagination
    - add `onReachBottom` loading to Home and My while preserving current filters
-15. Add an overdue unresolved activity state:
+15. Add an overdue unresolved organizer workflow:
    - detect `published` plus `confirmStatus: pending` after `endAt`
-   - show a clear participant-facing unresolved/expired state
    - remind organizers to confirm or cancel manually
    - keep automatic confirmation disabled by default
 16. Keep the future operations/backend backlog visible but deferred:

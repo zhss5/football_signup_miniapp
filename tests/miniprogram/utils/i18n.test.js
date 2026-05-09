@@ -34,6 +34,10 @@ describe('i18n utilities', () => {
     expect(messages.activityCreate.saveChanges).toBe('\u4fdd\u5b58\u4fee\u6539');
   });
 
+  test('provides Chinese copy for expired activities', () => {
+    expect(t('activity.status.expired', {}, 'zh-CN')).toBe('\u6d3b\u52a8\u5df2\u8fc7\u671f');
+  });
+
   test('provides the requested insurance purchase link label', () => {
     const messages = getMessages('zh-CN');
 

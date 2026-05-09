@@ -12,7 +12,7 @@ const {
 } = require('../../services/registration-service');
 const { notifyActivityParticipants } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
-const { buildTeamListVm } = require('../../utils/formatters');
+const { buildTeamListVm, isActivityExpired } = require('../../utils/formatters');
 const { TEAM_COLOR_OPTIONS, isTeamColorKey } = require('../../utils/team-colors');
 const {
   getAppLocale,
@@ -189,6 +189,7 @@ Page({
     activityCoverSourceIndex: 0,
     activityDescriptionText: '',
     activityDetailImages: [],
+    activityExpiredVisible: false,
     colorPaletteVisible: false,
     colorPaletteTeamId: '',
     colorPaletteOptions: []
@@ -243,6 +244,7 @@ Page({
       activityCoverSourceIndex: 0,
       ...buildLocationMapState(activityWithDisplayCover),
       activityDetailImages,
+      activityExpiredVisible: isActivityExpired(activityWithDisplayCover),
       teams: buildTeamListVm(
         detail.teams,
         detail.myRegistration,

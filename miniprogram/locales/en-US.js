@@ -46,6 +46,7 @@ module.exports = {
       cancelled: 'Cancelled',
       deleted: 'Deleted',
       ended: 'Ended',
+      expired: 'Expired',
       joined: 'Joined',
       confirmed: 'Confirmed'
     },

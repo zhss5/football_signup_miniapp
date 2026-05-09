@@ -411,7 +411,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: add preferred playing position selection as a participant signup refinement
 - completed in code: remember the participant's latest preferred position choices and prefill them on future signups
 - completed in code: allow one-team activity setup as the minimum default instead of always creating two teams
-- polish empty states and activity status presentation
+- completed in code: polish empty states and show red expired badges for published activities after `endAt`
 - improve share metadata and visual card quality
 
 ### Option D: Full Operations Backend

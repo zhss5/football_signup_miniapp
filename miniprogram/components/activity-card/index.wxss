@@ -44,16 +44,42 @@
   color: #6b7280;
 }
 
+.activity-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 2rpx;
+}
+
+.capacity-text {
+  min-width: 0;
+  flex: 1;
+}
+
 .status {
+  flex: 0 0 auto;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #f3f4f6;
   color: #6b7280;
-  font-weight: 500;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .status-joinable {
+  background: #dcfce7;
   color: #168a45;
-  font-weight: 700;
 }
 
 .status-disabled {
+  background: #f3f4f6;
   color: #9ca3af;
+}
+
+.status-expired {
+  background: #fee2e2;
+  color: #b91c1c;
 }

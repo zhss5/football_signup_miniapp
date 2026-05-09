@@ -1636,3 +1636,29 @@ Related:
 Verification:
 
 - documentation-only change; no runtime behavior changed.
+
+## 2026-05-09 - Expired Activity Status Badges
+
+Past published activities now surface a more explicit expired state in participant-facing views.
+
+Delivered behavior:
+
+- activity status view models now treat `published` activities whose `endAt` has passed as `Expired` / `活动已过期`.
+- the expired state takes priority over signup-deadline closure and full capacity, while cancelled and deleted states still win.
+- Home/My activity cards render status in a right-aligned footer badge, with expired activities highlighted in red.
+- Activity Detail shows a red expired badge in the hero status row next to the confirmed badge when both apply.
+- team join buttons also use the expired status text after `endAt` has passed.
+
+Why it matters:
+
+- organizers can still find historical activities in My > All, but the card now clearly communicates that the activity is no longer active.
+- participants opening an old share/detail page see the expired state before scanning the signup teams.
+
+Deployment note:
+
+- this is a mini program frontend/view-model change only; no cloud function upload is required for this change.
+
+Verification:
+
+- targeted red/green coverage was added for activity card view models, team-list join state, detail-page reload state, card/detail templates, and Chinese i18n.
+- full regression suite passed: `56` test suites, `363` tests.

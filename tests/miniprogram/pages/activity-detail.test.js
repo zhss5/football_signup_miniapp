@@ -13,7 +13,11 @@ jest.mock('../../../miniprogram/services/registration-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
-  buildTeamListVm: jest.fn((teams) => teams)
+  buildTeamListVm: jest.fn((teams) => teams),
+  isActivityExpired: jest.fn(activity => {
+    const endAt = Date.parse(activity.endAt || '');
+    return Number.isFinite(endAt) && Date.now() > endAt;
+  })
 }));
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
@@ -339,6 +343,39 @@ describe('activity detail page', () => {
         height: 32
       })
     ]);
+  });
+
+  test('reload exposes an expired activity banner when the activity end time has passed', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Past Match',
+        status: 'published',
+        endAt: '2000-01-01T10:00:00.000Z'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(ctx.data.activityExpiredVisible).toBe(true);
   });
 
   test('reload passes registration management permission into the team list view model', async () => {

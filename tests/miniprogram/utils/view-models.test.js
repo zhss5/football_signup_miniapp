@@ -68,6 +68,23 @@ test('buildActivityCardVm marks activities past signup deadline as closed and ex
   expect(vm.startDisplayText).toBeTruthy();
 });
 
+test('buildActivityCardVm marks published activities after the end time as expired', () => {
+  const vm = buildActivityCardVm(
+    {
+      title: 'Saturday 8-10',
+      joinedCount: 3,
+      signupLimitTotal: 12,
+      status: 'published',
+      endAt: '2026-04-26T14:00:00.000Z',
+      signupDeadlineAt: '2026-04-26T11:00:00.000Z'
+    },
+    () => new Date('2026-04-26T14:30:00.000Z').getTime()
+  );
+
+  expect(vm.statusText).toBe('Expired');
+  expect(vm.statusTone).toBe('expired');
+});
+
 test('buildActivityCardVm marks deleted activities and hides organizer actions', () => {
   const vm = buildActivityCardVm({
     title: 'Saturday 8-10',
@@ -533,6 +550,32 @@ test('buildTeamListVm disables join after signup deadline', () => {
   expect(teams[0]).toMatchObject({
     joinDisabled: true,
     joinButtonText: 'Signup Closed'
+  });
+});
+
+test('buildTeamListVm disables join after the activity end time', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_white',
+        teamName: 'White',
+        joinedCount: 0,
+        maxMembers: 6,
+        members: []
+      }
+    ],
+    null,
+    {
+      status: 'published',
+      endAt: '2026-04-26T14:00:00.000Z',
+      signupDeadlineAt: '2026-04-26T11:00:00.000Z'
+    },
+    () => new Date('2026-04-26T14:30:00.000Z').getTime()
+  );
+
+  expect(teams[0]).toMatchObject({
+    joinDisabled: true,
+    joinButtonText: 'Expired'
   });
 });
 
