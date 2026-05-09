@@ -53,37 +53,49 @@ function createFakeDb(seed) {
 test('buildManagerRegistrationMessageData maps join and cancel changes to the activity notice template', () => {
   const activity = {
     title: 'May 9 training',
-    startAt: '2026-05-09T12:00:00.000Z'
+    joinedCount: 3,
+    signupLimitTotal: 24
   };
 
   expect(
     buildManagerRegistrationMessageData(activity, {
       changeType: 'registration_joined',
-      actorName: 'Alex'
+      actorName: 'Alex',
+      joinedCountAfter: 4
     })
   ).toEqual({
-    time2: {
-      value: '2026-05-09 20:00'
-    },
-    thing3: {
+    thing7: {
       value: 'May 9 training'
     },
-    thing6: {
-      value: '报名变更'
+    phrase1: {
+      value: '\u52a0\u5165'
     },
-    thing7: {
-      value: 'Alex 已报名'
+    thing5: {
+      value: 'Alex\u52a0\u5165\u62a5\u540d'
+    },
+    thing6: {
+      value: '4/24'
     }
   });
 
   expect(
     buildManagerRegistrationMessageData(activity, {
       changeType: 'registration_cancelled',
-      actorName: 'Alex'
+      actorName: 'Alex',
+      joinedCountAfter: 2
     })
-  ).toMatchObject({
+  ).toEqual({
     thing7: {
-      value: 'Alex 已退出'
+      value: 'May 9 training'
+    },
+    phrase1: {
+      value: '\u9000\u51fa'
+    },
+    thing5: {
+      value: 'Alex\u9000\u51fa\u62a5\u540d'
+    },
+    thing6: {
+      value: '2/24'
     }
   });
 });
@@ -140,11 +152,14 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
         _id: 'activity_1',
         title: 'May 9 training',
         startAt: '2026-05-09T12:00:00.000Z',
+        joinedCount: 3,
+        signupLimitTotal: 12,
         organizerOpenId: 'openid_owner'
       },
       actorOpenId: 'openid_player',
       actorName: 'Alex',
       changeType: 'registration_joined',
+      joinedCountAfter: 4,
       stamp: '2026-05-09T10:00:00.000Z'
     },
     {
@@ -164,6 +179,20 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
     'openid_admin',
     'openid_owner'
   ]);
+  expect(sendSubscribeMessage.mock.calls[0][0].data).toEqual({
+    thing7: {
+      value: 'May 9 training'
+    },
+    phrase1: {
+      value: '\u52a0\u5165'
+    },
+    thing5: {
+      value: 'Alex\u52a0\u5165\u62a5\u540d'
+    },
+    thing6: {
+      value: '4/12'
+    }
+  });
   expect(fakeDb.writes.adds).toEqual(
     expect.arrayContaining([
       expect.objectContaining({

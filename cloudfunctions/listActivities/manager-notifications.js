@@ -8,7 +8,6 @@ const NOTIFICATION_COLLECTIONS = [
   COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS,
   COLLECTIONS.NOTIFICATION_LOGS
 ];
-const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
 let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
@@ -16,40 +15,35 @@ function clip(value, maxLength) {
   return text.length > maxLength ? text.slice(0, maxLength) : text;
 }
 
-function pad(value) {
-  return String(value).padStart(2, '0');
-}
-
-function formatDateTime(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  const chinaTime = new Date(date.getTime() + CHINA_TIME_OFFSET_MS);
-
-  return `${chinaTime.getUTCFullYear()}-${pad(chinaTime.getUTCMonth() + 1)}-${pad(chinaTime.getUTCDate())} ${pad(chinaTime.getUTCHours())}:${pad(chinaTime.getUTCMinutes())}`;
+function normalizeCount(value) {
+  const count = Number(value || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
 function buildManagerRegistrationMessageData(activity, change = {}) {
   const actorName = clip(change.actorName || '\u961f\u5458', 10);
-  const actionText =
-    change.changeType === 'registration_cancelled'
-      ? `${actorName} \u5df2\u9000\u51fa`
-      : `${actorName} \u5df2\u62a5\u540d`;
+  const isCancelled = change.changeType === 'registration_cancelled';
+  const statusText = isCancelled ? '\u9000\u51fa' : '\u52a0\u5165';
+  const joinedCount = normalizeCount(
+    change.joinedCountAfter !== undefined ? change.joinedCountAfter : activity.joinedCount
+  );
+  const signupLimitTotal = normalizeCount(
+    change.signupLimitTotal !== undefined ? change.signupLimitTotal : activity.signupLimitTotal
+  );
+  const signupResult = signupLimitTotal > 0 ? `${joinedCount}/${signupLimitTotal}` : `${joinedCount}`;
 
   return {
-    time2: {
-      value: formatDateTime(activity.startAt)
-    },
-    thing3: {
+    thing7: {
       value: clip(activity.title || '\u8db3\u7403\u6d3b\u52a8', 20)
     },
-    thing6: {
-      value: '\u62a5\u540d\u53d8\u66f4'
+    phrase1: {
+      value: statusText
     },
-    thing7: {
-      value: clip(actionText, 20)
+    thing5: {
+      value: clip(`${actorName}${statusText}\u62a5\u540d`, 20)
+    },
+    thing6: {
+      value: clip(signupResult, 20)
     }
   };
 }

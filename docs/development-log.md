@@ -1738,3 +1738,25 @@ Verification:
 
 - targeted red/green coverage was added for the shared manager-notification helper, `joinActivity`, `cancelRegistration`, local mock behavior, and Activity Detail subscription UI.
 - full regression suite passed: `57` test suites, `380` tests.
+
+## 2026-05-09 - Manager Notification Template Field Mapping
+
+Manager signup-change messages now match the actual WeChat subscription template fields.
+
+Delivered behavior:
+
+- the activity name is sent as `thing7`.
+- the status is sent as `phrase1` with `加入` or `退出`.
+- the remark is sent as `thing5`, for example `Alex加入报名` or `Alex退出报名`.
+- the signup result is sent as `thing6` using the post-change count, for example `4/24`.
+- `joinActivity` and `cancelRegistration` now pass the post-change joined count plus the activity total to the shared manager-notification helper.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `joinActivity` and `cancelRegistration`.
+- the template ID remains local-only config and must not be committed.
+
+Verification:
+
+- targeted red/green coverage was updated for the shared manager-notification helper, `joinActivity`, and `cancelRegistration`.
+- full regression suite passed with the bundled Node runtime: `57` test suites, `380` tests. The machine's default Node 16 cannot run the repo's Jest 30 setup.

@@ -583,6 +583,8 @@ test('joinActivity notifies managers when a regular participant joins', async ()
       actorOpenId: 'openid_player',
       actorName: 'Alex',
       changeType: 'registration_joined',
+      joinedCountAfter: 1,
+      signupLimitTotal: 12,
       stamp: '2026-05-09T10:00:00.000Z'
     }),
     expect.any(Object)

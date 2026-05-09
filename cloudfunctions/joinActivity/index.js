@@ -241,6 +241,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
             actorOpenId: openid,
             actorName: signupName,
             changeType: 'registration_joined',
+            joinedCountAfter: normalizeCount(activityRes.data.joinedCount) + 1,
+            signupLimitTotal: normalizeCount(activityRes.data.signupLimitTotal),
             stamp
           }
     };

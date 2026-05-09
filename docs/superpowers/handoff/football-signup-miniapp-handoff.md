@@ -397,6 +397,7 @@ Current activity experience polish:
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Same-activity repeat exits are guarded for regular participants: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration. The activity organizer and `admin` users are exempt from this rejoin block, and manager removal actions are not rate-limited.
 - Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
+- Manager signup-change notification data now matches the current WeChat template: `thing7` activity name, `phrase1` `加入`/`退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
 
 Current My list behavior:
 
@@ -426,7 +427,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the latest manager-notification template mapping requires uploading `joinActivity` and `cancelRegistration`.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -438,9 +439,9 @@ Continue in this order:
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-   - add the real template ID to local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
+   - keep the real template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
-   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
+   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 14. Add activity-list pagination when activity volume exceeds one returned batch:

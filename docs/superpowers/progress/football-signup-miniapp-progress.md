@@ -401,7 +401,8 @@ The MVP still has known non-blocking gaps:
 - completed in code: organizers/admins can subscribe to activity signup-change notices from Activity Detail
 - completed in code: regular participant self-join and self-cancel send manager notices when managers have accepted the subscription
 - completed in code: organizer/admin self signup, self-cancel, and member removal do not send manager notices
-- pending operation: configure the actual WeChat template ID and verify real-device sends
+- completed in code: manager signup-change notification data now maps to the actual WeChat template fields: `thing7` activity name, `phrase1` join/exit status, `thing5` remark, and `thing6` post-change signup result.
+- pending operation: keep the actual WeChat template ID in local-only config and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 - TODO: after `endAt` passes, show an overdue unresolved state for still-published pending activities and remind organizers to confirm or cancel without automatically confirming
 

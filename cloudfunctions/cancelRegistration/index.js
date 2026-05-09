@@ -87,6 +87,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
             actorOpenId: openid,
             actorName: registrationRes.data.signupName,
             changeType: 'registration_cancelled',
+            joinedCountAfter: Math.max(normalizeCount(activityRes.data.joinedCount) - 1, 0),
+            signupLimitTotal: normalizeCount(activityRes.data.signupLimitTotal),
             stamp
           }
     };

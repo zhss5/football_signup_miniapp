@@ -157,7 +157,8 @@ test('cancelRegistration notifies managers when a regular participant cancels', 
                 status: 'published',
                 signupDeadlineAt: '2026-05-09T19:30:00.000Z',
                 startAt: '2026-05-09T20:00:00.000Z',
-                joinedCount: 1
+                joinedCount: 1,
+                signupLimitTotal: 12
               }
             }),
             update: updateActivity
@@ -219,6 +220,8 @@ test('cancelRegistration notifies managers when a regular participant cancels', 
       actorOpenId: 'openid_player',
       actorName: 'Alex',
       changeType: 'registration_cancelled',
+      joinedCountAfter: 0,
+      signupLimitTotal: 12,
       stamp: '2026-05-09T10:00:00.000Z'
     }),
     expect.any(Object)
