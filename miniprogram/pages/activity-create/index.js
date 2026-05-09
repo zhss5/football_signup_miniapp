@@ -49,6 +49,19 @@ function getImagePaths(result) {
   return [];
 }
 
+function sumTeamCapacity(teams = []) {
+  return teams.reduce((sum, team) => sum + (Number(team.maxMembers) || 0), 0);
+}
+
+function adjustSignupLimitForTeamChange(form, nextTeams) {
+  const currentTotal = Number(form.signupLimitTotal) || 0;
+  const currentTeamSlots = sumTeamCapacity(form.teams);
+  const nextTeamSlots = sumTeamCapacity(nextTeams);
+  const adjustedTotal = currentTotal + nextTeamSlots - currentTeamSlots;
+
+  return Math.max(nextTeamSlots, adjustedTotal);
+}
+
 function openCoverCropper(imagePath) {
   return new Promise((resolve, reject) => {
     wx.navigateTo({
@@ -383,9 +396,11 @@ Page({
   },
 
   onTeamsChange(event) {
+    const teams = Array.isArray(event.detail.teams) ? event.detail.teams : [];
     const form = {
       ...this.data.form,
-      teams: event.detail.teams
+      teams,
+      signupLimitTotal: adjustSignupLimitForTeamChange(this.data.form, teams)
     };
 
     this.syncDerivedState(form);

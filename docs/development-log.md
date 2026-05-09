@@ -1482,6 +1482,26 @@ Verification:
 
 - targeted red/green coverage was added for the Create/Edit WXML `maxlength`, frontend validator, `createActivity`, and `updateActivity`.
 
+## 2026-05-09 - Team Capacity Syncs Total Signup Limit
+
+The Create Activity form now keeps total signup capacity aligned with team changes.
+
+Delivered behavior:
+
+- Adding a team increases `signupLimitTotal` by the new team capacity.
+- Removing a team decreases `signupLimitTotal` by the removed team capacity.
+- Existing extra bench capacity is preserved when team capacity changes.
+- The adjusted total is never allowed below the current regular-team capacity.
+
+Why it matters:
+
+- organizers do not need to manually recalculate the total signup limit after changing the number of teams.
+- the form avoids accidental over-capacity validation errors after adding a team.
+
+Verification:
+
+- targeted red/green coverage was added for Create Activity `onTeamsChange` add/remove behavior.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.

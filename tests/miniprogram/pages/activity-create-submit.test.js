@@ -323,6 +323,96 @@ describe('activity create submit flow', () => {
     ]);
   });
 
+  test('onTeamsChange increases total signup limit when adding a team', () => {
+    const nextTeams = [
+      { teamName: 'Team 1', maxMembers: 12 },
+      { teamName: 'Team 2', maxMembers: 12 }
+    ];
+    const syncDerivedState = jest.fn();
+    const ctx = {
+      data: {
+        form: {
+          signupLimitTotal: 12,
+          teams: [
+            { teamName: 'Team 1', maxMembers: 12 }
+          ]
+        }
+      },
+      syncDerivedState
+    };
+
+    pageConfig.onTeamsChange.call(ctx, {
+      detail: {
+        teams: nextTeams
+      }
+    });
+
+    expect(syncDerivedState).toHaveBeenCalledWith({
+      signupLimitTotal: 24,
+      teams: nextTeams
+    });
+  });
+
+  test('onTeamsChange decreases total signup limit when removing a team', () => {
+    const nextTeams = [
+      { teamName: 'Team 1', maxMembers: 12 }
+    ];
+    const syncDerivedState = jest.fn();
+    const ctx = {
+      data: {
+        form: {
+          signupLimitTotal: 24,
+          teams: [
+            { teamName: 'Team 1', maxMembers: 12 },
+            { teamName: 'Team 2', maxMembers: 12 }
+          ]
+        }
+      },
+      syncDerivedState
+    };
+
+    pageConfig.onTeamsChange.call(ctx, {
+      detail: {
+        teams: nextTeams
+      }
+    });
+
+    expect(syncDerivedState).toHaveBeenCalledWith({
+      signupLimitTotal: 12,
+      teams: nextTeams
+    });
+  });
+
+  test('onTeamsChange preserves existing bench capacity when adding a team', () => {
+    const nextTeams = [
+      { teamName: 'Team 1', maxMembers: 12 },
+      { teamName: 'Team 2', maxMembers: 12 }
+    ];
+    const syncDerivedState = jest.fn();
+    const ctx = {
+      data: {
+        form: {
+          signupLimitTotal: 18,
+          teams: [
+            { teamName: 'Team 1', maxMembers: 12 }
+          ]
+        }
+      },
+      syncDerivedState
+    };
+
+    pageConfig.onTeamsChange.call(ctx, {
+      detail: {
+        teams: nextTeams
+      }
+    });
+
+    expect(syncDerivedState).toHaveBeenCalledWith({
+      signupLimitTotal: 30,
+      teams: nextTeams
+    });
+  });
+
   test('onSubmit blocks users without create permission', async () => {
     const ctx = {
       data: {
