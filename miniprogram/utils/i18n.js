@@ -261,6 +261,7 @@ function translateErrorMessage(error, translate) {
     'Activity is full': 'errors.activityFull',
     'Team is full': 'errors.teamFull',
     'You already joined this activity': 'errors.alreadyJoined',
+    'Please contact the organizer': 'errors.contactOrganizer',
     'No active registration to cancel': 'errors.noActiveRegistration',
     'Signup can no longer be cancelled': 'errors.signupCannotBeCancelled',
     'Only the organizer or an admin can remove registrations': 'errors.removeRegistrationNotAllowed',

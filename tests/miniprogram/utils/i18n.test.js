@@ -2,7 +2,8 @@ const {
   detectSystemLocale,
   getMessages,
   normalizeLocale,
-  t
+  t,
+  translateErrorMessage
 } = require('../../../miniprogram/utils/i18n');
 
 describe('i18n utilities', () => {
@@ -42,5 +43,14 @@ describe('i18n utilities', () => {
     const messages = getMessages('zh-CN');
 
     expect(messages.activity.insurance.copyAction).toBe('\u4fdd\u9669\u8d2d\u4e70\u94fe\u63a5\ud83d\udd17');
+  });
+
+  test('translates the repeat signup block message to Chinese', () => {
+    const message = translateErrorMessage(
+      new Error('Please contact the organizer'),
+      (key, params) => t(key, params, 'zh-CN')
+    );
+
+    expect(message).toBe('\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
   });
 });

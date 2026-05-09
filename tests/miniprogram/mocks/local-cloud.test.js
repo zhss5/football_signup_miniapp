@@ -787,6 +787,69 @@ test('local cloud client lets organizers remove a member and lets the member rej
   });
 });
 
+test('local cloud client asks repeat removed or cancelled participants to contact the organizer', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const teamId = detail.teams[0]._id;
+  const joinPayload = {
+    activityId: created.activityId,
+    teamId,
+    signupName: 'Alex',
+    source: 'share'
+  };
+
+  await participantClient.call('joinActivity', joinPayload);
+  await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: 'openid_player'
+  });
+
+  await participantClient.call('joinActivity', joinPayload);
+  await participantClient.call('cancelRegistration', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', joinPayload);
+  await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: 'openid_player'
+  });
+
+  await expect(participantClient.call('joinActivity', joinPayload)).rejects.toThrow(
+    'Please contact the organizer'
+  );
+});
+
 test('local cloud client blocks regular users from removing members', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

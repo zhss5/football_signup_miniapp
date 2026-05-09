@@ -253,6 +253,7 @@ module.exports = {
     activityFull: 'Activity is full',
     teamFull: 'Team is full',
     alreadyJoined: 'You already joined this activity',
+    contactOrganizer: 'Please contact the organizer',
     noActiveRegistration: 'No active registration to cancel',
     signupCannotBeCancelled: 'Signup can no longer be cancelled',
     removeRegistrationNotAllowed: 'Only the organizer or an admin can remove registrations',

@@ -7,6 +7,11 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+function normalizeCount(value) {
+  const count = Number(value || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
 function validatePayload(event = {}) {
   if (!event.activityId) {
     throw new Error('activityId is required');
@@ -74,6 +79,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         cancelledAt: stamp,
         removedByOpenId: openid,
         removedAt: stamp,
+        removedCount: normalizeCount(registration.removedCount) + 1,
         updatedAt: stamp
       }
     });

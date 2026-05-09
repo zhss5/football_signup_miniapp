@@ -8,6 +8,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const POSITION_VALUES = ['前锋', '中场', '边锋', '后腰', '中卫', '边卫', '门将'];
 const MAX_PREFERRED_POSITIONS = 2;
+const MAX_REPEAT_EXIT_COUNT = 3;
+const CONTACT_ORGANIZER_MESSAGE = 'Please contact the organizer';
 
 function normalizeText(value) {
   return String(value || '').trim();
@@ -15,6 +17,19 @@ function normalizeText(value) {
 
 function normalizeSource(value) {
   return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+function normalizeCount(value) {
+  const count = Number(value || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function getRepeatExitCount(registration) {
+  if (!registration) {
+    return 0;
+  }
+
+  return normalizeCount(registration.cancelCount) + normalizeCount(registration.removedCount);
 }
 
 function normalizePreferredPositions(value) {
@@ -137,6 +152,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('You already joined this activity');
     }
 
+    if (getRepeatExitCount(registrationRes.data) >= MAX_REPEAT_EXIT_COUNT) {
+      throw businessError(CONTACT_ORGANIZER_MESSAGE);
+    }
+
     await syncUserProfile(
       transaction,
       openid,
@@ -162,6 +181,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       preferredPositions,
       source: event.source || 'direct',
       joinedAt: stamp,
+      cancelCount: normalizeCount(registrationRes.data && registrationRes.data.cancelCount),
+      removedCount: normalizeCount(registrationRes.data && registrationRes.data.removedCount),
       updatedAt: stamp
     };
 

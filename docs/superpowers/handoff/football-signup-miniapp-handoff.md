@@ -391,6 +391,7 @@ Current activity experience polish:
 - Activity Detail resolves and renders the detail image gallery below the description, and detail images render without rounded corners.
 - Published activities whose `endAt` has passed now show an explicit red `Expired` / `活动已过期` badge on Home/My activity cards and in the Activity Detail hero.
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
+- Same-activity repeat exits are guarded: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration.
 - Organizer/admin registration-change notifications remain deferred to later phases.
 
 Current My list behavior:
@@ -421,7 +422,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -429,7 +430,7 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
+9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`

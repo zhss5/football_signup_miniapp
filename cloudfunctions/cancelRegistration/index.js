@@ -5,6 +5,11 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+function normalizeCount(value) {
+  const count = Number(value || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
 
@@ -39,6 +44,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         status: 'cancelled',
         cancelledAt: stamp,
+        cancelCount: normalizeCount(registrationRes.data.cancelCount) + 1,
         updatedAt: stamp
       }
     });

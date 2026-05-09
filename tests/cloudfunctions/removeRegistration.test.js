@@ -98,6 +98,7 @@ test('removeRegistration lets the organizer soft-remove a joined member and decr
       cancelledAt: stamp,
       removedByOpenId: 'openid_owner',
       removedAt: stamp,
+      removedCount: 1,
       updatedAt: stamp
     }
   });

@@ -369,6 +369,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: let organizers sign up participants on their behalf
 - completed in code: let organizers copy active participant names and preferred positions in one action
 - completed in code: move players between teams
+- completed in code: block same-user same-activity rejoin after three combined self-cancellations or organizer removals
 - promote bench players into regular teams
 - completed in code: move the proxy-signup action into the selected team's header row
 - improve remaining organizer action grouping on the detail page

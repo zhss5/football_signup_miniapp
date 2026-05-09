@@ -1677,3 +1677,31 @@ Verification:
 
 - targeted template/style coverage was updated for the stamp structure and visual treatment.
 - full regression suite passed: `56` test suites, `363` tests.
+
+## 2026-05-09 - Repeat Signup Abuse Guard
+
+Same-activity repeat signup is now capped after repeated exits by the same WeChat user.
+
+Delivered behavior:
+
+- `cancelRegistration` increments `cancelCount` on the user's same activity registration record.
+- `removeRegistration` increments `removedCount` when an organizer/admin removes a joined member.
+- `joinActivity` rejects another signup when `cancelCount + removedCount >= 3` for that same activity/user registration.
+- the mini program maps the backend message `Please contact the organizer` to `请联系组织者` in Chinese UI.
+- the local mock mirrors the CloudBase behavior so DevTools and real cloud tests stay aligned.
+
+Why it matters:
+
+- normal users can still cancel/rejoin a small number of times.
+- repeated self-cancellation or organizer removal no longer allows unlimited re-entry into the same activity.
+- the rule is scoped to one activity and one WeChat OpenID; other activities are unaffected.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `joinActivity`, `cancelRegistration`, and `removeRegistration`.
+- upload a new mini program frontend build so the translated toast is available.
+
+Verification:
+
+- targeted red/green coverage was added for CloudBase join/cancel/remove functions, local mock behavior, and i18n translation.
+- full regression suite passed: `56` test suites, `367` tests.

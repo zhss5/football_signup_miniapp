@@ -9,6 +9,9 @@ const { normalizeSignupName } = require('../utils/signup-name');
 const { isTeamColorKey, normalizeTeamColorKey } = require('../utils/team-colors');
 const { validateActivityDraft } = require('../utils/validators');
 
+const MAX_REPEAT_EXIT_COUNT = 3;
+const CONTACT_ORGANIZER_MESSAGE = 'Please contact the organizer';
+
 function validateSignupPayload(payload) {
   if (!payload.activityId) {
     throw new Error('activityId is required');
@@ -27,6 +30,19 @@ function validateSignupPayload(payload) {
 
 function normalizeSource(value) {
   return value === 'wechat' ? 'wechat' : 'manual';
+}
+
+function normalizeCount(value) {
+  const count = Number(value || 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function getRepeatExitCount(registration) {
+  if (!registration) {
+    return 0;
+  }
+
+  return normalizeCount(registration.cancelCount) + normalizeCount(registration.removedCount);
 }
 
 function validatePreferredPositions(value) {
@@ -581,6 +597,10 @@ function createLocalCloudClient(options = {}) {
       throw new Error('You already joined this activity');
     }
 
+    if (getRepeatExitCount(current) >= MAX_REPEAT_EXIT_COUNT) {
+      throw new Error(CONTACT_ORGANIZER_MESSAGE);
+    }
+
     const user = ensureUserInState(state, openid, stamp);
     user.preferredName = signupName;
     if (avatarUrl) {
@@ -608,6 +628,8 @@ function createLocalCloudClient(options = {}) {
       source: payload.source || 'direct',
       joinedAt: stamp,
       cancelledAt: current ? current.cancelledAt || '' : '',
+      cancelCount: normalizeCount(current && current.cancelCount),
+      removedCount: normalizeCount(current && current.removedCount),
       updatedAt: stamp
     };
 
@@ -742,6 +764,7 @@ function createLocalCloudClient(options = {}) {
 
     current.status = 'cancelled';
     current.cancelledAt = stamp;
+    current.cancelCount = normalizeCount(current.cancelCount) + 1;
     current.updatedAt = stamp;
     activity.joinedCount = Math.max(activity.joinedCount - 1, 0);
     activity.updatedAt = stamp;
@@ -790,6 +813,7 @@ function createLocalCloudClient(options = {}) {
     current.cancelledAt = stamp;
     current.removedByOpenId = openid;
     current.removedAt = stamp;
+    current.removedCount = normalizeCount(current.removedCount) + 1;
     current.updatedAt = stamp;
 
     activity.joinedCount = Math.max(Number(activity.joinedCount || 0) - 1, 0);
