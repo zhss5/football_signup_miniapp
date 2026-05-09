@@ -5,21 +5,26 @@ const {
   normalizeTeamColorKey
 } = require('../../../miniprogram/utils/team-colors');
 
-test('cycles team colors green white red blue black yellow', () => {
-  expect(Array.from({ length: 8 }, (_, index) => getDefaultTeamColorKey(index))).toEqual([
+test('cycles common kit colors green white red blue black yellow orange purple gray pink', () => {
+  expect(Array.from({ length: 12 }, (_, index) => getDefaultTeamColorKey(index))).toEqual([
     'green',
     'white',
     'red',
     'blue',
     'black',
     'yellow',
+    'orange',
+    'purple',
+    'gray',
+    'pink',
     'green',
     'white'
   ]);
 });
 
 test('normalizes unsupported team colors to the index default', () => {
-  expect(normalizeTeamColorKey('purple', 2)).toBe('red');
+  expect(normalizeTeamColorKey('teal', 2)).toBe('red');
+  expect(normalizeTeamColorKey('purple', 2)).toBe('purple');
   expect(normalizeTeamColorKey('blue', 2)).toBe('blue');
 });
 
@@ -33,5 +38,9 @@ test('exposes readable palette options', () => {
   expect(getTeamColorOption('white')).toMatchObject({
     key: 'white',
     requiresBorder: true
+  });
+  expect(getTeamColorOption('pink')).toMatchObject({
+    key: 'pink',
+    labelKey: 'teamColors.pink'
   });
 });

@@ -95,7 +95,21 @@ describe('activity detail page', () => {
 
   test('onTeamColorTap lets managers choose a color and reloads detail', async () => {
     updateTeamColor.mockResolvedValue({ updated: true });
-    global.wx.showActionSheet = jest.fn(({ success }) => success({ tapIndex: 2 }));
+    global.wx.showActionSheet = jest.fn(({ itemList, success }) => {
+      expect(itemList).toEqual([
+        'Green',
+        'White',
+        'Red',
+        'Blue',
+        'Black',
+        'Yellow',
+        'Orange',
+        'Purple',
+        'Gray',
+        'Pink'
+      ]);
+      success({ tapIndex: 6 });
+    });
 
     const ctx = {
       data: {
@@ -120,7 +134,7 @@ describe('activity detail page', () => {
       }
     });
 
-    expect(updateTeamColor).toHaveBeenCalledWith('activity_123', 'team_white', 'red');
+    expect(updateTeamColor).toHaveBeenCalledWith('activity_123', 'team_white', 'orange');
     expect(ctx.reload).toHaveBeenCalled();
   });
 

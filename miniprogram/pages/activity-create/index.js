@@ -13,6 +13,7 @@ const {
   summarizeTeamSlots
 } = require('../../utils/activity-draft');
 const { validateActivityDraft } = require('../../utils/validators');
+const { TEAM_COLOR_OPTIONS } = require('../../utils/team-colors');
 const {
   getAppLocale,
   getMessages,
@@ -229,7 +230,8 @@ Page({
         addTeam: i18n.teamEditor.addTeam,
         remove: i18n.teamEditor.remove,
         upToTeams: translate('teamEditor.upToTeams', { count: MAX_TEAMS }),
-        teamNamePrefix: i18n.teamEditor.teamNamePrefix
+        teamNamePrefix: i18n.teamEditor.teamNamePrefix,
+        colorOptions: TEAM_COLOR_OPTIONS.map(option => translate(option.labelKey))
       }
     });
     this.syncDerivedState(form, translate);

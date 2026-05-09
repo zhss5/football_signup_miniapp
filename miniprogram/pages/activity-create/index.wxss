@@ -94,7 +94,7 @@
 .image-preview-frame {
   position: relative;
   width: 100%;
-  padding-top: 50%;
+  padding-top: 80%;
   border-radius: 24rpx;
   overflow: hidden;
   background: #f3f4f6;

@@ -4,7 +4,11 @@ const TEAM_COLOR_OPTIONS = [
   { key: 'red', labelKey: 'teamColors.red', className: 'team-color-red', requiresBorder: false },
   { key: 'blue', labelKey: 'teamColors.blue', className: 'team-color-blue', requiresBorder: false },
   { key: 'black', labelKey: 'teamColors.black', className: 'team-color-black', requiresBorder: false },
-  { key: 'yellow', labelKey: 'teamColors.yellow', className: 'team-color-yellow', requiresBorder: true }
+  { key: 'yellow', labelKey: 'teamColors.yellow', className: 'team-color-yellow', requiresBorder: true },
+  { key: 'orange', labelKey: 'teamColors.orange', className: 'team-color-orange', requiresBorder: false },
+  { key: 'purple', labelKey: 'teamColors.purple', className: 'team-color-purple', requiresBorder: false },
+  { key: 'gray', labelKey: 'teamColors.gray', className: 'team-color-gray', requiresBorder: true },
+  { key: 'pink', labelKey: 'teamColors.pink', className: 'team-color-pink', requiresBorder: true }
 ];
 
 const TEAM_COLOR_KEYS = TEAM_COLOR_OPTIONS.map(item => item.key);

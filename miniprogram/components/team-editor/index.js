@@ -1,6 +1,32 @@
 const { MAX_TEAMS } = require('../../utils/constants');
 const { TEAM_COLOR_OPTIONS, normalizeTeamColorKey } = require('../../utils/team-colors');
 
+function buildColorLabels(labels = {}) {
+  if (
+    Array.isArray(labels.colorOptions) &&
+    labels.colorOptions.length === TEAM_COLOR_OPTIONS.length
+  ) {
+    return labels.colorOptions;
+  }
+
+  return TEAM_COLOR_OPTIONS.map(option => option.key);
+}
+
+function chooseColorIndex(itemList, fallbackIndex) {
+  return new Promise(resolve => {
+    if (typeof wx === 'undefined' || typeof wx.showActionSheet !== 'function') {
+      resolve(fallbackIndex);
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList,
+      success: result => resolve(Number(result.tapIndex)),
+      fail: () => resolve(-1)
+    });
+  });
+}
+
 function buildDefaultTeam(index, maxMembers = 0) {
   return {
     teamName: `Team ${index + 1}`,
@@ -71,7 +97,7 @@ Component({
       this.emitTeams(teams);
     },
 
-    onTeamColorTap(event) {
+    async onTeamColorTap(event) {
       const index = Number(event.currentTarget.dataset.index);
       const currentTeam = this.properties.teams[index];
 
@@ -81,12 +107,22 @@ Component({
 
       const currentKey = normalizeTeamColorKey(currentTeam.colorKey, index);
       const currentOptionIndex = TEAM_COLOR_OPTIONS.findIndex(item => item.key === currentKey);
-      const nextOption = TEAM_COLOR_OPTIONS[(currentOptionIndex + 1) % TEAM_COLOR_OPTIONS.length];
+      const fallbackIndex = (currentOptionIndex + 1) % TEAM_COLOR_OPTIONS.length;
+      const selectedIndex = await chooseColorIndex(
+        buildColorLabels(this.properties.labels),
+        fallbackIndex
+      );
+      const selectedOption = TEAM_COLOR_OPTIONS[selectedIndex];
+
+      if (!selectedOption) {
+        return;
+      }
+
       const teams = this.properties.teams.map((team, currentIndex) =>
         currentIndex === index
           ? {
               ...team,
-              colorKey: nextOption.key
+              colorKey: selectedOption.key
             }
           : team
       );

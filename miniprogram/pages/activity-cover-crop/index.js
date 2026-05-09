@@ -235,11 +235,6 @@ Page({
           });
 
           context.clearRect(0, 0, SHARE_OUTPUT_WIDTH, SHARE_OUTPUT_HEIGHT);
-          context.setFillStyle('#f3f6fa');
-          context.fillRect(0, 0, SHARE_OUTPUT_WIDTH, SHARE_OUTPUT_HEIGHT);
-          const shareCoverWidth = SHARE_OUTPUT_WIDTH;
-          const shareCoverHeight = SHARE_OUTPUT_WIDTH / 2;
-          const shareCoverTop = Math.round((SHARE_OUTPUT_HEIGHT - shareCoverHeight) / 2);
           context.drawImage(
             imagePath,
             cropRect.x,
@@ -247,9 +242,9 @@ Page({
             cropRect.width,
             cropRect.height,
             0,
-            shareCoverTop,
-            shareCoverWidth,
-            shareCoverHeight
+            0,
+            SHARE_OUTPUT_WIDTH,
+            SHARE_OUTPUT_HEIGHT
           );
           context.draw(false, async () => {
             try {

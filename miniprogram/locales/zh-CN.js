@@ -29,7 +29,11 @@ module.exports = {
     red: '\u7ea2\u8272',
     blue: '\u84dd\u8272',
     black: '\u9ed1\u8272',
-    yellow: '\u9ec4\u8272'
+    yellow: '\u9ec4\u8272',
+    orange: '\u6a59\u8272',
+    purple: '\u7d2b\u8272',
+    gray: '\u7070\u8272',
+    pink: '\u7c89\u8272'
   },
   activityCard: {
     start: '开始时间：{{value}}',
@@ -102,7 +106,7 @@ module.exports = {
     description: '活动说明',
     descriptionPlaceholder: '活动说明',
     activityImage: '活动图片',
-    imageHint: '当前支持 {{count}} 张图片。上传后会裁剪为首页和详情页共用的 2:1 封面比例，数据模型已预留后续多图扩展。',
+    imageHint: '当前支持 {{count}} 张图片。上传后会裁剪为首页、详情页和微信转发共用的 5:4 封面比例，数据模型已预留后续多图扩展。',
     replaceImage: '重新选择图片',
     chooseAndCropImage: '选择并裁剪图片',
     removeImage: '移除图片',
@@ -132,7 +136,7 @@ module.exports = {
   },
   coverCrop: {
     title: '裁剪封面',
-    hint: '下方会完整显示原图，高亮的 2:1 取景框就是首页和活动详情页最终展示的封面范围。',
+    hint: '下方会完整显示原图，高亮的 5:4 取景框就是首页、活动详情页和微信转发使用的封面范围。',
     loading: '正在准备裁剪器...',
     controls: {
       zoom: '缩放',

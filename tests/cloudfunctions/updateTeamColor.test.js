@@ -50,7 +50,7 @@ test('updateTeamColor lets the organizer update one active team color', async ()
   });
 });
 
-test('updateTeamColor rejects unsupported colors', async () => {
+test('updateTeamColor accepts expanded common kit colors', async () => {
   const db = createFakeDb({
     activity: { _id: 'activity_1', organizerOpenId: 'openid_owner', status: 'published' },
     team: { _id: 'team_1', activityId: 'activity_1', status: 'active' },
@@ -60,6 +60,34 @@ test('updateTeamColor rejects unsupported colors', async () => {
   await expect(
     updateTeamColor.main(
       { activityId: 'activity_1', teamId: 'team_1', colorKey: 'purple' },
+      { OPENID: 'openid_owner' },
+      { db, now: '2026-05-09T10:05:00.000Z' }
+    )
+  ).resolves.toEqual({
+    activityId: 'activity_1',
+    teamId: 'team_1',
+    colorKey: 'purple',
+    updated: true
+  });
+
+  expect(db.update).toHaveBeenCalledWith({
+    data: {
+      colorKey: 'purple',
+      updatedAt: '2026-05-09T10:05:00.000Z'
+    }
+  });
+});
+
+test('updateTeamColor rejects unsupported colors', async () => {
+  const db = createFakeDb({
+    activity: { _id: 'activity_1', organizerOpenId: 'openid_owner', status: 'published' },
+    team: { _id: 'team_1', activityId: 'activity_1', status: 'active' },
+    user: { roles: ['user'] }
+  });
+
+  await expect(
+    updateTeamColor.main(
+      { activityId: 'activity_1', teamId: 'team_1', colorKey: 'teal' },
       { OPENID: 'openid_owner' },
       { db }
     )

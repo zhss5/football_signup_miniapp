@@ -4,6 +4,8 @@ const {
   COVER_OUTPUT_HEIGHT,
   COVER_OUTPUT_QUALITY,
   COVER_OUTPUT_WIDTH,
+  SHARE_OUTPUT_HEIGHT,
+  SHARE_OUTPUT_WIDTH,
   COVER_THUMB_OUTPUT_HEIGHT,
   COVER_THUMB_OUTPUT_QUALITY,
   COVER_THUMB_OUTPUT_WIDTH
@@ -43,6 +45,13 @@ describe('activity cover crop flow', () => {
     expect(COVER_OUTPUT_QUALITY).toBeLessThanOrEqual(0.8);
     expect(pageJs).toContain('quality: COVER_OUTPUT_QUALITY');
     expect(pageJs).toContain("fileType: 'jpg'");
+  });
+
+  test('exports the cover and share image in the same 5:4 ratio', () => {
+    expect(COVER_OUTPUT_WIDTH / COVER_OUTPUT_HEIGHT).toBeCloseTo(1.25, 5);
+    expect(SHARE_OUTPUT_WIDTH / SHARE_OUTPUT_HEIGHT).toBeCloseTo(1.25, 5);
+    expect(COVER_OUTPUT_WIDTH).toBe(SHARE_OUTPUT_WIDTH);
+    expect(COVER_OUTPUT_HEIGHT).toBe(SHARE_OUTPUT_HEIGHT);
   });
 
   test('exports a smaller compressed thumbnail together with the cover image', () => {

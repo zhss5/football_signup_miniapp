@@ -1,4 +1,15 @@
-const TEAM_COLOR_KEYS = ['green', 'white', 'red', 'blue', 'black', 'yellow'];
+const TEAM_COLOR_KEYS = [
+  'green',
+  'white',
+  'red',
+  'blue',
+  'black',
+  'yellow',
+  'orange',
+  'purple',
+  'gray',
+  'pink'
+];
 
 function getDefaultTeamColorKey(index = 0) {
   const safeIndex = Math.max(Number(index) || 0, 0);

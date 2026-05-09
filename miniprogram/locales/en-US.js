@@ -28,7 +28,11 @@ module.exports = {
     red: 'Red',
     blue: 'Blue',
     black: 'Black',
-    yellow: 'Yellow'
+    yellow: 'Yellow',
+    orange: 'Orange',
+    purple: 'Purple',
+    gray: 'Gray',
+    pink: 'Pink'
   },
   activityCard: {
     start: 'Start: {{value}}',
@@ -108,7 +112,7 @@ module.exports = {
     descriptionPlaceholder: 'Description',
     activityImage: 'Activity image',
     imageHint:
-      'Currently supports {{count}} image. It will be cropped to the shared 2:1 cover frame used on Home and Activity Detail. The data model already reserves imageList for future multi-image support.',
+      'Currently supports {{count}} image. It will be cropped to the shared 5:4 cover frame used on Home, Activity Detail, and WeChat shares. The data model already reserves imageList for future multi-image support.',
     replaceImage: 'Replace image',
     chooseAndCropImage: 'Choose and crop image',
     removeImage: 'Remove image',
@@ -138,7 +142,7 @@ module.exports = {
   },
   coverCrop: {
     title: 'Adjust Cover',
-    hint: 'The full image stays visible below. The highlighted 2:1 frame is the final cover that will be shown on Home and Activity Detail.',
+    hint: 'The full image stays visible below. The highlighted 5:4 frame is the final cover used on Home, Activity Detail, and WeChat shares.',
     loading: 'Preparing cropper...',
     controls: {
       zoom: 'Zoom',

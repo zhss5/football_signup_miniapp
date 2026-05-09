@@ -1405,6 +1405,29 @@ Verification:
 - targeted red/green coverage was added for Home empty state, team colors, manager color editing, and share-safe image handling.
 - full regression verification is recorded with the implementation branch.
 
+## 2026-05-09 - Expanded Team Colors And 5:4 Covers
+
+Team colors and cover framing were adjusted after real WeChat share-card review.
+
+Delivered behavior:
+
+- Team colors now use ten common kit colors: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
+- Newly added teams still receive default colors by sequence; the sequence now wraps after the tenth color.
+- The create-activity team editor opens a preset color palette instead of only cycling to the next color.
+- Organizer/admin team-color editing on Activity Detail uses the same ten-color palette.
+- Activity cover upload, Home cards, Activity Detail, thumbnails, and share images now use a shared `5:4` frame.
+- The previous extra padded share image is no longer needed because the primary cover crop already matches the WeChat share-card ratio.
+
+Deployment notes:
+
+- Run `npm run copy:cloud-shared` before deploying cloud functions.
+- Redeploy `createActivity`, `updateActivity`, and `updateTeamColor` so CloudBase accepts and stores the expanded color keys.
+- Upload a new mini program build so the `5:4` cropper and updated palette are available on devices.
+
+Verification:
+
+- targeted red/green coverage was updated for team-color utilities, team editor palette selection, Activity Detail manager color editing, `updateTeamColor`, cover-ratio styles, crop math, and crop export dimensions.
+
 ## 2026-05-03 - My Active Filter Excludes Expired Activities
 
 The My page no longer shows expired created activities under the Active / Published filter.

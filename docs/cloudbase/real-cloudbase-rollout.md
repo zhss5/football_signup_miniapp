@@ -103,6 +103,11 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 
 The deployment output should show `success: true` for each function.
 
+Current deployment notes:
+
+- `createActivity`, `updateActivity`, and `updateTeamColor` must be deployed together after running `npm run copy:cloud-shared`; they share the ten-color team palette: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
+- The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
+
 ## Database Setup
 
 The runtime expects these collections:

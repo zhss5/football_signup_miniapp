@@ -45,6 +45,6 @@
   <canvas
     canvas-id="coverCropCanvas"
     class="hidden-canvas"
-    style="width: {{1200}}px; height: {{800}}px;"
+    style="width: {{1000}}px; height: {{800}}px;"
   ></canvas>
 </view>

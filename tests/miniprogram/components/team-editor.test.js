@@ -10,7 +10,8 @@ describe('team editor minimum team count', () => {
       componentConfig = config;
     });
     global.wx = {
-      showToast: jest.fn()
+      showToast: jest.fn(),
+      showActionSheet: jest.fn()
     };
 
     jest.resetModules();
@@ -54,8 +55,23 @@ describe('team editor minimum team count', () => {
     expect(wxml).toContain('data-field="colorKey"');
   });
 
-  test('cycles the selected team color when the color chip is tapped', () => {
+  test('opens a ten-color palette when the color chip is tapped', async () => {
     const triggerEvent = jest.fn();
+    global.wx.showActionSheet.mockImplementation(({ itemList, success }) => {
+      expect(itemList).toEqual([
+        'Green',
+        'White',
+        'Red',
+        'Blue',
+        'Black',
+        'Yellow',
+        'Orange',
+        'Purple',
+        'Gray',
+        'Pink'
+      ]);
+      success({ tapIndex: 6 });
+    });
     const ctx = {
       properties: {
         teams: [
@@ -64,13 +80,27 @@ describe('team editor minimum team count', () => {
             maxMembers: 8,
             colorKey: 'green'
           }
-        ]
+        ],
+        labels: {
+          colorOptions: [
+            'Green',
+            'White',
+            'Red',
+            'Blue',
+            'Black',
+            'Yellow',
+            'Orange',
+            'Purple',
+            'Gray',
+            'Pink'
+          ]
+        }
       },
       triggerEvent,
       emitTeams: componentConfig.methods.emitTeams
     };
 
-    componentConfig.methods.onTeamColorTap.call(ctx, {
+    await componentConfig.methods.onTeamColorTap.call(ctx, {
       currentTarget: {
         dataset: {
           index: 0
@@ -80,13 +110,14 @@ describe('team editor minimum team count', () => {
 
     expect(triggerEvent).toHaveBeenCalledWith('change', {
       teams: [
-        {
-          teamName: 'White',
-          maxMembers: 8,
-          colorKey: 'white'
-        }
-      ]
-    });
+          {
+            teamName: 'White',
+            maxMembers: 8,
+            colorKey: 'orange'
+          }
+        ]
+      });
+    expect(global.wx.showActionSheet).toHaveBeenCalled();
   });
 
   test('assigns the next default color when adding a team', () => {

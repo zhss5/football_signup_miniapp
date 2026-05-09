@@ -64,6 +64,24 @@
   border-color: #d97706;
 }
 
+.team-color-orange {
+  background: #f97316;
+}
+
+.team-color-purple {
+  background: #7c3aed;
+}
+
+.team-color-gray {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.team-color-pink {
+  background: #f9a8d4;
+  border-color: #db2777;
+}
+
 .team-capacity {
   flex: 0 0 116rpx;
   text-align: center;

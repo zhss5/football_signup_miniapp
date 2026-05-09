@@ -374,7 +374,10 @@ Current activity experience polish:
 
 - Activity sharing uses `shareImage` / `shareDisplayImage` before falling back to cover display images.
 - New cover uploads create separate cover, thumbnail, and share-card-safe image assets.
+- Cover upload, Home cards, Activity Detail, thumbnails, and share images now use a shared `5:4` frame for WeChat share-card compatibility.
 - Teams have semantic color keys and historical fallback colors by sort order.
+- Team color keys now cover ten common kit colors: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
+- The create-activity team editor and Activity Detail manager flow both use the same preset color palette.
 - Organizers/admins can update team colors from Activity Detail through `updateTeamColor`.
 - Detail gallery images and organizer/admin registration-change notifications remain deferred to later phases.
 
@@ -414,7 +417,7 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate cover image loading, sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, and organizer team reassignment after CloudBase deployment.
+9. Validate `5:4` cover image loading, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
