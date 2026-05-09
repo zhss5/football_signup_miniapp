@@ -3,7 +3,16 @@
     <view class="team-card">
       <view class="team-head">
         <view class="team-title-row">
-          <text class="team-name">{{item.teamName}}</text>
+          <button
+            class="team-color-chip {{item.teamColorClass}}"
+            data-team-id="{{item._id}}"
+            bindtap="onTeamColorTap"
+          ></button>
+          <text
+            class="team-name {{item.teamColorClass}}-text"
+            data-team-id="{{item._id}}"
+            bindtap="onTeamColorTap"
+          >{{item.teamName}}</text>
           <button
             wx:if="{{item.canProxySignup}}"
             class="proxy-signup-button"

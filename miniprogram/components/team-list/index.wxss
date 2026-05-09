@@ -30,6 +30,73 @@
   font-weight: 700;
 }
 
+.team-color-chip {
+  flex: 0 0 32rpx;
+  width: 32rpx;
+  height: 32rpx;
+  min-width: 32rpx;
+  margin: 0;
+  padding: 0;
+  border: 2rpx solid transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  line-height: 32rpx;
+}
+
+.team-color-chip::after {
+  border: none;
+}
+
+.team-color-green {
+  background: #16a34a;
+}
+
+.team-color-white {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.team-color-red {
+  background: #dc2626;
+}
+
+.team-color-blue {
+  background: #2563eb;
+}
+
+.team-color-black {
+  background: #111827;
+}
+
+.team-color-yellow {
+  background: #facc15;
+  border-color: #d97706;
+}
+
+.team-color-green-text {
+  color: #166534;
+}
+
+.team-color-white-text {
+  color: #334155;
+}
+
+.team-color-red-text {
+  color: #991b1b;
+}
+
+.team-color-blue-text {
+  color: #1d4ed8;
+}
+
+.team-color-black-text {
+  color: #111827;
+}
+
+.team-color-yellow-text {
+  color: #92400e;
+}
+
 .team-count {
   flex: 0 0 auto;
 }

@@ -33,6 +33,12 @@ Component({
       });
     },
 
+    onTeamColorTap(event) {
+      this.triggerEvent('teamcolortap', {
+        teamId: event.currentTarget.dataset.teamId
+      });
+    },
+
     onMemberActionTap(event) {
       const dataset = event.currentTarget.dataset;
       const eventNameByAction = {

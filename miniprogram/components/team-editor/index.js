@@ -1,9 +1,11 @@
 const { MAX_TEAMS } = require('../../utils/constants');
+const { TEAM_COLOR_OPTIONS, normalizeTeamColorKey } = require('../../utils/team-colors');
 
 function buildDefaultTeam(index, maxMembers = 0) {
   return {
     teamName: `Team ${index + 1}`,
-    maxMembers
+    maxMembers,
+    colorKey: normalizeTeamColorKey('', index)
   };
 }
 
@@ -66,6 +68,29 @@ Component({
           teamName: prefix ? `${prefix}${this.properties.teams.length + 1}` : defaultTeam.teamName
         }
       ];
+      this.emitTeams(teams);
+    },
+
+    onTeamColorTap(event) {
+      const index = Number(event.currentTarget.dataset.index);
+      const currentTeam = this.properties.teams[index];
+
+      if (!currentTeam) {
+        return;
+      }
+
+      const currentKey = normalizeTeamColorKey(currentTeam.colorKey, index);
+      const currentOptionIndex = TEAM_COLOR_OPTIONS.findIndex(item => item.key === currentKey);
+      const nextOption = TEAM_COLOR_OPTIONS[(currentOptionIndex + 1) % TEAM_COLOR_OPTIONS.length];
+      const teams = this.properties.teams.map((team, currentIndex) =>
+        currentIndex === index
+          ? {
+              ...team,
+              colorKey: nextOption.key
+            }
+          : team
+      );
+
       this.emitTeams(teams);
     },
 

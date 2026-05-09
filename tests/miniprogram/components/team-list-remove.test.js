@@ -47,7 +47,7 @@ describe('team-list member removal', () => {
     const titleRowBlock = titleRowMatch ? titleRowMatch[0] : '';
 
     expect(titleRowMatch).not.toBeNull();
-    expect(titleRowBlock).toContain('class="team-name"');
+    expect(titleRowBlock).toContain('class="team-name {{item.teamColorClass}}-text"');
     expect(titleRowBlock).toContain('class="proxy-signup-button"');
     expect(wxss).toContain('.team-title-row');
     expect(wxss).toMatch(/\.proxy-signup-button\s*{[^}]*height:\s*56rpx;/);
@@ -114,6 +114,16 @@ describe('team-list member removal', () => {
     expect(teamNameWeightMatch).not.toBeNull();
     expect(memberNameWeightMatch).not.toBeNull();
     expect(Number(teamNameWeightMatch[1])).toBeGreaterThan(Number(memberNameWeightMatch[1]));
+  });
+
+  test('team list renders team names with color styling', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('team-color-chip');
+    expect(wxml).toContain('{{item.teamColorClass}}');
   });
 
   test('renders manager move member controls', () => {

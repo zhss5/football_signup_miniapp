@@ -44,6 +44,88 @@ describe('team editor minimum team count', () => {
     expect(wxss).toMatch(/\.remove-button\s*{[^}]*flex:/);
   });
 
+  test('renders a team color chip in the team editor row', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-editor/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('class="team-color-chip');
+    expect(wxml).toContain('data-field="colorKey"');
+  });
+
+  test('cycles the selected team color when the color chip is tapped', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      properties: {
+        teams: [
+          {
+            teamName: 'White',
+            maxMembers: 8,
+            colorKey: 'green'
+          }
+        ]
+      },
+      triggerEvent,
+      emitTeams: componentConfig.methods.emitTeams
+    };
+
+    componentConfig.methods.onTeamColorTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          index: 0
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('change', {
+      teams: [
+        {
+          teamName: 'White',
+          maxMembers: 8,
+          colorKey: 'white'
+        }
+      ]
+    });
+  });
+
+  test('assigns the next default color when adding a team', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      properties: {
+        teams: [
+          {
+            teamName: 'Team 1',
+            maxMembers: 8,
+            colorKey: 'green'
+          }
+        ],
+        labels: {
+          teamNamePrefix: 'Team '
+        }
+      },
+      triggerEvent,
+      emitTeams: componentConfig.methods.emitTeams
+    };
+
+    componentConfig.methods.onAddTeam.call(ctx);
+
+    expect(triggerEvent).toHaveBeenCalledWith('change', {
+      teams: [
+        {
+          teamName: 'Team 1',
+          maxMembers: 8,
+          colorKey: 'green'
+        },
+        {
+          teamName: 'Team 2',
+          maxMembers: 8,
+          colorKey: 'white'
+        }
+      ]
+    });
+  });
+
   test('does not remove the final remaining team', () => {
     const triggerEvent = jest.fn();
     const ctx = {
@@ -97,7 +179,8 @@ describe('team editor minimum team count', () => {
         },
         {
           teamName: '队伍2',
-          maxMembers: 8
+          maxMembers: 8,
+          colorKey: 'white'
         }
       ]
     });

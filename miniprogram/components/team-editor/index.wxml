@@ -2,6 +2,12 @@
   <block wx:for="{{teams}}" wx:key="index">
     <view class="team-row">
       <view class="team-fields">
+        <button
+          class="team-color-chip team-color-{{item.colorKey || 'green'}}"
+          data-index="{{index}}"
+          data-field="colorKey"
+          bindtap="onTeamColorTap"
+        ></button>
         <input
           class="team-input"
           value="{{item.teamName}}"

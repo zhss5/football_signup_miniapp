@@ -158,6 +158,41 @@ test('buildTeamListVm exposes a compact join action only while a team can be joi
   });
 });
 
+test('buildTeamListVm exposes team color display fields with fallback by sort order', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_one',
+        teamName: 'Team 1',
+        sort: 0,
+        colorKey: 'green',
+        joinedCount: 0,
+        maxMembers: 12,
+        members: []
+      },
+      {
+        _id: 'team_two',
+        teamName: 'Team 2',
+        sort: 1,
+        joinedCount: 0,
+        maxMembers: 12,
+        members: []
+      }
+    ],
+    null,
+    { status: 'published' }
+  );
+
+  expect(teams[0]).toMatchObject({
+    teamColorKey: 'green',
+    teamColorClass: 'team-color-green'
+  });
+  expect(teams[1]).toMatchObject({
+    teamColorKey: 'white',
+    teamColorClass: 'team-color-white'
+  });
+});
+
 test('buildTeamListVm marks the current user member row with cancel signup action', () => {
   const teams = buildTeamListVm(
     [

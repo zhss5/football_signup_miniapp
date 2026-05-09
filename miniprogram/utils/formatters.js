@@ -1,5 +1,6 @@
 const DEFAULT_MEMBER_AVATAR_TEXT = '#';
 const { t: translateText } = require('./i18n');
+const { getTeamColorOption } = require('./team-colors');
 
 function resolveNow(nowProvider) {
   return typeof nowProvider === 'function' ? nowProvider() : Date.now();
@@ -130,7 +131,8 @@ function buildTeamListVm(
     translate
   };
 
-  return teams.map(team => {
+  return teams.map((team, index) => {
+    const colorOption = getTeamColorOption(team.colorKey, index);
     const isFull = Number(team.joinedCount) >= Number(team.maxMembers);
     let joinDisabled = !signupState.joinEnabled || isFull;
     let joinButtonText = signupState.joinEnabled
@@ -153,6 +155,9 @@ function buildTeamListVm(
 
     return {
       ...team,
+      teamColorKey: colorOption.key,
+      teamColorClass: colorOption.className,
+      teamColorRequiresBorder: colorOption.requiresBorder,
       joinDisabled,
       joinButtonText,
       joinActionVisible,
