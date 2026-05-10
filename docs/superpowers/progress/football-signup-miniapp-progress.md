@@ -235,6 +235,8 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - cancellation notices keep the default cancellation reminder text instead of reusing the confirmation reminder
 - the new `notifyActivityParticipants` cloud function logs per-recipient results in `notification_logs` and skips duplicate sends for the same recipient/type
 - local mock mode implements the same subscription and notification summary behavior
+- organizer/admin signup-notification subscription state is returned by `getActivityDetail`
+- the Activity Detail manager subscription action disables and greys out after the manager has an accepted subscription for the current activity
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -270,8 +272,8 @@ The current implementation differs from the original early MVP assumptions in th
 Latest verified test result:
 
 - command: `npm test -- --runInBand`
-- result: `52` test suites passed
-- result: `297` tests passed
+- result: `57` test suites passed
+- result: `383` tests passed
 
 Covered areas include:
 
@@ -306,6 +308,7 @@ Covered areas include:
 - one-team default activity setup behavior
 - optional insurance-link create/edit/detail web-view opening behavior
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
+- manager signup-notification subscription state across CloudBase detail, local mock detail, and Activity Detail UI
 - cancelled activity confirmation-banner suppression
 - notification reminder persistence and confirmation-message reminder behavior
 - real-device subscription prompt timing and cover-image fallback candidates
@@ -402,6 +405,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: regular participant self-join and self-cancel send manager notices when managers have accepted the subscription
 - completed in code: organizer/admin self signup, self-cancel, and member removal do not send manager notices
 - completed in code: manager signup-change notification data now maps to the actual WeChat template fields: `thing7` activity name, `phrase1` join/exit status, `thing5` remark, and `thing6` post-change signup result.
+- completed in code: manager subscription state is reflected on Activity Detail, so the subscribe button stays disabled after an accepted per-activity subscription
 - pending operation: keep the actual WeChat template ID in local-only config and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 - TODO: after `endAt` passes, show an overdue unresolved state for still-published pending activities and remind organizers to confirm or cancel without automatically confirming

@@ -1760,3 +1760,25 @@ Verification:
 
 - targeted red/green coverage was updated for the shared manager-notification helper, `joinActivity`, and `cancelRegistration`.
 - full regression suite passed with the bundled Node runtime: `57` test suites, `380` tests. The machine's default Node 16 cannot run the repo's Jest 30 setup.
+
+## 2026-05-10 - Manager Signup Notification Subscription State
+
+Activity Detail now keeps the manager signup-notification action in sync with backend subscription state.
+
+Delivered behavior:
+
+- `getActivityDetail` returns `viewer.registrationNotificationSubscribed` for organizers/admins when the current manager has an accepted `activity_notice` subscription for that activity.
+- regular viewers always receive `registrationNotificationSubscribed: false`, even if they have participant notification subscriptions.
+- the local mock returns the same viewer flag for DevTools testing.
+- Activity Detail disables and greys the manager subscription button after a successful subscription request.
+- re-entering Activity Detail also shows the disabled state when CloudBase already has an accepted subscription record.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `getActivityDetail`.
+- upload a new mini program frontend build so the disabled subscription button and updated label are available on devices.
+
+Verification:
+
+- targeted red/green coverage was added for CloudBase `getActivityDetail`, local mock detail data, Activity Detail subscription handling, and the template disabled state.
+- full regression suite passed: `57` test suites, `383` tests.

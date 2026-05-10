@@ -647,24 +647,55 @@ describe('activity detail page', () => {
     );
 
     expect(wxml).toContain('bindtap="onSubscribeRegistrationNotifications"');
-    expect(wxml).toContain('{{i18n.activity.actions.subscribeRegistrationNotifications}}');
+    expect(wxml).toContain('i18n.activity.actions.subscribeRegistrationNotifications');
+    expect(wxml).toContain('disabled="{{viewer.registrationNotificationSubscribed}}"');
+    expect(wxml).toContain('action-button-disabled');
+    expect(wxml).toContain('i18n.activity.actions.registrationNotificationsSubscribed');
   });
 
   test('onSubscribeRegistrationNotifications records manager notification consent', async () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
-        locale: 'en-US'
+        locale: 'en-US',
+        viewer: {
+          canManageRegistrations: true,
+          registrationNotificationSubscribed: false
+        }
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
       }
     };
 
     await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
 
     expect(requestActivityNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(true);
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup notifications enabled',
       icon: 'success'
     });
+  });
+
+  test('onSubscribeRegistrationNotifications does not request consent again once subscribed', async () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        viewer: {
+          canManageRegistrations: true,
+          registrationNotificationSubscribed: true
+        }
+      }
+    };
+
+    await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
+
+    expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
   });
 
   test('openEditActivity navigates to the create page in edit mode for the current activity', () => {

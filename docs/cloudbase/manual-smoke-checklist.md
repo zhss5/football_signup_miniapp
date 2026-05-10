@@ -72,6 +72,8 @@
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names, including preferred positions when available
 - Confirm organizer actions are ordered copy participant names, edit activity, confirm activity, cancel activity
+- Confirm organizer/admin can subscribe to signup-change notices for the current activity
+- Confirm the signup-notification subscription button greys out after accepted consent and remains grey after reopening Activity Detail
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm a cancelled activity does not show the confirmed-state banner, even if it was confirmed before cancellation

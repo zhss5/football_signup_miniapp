@@ -540,6 +540,15 @@ function createLocalCloudClient(options = {}) {
         activity.status === 'published' &&
         (!Number.isFinite(deadline) || Date.parse(now()) <= deadline)
     );
+    const registrationNotificationSubscribed = canManageRegistrations
+      ? Object.values(state.notificationSubscriptions).some(
+          item =>
+            item.activityId === payload.activityId &&
+            item.userOpenId === openid &&
+            item.templateKey === 'activity_notice' &&
+            item.status === 'accepted'
+        )
+      : false;
 
     return {
       activity: clone(activity),
@@ -551,7 +560,8 @@ function createLocalCloudClient(options = {}) {
         canManageRegistrations,
         canCancelActivity: activity.organizerOpenId === openid && activity.status === 'published',
         canDeleteActivity: activity.organizerOpenId === openid && Number(activity.joinedCount) === 0,
-        canCancelSignup
+        canCancelSignup,
+        registrationNotificationSubscribed
       }
     };
   }

@@ -44,6 +44,7 @@ The codebase supports:
 - signup subscription opt-in and cloud-function-backed notification records
 - signup subscription consent is requested inside the submit tap flow before the signup cloud call, then recorded after signup succeeds
 - organizer/admin-triggered proceeding and cancellation notices for subscribed active participants
+- organizer/admin signup-notification subscription state on Activity Detail, with the subscribe action disabled after accepted consent
 - copyable user ID on My page for manual CloudBase role grants
 - highlighted activity signup status on activity cards
 - simplified signup without participant phone collection
@@ -125,6 +126,13 @@ Latest preferred-position visibility change:
 - proxy-registration metadata remains manager-only.
 - redeploy `getActivityDetail` after running `npm run copy:cloud-shared`.
 - upload a new mini program frontend build so regular users can see position text in Activity Detail.
+
+Latest manager signup-notification subscription-state change:
+
+- `getActivityDetail` now returns `viewer.registrationNotificationSubscribed` for organizers/admins when the current manager has accepted the current activity's `activity_notice` subscription.
+- the Activity Detail manager subscription button greys out and disables after accepted consent, including when the page is reopened later.
+- redeploy `getActivityDetail` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so the disabled state and updated button label are available on devices.
 
 Latest mobile cover-upload fix:
 
@@ -256,7 +264,7 @@ node scripts/copy-cloud-shared.mjs && node node_modules/jest/bin/jest.js --runIn
 Latest result:
 
 - `57` test suites passed
-- `380` tests passed
+- `383` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, manager signup-change notification behavior, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 

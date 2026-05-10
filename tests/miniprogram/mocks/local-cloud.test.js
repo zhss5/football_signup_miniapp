@@ -1266,6 +1266,65 @@ test('local cloud client keeps phone authorization available for future extensio
   });
 });
 
+test('local cloud client exposes manager registration notification subscription state', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T11:00:00.000Z',
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'May 9 training',
+    startAt: '2026-05-09T20:00:00.000Z',
+    endAt: '2026-05-09T22:00:00.000Z',
+    signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const beforeSubscribe = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'activity_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+  await participantClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'activity_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+  const ownerDetail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const participantDetail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(beforeSubscribe.viewer.registrationNotificationSubscribed).toBe(false);
+  expect(ownerDetail.viewer.registrationNotificationSubscribed).toBe(true);
+  expect(participantDetail.viewer.registrationNotificationSubscribed).toBe(false);
+});
+
 test('local cloud client records subscriptions and lets organizers confirm or cancel with notification summaries', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

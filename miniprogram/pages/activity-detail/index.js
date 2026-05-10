@@ -538,10 +538,24 @@ Page({
 
   async onSubscribeRegistrationNotifications() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
+    const viewer = this.data.viewer || {};
+
+    if (viewer.registrationNotificationSubscribed) {
+      return;
+    }
 
     try {
       const result = await requestActivityNotificationSubscription(this.data.activityId);
       const accepted = result && (result.status === 'accepted' || result.subscribed);
+
+      if (accepted) {
+        this.setData({
+          viewer: {
+            ...viewer,
+            registrationNotificationSubscribed: true
+          }
+        });
+      }
 
       wx.showToast({
         title: accepted

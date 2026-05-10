@@ -69,6 +69,7 @@ module.exports = {
       join: 'Join',
       copyParticipantNames: 'Copy participant names',
       subscribeRegistrationNotifications: 'Subscribe signup notices',
+      registrationNotificationsSubscribed: 'Signup notices subscribed',
       proxySignup: 'Add participant',
       confirmProceeding: 'Confirm Activity',
       cancelActivity: 'Cancel Activity',

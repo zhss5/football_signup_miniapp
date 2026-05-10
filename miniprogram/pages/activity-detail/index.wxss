@@ -255,6 +255,12 @@
   background: #ffffff;
 }
 
+.action-button-disabled,
+.action-button[disabled] {
+  color: #9ca3af;
+  background: #f3f4f6;
+}
+
 .danger-action-button {
   color: #b91c1c;
 }

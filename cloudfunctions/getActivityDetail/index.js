@@ -7,6 +7,8 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
+
 async function getCurrentUser(db, openid) {
   const result = await db
     .collection(COLLECTIONS.USERS)
@@ -15,6 +17,21 @@ async function getCurrentUser(db, openid) {
     .catch(() => ({ data: null }));
 
   return result.data || null;
+}
+
+async function hasRegistrationNotificationSubscription(db, activityId, openid) {
+  const result = await db
+    .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
+    .where({
+      activityId,
+      userOpenId: openid,
+      templateKey: ACTIVITY_NOTICE_TEMPLATE_KEY,
+      status: 'accepted'
+    })
+    .get()
+    .catch(() => ({ data: [] }));
+
+  return Boolean(result.data && result.data.length > 0);
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -61,6 +78,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       (!Number.isFinite(deadline) || Date.parse(stamp) <= deadline)
   );
   const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
+  const registrationNotificationSubscribed = canManageRegistrations
+    ? await hasRegistrationNotificationSubscription(db, event.activityId, openid)
+    : false;
 
   const userOpenIds = Array.from(new Set(joinedRes.data.map(item => item.userOpenId)));
   let usersById = {};
@@ -120,7 +140,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         activity.data.organizerOpenId === openid && activity.data.status === 'published',
       canDeleteActivity:
         activity.data.organizerOpenId === openid && Number(activity.data.joinedCount) === 0,
-      canCancelSignup
+      canCancelSignup,
+      registrationNotificationSubscribed
     }
   };
 }

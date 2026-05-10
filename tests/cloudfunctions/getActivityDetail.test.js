@@ -426,3 +426,97 @@ test('getActivityDetail exposes edit permission for admins', async () => {
     canManageRegistrations: true
   });
 });
+
+test('getActivityDetail exposes manager registration notification subscription state', async () => {
+  const activity = {
+    _id: 'activity_1',
+    title: 'Saturday 8-10',
+    organizerOpenId: 'openid_owner',
+    status: 'published',
+    joinedCount: 0,
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z'
+  };
+  const notificationSubscriptions = [
+    {
+      _id: 'activity_1_openid_owner_activity_notice',
+      activityId: 'activity_1',
+      userOpenId: 'openid_owner',
+      templateKey: 'activity_notice',
+      status: 'accepted'
+    },
+    {
+      _id: 'activity_1_openid_regular_activity_notice',
+      activityId: 'activity_1',
+      userOpenId: 'openid_regular',
+      templateKey: 'activity_notice',
+      status: 'accepted'
+    }
+  ];
+  const fakeDb = {
+    command: {
+      in(values) {
+        return { values };
+      }
+    },
+    collection(name) {
+      return {
+        doc(id) {
+          return {
+            async get() {
+              if (name === 'activities') {
+                return { data: activity };
+              }
+
+              if (name === 'users') {
+                return { data: null };
+              }
+
+              if (name === 'registrations') {
+                throw new Error('not found');
+              }
+
+              throw new Error(`Unsupported doc lookup for ${name}`);
+            }
+          };
+        },
+        where(query) {
+          return {
+            async get() {
+              if (name === 'activity_teams' || name === 'registrations' || name === 'users') {
+                return { data: [] };
+              }
+
+              if (name === 'notification_subscriptions') {
+                return {
+                  data: notificationSubscriptions.filter(
+                    item =>
+                      item.activityId === query.activityId &&
+                      item.userOpenId === query.userOpenId &&
+                      item.templateKey === query.templateKey &&
+                      item.status === query.status
+                  )
+                };
+              }
+
+              throw new Error(`Unsupported query for ${name}`);
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const organizerResult = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db: fakeDb }
+  );
+  const regularResult = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_regular' },
+    { db: fakeDb }
+  );
+
+  expect(organizerResult.viewer.registrationNotificationSubscribed).toBe(true);
+  expect(regularResult.viewer.registrationNotificationSubscribed).toBe(false);
+});
