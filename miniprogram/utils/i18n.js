@@ -261,7 +261,8 @@ function translateErrorMessage(error, translate) {
     'Activity is full': 'errors.activityFull',
     'Team is full': 'errors.teamFull',
     'You already joined this activity': 'errors.alreadyJoined',
-    'Please contact the organizer': 'errors.contactOrganizer',
+    'Too many repeat signups. Please contact the organizer': 'errors.repeatSignupLimitExceeded',
+    'Please contact the organizer': 'errors.repeatSignupLimitExceeded',
     'No active registration to cancel': 'errors.noActiveRegistration',
     'Signup can no longer be cancelled': 'errors.signupCannotBeCancelled',
     'Only the organizer or an admin can remove registrations': 'errors.removeRegistrationNotAllowed',
@@ -277,8 +278,18 @@ function translateErrorMessage(error, translate) {
     'Only the organizer or an admin can edit this activity': 'errors.editActivityNotAllowed'
   };
 
-  const message = error && error.message ? error.message : '';
-  const key = mapping[message];
+  const message = [
+    error && error.message,
+    error && error.errMsg,
+    error && error.errorMessage
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const exactKey = mapping[message];
+  const matchedMessage = exactKey
+    ? ''
+    : Object.keys(mapping).find(item => message.includes(item));
+  const key = exactKey || (matchedMessage ? mapping[matchedMessage] : '');
 
   if (!key) {
     return message;

@@ -11,7 +11,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const POSITION_VALUES = ['前锋', '中场', '边锋', '后腰', '中卫', '边卫', '门将'];
 const MAX_PREFERRED_POSITIONS = 2;
 const MAX_REPEAT_EXIT_COUNT = 3;
-const CONTACT_ORGANIZER_MESSAGE = 'Please contact the organizer';
+const REPEAT_SIGNUP_LIMIT_MESSAGE = 'Too many repeat signups. Please contact the organizer';
 
 function normalizeText(value) {
   return String(value || '').trim();
@@ -172,7 +172,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       !actorCanEditActivity &&
       getRepeatExitCount(registrationRes.data) >= MAX_REPEAT_EXIT_COUNT
     ) {
-      throw businessError(CONTACT_ORGANIZER_MESSAGE);
+      throw businessError(REPEAT_SIGNUP_LIMIT_MESSAGE);
     }
 
     await syncUserProfile(

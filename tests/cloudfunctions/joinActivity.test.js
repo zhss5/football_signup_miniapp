@@ -57,7 +57,7 @@ test('joinActivity rejects signups after deadline', async () => {
   ).rejects.toThrow('Signup is closed');
 });
 
-test('joinActivity rejects rejoin after three prior cancellations or removals', async () => {
+test('joinActivity rejects rejoin after three prior cancellations or removals with a clear repeat signup message', async () => {
   jest.resetModules();
 
   const setRegistration = jest.fn().mockResolvedValue({});
@@ -144,7 +144,7 @@ test('joinActivity rejects rejoin after three prior cancellations or removals', 
       {},
       { now: '2026-04-19T10:00:00.000Z' }
     )
-  ).rejects.toThrow('Please contact the organizer');
+  ).rejects.toThrow('Too many repeat signups. Please contact the organizer');
 
   expect(setRegistration).not.toHaveBeenCalled();
   expect(updateActivity).not.toHaveBeenCalled();

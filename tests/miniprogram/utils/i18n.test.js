@@ -47,10 +47,32 @@ describe('i18n utilities', () => {
 
   test('translates the repeat signup block message to Chinese', () => {
     const message = translateErrorMessage(
-      new Error('Please contact the organizer'),
+      new Error('Too many repeat signups. Please contact the organizer'),
       (key, params) => t(key, params, 'zh-CN')
     );
 
-    expect(message).toBe('\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
+    expect(message).toBe('\u91cd\u590d\u62a5\u540d\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
+  });
+
+  test('translates wrapped CloudBase repeat signup errors to Chinese', () => {
+    const message = translateErrorMessage(
+      new Error(
+        'cloud.callFunction:fail Error: errCode: -504002 functions execute fail | errMsg: Error: Too many repeat signups. Please contact the organizer'
+      ),
+      (key, params) => t(key, params, 'zh-CN')
+    );
+
+    expect(message).toBe('\u91cd\u590d\u62a5\u540d\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
+  });
+
+  test('translates legacy wrapped contact-organizer errors as repeat signup blocks', () => {
+    const message = translateErrorMessage(
+      new Error(
+        'cloud.callFunction:fail Error: errCode: -504002 functions execute fail | errMsg: Error: Please contact the organizer'
+      ),
+      (key, params) => t(key, params, 'zh-CN')
+    );
+
+    expect(message).toBe('\u91cd\u590d\u62a5\u540d\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
   });
 });

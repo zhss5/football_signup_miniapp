@@ -246,6 +246,8 @@ module.exports = {
 module.exports.activity.status.confirmed = '\u5df2\u786e\u8ba4\u4e3e\u884c';
 module.exports.activity.status.expired = '\u6d3b\u52a8\u5df2\u8fc7\u671f';
 module.exports.errors.contactOrganizer = '\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005';
+module.exports.errors.repeatSignupLimitExceeded =
+  '\u91cd\u590d\u62a5\u540d\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005';
 module.exports.activity.descriptionTitle = '\u6d3b\u52a8\u8bf4\u660e';
 module.exports.activity.activityImagesTitle = '\u6d3b\u52a8\u56fe\u7247';
 module.exports.activity.actions.confirmProceeding = '\u786e\u8ba4\u4e3e\u884c';

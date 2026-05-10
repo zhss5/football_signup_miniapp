@@ -10,7 +10,7 @@ const { isTeamColorKey, normalizeTeamColorKey } = require('../utils/team-colors'
 const { validateActivityDraft } = require('../utils/validators');
 
 const MAX_REPEAT_EXIT_COUNT = 3;
-const CONTACT_ORGANIZER_MESSAGE = 'Please contact the organizer';
+const REPEAT_SIGNUP_LIMIT_MESSAGE = 'Too many repeat signups. Please contact the organizer';
 const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 
@@ -613,7 +613,7 @@ function createLocalCloudClient(options = {}) {
       !canEditActivity(activity, state.users[openid], openid) &&
       getRepeatExitCount(current) >= MAX_REPEAT_EXIT_COUNT
     ) {
-      throw new Error(CONTACT_ORGANIZER_MESSAGE);
+      throw new Error(REPEAT_SIGNUP_LIMIT_MESSAGE);
     }
 
     const user = ensureUserInState(state, openid, stamp);

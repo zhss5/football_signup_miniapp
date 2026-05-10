@@ -846,7 +846,7 @@ test('local cloud client asks repeat removed or cancelled participants to contac
   });
 
   await expect(participantClient.call('joinActivity', joinPayload)).rejects.toThrow(
-    'Please contact the organizer'
+    'Too many repeat signups. Please contact the organizer'
   );
 });
 
