@@ -26,6 +26,7 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
+  getManagerRegistrationNoticeTemplateId: jest.fn(() => 'tmpl_manager_current'),
   notifyActivityParticipants: jest.fn(),
   requestActivityNotificationSubscription: jest.fn(),
   requestManagerRegistrationNotificationSubscription: jest.fn()
@@ -46,6 +47,7 @@ describe('activity detail page', () => {
   let getActivitySignupState;
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
+  let getManagerRegistrationNoticeTemplateId;
   let requestActivityNotificationSubscription;
   let requestManagerRegistrationNotificationSubscription;
 
@@ -74,6 +76,7 @@ describe('activity detail page', () => {
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
     ({ getActivitySignupState } = require('../../../miniprogram/utils/formatters'));
     ({
+      getManagerRegistrationNoticeTemplateId,
       notifyActivityParticipants,
       requestActivityNotificationSubscription,
       requestManagerRegistrationNotificationSubscription
@@ -88,6 +91,7 @@ describe('activity detail page', () => {
     });
     requestManagerRegistrationNotificationSubscription.mockResolvedValue({
       configured: true,
+      templateId: 'tmpl_manager_current',
       status: 'accepted'
     });
     getActivitySignupState.mockReturnValue({
@@ -95,6 +99,7 @@ describe('activity detail page', () => {
       joinEnabled: true,
       isExpired: false
     });
+    getManagerRegistrationNoticeTemplateId.mockReturnValue('tmpl_manager_current');
   });
 
   test('openSignup stores the selected team name so the sheet can show which team is being joined', () => {
@@ -540,6 +545,44 @@ describe('activity detail page', () => {
     expect(ctx.data.viewer.canManageRegistrations).toBe(true);
   });
 
+  test('reload lets managers resubscribe when the saved manager notice template is stale', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Thursday Match',
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        canManageRegistrations: true,
+        registrationNotificationSubscribed: true,
+        registrationNotificationSubscriptionTemplateId: 'tmpl_activity_notice'
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(getManagerRegistrationNoticeTemplateId).toHaveBeenCalled();
+    expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(false);
+    expect(ctx.data.viewer.registrationNotificationSubscriptionTemplateId).toBe(
+      'tmpl_activity_notice'
+    );
+  });
+
   test('reload hides the map preview when the activity has no coordinates', async () => {
     getActivityDetail.mockResolvedValue({
       activity: {
@@ -775,6 +818,9 @@ describe('activity detail page', () => {
     expect(requestManagerRegistrationNotificationSubscription).toHaveBeenCalledWith('activity_123');
     expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
     expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(true);
+    expect(ctx.data.viewer.registrationNotificationSubscriptionTemplateId).toBe(
+      'tmpl_manager_current'
+    );
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup notifications enabled',
       icon: 'success'

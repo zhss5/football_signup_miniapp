@@ -11,6 +11,7 @@ const {
   removeRegistration
 } = require('../../services/registration-service');
 const {
+  getManagerRegistrationNoticeTemplateId,
   notifyActivityParticipants,
   requestManagerRegistrationNotificationSubscription
 } = require('../../services/notification-service');
@@ -168,6 +169,27 @@ function isCloudFileId(value) {
   return typeof value === 'string' && value.startsWith('cloud://');
 }
 
+function normalizeViewerRegistrationNotificationState(viewer = {}) {
+  const expectedTemplateId = getManagerRegistrationNoticeTemplateId();
+
+  if (!viewer || !viewer.registrationNotificationSubscribed || !expectedTemplateId) {
+    return viewer;
+  }
+
+  const savedTemplateId = String(
+    viewer.registrationNotificationSubscriptionTemplateId || ''
+  ).trim();
+
+  if (savedTemplateId === expectedTemplateId) {
+    return viewer;
+  }
+
+  return {
+    ...viewer,
+    registrationNotificationSubscribed: false
+  };
+}
+
 async function resolveCoverCandidate(candidate) {
   if (!isCloudFileId(candidate)) {
     return candidate || '';
@@ -249,6 +271,7 @@ Page({
     );
     this.setData({
       ...detail,
+      viewer: normalizeViewerRegistrationNotificationState(detail.viewer),
       activity: activityWithDisplayCover,
       activityDescriptionText,
       activityCoverCandidates,
@@ -563,7 +586,9 @@ Page({
         this.setData({
           viewer: {
             ...viewer,
-            registrationNotificationSubscribed: true
+            registrationNotificationSubscribed: true,
+            registrationNotificationSubscriptionTemplateId:
+              result.templateId || viewer.registrationNotificationSubscriptionTemplateId || ''
           }
         });
       }

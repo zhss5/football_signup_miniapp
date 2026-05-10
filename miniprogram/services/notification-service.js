@@ -153,6 +153,7 @@ function notifyActivityParticipants(activityId, notificationType) {
 module.exports = {
   ACTIVITY_NOTICE_TEMPLATE_KEY,
   MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
+  getManagerRegistrationNoticeTemplateId,
   notifyActivityParticipants,
   recordActivityNotificationSubscription,
   requestActivityNotificationSubscriptionConsent,

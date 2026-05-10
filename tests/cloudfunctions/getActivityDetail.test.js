@@ -442,6 +442,7 @@ test('getActivityDetail exposes manager registration notification subscription s
       activityId: 'activity_1',
       userOpenId: 'openid_owner',
       templateKey: 'manager_registration_notice',
+      templateId: 'tmpl_manager',
       status: 'accepted'
     },
     {
@@ -518,5 +519,9 @@ test('getActivityDetail exposes manager registration notification subscription s
   );
 
   expect(organizerResult.viewer.registrationNotificationSubscribed).toBe(true);
+  expect(organizerResult.viewer.registrationNotificationSubscriptionTemplateId).toBe(
+    'tmpl_manager'
+  );
   expect(regularResult.viewer.registrationNotificationSubscribed).toBe(false);
+  expect(regularResult.viewer.registrationNotificationSubscriptionTemplateId).toBe('');
 });

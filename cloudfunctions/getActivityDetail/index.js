@@ -19,7 +19,7 @@ async function getCurrentUser(db, openid) {
   return result.data || null;
 }
 
-async function hasRegistrationNotificationSubscription(db, activityId, openid) {
+async function getRegistrationNotificationSubscriptionState(db, activityId, openid) {
   const result = await db
     .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
     .where({
@@ -30,8 +30,12 @@ async function hasRegistrationNotificationSubscription(db, activityId, openid) {
     })
     .get()
     .catch(() => ({ data: [] }));
+  const subscription = result.data && result.data[0];
 
-  return Boolean(result.data && result.data.length > 0);
+  return {
+    subscribed: Boolean(subscription),
+    templateId: subscription && subscription.templateId ? String(subscription.templateId) : ''
+  };
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -78,9 +82,12 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       (!Number.isFinite(deadline) || Date.parse(stamp) <= deadline)
   );
   const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
-  const registrationNotificationSubscribed = canManageRegistrations
-    ? await hasRegistrationNotificationSubscription(db, event.activityId, openid)
-    : false;
+  const registrationNotificationSubscription = canManageRegistrations
+    ? await getRegistrationNotificationSubscriptionState(db, event.activityId, openid)
+    : {
+        subscribed: false,
+        templateId: ''
+      };
 
   const userOpenIds = Array.from(new Set(joinedRes.data.map(item => item.userOpenId)));
   let usersById = {};
@@ -141,7 +148,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       canDeleteActivity:
         activity.data.organizerOpenId === openid && Number(activity.data.joinedCount) === 0,
       canCancelSignup,
-      registrationNotificationSubscribed
+      registrationNotificationSubscribed: registrationNotificationSubscription.subscribed,
+      registrationNotificationSubscriptionTemplateId:
+        registrationNotificationSubscription.templateId
     }
   };
 }
