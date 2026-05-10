@@ -115,6 +115,35 @@ Current deployment notes:
 - The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
 - Notification configuration uses two template IDs: `activityNotice` for participant proceeding/cancellation notices, and `managerRegistrationNotice` for organizer/admin signup-change notices.
 
+## Subscription Template Verification
+
+Before trusting an uploaded experience build, verify both subscription templates from the real mini program runtime instead of only checking local config.
+
+Participant proceeding/cancellation notices:
+
+- the frontend requests `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
+- cloud sends use `templateKey: activity_notice`
+- `notification_logs.notificationType` should be `proceeding` or `cancelled`
+
+Organizer/admin signup-change notices:
+
+- the Activity Detail manager action requests `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
+- cloud sends use `templateKey: manager_registration_notice`
+- `notification_logs.notificationType` should be `registration_joined` or `registration_cancelled`
+
+Real-device verification steps:
+
+1. Open the uploaded experience build as the activity organizer or an admin.
+2. Tap the signup-notification subscribe action on Activity Detail.
+3. Confirm the WeChat consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template.
+4. In CloudBase, inspect `notification_subscriptions` for the current activity and manager user. The row should use `templateKey: manager_registration_notice` and a `templateId` matching the local-only `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` value.
+5. Have a regular participant join or exit the activity.
+6. Inspect `notification_logs`; the manager notification row should use `templateKey: manager_registration_notice`, `notificationType: registration_joined` or `registration_cancelled`, and the same manager template ID.
+
+Do not commit real template IDs. Keep them in `miniprogram/config/env.local.js` or other local/secret deployment configuration only.
+
+If an organizer previously subscribed with the wrong template, deploy the latest `getActivityDetail`, upload the latest mini program frontend build, then have that organizer tap the signup-notification subscribe action again. The current frontend re-enables the action when the stored manager subscription template ID does not match the configured manager template ID.
+
 ## Database Setup
 
 The runtime expects these collections:

@@ -1806,3 +1806,18 @@ Verification:
 
 - targeted red/green coverage was updated for notification service config, Activity Detail manager subscription handling, CloudBase manager notifications, CloudBase `getActivityDetail`, and local mock notification behavior.
 - full regression suite passed: `57` test suites, `385` tests.
+
+## 2026-05-10 - Experience Build Notification Template Verification
+
+The CloudBase rollout documentation now records how to verify that an uploaded experience build is using the correct WeChat subscription template for manager signup-change notices.
+
+Documented checks:
+
+- verify the manager signup-notification consent prompt shows the manager signup-change template rather than the participant activity confirmation/cancellation template.
+- verify `notification_subscriptions` stores manager consent with `templateKey: manager_registration_notice`.
+- verify `notification_logs` for regular participant join/exit events uses `registration_joined` or `registration_cancelled` with `templateKey: manager_registration_notice`.
+- keep real template IDs in local-only configuration; tracked docs should reference the config keys rather than storing concrete IDs.
+
+Deployment note:
+
+- deploy `getActivityDetail` and upload the latest mini program frontend build before asking organizers to refresh stale manager notification consent.

@@ -76,6 +76,10 @@
 - Confirm organizer/admin can subscribe to signup-change notices for the current activity
 - Confirm organizer/admin signup-change notices use `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
 - Confirm the signup-notification subscription button greys out after accepted consent and remains grey after reopening Activity Detail
+- In the uploaded experience build, confirm the manager signup-notification consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template
+- In `notification_subscriptions`, confirm the manager row uses `templateKey: manager_registration_notice` and a `templateId` matching local-only config `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
+- If a manager row still uses the participant activity template ID, redeploy `getActivityDetail`, upload the latest mini program frontend build, and have the organizer tap the signup-notification subscribe action again
+- After another regular participant joins or exits, confirm `notification_logs` records `registration_joined` or `registration_cancelled` with `templateKey: manager_registration_notice`
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm a cancelled activity does not show the confirmed-state banner, even if it was confirmed before cancellation
