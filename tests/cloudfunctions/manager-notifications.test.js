@@ -50,7 +50,7 @@ function createFakeDb(seed) {
   };
 }
 
-test('buildManagerRegistrationMessageData maps join and cancel changes to the activity notice template', () => {
+test('buildManagerRegistrationMessageData maps join and cancel changes to the manager notice template', () => {
   const activity = {
     title: 'May 9 training',
     joinedCount: 3,
@@ -110,35 +110,46 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
       openid_regular: {
         _id: 'openid_regular',
         roles: ['user']
+      },
+      openid_activity_only_manager: {
+        _id: 'openid_activity_only_manager',
+        roles: ['admin']
       }
     },
     notificationSubscriptions: {
       owner_sub: {
         activityId: 'activity_1',
         userOpenId: 'openid_owner',
-        templateKey: 'activity_notice',
-        templateId: 'tmpl_123',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
         status: 'accepted'
       },
       admin_sub: {
         activityId: 'activity_1',
         userOpenId: 'openid_admin',
-        templateKey: 'activity_notice',
-        templateId: 'tmpl_123',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
         status: 'accepted'
       },
       regular_sub: {
         activityId: 'activity_1',
         userOpenId: 'openid_regular',
-        templateKey: 'activity_notice',
-        templateId: 'tmpl_123',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
         status: 'accepted'
       },
       actor_sub: {
         activityId: 'activity_1',
         userOpenId: 'openid_player',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
+        status: 'accepted'
+      },
+      activity_notice_sub: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_activity_only_manager',
         templateKey: 'activity_notice',
-        templateId: 'tmpl_123',
+        templateId: 'tmpl_activity',
         status: 'accepted'
       }
     }
@@ -178,6 +189,10 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
   expect(sendSubscribeMessage.mock.calls.map(call => call[0].touser).sort()).toEqual([
     'openid_admin',
     'openid_owner'
+  ]);
+  expect(sendSubscribeMessage.mock.calls.map(call => call[0].templateId)).toEqual([
+    'tmpl_manager',
+    'tmpl_manager'
   ]);
   expect(sendSubscribeMessage.mock.calls[0][0].data).toEqual({
     thing7: {
@@ -219,8 +234,8 @@ test('notifyActivityManagers skips manager self signup or cancellation notificat
       owner_sub: {
         activityId: 'activity_1',
         userOpenId: 'openid_owner',
-        templateKey: 'activity_notice',
-        templateId: 'tmpl_123',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
         status: 'accepted'
       }
     }

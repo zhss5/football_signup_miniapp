@@ -1303,7 +1303,7 @@ test('local cloud client exposes manager registration notification subscription 
   });
   await ownerClient.call('recordNotificationSubscription', {
     activityId: created.activityId,
-    templateKey: 'activity_notice',
+    templateKey: 'manager_registration_notice',
     templateId: 'tmpl_123',
     status: 'accepted'
   });
@@ -1447,13 +1447,13 @@ test('local cloud client records manager notifications only for regular self joi
   await adminClient.call('ensureUserProfile', {});
   await ownerClient.call('recordNotificationSubscription', {
     activityId: created.activityId,
-    templateKey: 'activity_notice',
+    templateKey: 'manager_registration_notice',
     templateId: 'tmpl_123',
     status: 'accepted'
   });
   await adminClient.call('recordNotificationSubscription', {
     activityId: created.activityId,
-    templateKey: 'activity_notice',
+    templateKey: 'manager_registration_notice',
     templateId: 'tmpl_123',
     status: 'accepted'
   });

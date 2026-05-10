@@ -438,10 +438,10 @@ test('getActivityDetail exposes manager registration notification subscription s
   };
   const notificationSubscriptions = [
     {
-      _id: 'activity_1_openid_owner_activity_notice',
+      _id: 'activity_1_openid_owner_manager_registration_notice',
       activityId: 'activity_1',
       userOpenId: 'openid_owner',
-      templateKey: 'activity_notice',
+      templateKey: 'manager_registration_notice',
       status: 'accepted'
     },
     {

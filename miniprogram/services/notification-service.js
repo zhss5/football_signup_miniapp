@@ -2,6 +2,7 @@ const { call } = require('./cloud');
 const { SUBSCRIBE_MESSAGE_TEMPLATE_IDS = {} } = require('../config/env');
 
 const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
+const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 
 function getWxRuntime() {
   if (typeof wx !== 'undefined' && wx) {
@@ -23,6 +24,14 @@ function getActivityNoticeTemplateId() {
   );
 }
 
+function getManagerRegistrationNoticeTemplateId() {
+  return (
+    SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice ||
+    SUBSCRIBE_MESSAGE_TEMPLATE_IDS.manager_registration_notice ||
+    ''
+  );
+}
+
 function normalizeSubscribeStatus(value) {
   return value === 'accept' || value === 'accepted' ? 'accepted' : 'declined';
 }
@@ -39,6 +48,13 @@ function requestSubscribeMessage(wxRuntime, templateId) {
 
 async function requestActivityNotificationSubscription(activityId) {
   const subscription = await requestActivityNotificationSubscriptionConsent();
+  await recordActivityNotificationSubscription(activityId, subscription);
+
+  return subscription;
+}
+
+async function requestManagerRegistrationNotificationSubscription(activityId) {
+  const subscription = await requestManagerRegistrationNotificationSubscriptionConsent();
   await recordActivityNotificationSubscription(activityId, subscription);
 
   return subscription;
@@ -75,6 +91,37 @@ async function requestActivityNotificationSubscriptionConsent() {
   };
 }
 
+async function requestManagerRegistrationNotificationSubscriptionConsent() {
+  const templateId = getManagerRegistrationNoticeTemplateId();
+
+  if (!templateId) {
+    return {
+      configured: false,
+      skipped: true,
+      reason: 'template-not-configured'
+    };
+  }
+
+  const wxRuntime = getWxRuntime();
+  if (!wxRuntime || typeof wxRuntime.requestSubscribeMessage !== 'function') {
+    return {
+      configured: true,
+      skipped: true,
+      reason: 'subscribe-api-unavailable'
+    };
+  }
+
+  const requestResult = await requestSubscribeMessage(wxRuntime, templateId);
+  const status = normalizeSubscribeStatus(requestResult && requestResult[templateId]);
+
+  return {
+    configured: true,
+    templateKey: MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
+    templateId,
+    status
+  };
+}
+
 async function recordActivityNotificationSubscription(activityId, subscription = {}) {
   if (
     !activityId ||
@@ -105,8 +152,11 @@ function notifyActivityParticipants(activityId, notificationType) {
 
 module.exports = {
   ACTIVITY_NOTICE_TEMPLATE_KEY,
+  MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
   notifyActivityParticipants,
   recordActivityNotificationSubscription,
   requestActivityNotificationSubscriptionConsent,
-  requestActivityNotificationSubscription
+  requestActivityNotificationSubscription,
+  requestManagerRegistrationNotificationSubscriptionConsent,
+  requestManagerRegistrationNotificationSubscription
 };

@@ -22,7 +22,8 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
   notifyActivityParticipants: jest.fn(),
-  requestActivityNotificationSubscription: jest.fn()
+  requestActivityNotificationSubscription: jest.fn(),
+  requestManagerRegistrationNotificationSubscription: jest.fn()
 }));
 
 const fs = require('fs');
@@ -40,6 +41,7 @@ describe('activity detail page', () => {
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
   let requestActivityNotificationSubscription;
+  let requestManagerRegistrationNotificationSubscription;
 
   beforeEach(() => {
     pageConfig = null;
@@ -66,13 +68,18 @@ describe('activity detail page', () => {
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
     ({
       notifyActivityParticipants,
-      requestActivityNotificationSubscription
+      requestActivityNotificationSubscription,
+      requestManagerRegistrationNotificationSubscription
     } = require('../../../miniprogram/services/notification-service'));
     notifyActivityParticipants.mockResolvedValue({
       sent: 0,
       failed: 0
     });
     requestActivityNotificationSubscription.mockResolvedValue({
+      configured: true,
+      status: 'accepted'
+    });
+    requestManagerRegistrationNotificationSubscription.mockResolvedValue({
       configured: true,
       status: 'accepted'
     });
@@ -673,7 +680,8 @@ describe('activity detail page', () => {
 
     await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
 
-    expect(requestActivityNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(requestManagerRegistrationNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
     expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(true);
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Signup notifications enabled',
@@ -695,6 +703,7 @@ describe('activity detail page', () => {
 
     await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
 
+    expect(requestManagerRegistrationNotificationSubscription).not.toHaveBeenCalled();
     expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
   });
 

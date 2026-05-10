@@ -101,7 +101,7 @@ Latest activity-notification change:
 - `notifyActivityParticipants` confirms or cancels the activity, sends subscribed active participants the relevant WeChat subscription message, and writes per-recipient logs.
 - proceeding notices use `notificationHint` when present; cancellation notices keep the default cancellation reminder text.
 - duplicate sends are skipped per `activityId + notificationType + recipientOpenId`.
-- configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` in local-only config before expecting real subscription prompts or sends.
+- configure `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` for participant proceeding/cancellation notices and `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` for organizer/admin signup-change notices before expecting real subscription prompts or sends.
 - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `createActivity`, `updateActivity`, and `ensureUserProfile` after running `npm run copy:cloud-shared`.
 - upload a new mini program frontend build so the subscription prompt, confirmed banner, and organizer action are available on device.
 
@@ -129,7 +129,7 @@ Latest preferred-position visibility change:
 
 Latest manager signup-notification subscription-state change:
 
-- `getActivityDetail` now returns `viewer.registrationNotificationSubscribed` for organizers/admins when the current manager has accepted the current activity's `activity_notice` subscription.
+- `getActivityDetail` now returns `viewer.registrationNotificationSubscribed` for organizers/admins when the current manager has accepted the current activity's `manager_registration_notice` subscription.
 - the Activity Detail manager subscription button greys out and disables after accepted consent, including when the page is reopened later.
 - redeploy `getActivityDetail` after running `npm run copy:cloud-shared`.
 - upload a new mini program frontend build so the disabled state and updated button label are available on devices.
@@ -264,7 +264,7 @@ node scripts/copy-cloud-shared.mjs && node node_modules/jest/bin/jest.js --runIn
 Latest result:
 
 - `57` test suites passed
-- `383` tests passed
+- `385` tests passed
 
 The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, manager signup-change notification behavior, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
 
@@ -355,7 +355,7 @@ Current insurance-link behavior:
 Current activity notification behavior:
 
 - new activities carry a separate confirmation state: `confirmStatus: pending/confirmed`.
-- signup requests a subscription only when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured.
+- signup requests participant activity-notice consent only when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured.
 - signup requests subscription consent before the signup cloud call to preserve WeChat's user-tap requirement; recording the choice still happens after signup succeeds.
 - subscription choices are stored in `notification_subscriptions`; declined choices are stored too, but only accepted active registrations are notified.
 - `recordNotificationSubscription` self-creates `notification_subscriptions` when possible so older CloudBase environments can recover from missing notification collections.
@@ -369,6 +369,7 @@ Current activity notification behavior:
 - real sends use the approved `训练提醒` template mapping: `time2` appointment time, `thing3` activity title, `thing6` confirmation/cancellation note, and `thing7` location/reminder text.
 - `time2` is formatted explicitly as China local time so UTC CloudBase runtimes do not send activity times eight hours early.
 - Activity Detail has a manager-only action to subscribe the current organizer/admin to signup-change notices for that activity.
+- manager signup-change consent uses `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` and stores `templateKey: manager_registration_notice`.
 - accepted manager subscriptions are notified only when a regular participant joins through `joinActivity` or self-cancels through `cancelRegistration`.
 - organizer/admin self signup, organizer/admin self cancellation, and organizer/admin removal of another participant intentionally do not send manager notices.
 - manager notification failures are caught after the registration write, so signup and self-cancellation are not blocked by notification delivery problems.
@@ -405,7 +406,7 @@ Current activity experience polish:
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Same-activity repeat exits are guarded for regular participants: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration. The activity organizer and `admin` users are exempt from this rejoin block, and manager removal actions are not rate-limited.
 - Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
-- Manager signup-change notification data now matches the current WeChat template: `thing7` activity name, `phrase1` `加入`/`退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
+- Manager signup-change notification data now matches the current WeChat manager template: `thing7` activity name, `phrase1` `加入`/`退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
 
 Current My list behavior:
 
@@ -435,7 +436,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the latest manager-notification template mapping requires uploading `joinActivity` and `cancelRegistration`.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the split manager-notification template key requires uploading `getActivityDetail`, `joinActivity`, and `cancelRegistration`.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -447,7 +448,8 @@ Continue in this order:
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-   - keep the real template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
+   - keep the participant proceeding/cancellation template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
+   - keep the organizer/admin signup-change template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
    - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.

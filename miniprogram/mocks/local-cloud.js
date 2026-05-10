@@ -11,6 +11,8 @@ const { validateActivityDraft } = require('../utils/validators');
 
 const MAX_REPEAT_EXIT_COUNT = 3;
 const CONTACT_ORGANIZER_MESSAGE = 'Please contact the organizer';
+const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
+const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 
 function validateSignupPayload(payload) {
   if (!payload.activityId) {
@@ -545,7 +547,7 @@ function createLocalCloudClient(options = {}) {
           item =>
             item.activityId === payload.activityId &&
             item.userOpenId === openid &&
-            item.templateKey === 'activity_notice' &&
+            item.templateKey === MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY &&
             item.status === 'accepted'
         )
       : false;
@@ -988,7 +990,9 @@ function createLocalCloudClient(options = {}) {
     const state = readState();
     const openid = getOpenId();
     const stamp = now();
-    const templateKey = String(payload.templateKey || 'activity_notice').trim() || 'activity_notice';
+    const templateKey =
+      String(payload.templateKey || ACTIVITY_NOTICE_TEMPLATE_KEY).trim() ||
+      ACTIVITY_NOTICE_TEMPLATE_KEY;
     const status = normalizeSubscriptionStatus(payload.status);
     const subscriptionId = `${payload.activityId}_${openid}_${templateKey}`;
 
@@ -1026,7 +1030,7 @@ function createLocalCloudClient(options = {}) {
     return Object.values(state.notificationSubscriptions).filter(item => {
       if (
         item.activityId !== activity._id ||
-        item.templateKey !== 'activity_notice' ||
+        item.templateKey !== MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY ||
         item.status !== 'accepted' ||
         !item.userOpenId ||
         !item.templateId ||
@@ -1109,7 +1113,7 @@ function createLocalCloudClient(options = {}) {
     const subscriptions = Object.values(state.notificationSubscriptions).filter(
       item =>
         item.activityId === payload.activityId &&
-        item.templateKey === 'activity_notice' &&
+        item.templateKey === ACTIVITY_NOTICE_TEMPLATE_KEY &&
         item.status === 'accepted' &&
         joinedOpenIds.has(item.userOpenId)
     );

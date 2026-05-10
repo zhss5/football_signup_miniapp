@@ -12,7 +12,7 @@ const {
 } = require('../../services/registration-service');
 const {
   notifyActivityParticipants,
-  requestActivityNotificationSubscription
+  requestManagerRegistrationNotificationSubscription
 } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
 const { buildTeamListVm, isActivityExpired } = require('../../utils/formatters');
@@ -545,7 +545,7 @@ Page({
     }
 
     try {
-      const result = await requestActivityNotificationSubscription(this.data.activityId);
+      const result = await requestManagerRegistrationNotificationSubscription(this.data.activityId);
       const accepted = result && (result.status === 'accepted' || result.subscribed);
 
       if (accepted) {

@@ -45,6 +45,44 @@ describe('notification service', () => {
     });
   });
 
+  test('requests the manager registration notice template and records accepted subscriptions', async () => {
+    global.wx.requestSubscribeMessage = jest.fn(({ success }) => {
+      success({
+        tmpl_manager: 'accept'
+      });
+    });
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        activityNotice: 'tmpl_activity',
+        managerRegistrationNotice: 'tmpl_manager'
+      }
+    }));
+
+    const {
+      requestManagerRegistrationNotificationSubscription
+    } = require('../../../miniprogram/services/notification-service');
+
+    await expect(
+      requestManagerRegistrationNotificationSubscription('activity_1')
+    ).resolves.toMatchObject({
+      configured: true,
+      templateKey: 'manager_registration_notice',
+      status: 'accepted'
+    });
+
+    expect(global.wx.requestSubscribeMessage).toHaveBeenCalledWith({
+      tmplIds: ['tmpl_manager'],
+      success: expect.any(Function),
+      fail: expect.any(Function)
+    });
+    expect(call).toHaveBeenCalledWith('recordNotificationSubscription', {
+      activityId: 'activity_1',
+      templateKey: 'manager_registration_notice',
+      templateId: 'tmpl_manager',
+      status: 'accepted'
+    });
+  });
+
   test('can request subscription consent before recording it', async () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
@@ -85,6 +123,28 @@ describe('notification service', () => {
     const { requestActivityNotificationSubscription } = require('../../../miniprogram/services/notification-service');
 
     await expect(requestActivityNotificationSubscription('activity_1')).resolves.toEqual({
+      configured: false,
+      skipped: true,
+      reason: 'template-not-configured'
+    });
+    expect(global.wx.requestSubscribeMessage).not.toHaveBeenCalled();
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  test('does nothing when the manager registration notice template id is not configured', async () => {
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        activityNotice: 'tmpl_activity'
+      }
+    }));
+
+    const {
+      requestManagerRegistrationNotificationSubscription
+    } = require('../../../miniprogram/services/notification-service');
+
+    await expect(
+      requestManagerRegistrationNotificationSubscription('activity_1')
+    ).resolves.toEqual({
       configured: false,
       skipped: true,
       reason: 'template-not-configured'

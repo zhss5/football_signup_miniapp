@@ -7,7 +7,7 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
+const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 
 async function getCurrentUser(db, openid) {
   const result = await db
@@ -25,7 +25,7 @@ async function hasRegistrationNotificationSubscription(db, activityId, openid) {
     .where({
       activityId,
       userOpenId: openid,
-      templateKey: ACTIVITY_NOTICE_TEMPLATE_KEY,
+      templateKey: MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
       status: 'accepted'
     })
     .get()

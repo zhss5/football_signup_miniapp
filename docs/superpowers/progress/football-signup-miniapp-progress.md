@@ -25,7 +25,7 @@ The latest CloudBase work has already:
 - validated the role-gated `createActivity` flow in CloudBase after deployment
 - added `updateActivity` for organizer/admin edits; deploy this function before real-device edit testing
 
-The current focus is shifting from CloudBase bring-up to real-device validation, media performance, participant communication, and operations polish. Notification V1 is now implemented in code, but still needs a real WeChat subscription template ID and CloudBase deployment before real-device validation.
+The current focus is shifting from CloudBase bring-up to real-device validation, media performance, participant communication, and operations polish. Notification V1 is now implemented in code, but still needs real WeChat subscription template IDs and CloudBase deployment before real-device validation.
 
 ## 2. Completed Features
 
@@ -237,6 +237,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - local mock mode implements the same subscription and notification summary behavior
 - organizer/admin signup-notification subscription state is returned by `getActivityDetail`
 - the Activity Detail manager subscription action disables and greys out after the manager has an accepted subscription for the current activity
+- participant activity proceeding/cancellation notices and organizer/admin signup-change notices use separate subscription template IDs and separate `notification_subscriptions.templateKey` values
 
 ## 3. Behavior Changes From the Original MVP Draft
 
@@ -273,7 +274,7 @@ Latest verified test result:
 
 - command: `npm test -- --runInBand`
 - result: `57` test suites passed
-- result: `383` tests passed
+- result: `385` tests passed
 
 Covered areas include:
 
@@ -309,6 +310,7 @@ Covered areas include:
 - optional insurance-link create/edit/detail web-view opening behavior
 - activity confirmation and notification V1 behavior across cloud functions, local mock, service adapter, signup flow, and Activity Detail organizer actions
 - manager signup-notification subscription state across CloudBase detail, local mock detail, and Activity Detail UI
+- split participant and manager subscription template behavior across frontend config, Activity Detail, CloudBase manager notifications, and local mock
 - cancelled activity confirmation-banner suppression
 - notification reminder persistence and confirmation-message reminder behavior
 - real-device subscription prompt timing and cover-image fallback candidates
@@ -389,6 +391,7 @@ The MVP still has known non-blocking gaps:
 ### Option B2: Participant Notifications
 
 - completed in code: request WeChat subscription after successful signup when `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice` is configured
+- completed in code: use `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` for organizer/admin signup-change subscriptions
 - completed in code: use one generic activity-notice template slot for proceeding and cancellation notices
 - completed in code: organizer/admin-triggered `Confirm Activity`
 - completed in code: store confirmation as `confirmStatus: pending/confirmed` while keeping `status: published/cancelled/deleted`
@@ -406,7 +409,7 @@ The MVP still has known non-blocking gaps:
 - completed in code: organizer/admin self signup, self-cancel, and member removal do not send manager notices
 - completed in code: manager signup-change notification data now maps to the actual WeChat template fields: `thing7` activity name, `phrase1` join/exit status, `thing5` remark, and `thing6` post-change signup result.
 - completed in code: manager subscription state is reflected on Activity Detail, so the subscribe button stays disabled after an accepted per-activity subscription
-- pending operation: keep the actual WeChat template ID in local-only config and verify real-device sends
+- pending operation: keep both real WeChat template IDs in local-only config and verify real-device sends
 - defer automatic pre-activity reminders until manual sending is stable
 - TODO: after `endAt` passes, show an overdue unresolved state for still-published pending activities and remind organizers to confirm or cancel without automatically confirming
 

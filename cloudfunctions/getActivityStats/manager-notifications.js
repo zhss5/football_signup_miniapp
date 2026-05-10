@@ -2,7 +2,7 @@ const { COLLECTIONS } = require('./collections');
 const { ensureCloudCollections } = require('./database');
 const { canEditActivity } = require('./roles');
 
-const TEMPLATE_KEY = 'activity_notice';
+const TEMPLATE_KEY = 'manager_registration_notice';
 const REGISTRATION_CHANGE_TYPES = new Set(['registration_joined', 'registration_cancelled']);
 const NOTIFICATION_COLLECTIONS = [
   COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS,

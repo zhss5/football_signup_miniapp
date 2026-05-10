@@ -82,7 +82,11 @@ When you are ready to use CloudBase:
 module.exports = {
   USE_LOCAL_MOCK: false,
   CLOUD_ENV_ID: 'your-cloud-env-id',
-  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+  SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+    activityNotice: 'your-activity-confirm-cancel-template-id',
+    managerRegistrationNotice: 'your-manager-signup-change-template-id'
+  }
 };
 ```
 
@@ -107,7 +111,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

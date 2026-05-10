@@ -46,6 +46,7 @@
 - Confirm the signup still succeeds if the user declines the subscription prompt
 - If signup subscription recording fails with `DATABASE_COLLECTION_NOT_EXIST`, confirm `recordNotificationSubscription` was redeployed and `notification_subscriptions` exists
 - Confirm `notification_subscriptions` records the user's accepted or declined choice
+- Confirm participant activity notices use `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
 - Confirm normal signup records created from the current UI do not contain `phoneSnapshot`
 - Confirm only one active signup per activity is allowed
 - Confirm signup is blocked after `signupDeadlineAt`
@@ -73,6 +74,7 @@
 - Confirm organizer/admin can copy all active participant names, including preferred positions when available
 - Confirm organizer actions are ordered copy participant names, edit activity, confirm activity, cancel activity
 - Confirm organizer/admin can subscribe to signup-change notices for the current activity
+- Confirm organizer/admin signup-change notices use `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
 - Confirm the signup-notification subscription button greys out after accepted consent and remains grey after reopening Activity Detail
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation

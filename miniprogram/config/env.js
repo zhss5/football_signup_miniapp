@@ -4,7 +4,8 @@ const defaults = {
   LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
   ENABLE_CLOUD_DIAGNOSTICS: false,
   SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
-    activityNotice: ''
+    activityNotice: '',
+    managerRegistrationNotice: ''
   }
 };
 

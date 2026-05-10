@@ -34,7 +34,11 @@ Create a local-only override file:
 module.exports = {
   USE_LOCAL_MOCK: false,
   CLOUD_ENV_ID: 'your-cloud-env-id',
-  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1'
+  LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
+  SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+    activityNotice: 'your-activity-confirm-cancel-template-id',
+    managerRegistrationNotice: 'your-manager-signup-change-template-id'
+  }
 };
 ```
 
@@ -81,7 +85,9 @@ Recommended function set:
 11. `moveRegistration`
 12. `cancelActivity`
 13. `deleteActivity`
-14. `getActivityStats`
+14. `recordNotificationSubscription`
+15. `notifyActivityParticipants`
+16. `getActivityStats`
 
 Legacy note:
 
@@ -97,7 +103,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -107,6 +113,7 @@ Current deployment notes:
 
 - `createActivity`, `updateActivity`, and `updateTeamColor` must be deployed together after running `npm run copy:cloud-shared`; they share the ten-color team palette: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
 - The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
+- Notification configuration uses two template IDs: `activityNotice` for participant proceeding/cancellation notices, and `managerRegistrationNotice` for organizer/admin signup-change notices.
 
 ## Database Setup
 

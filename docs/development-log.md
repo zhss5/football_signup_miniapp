@@ -1782,3 +1782,27 @@ Verification:
 
 - targeted red/green coverage was added for CloudBase `getActivityDetail`, local mock detail data, Activity Detail subscription handling, and the template disabled state.
 - full regression suite passed: `57` test suites, `383` tests.
+
+## 2026-05-10 - Notification Templates Split By Audience
+
+Participant activity notices and manager signup-change notices now use separate WeChat subscription templates.
+
+Delivered behavior:
+
+- participant proceeding/cancellation notices continue to use `templateKey: activity_notice` and local config `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`.
+- organizer/admin signup-change notices now use `templateKey: manager_registration_notice` and local config `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`.
+- Activity Detail manager subscription requests the manager template instead of the participant activity template.
+- `getActivityDetail` reads manager subscription state from `manager_registration_notice`, so the manager subscribe button reflects the correct per-activity manager consent.
+- manager notification sending ignores `activity_notice` subscriptions and only sends to accepted `manager_registration_notice` subscriptions.
+- local mock mode mirrors the same split template behavior.
+
+Deployment note:
+
+- add the real manager signup-change template ID to local-only `env.local.js` as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`.
+- run `npm run copy:cloud-shared`, then upload `getActivityDetail`, `joinActivity`, and `cancelRegistration`.
+- upload a new mini program frontend build so Activity Detail requests the manager template.
+
+Verification:
+
+- targeted red/green coverage was updated for notification service config, Activity Detail manager subscription handling, CloudBase manager notifications, CloudBase `getActivityDetail`, and local mock notification behavior.
+- full regression suite passed: `57` test suites, `385` tests.
