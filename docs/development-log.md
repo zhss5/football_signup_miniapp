@@ -1746,7 +1746,7 @@ Manager signup-change messages now match the actual WeChat subscription template
 Delivered behavior:
 
 - the activity name is sent as `thing7`.
-- the status is sent as `phrase1` with `加入` or `退出`.
+- the status is sent as `phrase1` with `参与者加入` or `参与者退出`.
 - the remark is sent as `thing5`, for example `Alex加入报名` or `Alex退出报名`.
 - the signup result is sent as `thing6` using the post-change count, for example `4/24`.
 - `joinActivity` and `cancelRegistration` now pass the post-change joined count plus the activity total to the shared manager-notification helper.

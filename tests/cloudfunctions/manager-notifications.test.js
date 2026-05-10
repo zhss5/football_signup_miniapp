@@ -68,7 +68,7 @@ test('buildManagerRegistrationMessageData maps join and cancel changes to the ma
       value: 'May 9 training'
     },
     phrase1: {
-      value: '\u52a0\u5165'
+      value: '\u53c2\u4e0e\u8005\u52a0\u5165'
     },
     thing5: {
       value: 'Alex\u52a0\u5165\u62a5\u540d'
@@ -89,7 +89,7 @@ test('buildManagerRegistrationMessageData maps join and cancel changes to the ma
       value: 'May 9 training'
     },
     phrase1: {
-      value: '\u9000\u51fa'
+      value: '\u53c2\u4e0e\u8005\u9000\u51fa'
     },
     thing5: {
       value: 'Alex\u9000\u51fa\u62a5\u540d'
@@ -199,7 +199,7 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
       value: 'May 9 training'
     },
     phrase1: {
-      value: '\u52a0\u5165'
+      value: '\u53c2\u4e0e\u8005\u52a0\u5165'
     },
     thing5: {
       value: 'Alex\u52a0\u5165\u62a5\u540d'

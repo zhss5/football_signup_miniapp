@@ -24,6 +24,9 @@ function buildManagerRegistrationMessageData(activity, change = {}) {
   const actorName = clip(change.actorName || '\u961f\u5458', 10);
   const isCancelled = change.changeType === 'registration_cancelled';
   const statusText = isCancelled ? '\u9000\u51fa' : '\u52a0\u5165';
+  const participantStatusText = isCancelled
+    ? '\u53c2\u4e0e\u8005\u9000\u51fa'
+    : '\u53c2\u4e0e\u8005\u52a0\u5165';
   const joinedCount = normalizeCount(
     change.joinedCountAfter !== undefined ? change.joinedCountAfter : activity.joinedCount
   );
@@ -37,7 +40,7 @@ function buildManagerRegistrationMessageData(activity, change = {}) {
       value: clip(activity.title || '\u8db3\u7403\u6d3b\u52a8', 20)
     },
     phrase1: {
-      value: statusText
+      value: participantStatusText
     },
     thing5: {
       value: clip(`${actorName}${statusText}\u62a5\u540d`, 20)

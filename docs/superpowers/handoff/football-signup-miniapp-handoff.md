@@ -406,7 +406,7 @@ Current activity experience polish:
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Same-activity repeat exits are guarded for regular participants: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration. The activity organizer and `admin` users are exempt from this rejoin block, and manager removal actions are not rate-limited.
 - Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
-- Manager signup-change notification data now matches the current WeChat manager template: `thing7` activity name, `phrase1` `加入`/`退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
+- Manager signup-change notification data now matches the current WeChat manager template: `thing7` activity name, `phrase1` `参与者加入`/`参与者退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
 
 Current My list behavior:
 
