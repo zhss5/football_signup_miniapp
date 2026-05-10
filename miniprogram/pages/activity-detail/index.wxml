@@ -39,6 +39,11 @@
         <text>{{i18n.activity.status.confirmed}}</text>
       </view>
     </view>
+    <view wx:if="{{activity.status === 'cancelled'}}" class="hero-status-row">
+      <view class="cancelled-banner">
+        <text>{{i18n.activity.status.cancelled}}</text>
+      </view>
+    </view>
     <view wx:if="{{activityExpiredVisible}}" class="expired-stamp">
       <text>{{i18n.activity.status.expired}}</text>
     </view>

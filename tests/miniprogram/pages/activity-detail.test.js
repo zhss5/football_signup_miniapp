@@ -394,6 +394,22 @@ describe('activity detail page', () => {
     expect(ctx.data.activityExpiredVisible).toBe(true);
   });
 
+  test('activity detail template renders a cancelled activity status badge', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain("activity.status === 'cancelled'");
+    expect(wxml).toContain('class="cancelled-banner"');
+    expect(wxml).toContain('{{i18n.activity.status.cancelled}}');
+    expect(wxss).toContain('.cancelled-banner');
+  });
+
   test('reload passes registration management permission into the team list view model', async () => {
     getActivityDetail.mockResolvedValue({
       activity: {
