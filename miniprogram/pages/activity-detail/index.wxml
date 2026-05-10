@@ -44,6 +44,11 @@
         <text>{{i18n.activity.status.cancelled}}</text>
       </view>
     </view>
+    <view wx:if="{{activitySignupClosedVisible}}" class="hero-status-row">
+      <view class="signup-closed-banner">
+        <text>{{i18n.activity.status.signupClosed}}</text>
+      </view>
+    </view>
     <view wx:if="{{activityExpiredVisible}}" class="expired-stamp">
       <text>{{i18n.activity.status.expired}}</text>
     </view>

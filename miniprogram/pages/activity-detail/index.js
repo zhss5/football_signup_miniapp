@@ -15,7 +15,11 @@ const {
   requestManagerRegistrationNotificationSubscription
 } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
-const { buildTeamListVm, isActivityExpired } = require('../../utils/formatters');
+const {
+  buildTeamListVm,
+  getActivitySignupState,
+  isActivityExpired
+} = require('../../utils/formatters');
 const { TEAM_COLOR_OPTIONS, isTeamColorKey } = require('../../utils/team-colors');
 const {
   getAppLocale,
@@ -193,6 +197,7 @@ Page({
     activityDescriptionText: '',
     activityDetailImages: [],
     activityExpiredVisible: false,
+    activitySignupClosedVisible: false,
     colorPaletteVisible: false,
     colorPaletteTeamId: '',
     colorPaletteOptions: []
@@ -237,6 +242,11 @@ Page({
     const activityDetailImages = Array.isArray(activityWithDisplayCover.detailDisplayImages)
       ? activityWithDisplayCover.detailDisplayImages.filter(Boolean)
       : [];
+    const signupState = getActivitySignupState(
+      activityWithDisplayCover,
+      undefined,
+      translate
+    );
     this.setData({
       ...detail,
       activity: activityWithDisplayCover,
@@ -248,6 +258,7 @@ Page({
       ...buildLocationMapState(activityWithDisplayCover),
       activityDetailImages,
       activityExpiredVisible: isActivityExpired(activityWithDisplayCover),
+      activitySignupClosedVisible: signupState.stateKey === 'signupClosed',
       teams: buildTeamListVm(
         detail.teams,
         detail.myRegistration,

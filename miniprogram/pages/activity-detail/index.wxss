@@ -204,7 +204,8 @@
 }
 
 .confirmed-banner,
-.cancelled-banner {
+.cancelled-banner,
+.signup-closed-banner {
   display: inline-flex;
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
@@ -220,6 +221,11 @@
 .cancelled-banner {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.signup-closed-banner {
+  background: #f3f4f6;
+  color: #4b5563;
 }
 
 .expired-stamp {

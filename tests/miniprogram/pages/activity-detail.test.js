@@ -14,6 +14,11 @@ jest.mock('../../../miniprogram/services/registration-service', () => ({
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildTeamListVm: jest.fn((teams) => teams),
+  getActivitySignupState: jest.fn(() => ({
+    statusText: 'Joinable',
+    joinEnabled: true,
+    isExpired: false
+  })),
   isActivityExpired: jest.fn(activity => {
     const endAt = Date.parse(activity.endAt || '');
     return Number.isFinite(endAt) && Date.now() > endAt;
@@ -38,6 +43,7 @@ describe('activity detail page', () => {
   let moveRegistration;
   let removeRegistration;
   let buildTeamListVm;
+  let getActivitySignupState;
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
   let requestActivityNotificationSubscription;
@@ -66,6 +72,7 @@ describe('activity detail page', () => {
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
+    ({ getActivitySignupState } = require('../../../miniprogram/utils/formatters'));
     ({
       notifyActivityParticipants,
       requestActivityNotificationSubscription,
@@ -82,6 +89,11 @@ describe('activity detail page', () => {
     requestManagerRegistrationNotificationSubscription.mockResolvedValue({
       configured: true,
       status: 'accepted'
+    });
+    getActivitySignupState.mockReturnValue({
+      statusText: 'Joinable',
+      joinEnabled: true,
+      isExpired: false
     });
   });
 
@@ -394,6 +406,54 @@ describe('activity detail page', () => {
     expect(ctx.data.activityExpiredVisible).toBe(true);
   });
 
+  test('reload exposes a signup closed banner when signup deadline has passed', async () => {
+    getActivitySignupState.mockReturnValue({
+      statusText: 'Signup Closed',
+      joinEnabled: false,
+      isExpired: false,
+      stateKey: 'signupClosed'
+    });
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Closed Signup Match',
+        status: 'published',
+        signupDeadlineAt: '2000-01-01T10:00:00.000Z',
+        endAt: '2999-01-01T10:00:00.000Z'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(getActivitySignupState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: 'activity_123',
+        signupDeadlineAt: '2000-01-01T10:00:00.000Z'
+      }),
+      undefined,
+      expect.any(Function)
+    );
+    expect(ctx.data.activitySignupClosedVisible).toBe(true);
+  });
+
   test('activity detail template renders a cancelled activity status badge', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
@@ -408,6 +468,22 @@ describe('activity detail page', () => {
     expect(wxml).toContain('class="cancelled-banner"');
     expect(wxml).toContain('{{i18n.activity.status.cancelled}}');
     expect(wxss).toContain('.cancelled-banner');
+  });
+
+  test('activity detail template renders a signup closed status badge', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{activitySignupClosedVisible}}"');
+    expect(wxml).toContain('class="signup-closed-banner"');
+    expect(wxml).toContain('{{i18n.activity.status.signupClosed}}');
+    expect(wxss).toContain('.signup-closed-banner');
   });
 
   test('reload passes registration management permission into the team list view model', async () => {

@@ -44,6 +44,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isDeleted) {
     return {
+      stateKey: 'deleted',
       statusText: translate('activity.status.deleted'),
       joinEnabled: false,
       isExpired: false
@@ -52,6 +53,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isCancelled) {
     return {
+      stateKey: 'cancelled',
       statusText: translate('activity.status.cancelled'),
       joinEnabled: false,
       isExpired: false
@@ -60,6 +62,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isExpired) {
     return {
+      stateKey: 'expired',
       statusText: translate('activity.status.expired'),
       joinEnabled: false,
       isExpired: true
@@ -68,6 +71,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isFull) {
     return {
+      stateKey: 'full',
       statusText: translate('activity.status.full'),
       joinEnabled: false,
       isExpired: false
@@ -76,6 +80,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isPublished && isSignupClosed) {
     return {
+      stateKey: 'signupClosed',
       statusText: translate('activity.status.signupClosed'),
       joinEnabled: false,
       isExpired: false
@@ -84,6 +89,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
 
   if (isPublished) {
     return {
+      stateKey: 'joinable',
       statusText: translate('activity.status.joinable'),
       joinEnabled: true,
       isExpired: false
@@ -91,6 +97,7 @@ function getActivitySignupState(activity = {}, nowProvider, translate = defaultT
   }
 
   return {
+    stateKey: 'ended',
     statusText: translate('activity.status.ended'),
     joinEnabled: false,
     isExpired: false

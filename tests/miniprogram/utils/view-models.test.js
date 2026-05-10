@@ -1,7 +1,8 @@
 const {
   DEFAULT_MEMBER_AVATAR_TEXT,
   buildActivityCardVm,
-  buildTeamListVm
+  buildTeamListVm,
+  getActivitySignupState
 } = require('../../../miniprogram/utils/formatters');
 const { t } = require('../../../miniprogram/utils/i18n');
 
@@ -66,6 +67,24 @@ test('buildActivityCardVm marks activities past signup deadline as closed and ex
   expect(vm.statusText).toBe('Signup Closed');
   expect(vm.capacityText).toBe('Joined 3 / 12');
   expect(vm.startDisplayText).toBeTruthy();
+});
+
+test('getActivitySignupState exposes a stable signup closed state key', () => {
+  const state = getActivitySignupState(
+    {
+      joinedCount: 3,
+      signupLimitTotal: 12,
+      status: 'published',
+      signupDeadlineAt: '2026-04-26T11:00:00.000Z'
+    },
+    () => new Date('2026-04-26T12:30:00.000Z').getTime()
+  );
+
+  expect(state).toMatchObject({
+    statusText: 'Signup Closed',
+    joinEnabled: false,
+    stateKey: 'signupClosed'
+  });
 });
 
 test('buildActivityCardVm marks published activities after the end time as expired', () => {
