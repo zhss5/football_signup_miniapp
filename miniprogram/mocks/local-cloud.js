@@ -1063,6 +1063,11 @@ function createLocalCloudClient(options = {}) {
         status: 'sent',
         createdAt: stamp
       });
+      subscription.status = 'consumed';
+      subscription.subscribed = false;
+      subscription.consumedAt = stamp;
+      subscription.updatedAt = stamp;
+      subscription.lastSendStatus = 'sent';
     });
   }
 

@@ -3,7 +3,7 @@ const {
   notifyActivityManagers
 } = require('../../cloudfunctions/_shared/manager-notifications');
 
-function createCollection(dataByCollection, writes) {
+function createCollection(collectionName, dataByCollection, writes) {
   return {
     doc(id) {
       return {
@@ -11,6 +11,22 @@ function createCollection(dataByCollection, writes) {
           return {
             data: dataByCollection[id] || null
           };
+        },
+        async update({ data }) {
+          writes.updates.push({
+            collection: collectionName,
+            id,
+            data
+          });
+
+          if (dataByCollection[id]) {
+            dataByCollection[id] = {
+              ...dataByCollection[id],
+              ...data
+            };
+          }
+
+          return {};
         }
       };
     },
@@ -34,7 +50,8 @@ function createCollection(dataByCollection, writes) {
 
 function createFakeDb(seed) {
   const writes = {
-    adds: []
+    adds: [],
+    updates: []
   };
   const data = {
     users: seed.users || {},
@@ -45,7 +62,7 @@ function createFakeDb(seed) {
   return {
     writes,
     collection(name) {
-      return createCollection(data[name], writes);
+      return createCollection(name, data[name], writes);
     }
   };
 }
@@ -223,6 +240,87 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
         recipientOpenId: 'openid_admin',
         notificationType: 'registration_joined',
         status: 'sent'
+      })
+    ])
+  );
+  expect(fakeDb.writes.updates).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        collection: 'notification_subscriptions',
+        id: 'activity_1_openid_owner_manager_registration_notice',
+        data: expect.objectContaining({
+          status: 'consumed',
+          subscribed: false,
+          consumedAt: '2026-05-09T10:00:00.000Z',
+          lastSendStatus: 'sent'
+        })
+      }),
+      expect.objectContaining({
+        collection: 'notification_subscriptions',
+        id: 'activity_1_openid_admin_manager_registration_notice',
+        data: expect.objectContaining({
+          status: 'consumed',
+          subscribed: false,
+          consumedAt: '2026-05-09T10:00:00.000Z',
+          lastSendStatus: 'sent'
+        })
+      })
+    ])
+  );
+});
+
+test('notifyActivityManagers consumes stale accepted subscriptions after send failures so managers can re-subscribe', async () => {
+  const fakeDb = createFakeDb({
+    notificationSubscriptions: {
+      owner_sub: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_owner',
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
+        status: 'accepted'
+      }
+    }
+  });
+  const sendSubscribeMessage = jest.fn().mockRejectedValue(new Error('quota exhausted'));
+
+  const result = await notifyActivityManagers(
+    fakeDb,
+    {
+      activity: {
+        _id: 'activity_1',
+        title: 'May 9 training',
+        organizerOpenId: 'openid_owner',
+        joinedCount: 4,
+        signupLimitTotal: 12
+      },
+      actorOpenId: 'openid_player',
+      actorName: 'Alex',
+      changeType: 'registration_cancelled',
+      joinedCountAfter: 3,
+      stamp: '2026-05-09T10:00:00.000Z'
+    },
+    {
+      sendSubscribeMessage,
+      ensureNotificationCollections: jest.fn().mockResolvedValue({})
+    }
+  );
+
+  expect(result).toMatchObject({
+    totalRecipients: 1,
+    sent: 0,
+    failed: 1
+  });
+  expect(fakeDb.writes.updates).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        collection: 'notification_subscriptions',
+        id: 'activity_1_openid_owner_manager_registration_notice',
+        data: expect.objectContaining({
+          status: 'consumed',
+          subscribed: false,
+          lastSendStatus: 'failed',
+          lastErrorMessage: 'quota exhausted'
+        })
       })
     ])
   );

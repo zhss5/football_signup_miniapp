@@ -373,6 +373,7 @@ Current activity notification behavior:
 - accepted manager subscriptions are notified only when a regular participant joins through `joinActivity` or self-cancels through `cancelRegistration`.
 - organizer/admin self signup, organizer/admin self cancellation, and organizer/admin removal of another participant intentionally do not send manager notices.
 - manager notification failures are caught after the registration write, so signup and self-cancellation are not blocked by notification delivery problems.
+- manager signup-change subscriptions are treated as one-shot WeChat consent: after a send attempt, the `manager_registration_notice` row is marked `consumed`, so Activity Detail can prompt the organizer/admin to subscribe again for the next signup-change notice.
 
 - TODO: after `endAt` passes, show an overdue unresolved state for activities that are still `published` and `confirmStatus: pending`, and remind organizers to confirm or cancel manually without automatic confirmation.
 
@@ -408,6 +409,8 @@ Current activity experience polish:
 - Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
 - Manager signup-change notification data now matches the current WeChat manager template: `thing7` activity name, `phrase1` `参与者加入`/`参与者退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
 
+- Manager signup-change notification consent is one-shot: after a notification send attempt, organizers/admins need to subscribe again if they want the next join/cancel notice.
+
 Current My list behavior:
 
 - My loads one batch each for created activities and joined activities.
@@ -436,7 +439,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the split manager-notification template key requires uploading `getActivityDetail`, `joinActivity`, and `cancelRegistration`.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the manager-notification path requires uploading `getActivityDetail`, `joinActivity`, and `cancelRegistration`.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -451,7 +454,7 @@ Continue in this order:
    - keep the participant proceeding/cancellation template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
    - keep the organizer/admin signup-change template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
-   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
+   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, one-shot manager consent consumption and re-subscription, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 14. Add activity-list pagination when activity volume exceeds one returned batch:

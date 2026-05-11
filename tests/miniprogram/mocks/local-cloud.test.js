@@ -1470,6 +1470,12 @@ test('local cloud client records manager notifications only for regular self joi
   await participantClient.call('cancelRegistration', {
     activityId: created.activityId
   });
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'manager_registration_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
   await participantClient.call('joinActivity', {
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
@@ -1489,21 +1495,33 @@ test('local cloud client records manager notifications only for regular self joi
   expect(managerNotifications.map(item => item.notificationType)).toEqual([
     'registration_joined',
     'registration_joined',
-    'registration_cancelled',
-    'registration_cancelled',
-    'registration_joined',
     'registration_joined'
   ]);
   expect(
     managerNotifications.map(item => item.recipientOpenId).sort()
   ).toEqual([
     'openid_admin',
-    'openid_admin',
-    'openid_admin',
-    'openid_owner',
     'openid_owner',
     'openid_owner'
   ]);
+  expect(Object.values(state.notificationSubscriptions)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        userOpenId: 'openid_owner',
+        templateKey: 'manager_registration_notice',
+        status: 'consumed',
+        subscribed: false,
+        lastSendStatus: 'sent'
+      }),
+      expect.objectContaining({
+        userOpenId: 'openid_admin',
+        templateKey: 'manager_registration_notice',
+        status: 'consumed',
+        subscribed: false,
+        lastSendStatus: 'sent'
+      })
+    ])
+  );
   expect(
     managerNotifications.some(
       item => item.notificationType === 'registration_cancelled' && item.actorOpenId === 'openid_owner'

@@ -1821,3 +1821,30 @@ Documented checks:
 Deployment note:
 
 - deploy `getActivityDetail` and upload the latest mini program frontend build before asking organizers to refresh stale manager notification consent.
+
+## 2026-05-11 - Consume Manager Signup Notification Consent
+
+Manager signup-change notification consent now behaves as a one-shot WeChat subscription.
+
+Delivered behavior:
+
+- after `notifyActivityManagers` attempts to send a manager signup-change notice, the corresponding `manager_registration_notice` subscription is marked `consumed`.
+- consumed rows set `subscribed: false`, `consumedAt`, `updatedAt`, and `lastSendStatus`.
+- failed send attempts are also marked consumed with `lastSendStatus: failed`, so stale accepted rows that no longer have WeChat send quota do not keep the Activity Detail button disabled forever.
+- `getActivityDetail` already only treats `status: accepted` as subscribed, so managers can subscribe again after one notification is consumed.
+- the local mock now mirrors the same one-shot manager subscription behavior.
+
+Why it matters:
+
+- WeChat subscription-message consent is not an unlimited push channel. An organizer/admin needs to authorize again after the previous manager signup-change notice is used.
+- this prevents the confusing state where the UI says signup notifications are subscribed, but WeChat has already consumed or rejected the send quota.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `joinActivity` and `cancelRegistration`.
+- upload the mini program build only if the manager subscription UI code in the target build is older than the current remote `main`.
+
+Verification:
+
+- targeted red/green coverage was added for successful manager-notice consumption, stale accepted subscription cleanup after send failure, and local mock one-shot behavior.
+- full regression suite passed with the bundled Node runtime: `57` test suites, `393` tests.

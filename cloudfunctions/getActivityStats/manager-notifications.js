@@ -128,6 +128,51 @@ async function addNotificationLog(db, data) {
   });
 }
 
+function getSubscriptionDocumentId(subscription) {
+  if (subscription && subscription._id) {
+    return subscription._id;
+  }
+
+  if (
+    subscription &&
+    subscription.activityId &&
+    subscription.userOpenId &&
+    subscription.templateKey
+  ) {
+    return `${subscription.activityId}_${subscription.userOpenId}_${subscription.templateKey}`;
+  }
+
+  return '';
+}
+
+async function consumeManagerSubscription(db, subscription, stamp, sendStatus, errorMessage) {
+  const documentId = getSubscriptionDocumentId(subscription);
+
+  if (!documentId) {
+    return;
+  }
+
+  const data = {
+    status: 'consumed',
+    subscribed: false,
+    consumedAt: stamp,
+    updatedAt: stamp,
+    lastSendStatus: sendStatus
+  };
+
+  if (errorMessage) {
+    data.lastErrorMessage = clip(errorMessage, 200);
+  }
+
+  await db
+    .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
+    .doc(documentId)
+    .update({
+      data
+    })
+    .catch(() => null);
+}
+
 async function notifyActivityManagers(db, payload, deps = {}) {
   if (!payload || !payload.activity || !payload.activity._id) {
     return {
@@ -185,6 +230,7 @@ async function notifyActivityManagers(db, payload, deps = {}) {
         lang: 'zh_CN'
       });
       summary.sent += 1;
+      await consumeManagerSubscription(db, subscription, payload.stamp, 'sent');
       await addNotificationLog(db, {
         activityId: payload.activity._id,
         actorOpenId: payload.actorOpenId,
@@ -197,6 +243,13 @@ async function notifyActivityManagers(db, payload, deps = {}) {
       });
     } catch (error) {
       summary.failed += 1;
+      await consumeManagerSubscription(
+        db,
+        subscription,
+        payload.stamp,
+        'failed',
+        error && error.message ? error.message : String(error)
+      );
       await addNotificationLog(db, {
         activityId: payload.activity._id,
         actorOpenId: payload.actorOpenId,
