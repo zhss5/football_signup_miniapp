@@ -1876,3 +1876,24 @@ Verification:
 
 - targeted coverage was added/updated for activity draft defaults, frontend and shared validation, create/update persistence, `joinActivity` threshold behavior, `cancelRegistration` no-notify behavior, Create submit subscription recording, and local mock threshold behavior.
 - targeted suite passed with the bundled Node runtime: `8` test suites, `101` tests.
+
+## 2026-05-11 - Default Mini Program Locale Changed To Chinese
+
+First-time experience-version users now see the mini program in Chinese by default.
+
+Delivered behavior:
+
+- the default locale is now `zh-CN`.
+- first-run users without a stored language preference no longer inherit an English system or WeChat runtime language.
+- stored manual language preferences still take precedence, so users who explicitly switch to English keep seeing English.
+- empty locale storage is no longer normalized into a manual locale, which keeps first-run default behavior distinguishable from an explicit language choice.
+
+Deployment note:
+
+- no cloud functions need to be uploaded for this change.
+- upload a new mini program frontend build / experience version so first-time users receive the Chinese default.
+
+Verification:
+
+- targeted red/green coverage was added for the first-run Chinese default on an English runtime.
+- full regression suite passed with the bundled Node runtime: `57` test suites, `399` tests.
