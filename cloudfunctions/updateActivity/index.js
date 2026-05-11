@@ -66,6 +66,21 @@ function resolveAddressName(event, activity, addressText) {
   return addressName || addressText;
 }
 
+function getDefaultRegistrationNoticeThreshold(signupLimitTotal) {
+  const total = Number(signupLimitTotal) || 0;
+  return total > 0 ? Math.ceil(total * 0.8) : 0;
+}
+
+function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
+  const threshold = Number(value || 0);
+
+  if (Number.isFinite(threshold) && threshold > 0) {
+    return Math.floor(threshold);
+  }
+
+  return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
+}
+
 function buildActivityUpdateData(event, activity, stamp) {
   const imageList = normalizeImageList(event);
   const detailImages = normalizeDetailImages(event);
@@ -83,6 +98,10 @@ function buildActivityUpdateData(event, activity, stamp) {
     description: event.description || '',
     insuranceLink: String(event.insuranceLink || '').trim(),
     notificationHint: String(event.notificationHint || '').trim(),
+    registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+      event.registrationNoticeThreshold,
+      event.signupLimitTotal
+    ),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
     shareImage: event.shareImage || '',

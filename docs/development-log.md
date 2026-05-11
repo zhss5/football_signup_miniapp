@@ -1848,3 +1848,31 @@ Verification:
 
 - targeted red/green coverage was added for successful manager-notice consumption, stale accepted subscription cleanup after send failure, and local mock one-shot behavior.
 - full regression suite passed with the bundled Node runtime: `57` test suites, `393` tests.
+
+## 2026-05-11 - Threshold-Based Manager Signup Change Notices
+
+Manager signup-change notices now use an activity-level threshold instead of sending on every participant change.
+
+Delivered behavior:
+
+- activities store `registrationNoticeThreshold`.
+- create/edit defaults the threshold to `ceil(signupLimitTotal * 0.8)` and lets organizers/admins override it.
+- threshold validation requires an integer from `1` through `signupLimitTotal`.
+- when team capacity changes update the total signup limit, an unchanged/default/invalid threshold is recalculated from the new total while a valid custom threshold is preserved.
+- create activity asks the organizer for manager signup-change notification consent before submitting, then records the consent against the created activity.
+- only a regular participant's self-join can trigger the manager signup-change notice.
+- the trigger check uses the post-join total `joinedCountAfter >= registrationNoticeThreshold`; proxy signups are included in that total because they increase the activity's joined count.
+- organizer/admin self-join, organizer/admin proxy signup, organizer/admin removal, and participant self-cancel do not send manager signup-change notices.
+- if there is no accepted one-shot manager subscription, no notice is sent; Activity Detail keeps the manual subscribe action available.
+- local mock behavior matches the CloudBase functions.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`, then upload `createActivity`, `updateActivity`, `joinActivity`, and `cancelRegistration`.
+- upload a new mini program frontend build so Create/Edit shows the threshold field and Create requests manager notification consent.
+- `cancelRegistration` is part of the upload because participant exits intentionally no longer send manager signup-change notices.
+
+Verification:
+
+- targeted coverage was added/updated for activity draft defaults, frontend and shared validation, create/update persistence, `joinActivity` threshold behavior, `cancelRegistration` no-notify behavior, Create submit subscription recording, and local mock threshold behavior.
+- targeted suite passed with the bundled Node runtime: `8` test suites, `101` tests.

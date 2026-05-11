@@ -79,7 +79,9 @@
 - In the uploaded experience build, confirm the manager signup-notification consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template
 - In `notification_subscriptions`, confirm the manager row uses `templateKey: manager_registration_notice` and a `templateId` matching local-only config `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
 - If a manager row still uses the participant activity template ID, redeploy `getActivityDetail`, upload the latest mini program frontend build, and have the organizer tap the signup-notification subscribe action again
-- After another regular participant joins or exits, confirm `notification_logs` records `registration_joined` or `registration_cancelled` with `templateKey: manager_registration_notice`
+- Confirm the activity has a `registrationNoticeThreshold`; Create/Edit defaults it to 80% of the total signup limit and lets organizer/admin users change it.
+- After a regular participant joins and the post-join total reaches the threshold, confirm `notification_logs` records `registration_joined` with `templateKey: manager_registration_notice`.
+- Confirm participant self-cancel does not create a manager signup-change notification.
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm a cancelled activity does not show the confirmed-state banner, even if it was confirmed before cancellation

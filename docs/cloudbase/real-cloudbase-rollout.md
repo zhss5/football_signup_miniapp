@@ -129,7 +129,9 @@ Organizer/admin signup-change notices:
 
 - the Activity Detail manager action requests `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
 - cloud sends use `templateKey: manager_registration_notice`
-- `notification_logs.notificationType` should be `registration_joined` or `registration_cancelled`
+- `notification_logs.notificationType` should be `registration_joined`
+- activity documents store `registrationNoticeThreshold`; regular participant self-join sends only when the post-join total reaches that threshold
+- participant self-cancel, organizer/admin removal, and organizer/admin proxy signup do not send manager signup-change notices
 
 Real-device verification steps:
 
@@ -137,8 +139,9 @@ Real-device verification steps:
 2. Tap the signup-notification subscribe action on Activity Detail.
 3. Confirm the WeChat consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template.
 4. In CloudBase, inspect `notification_subscriptions` for the current activity and manager user. The row should use `templateKey: manager_registration_notice` and a `templateId` matching the local-only `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` value.
-5. Have a regular participant join or exit the activity.
-6. Inspect `notification_logs`; the manager notification row should use `templateKey: manager_registration_notice`, `notificationType: registration_joined` or `registration_cancelled`, and the same manager template ID.
+5. Have regular participants join until the post-join total reaches the activity's `registrationNoticeThreshold`.
+6. Inspect `notification_logs`; the manager notification row should use `templateKey: manager_registration_notice`, `notificationType: registration_joined`, and the same manager template ID.
+7. Have a regular participant cancel their signup and confirm no new manager signup-change row is created.
 
 Do not commit real template IDs. Keep them in `miniprogram/config/env.local.js` or other local/secret deployment configuration only.
 

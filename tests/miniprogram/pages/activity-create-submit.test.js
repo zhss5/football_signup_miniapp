@@ -15,6 +15,11 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
   ensureUserProfile: jest.fn()
 }));
 
+jest.mock('../../../miniprogram/services/notification-service', () => ({
+  recordActivityNotificationSubscription: jest.fn(),
+  requestManagerRegistrationNotificationSubscriptionConsent: jest.fn()
+}));
+
 jest.mock('../../../miniprogram/utils/activity-draft', () => ({
   buildActivityEditForm: jest.fn(() => ({
     title: 'Existing Thursday Match',
@@ -25,6 +30,9 @@ jest.mock('../../../miniprogram/utils/activity-draft', () => ({
   createDefaultActivityForm: jest.fn(() => ({
     title: 'Thursday Match'
   })),
+  getDefaultRegistrationNoticeThreshold: jest.fn(total =>
+    Number(total || 0) > 0 ? Math.ceil(Number(total || 0) * 0.8) : 0
+  ),
   summarizeTeamSlots: jest.fn(() => ({
     namedTeamSlots: 12,
     benchSlots: 0,
@@ -50,6 +58,8 @@ describe('activity create submit flow', () => {
   let ensureUserProfile;
   let uploadFile;
   let validateActivityDraft;
+  let recordActivityNotificationSubscription;
+  let requestManagerRegistrationNotificationSubscriptionConsent;
   let app;
 
   beforeEach(() => {
@@ -76,7 +86,16 @@ describe('activity create submit flow', () => {
     } = require('../../../miniprogram/services/activity-service'));
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
+    ({
+      recordActivityNotificationSubscription,
+      requestManagerRegistrationNotificationSubscriptionConsent
+    } = require('../../../miniprogram/services/notification-service'));
     ({ validateActivityDraft } = require('../../../miniprogram/utils/validators'));
+    requestManagerRegistrationNotificationSubscriptionConsent.mockResolvedValue({
+      configured: false,
+      skipped: true
+    });
+    recordActivityNotificationSubscription.mockResolvedValue({ skipped: true });
   });
 
   test('onLoad marks the create page unavailable for regular users', async () => {
@@ -349,6 +368,7 @@ describe('activity create submit flow', () => {
 
     expect(syncDerivedState).toHaveBeenCalledWith({
       signupLimitTotal: 24,
+      registrationNoticeThreshold: 20,
       teams: nextTeams
     });
   });
@@ -379,6 +399,7 @@ describe('activity create submit flow', () => {
 
     expect(syncDerivedState).toHaveBeenCalledWith({
       signupLimitTotal: 12,
+      registrationNoticeThreshold: 10,
       teams: nextTeams
     });
   });
@@ -409,6 +430,7 @@ describe('activity create submit flow', () => {
 
     expect(syncDerivedState).toHaveBeenCalledWith({
       signupLimitTotal: 30,
+      registrationNoticeThreshold: 24,
       teams: nextTeams
     });
   });
@@ -641,6 +663,45 @@ describe('activity create submit flow', () => {
         imageList: ['cloud://prod-env-123/activity-covers/cover.jpg']
       })
     );
+  });
+
+  test('onSubmit requests manager registration notification consent before creating and records it after creation', async () => {
+    requestManagerRegistrationNotificationSubscriptionConsent.mockResolvedValue({
+      configured: true,
+      templateKey: 'manager_registration_notice',
+      templateId: 'tmpl_manager',
+      status: 'accepted'
+    });
+    createActivity.mockResolvedValue({ activityId: 'activity_123' });
+
+    const ctx = {
+      data: {
+        form: {
+          title: 'Thursday Match'
+        },
+        canCreateActivity: true
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(requestManagerRegistrationNotificationSubscriptionConsent).toHaveBeenCalled();
+    expect(
+      requestManagerRegistrationNotificationSubscriptionConsent.mock.invocationCallOrder[0]
+    ).toBeLessThan(createActivity.mock.invocationCallOrder[0]);
+    expect(recordActivityNotificationSubscription).toHaveBeenCalledWith('activity_123', {
+      configured: true,
+      templateKey: 'manager_registration_notice',
+      templateId: 'tmpl_manager',
+      status: 'accepted'
+    });
   });
 
   test('onSubmit uploads selected detail images before creating the activity', async () => {

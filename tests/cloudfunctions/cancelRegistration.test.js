@@ -122,7 +122,7 @@ test('cancelRegistration increments the participant cancellation count', async (
   jest.dontMock('wx-server-sdk');
 });
 
-test('cancelRegistration notifies managers when a regular participant cancels', async () => {
+test('cancelRegistration does not notify managers when a regular participant cancels', async () => {
   jest.resetModules();
 
   const updateRegistration = jest.fn().mockResolvedValue({});
@@ -210,22 +210,7 @@ test('cancelRegistration notifies managers when a regular participant cancels', 
     }
   );
 
-  expect(notifyActivityManagers).toHaveBeenCalledWith(
-    fakeDb,
-    expect.objectContaining({
-      activity: expect.objectContaining({
-        _id: 'activity_1',
-        organizerOpenId: 'openid_owner'
-      }),
-      actorOpenId: 'openid_player',
-      actorName: 'Alex',
-      changeType: 'registration_cancelled',
-      joinedCountAfter: 0,
-      signupLimitTotal: 12,
-      stamp: '2026-05-09T10:00:00.000Z'
-    }),
-    expect.any(Object)
-  );
+  expect(notifyActivityManagers).not.toHaveBeenCalled();
 
   jest.dontMock('wx-server-sdk');
 });

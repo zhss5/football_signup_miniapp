@@ -10,8 +10,13 @@ const {
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
+  getDefaultRegistrationNoticeThreshold,
   summarizeTeamSlots
 } = require('../../utils/activity-draft');
+const {
+  recordActivityNotificationSubscription,
+  requestManagerRegistrationNotificationSubscriptionConsent
+} = require('../../services/notification-service');
 const { validateActivityDraft } = require('../../utils/validators');
 const { TEAM_COLOR_OPTIONS } = require('../../utils/team-colors');
 const {
@@ -60,6 +65,19 @@ function adjustSignupLimitForTeamChange(form, nextTeams) {
   const adjustedTotal = currentTotal + nextTeamSlots - currentTeamSlots;
 
   return Math.max(nextTeamSlots, adjustedTotal);
+}
+
+function adjustRegistrationNoticeThresholdForTotalChange(form, nextTotal) {
+  const total = Number(nextTotal) || 0;
+  const currentTotal = Number(form.signupLimitTotal) || 0;
+  const currentThreshold = Number(form.registrationNoticeThreshold) || 0;
+  const currentDefault = getDefaultRegistrationNoticeThreshold(currentTotal);
+
+  if (!currentThreshold || currentThreshold > total || currentThreshold === currentDefault) {
+    return getDefaultRegistrationNoticeThreshold(total);
+  }
+
+  return currentThreshold;
 }
 
 function openCoverCropper(imagePath) {
@@ -359,14 +377,22 @@ Page({
   onFieldInput(event) {
     const field = event.currentTarget.dataset.field;
     const value = event.detail.value;
+    const numericFields = new Set(['signupLimitTotal', 'registrationNoticeThreshold']);
     const form = {
       ...this.data.form,
-      [field]: field === 'signupLimitTotal' ? Number(value) || 0 : value
+      [field]: numericFields.has(field) ? Number(value) || 0 : value
     };
 
     if (field === 'addressText') {
       form.addressName = '';
       form.location = null;
+    }
+
+    if (field === 'signupLimitTotal') {
+      form.registrationNoticeThreshold = adjustRegistrationNoticeThresholdForTotalChange(
+        this.data.form,
+        form.signupLimitTotal
+      );
     }
 
     this.syncDerivedState(form);
@@ -397,10 +423,15 @@ Page({
 
   onTeamsChange(event) {
     const teams = Array.isArray(event.detail.teams) ? event.detail.teams : [];
+    const signupLimitTotal = adjustSignupLimitForTeamChange(this.data.form, teams);
     const form = {
       ...this.data.form,
       teams,
-      signupLimitTotal: adjustSignupLimitForTeamChange(this.data.form, teams)
+      signupLimitTotal,
+      registrationNoticeThreshold: adjustRegistrationNoticeThresholdForTotalChange(
+        this.data.form,
+        signupLimitTotal
+      )
     };
 
     this.syncDerivedState(form);
@@ -604,6 +635,9 @@ Page({
       this.setData({ validationErrors: {} });
       validateActivityDraft(payload, translate);
       this.setData({ submitting: true });
+      const managerSubscription = this.data.isEditMode
+        ? null
+        : await requestManagerRegistrationNotificationSubscriptionConsent().catch(() => null);
       const uploadedPayload = await uploadActivityCover(payload);
       const { activityId } = this.data.isEditMode
         ? await updateActivity({
@@ -611,6 +645,9 @@ Page({
             activityId: this.data.editActivityId
           })
         : await createActivity(uploadedPayload);
+      if (!this.data.isEditMode && managerSubscription) {
+        await recordActivityNotificationSubscription(activityId, managerSubscription).catch(() => null);
+      }
       if (this.data.isEditMode) {
         returnToEditedActivityDetail(activityId);
         return;

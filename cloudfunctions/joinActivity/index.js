@@ -34,6 +34,27 @@ function getRepeatExitCount(registration) {
   return normalizeCount(registration.cancelCount) + normalizeCount(registration.removedCount);
 }
 
+function getDefaultRegistrationNoticeThreshold(signupLimitTotal) {
+  const total = normalizeCount(signupLimitTotal);
+  return total > 0 ? Math.ceil(total * 0.8) : 0;
+}
+
+function getRegistrationNoticeThreshold(activity) {
+  const threshold = normalizeCount(activity && activity.registrationNoticeThreshold);
+  const total = normalizeCount(activity && activity.signupLimitTotal);
+
+  if (threshold > 0 && threshold <= total) {
+    return threshold;
+  }
+
+  return getDefaultRegistrationNoticeThreshold(total);
+}
+
+function shouldNotifyManagersForJoin(activity, joinedCountAfter) {
+  const threshold = getRegistrationNoticeThreshold(activity);
+  return threshold > 0 && normalizeCount(joinedCountAfter) >= threshold;
+}
+
 function normalizePreferredPositions(value) {
   const seen = new Set();
   const input = Array.isArray(value) ? value : [];
@@ -227,13 +248,16 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       }
     });
 
+    const joinedCountAfter = normalizeCount(activityRes.data.joinedCount) + 1;
+    const shouldNotifyManagers =
+      !actorCanEditActivity && shouldNotifyManagersForJoin(activityRes.data, joinedCountAfter);
+
     return {
       registrationId,
       teamId: event.teamId,
       status: 'joined',
-      managerNotification: actorCanEditActivity
-        ? null
-        : {
+      managerNotification: shouldNotifyManagers
+        ? {
             activity: {
               ...activityRes.data,
               _id: event.activityId
@@ -241,10 +265,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
             actorOpenId: openid,
             actorName: signupName,
             changeType: 'registration_joined',
-            joinedCountAfter: normalizeCount(activityRes.data.joinedCount) + 1,
+            joinedCountAfter,
             signupLimitTotal: normalizeCount(activityRes.data.signupLimitTotal),
             stamp
           }
+        : null
     };
   });
 

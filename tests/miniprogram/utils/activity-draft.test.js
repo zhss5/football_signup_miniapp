@@ -20,6 +20,7 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
   ]);
   expect(form.insuranceLink).toBe('');
   expect(form.notificationHint).toBe('');
+  expect(form.registrationNoticeThreshold).toBe(10);
   expect(form).not.toHaveProperty('requirePhone');
 });
 
@@ -45,17 +46,29 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
     addressText: 'Half Stone',
     insuranceLink: ' https://insurance.example.com/apply ',
     notificationHint: ' 请提前10分钟到场 ',
+    registrationNoticeThreshold: '16',
     coverImage: 'wxfile://cover-1.png',
     imageList: ['wxfile://cover-1.png']
   });
 
   expect(payload.insuranceLink).toBe('https://insurance.example.com/apply');
   expect(payload.notificationHint).toBe('请提前10分钟到场');
+  expect(payload.registrationNoticeThreshold).toBe(16);
   expect(payload.coverImage).toBe('wxfile://cover-1.png');
   expect(payload.imageList).toEqual(['wxfile://cover-1.png']);
   expect(payload).not.toHaveProperty('requirePhone');
   expect(new Date(payload.startAt).getTime()).toBeLessThan(new Date(payload.endAt).getTime());
   expect(new Date(payload.signupDeadlineAt).getTime()).toBeLessThanOrEqual(new Date(payload.startAt).getTime());
+});
+
+test('buildActivityPayload defaults the registration notice threshold to 80 percent of capacity', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    signupLimitTotal: 20,
+    registrationNoticeThreshold: ''
+  });
+
+  expect(payload.registrationNoticeThreshold).toBe(16);
 });
 
 test('buildActivityPayload preserves a generated cover thumbnail', () => {
@@ -147,6 +160,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
       description: 'Original notes',
       insuranceLink: 'https://insurance.example.com/original',
       notificationHint: 'Bring both kits',
+      registrationNoticeThreshold: 16,
       coverImage: 'cloud://cover-a',
       coverThumbImage: 'cloud://cover-a-thumb',
       detailImages: ['cloud://detail-a', 'cloud://detail-b'],
@@ -174,6 +188,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     description: 'Original notes',
     insuranceLink: 'https://insurance.example.com/original',
     notificationHint: 'Bring both kits',
+    registrationNoticeThreshold: 16,
     coverImage: 'cloud://cover-a',
     coverThumbImage: 'cloud://cover-a-thumb',
     detailImages: ['cloud://detail-a', 'cloud://detail-b'],

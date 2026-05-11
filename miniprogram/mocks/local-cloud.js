@@ -39,6 +39,33 @@ function normalizeCount(value) {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
+function getDefaultRegistrationNoticeThreshold(signupLimitTotal) {
+  const total = normalizeCount(signupLimitTotal);
+  return total > 0 ? Math.ceil(total * 0.8) : 0;
+}
+
+function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
+  const threshold = normalizeCount(value);
+  const total = normalizeCount(signupLimitTotal);
+  if (threshold > 0 && threshold <= total) {
+    return threshold;
+  }
+
+  return getDefaultRegistrationNoticeThreshold(total);
+}
+
+function getRegistrationNoticeThreshold(activity) {
+  return normalizeRegistrationNoticeThreshold(
+    activity && activity.registrationNoticeThreshold,
+    activity && activity.signupLimitTotal
+  );
+}
+
+function shouldNotifyManagersForJoin(activity, joinedCountAfter) {
+  const threshold = getRegistrationNoticeThreshold(activity);
+  return threshold > 0 && normalizeCount(joinedCountAfter) >= threshold;
+}
+
 function getRepeatExitCount(registration) {
   if (!registration) {
     return 0;
@@ -237,6 +264,10 @@ function createLocalCloudClient(options = {}) {
       imageList,
       detailImages,
       signupLimitTotal: Number(payload.signupLimitTotal) || 0,
+      registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+        payload.registrationNoticeThreshold,
+        payload.signupLimitTotal
+      ),
       joinedCount: 0,
       requirePhone: false,
       inviteCode: payload.inviteCode || '',
@@ -394,6 +425,10 @@ function createLocalCloudClient(options = {}) {
       imageList,
       detailImages,
       signupLimitTotal: Number(payload.signupLimitTotal) || 0,
+      registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+        payload.registrationNoticeThreshold,
+        payload.signupLimitTotal
+      ),
       requirePhone: false,
       inviteCode: payload.inviteCode || '',
       updatedAt: stamp
@@ -659,7 +694,10 @@ function createLocalCloudClient(options = {}) {
     activity.updatedAt = stamp;
     team.joinedCount += 1;
 
-    if (!canEditActivity(activity, user, openid)) {
+    if (
+      !canEditActivity(activity, user, openid) &&
+      shouldNotifyManagersForJoin(activity, activity.joinedCount)
+    ) {
       recordManagerRegistrationNotifications(
         state,
         activity,
@@ -796,17 +834,6 @@ function createLocalCloudClient(options = {}) {
     activity.joinedCount = Math.max(activity.joinedCount - 1, 0);
     activity.updatedAt = stamp;
     team.joinedCount = Math.max(team.joinedCount - 1, 0);
-
-    if (!canEditActivity(activity, state.users[openid], openid)) {
-      recordManagerRegistrationNotifications(
-        state,
-        activity,
-        openid,
-        current.signupName,
-        'registration_cancelled',
-        stamp
-      );
-    }
 
     writeState(state);
     return {

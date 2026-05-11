@@ -406,10 +406,14 @@ Current activity experience polish:
 - Published activities whose `endAt` has passed now show an explicit red `Expired` / `活动已过期` badge on Home/My activity cards and in the Activity Detail hero.
 - Expired status takes priority over signup-deadline closure and full capacity; cancelled/deleted activities still keep their own status labels.
 - Same-activity repeat exits are guarded for regular participants: `cancelRegistration` increments `cancelCount`, organizer/admin removal increments `removedCount`, and `joinActivity` rejects another signup with `Please contact the organizer` once `cancelCount + removedCount >= 3` for the same activity/user registration. The activity organizer and `admin` users are exempt from this rejoin block, and manager removal actions are not rate-limited.
-- Organizer/admin registration-change notifications are implemented for regular participant self-join and self-cancel only.
+- Organizer/admin registration-change notifications are now threshold-based under WeChat one-shot subscription constraints.
+- Activities store `registrationNoticeThreshold`, defaulting to `ceil(signupLimitTotal * 0.8)`, and organizers/admins can edit it from Create/Edit Activity.
+- Only a regular participant self-join can trigger the manager signup-change notice, and only when the post-join total reaches or exceeds the threshold.
+- Proxy signups count toward the threshold total but do not directly send a notice; organizer/admin self-join, participant self-cancel, organizer/admin removal, and organizer/admin proxy signup do not send manager signup-change notices.
 - Manager signup-change notification data now matches the current WeChat manager template: `thing7` activity name, `phrase1` `参与者加入`/`参与者退出`, `thing5` remark, and `thing6` post-change `current/total` signup count.
 
-- Manager signup-change notification consent is one-shot: after a notification send attempt, organizers/admins need to subscribe again if they want the next join/cancel notice.
+- Manager signup-change notification consent is one-shot: after a notification send attempt, organizers/admins need to subscribe again if they want the next join notice.
+- Create Activity requests manager signup-change consent before submit and records it after the activity is created; the manual Activity Detail subscribe button remains available for re-subscription.
 
 Current My list behavior:
 
@@ -439,7 +443,7 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the manager-notification path requires uploading `getActivityDetail`, `joinActivity`, and `cancelRegistration`.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the threshold-based manager-notification path requires uploading `createActivity`, `updateActivity`, `joinActivity`, and `cancelRegistration`.
 5. Apply indexes from:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
 6. Apply database rules from:
@@ -447,14 +451,14 @@ Continue in this order:
 7. Run the smoke checklist on DevTools and a real device:
    - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
-9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits for regular participants, organizer/admin repeat-signup exemption, manager signup-change notification opt-in, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
+9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits for regular participants, organizer/admin repeat-signup exemption, threshold-based manager signup-change notification opt-in, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
    - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - keep the participant proceeding/cancellation template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
    - keep the organizer/admin signup-change template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
-   - validate signup subscription prompt, manager signup-change opt-in, regular-user join/cancel manager notices, one-shot manager consent consumption and re-subscription, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
+   - validate signup subscription prompt, manager signup-change opt-in, threshold-triggered regular-user join manager notices, participant cancel no-notify behavior, one-shot manager consent consumption and re-subscription, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
 14. Add activity-list pagination when activity volume exceeds one returned batch:

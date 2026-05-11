@@ -80,6 +80,27 @@ function validateActivityDraft(draft, translate = null) {
     throw buildValidationError('signupLimitTotal', 'errors.totalSignupLimitRequired', translate);
   }
 
+  const rawRegistrationNoticeThreshold = draft.registrationNoticeThreshold;
+  if (
+    rawRegistrationNoticeThreshold !== undefined &&
+    rawRegistrationNoticeThreshold !== null &&
+    rawRegistrationNoticeThreshold !== ''
+  ) {
+    const registrationNoticeThreshold = Number(rawRegistrationNoticeThreshold);
+    if (
+      !Number.isFinite(registrationNoticeThreshold) ||
+      Math.floor(registrationNoticeThreshold) !== registrationNoticeThreshold ||
+      registrationNoticeThreshold <= 0 ||
+      registrationNoticeThreshold > totalSignupLimit
+    ) {
+      throw buildValidationError(
+        'registrationNoticeThreshold',
+        'errors.registrationNoticeThresholdRange',
+        translate
+      );
+    }
+  }
+
   const imageList = Array.isArray(draft.imageList)
     ? draft.imageList.filter(Boolean)
     : draft.coverImage

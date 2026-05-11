@@ -56,6 +56,23 @@ function validateActivityDraft(draft) {
     throw new Error('Total signup limit is required');
   }
 
+  const rawRegistrationNoticeThreshold = draft.registrationNoticeThreshold;
+  if (
+    rawRegistrationNoticeThreshold !== undefined &&
+    rawRegistrationNoticeThreshold !== null &&
+    rawRegistrationNoticeThreshold !== ''
+  ) {
+    const registrationNoticeThreshold = Number(rawRegistrationNoticeThreshold);
+    if (
+      !Number.isFinite(registrationNoticeThreshold) ||
+      Math.floor(registrationNoticeThreshold) !== registrationNoticeThreshold ||
+      registrationNoticeThreshold <= 0 ||
+      registrationNoticeThreshold > totalSignupLimit
+    ) {
+      throw new Error('Registration notice threshold must be between 1 and total signup limit');
+    }
+  }
+
   const imageList = Array.isArray(draft.imageList)
     ? draft.imageList.filter(Boolean)
     : draft.coverImage

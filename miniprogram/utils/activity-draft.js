@@ -29,6 +29,21 @@ function getTomorrowDateInputValue(nowOption) {
   return formatDateInputValue(tomorrow);
 }
 
+function getDefaultRegistrationNoticeThreshold(signupLimitTotal) {
+  const total = Number(signupLimitTotal) || 0;
+  return total > 0 ? Math.ceil(total * 0.8) : 0;
+}
+
+function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
+  const threshold = Number(value || 0);
+
+  if (Number.isFinite(threshold) && threshold > 0) {
+    return Math.floor(threshold);
+  }
+
+  return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
+}
+
 function createDefaultActivityForm(options = {}) {
   const defaultTeams = Array.isArray(options.defaultTeams) && options.defaultTeams.length
     ? options.defaultTeams
@@ -60,6 +75,7 @@ function createDefaultActivityForm(options = {}) {
     imageList: [],
     detailImages: [],
     signupLimitTotal: 12,
+    registrationNoticeThreshold: getDefaultRegistrationNoticeThreshold(12),
     inviteCode: '',
     teams
   };
@@ -120,6 +136,10 @@ function buildActivityPayload(form) {
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
     insuranceLink: String(form.insuranceLink || '').trim(),
     notificationHint: String(form.notificationHint || '').trim(),
+    registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+      form.registrationNoticeThreshold,
+      form.signupLimitTotal
+    ),
     coverImage,
     coverThumbImage,
     shareImage: coverImage ? form.shareImage || '' : '',
@@ -167,6 +187,10 @@ function buildActivityEditForm(activity = {}, teams = []) {
     imageList,
     detailImages,
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
+    registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+      activity.registrationNoticeThreshold,
+      Number(activity.signupLimitTotal) || 0
+    ),
     inviteCode: activity.inviteCode || '',
     teams: editableTeams
   };
@@ -176,5 +200,7 @@ module.exports = {
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
+  getDefaultRegistrationNoticeThreshold,
+  normalizeRegistrationNoticeThreshold,
   summarizeTeamSlots
 };

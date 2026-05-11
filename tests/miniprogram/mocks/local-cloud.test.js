@@ -79,6 +79,7 @@ test('local cloud client lets an organizer update a team color', async () => {
     coverImage: '',
     imageList: [],
     signupLimitTotal: 12,
+    registrationNoticeThreshold: 1,
     requirePhone: false,
     inviteCode: '',
     teams: [
@@ -162,6 +163,7 @@ test('local cloud client lets an organizer update an activity without changing r
     coverImage: '',
     imageList: [],
     signupLimitTotal: 12,
+    registrationNoticeThreshold: 1,
     requirePhone: false,
     inviteCode: '',
     teams: [
@@ -1290,6 +1292,7 @@ test('local cloud client exposes manager registration notification subscription 
     coverImage: '',
     imageList: [],
     signupLimitTotal: 12,
+    registrationNoticeThreshold: 1,
     requirePhone: false,
     inviteCode: '',
     teams: [
@@ -1406,6 +1409,61 @@ test('local cloud client records subscriptions and lets organizers confirm or ca
   expect(cancelledDetail.activity.status).toBe('cancelled');
 });
 
+test('local cloud client waits until the signup threshold before manager notification', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T11:00:00.000Z',
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'May 9 training',
+    startAt: '2026-05-09T20:00:00.000Z',
+    endAt: '2026-05-09T22:00:00.000Z',
+    signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    registrationNoticeThreshold: 3,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 12 }
+    ]
+  });
+
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'manager_registration_notice',
+    templateId: 'tmpl_123',
+    status: 'accepted'
+  });
+
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detail.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+
+  const state = storage.getItem('football-signup-local-cloud-v1');
+  expect(
+    state.notificationLogs.filter(item => item.notificationType === 'registration_joined')
+  ).toHaveLength(0);
+});
+
 test('local cloud client records manager notifications only for regular self joins and cancels', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({
@@ -1436,6 +1494,7 @@ test('local cloud client records manager notifications only for regular self joi
     coverImage: '',
     imageList: [],
     signupLimitTotal: 12,
+    registrationNoticeThreshold: 1,
     requirePhone: false,
     inviteCode: '',
     teams: [

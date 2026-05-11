@@ -78,6 +78,7 @@ test('createActivity stores activity and teams', async () => {
   );
 
   expect(result.activityId).toBe('activity_1');
+  expect(writes[0].data.registrationNoticeThreshold).toBe(10);
   expect(writes.filter(item => item.name === 'activity_teams')).toHaveLength(2);
   expect(writes.filter(item => item.name === 'activity_teams').map(item => item.data.colorKey)).toEqual([
     'green',
@@ -108,6 +109,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
       detailImages: ['cloud://football/detail-1.jpg', 'cloud://football/detail-2.jpg'],
       insuranceLink: ' https://insurance.example.com/apply ',
       notificationHint: ' 请提前10分钟到场 ',
+      registrationNoticeThreshold: 16,
       signupLimitTotal: 20,
       requirePhone: true,
       teams: [
@@ -134,6 +136,7 @@ test('createActivity stores map location, deadline, image list, and auto generat
     detailImages: ['cloud://football/detail-1.jpg', 'cloud://football/detail-2.jpg'],
     insuranceLink: 'https://insurance.example.com/apply',
     notificationHint: '请提前10分钟到场',
+    registrationNoticeThreshold: 16,
     signupLimitTotal: 20,
     requirePhone: false
   });

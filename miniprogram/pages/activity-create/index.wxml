@@ -109,6 +109,19 @@
   </view>
 
   <view class="field">
+    <text class="label">{{i18n.activityCreate.registrationNoticeThreshold}}</text>
+    <input
+      class="input"
+      placeholder="{{i18n.activityCreate.registrationNoticeThresholdPlaceholder}}"
+      type="number"
+      data-field="registrationNoticeThreshold"
+      value="{{form.registrationNoticeThreshold}}"
+      bindinput="onFieldInput"
+    />
+    <text class="hint">{{i18n.activityCreate.registrationNoticeThresholdHint}}</text>
+  </view>
+
+  <view class="field">
     <text class="label">{{i18n.activityCreate.coverImage}}</text>
     <view class="upload-panel">
       <view class="image-preview-frame" bindtap="onChooseActivityImage">

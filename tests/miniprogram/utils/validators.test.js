@@ -88,6 +88,36 @@ describe('validateActivityDraft', () => {
     ).toThrow('Only one activity image is supported right now');
   });
 
+  test('rejects registration notice thresholds outside the total signup limit', () => {
+    const draft = {
+      title: 'Saturday 8-10',
+      startAt: '2026-04-26T20:00:00.000Z',
+      endAt: '2026-04-26T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+      addressText: 'Half Stone',
+      signupLimitTotal: 12,
+      imageList: [],
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
+    };
+
+    expect(() =>
+      validateActivityDraft({
+        ...draft,
+        registrationNoticeThreshold: 0
+      })
+    ).toThrow('Registration notice threshold must be between 1 and total signup limit');
+
+    expect(() =>
+      validateActivityDraft({
+        ...draft,
+        registrationNoticeThreshold: 13
+      })
+    ).toThrow('Registration notice threshold must be between 1 and total signup limit');
+  });
+
   test('rejects more than five detail images', () => {
     expect(() =>
       validateActivityDraft({

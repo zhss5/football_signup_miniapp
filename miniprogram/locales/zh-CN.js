@@ -257,12 +257,18 @@ module.exports.activityCreate.notificationHintPlaceholder =
   '\u53ef\u9009\uff0c\u7528\u4e8e\u786e\u8ba4\u4e3e\u884c\u901a\u77e5';
 module.exports.activityCreate.notificationHintHint =
   '\u786e\u8ba4\u4e3e\u884c\u901a\u77e5\u4f1a\u4f7f\u7528\u8fd9\u6bb5\u5185\u5bb9\uff1b\u53d6\u6d88\u901a\u77e5\u4f7f\u7528\u9ed8\u8ba4\u53d6\u6d88\u6587\u6848\u3002';
+module.exports.activityCreate.registrationNoticeThreshold = '\u62a5\u540d\u901a\u77e5\u9608\u503c';
+module.exports.activityCreate.registrationNoticeThresholdPlaceholder = '\u62a5\u540d\u901a\u77e5\u9608\u503c';
+module.exports.activityCreate.registrationNoticeThresholdHint =
+  '\u9ed8\u8ba4\u4e3a\u603b\u62a5\u540d\u4eba\u6570\u7684 80%\uff1b\u666e\u901a\u7528\u6237\u62a5\u540d\u540e\u8fbe\u5230\u8be5\u4eba\u6570\u624d\u901a\u77e5\u7ec4\u7ec7\u8005\u3002';
 module.exports.activityCreate.coverImage = '\u5c01\u9762\u56fe\u7247';
 module.exports.activityCreate.detailImages = '\u8be6\u60c5\u56fe\u7247';
 module.exports.activityCreate.detailImageHint =
   '\u6700\u591a\u4e0a\u4f20 {{count}} \u5f20\uff0c\u7528\u4e8e\u6d3b\u52a8\u8be6\u60c5\u9875\u7684\u56fe\u6587\u5185\u5bb9\u3002';
 module.exports.activityCreate.addDetailImages = '\u6dfb\u52a0\u8be6\u60c5\u56fe';
 module.exports.errors.tooManyDetailImages = '\u6700\u591a\u652f\u6301 5 \u5f20\u8be6\u60c5\u56fe\u7247';
+module.exports.errors.registrationNoticeThresholdRange =
+  '\u62a5\u540d\u901a\u77e5\u9608\u503c\u5fc5\u987b\u5728 1 \u5230\u603b\u62a5\u540d\u4eba\u6570\u4e4b\u95f4';
 module.exports.modal.cancelActivity.content =
   '\u6b64\u64cd\u4f5c\u4f1a\u505c\u6b62\u65b0\u7684\u62a5\u540d\uff0c\u5e76\u901a\u77e5\u5df2\u8ba2\u9605\u7684\u53c2\u4e0e\u8005\u3002';
 module.exports.modal.confirmProceeding = {
