@@ -1,7 +1,7 @@
 const enUS = require('../locales/en-US');
 const zhCN = require('../locales/zh-CN');
 
-const DEFAULT_LOCALE = 'en-US';
+const DEFAULT_LOCALE = 'zh-CN';
 const LOCALE_STORAGE_KEY = 'football-signup-locale';
 const SUPPORTED_LOCALES = {
   'en-US': enUS,
@@ -122,7 +122,8 @@ function getStoredLocale() {
   }
 
   try {
-    return normalizeLocale(wx.getStorageSync(LOCALE_STORAGE_KEY) || '');
+    const storedLocale = wx.getStorageSync(LOCALE_STORAGE_KEY);
+    return storedLocale ? normalizeLocale(storedLocale) : '';
   } catch (error) {
     return '';
   }
@@ -169,7 +170,7 @@ function applyTabBarLocale(locale) {
 
 function initializeLocale(app) {
   const manualLocale = getStoredLocale();
-  const locale = manualLocale || detectSystemLocale();
+  const locale = manualLocale || DEFAULT_LOCALE;
 
   if (app) {
     app.globalData = {
@@ -213,7 +214,7 @@ function getAppLocale() {
     }
   }
 
-  return getStoredLocale() || detectSystemLocale();
+  return getStoredLocale() || DEFAULT_LOCALE;
 }
 
 function setPageNavigationTitle(titleKey, locale, params) {

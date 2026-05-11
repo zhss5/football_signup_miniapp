@@ -834,7 +834,7 @@ describe('activity create submit flow', () => {
       addressText: 'Activity address is required'
     });
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Activity address is required',
+      title: '\u6d3b\u52a8\u5730\u5740\u4e0d\u80fd\u4e3a\u7a7a',
       icon: 'none'
     });
   });

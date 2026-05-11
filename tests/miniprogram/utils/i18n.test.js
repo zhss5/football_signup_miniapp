@@ -1,17 +1,38 @@
 const {
+  DEFAULT_LOCALE,
   detectSystemLocale,
   getMessages,
+  initializeLocale,
   normalizeLocale,
   t,
   translateErrorMessage
 } = require('../../../miniprogram/utils/i18n');
 
 describe('i18n utilities', () => {
+  afterEach(() => {
+    delete global.wx;
+  });
+
   test('normalizes system language values into supported locales', () => {
     expect(normalizeLocale('zh_CN')).toBe('zh-CN');
     expect(normalizeLocale('zh-TW')).toBe('zh-CN');
     expect(normalizeLocale('en')).toBe('en-US');
-    expect(normalizeLocale('fr-FR')).toBe('en-US');
+    expect(normalizeLocale('fr-FR')).toBe('zh-CN');
+  });
+
+  test('defaults first-run app locale to Chinese even on an English system', () => {
+    global.wx = {
+      getStorageSync: jest.fn(() => ''),
+      getAppBaseInfo: jest.fn(() => ({ language: 'en' })),
+      getSystemInfoSync: jest.fn(() => ({ language: 'en' })),
+      setTabBarItem: jest.fn()
+    };
+    const app = { globalData: {} };
+
+    expect(DEFAULT_LOCALE).toBe('zh-CN');
+    expect(initializeLocale(app)).toBe('zh-CN');
+    expect(app.globalData.locale).toBe('zh-CN');
+    expect(app.globalData.manualLocale).toBe('');
   });
 
   test('detects Chinese from system language and returns translated labels', () => {

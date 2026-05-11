@@ -136,7 +136,7 @@ describe('activity join page', () => {
     ).toBeGreaterThan(joinActivity.mock.invocationCallOrder[0]);
     expect(openerEventChannel.emit).toHaveBeenCalledWith('signupSuccess');
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Signup successful',
+      title: '\u62a5\u540d\u6210\u529f',
       icon: 'success'
     });
 
@@ -175,7 +175,7 @@ describe('activity join page', () => {
     expect(joinActivity).toHaveBeenCalled();
     expect(recordActivityNotificationSubscription).not.toHaveBeenCalled();
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Signup successful',
+      title: '\u62a5\u540d\u6210\u529f',
       icon: 'success'
     });
   });
@@ -362,7 +362,7 @@ describe('activity join page', () => {
 
     expect(ctx.data.preferredPositions).toEqual(['前锋', '门将']);
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Choose up to 2 positions',
+      title: '\u6700\u591a\u9009 2 \u4e2a\u4f4d\u7f6e',
       icon: 'none'
     });
 
@@ -423,7 +423,7 @@ describe('activity join page', () => {
     await pageConfig.onSubmit.call(ctx);
 
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Signup name is required',
+      title: '\u62a5\u540d\u540d\u79f0\u4e0d\u80fd\u4e3a\u7a7a',
       icon: 'none'
     });
     expect(joinActivity).not.toHaveBeenCalled();
