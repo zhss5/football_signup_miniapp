@@ -190,6 +190,10 @@ describe('activity create submit flow', () => {
       path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
       'utf8'
     );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxss'),
+      'utf8'
+    );
 
     const teamEditorIndex = wxml.indexOf('<team-editor');
     const totalSignupIndex = wxml.indexOf('data-field="signupLimitTotal"');
@@ -201,13 +205,16 @@ describe('activity create submit flow', () => {
     const registrationNoticeIndex = wxml.indexOf('data-field="registrationNoticeThreshold"');
     const coverImageIndex = wxml.indexOf('{{i18n.activityCreate.coverImage}}');
 
+    expect(wxml).toContain('class="notification-settings-group"');
     expect(teamEditorIndex).toBeGreaterThan(-1);
     expect(totalSignupIndex).toBeGreaterThan(teamEditorIndex);
     expect(notificationSettingsIndex).toBeGreaterThan(totalSignupIndex);
     expect(notificationSettingsHintIndex).toBeGreaterThan(notificationSettingsIndex);
-    expect(notificationHintIndex).toBeGreaterThan(notificationSettingsHintIndex);
-    expect(registrationNoticeIndex).toBeGreaterThan(notificationHintIndex);
-    expect(coverImageIndex).toBeGreaterThan(registrationNoticeIndex);
+    expect(registrationNoticeIndex).toBeGreaterThan(notificationSettingsHintIndex);
+    expect(notificationHintIndex).toBeGreaterThan(registrationNoticeIndex);
+    expect(coverImageIndex).toBeGreaterThan(notificationHintIndex);
+    expect(wxss).toContain('.notification-settings-group');
+    expect(wxss).toContain('.notification-settings-group .input');
   });
 
   test('renders the team editor when editing an existing activity', () => {

@@ -2024,3 +2024,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for notification-settings grouping, single-line reminder input, and Chinese notification-settings copy.
+
+## 2026-05-12 - Notification Settings Visual Group
+
+Create/Edit Activity now makes notification settings visually distinct as one form group.
+
+Delivered behavior:
+
+- `Notification settings` now wraps its fields in a bordered white group with a header divider.
+- the signup-notice threshold is listed before the activity proceeding reminder.
+- notification-setting inputs use a subtle gray background inside the group so they still read as editable controls.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this UI-only layout change.
+
+Verification:
+
+- targeted red/green coverage was updated to assert the visual group class, group styling, and field ordering.
