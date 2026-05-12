@@ -56,6 +56,18 @@ describe('i18n utilities', () => {
     expect(messages.activityCreate.saveChanges).toBe('\u4fdd\u5b58\u4fee\u6539');
   });
 
+  test('provides Chinese copy for notification settings fields', () => {
+    const messages = getMessages('zh-CN');
+
+    expect(messages.activityCreate.notificationSettings).toBe('\u901a\u77e5\u8bbe\u7f6e');
+    expect(messages.activityCreate.notificationSettingsHint).toBe(
+      '\u4ec5\u7528\u4e8e\u901a\u77e5\u6d88\u606f\uff0c\u4e0d\u4f1a\u5c55\u793a\u5728\u6d3b\u52a8\u8be6\u60c5\u9875\u3002'
+    );
+    expect(messages.activityCreate.notificationHint).toBe(
+      '\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5\u6e29\u99a8\u63d0\u793a'
+    );
+  });
+
   test('provides Chinese copy for expired activities', () => {
     expect(t('activity.status.expired', {}, 'zh-CN')).toBe('\u6d3b\u52a8\u5df2\u8fc7\u671f');
   });

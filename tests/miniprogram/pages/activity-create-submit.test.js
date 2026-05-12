@@ -178,8 +178,36 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('data-field="notificationHint"');
     expect(wxml).toContain('{{i18n.activityCreate.notificationHint}}');
     expect(wxml).toMatch(
-      /<textarea[\s\S]*data-field="notificationHint"[\s\S]*maxlength="20"[\s\S]*\/>/
+      /<input[\s\S]*data-field="notificationHint"[\s\S]*maxlength="20"[\s\S]*\/>/
     );
+    expect(wxml).not.toMatch(/<textarea[\s\S]*data-field="notificationHint"/);
+  });
+
+  test('groups notification-only settings together before display content', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    const teamEditorIndex = wxml.indexOf('<team-editor');
+    const totalSignupIndex = wxml.indexOf('data-field="signupLimitTotal"');
+    const notificationSettingsIndex = wxml.indexOf('{{i18n.activityCreate.notificationSettings}}');
+    const notificationSettingsHintIndex = wxml.indexOf(
+      '{{i18n.activityCreate.notificationSettingsHint}}'
+    );
+    const notificationHintIndex = wxml.indexOf('data-field="notificationHint"');
+    const registrationNoticeIndex = wxml.indexOf('data-field="registrationNoticeThreshold"');
+    const coverImageIndex = wxml.indexOf('{{i18n.activityCreate.coverImage}}');
+
+    expect(teamEditorIndex).toBeGreaterThan(-1);
+    expect(totalSignupIndex).toBeGreaterThan(teamEditorIndex);
+    expect(notificationSettingsIndex).toBeGreaterThan(totalSignupIndex);
+    expect(notificationSettingsHintIndex).toBeGreaterThan(notificationSettingsIndex);
+    expect(notificationHintIndex).toBeGreaterThan(notificationSettingsHintIndex);
+    expect(registrationNoticeIndex).toBeGreaterThan(notificationHintIndex);
+    expect(coverImageIndex).toBeGreaterThan(registrationNoticeIndex);
   });
 
   test('renders the team editor when editing an existing activity', () => {

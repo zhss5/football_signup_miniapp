@@ -76,19 +76,6 @@
   </view>
 
   <view class="field">
-    <text class="label">{{i18n.activityCreate.notificationHint}}</text>
-    <textarea
-      class="textarea"
-      placeholder="{{i18n.activityCreate.notificationHintPlaceholder}}"
-      data-field="notificationHint"
-      value="{{form.notificationHint}}"
-      maxlength="20"
-      bindinput="onFieldInput"
-    />
-    <text class="hint">{{i18n.activityCreate.notificationHintHint}}</text>
-  </view>
-
-  <view class="field">
     <text class="label">{{i18n.activityCreate.teams}}</text>
     <text class="hint">{{i18n.activityCreate.teamsHint}}</text>
   </view>
@@ -107,6 +94,24 @@
     <text class="hint">{{namedTeamsSlotsText}}</text>
     <text wx:if="{{benchSlots > 0}}" class="hint">{{benchSlotsText}}</text>
     <text wx:if="{{overCapacity}}" class="error-text">{{i18n.activityCreate.overCapacity}}</text>
+  </view>
+
+  <view class="field">
+    <text class="label">{{i18n.activityCreate.notificationSettings}}</text>
+    <text class="hint">{{i18n.activityCreate.notificationSettingsHint}}</text>
+  </view>
+
+  <view class="field">
+    <text class="label">{{i18n.activityCreate.notificationHint}}</text>
+    <input
+      class="input"
+      placeholder="{{i18n.activityCreate.notificationHintPlaceholder}}"
+      data-field="notificationHint"
+      value="{{form.notificationHint}}"
+      maxlength="20"
+      bindinput="onFieldInput"
+    />
+    <text class="hint">{{i18n.activityCreate.notificationHintHint}}</text>
   </view>
 
   <view class="field">

@@ -2003,3 +2003,24 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for form markup, input normalization, payload normalization, and notification send normalization.
+
+## 2026-05-12 - Notification Settings Form Grouping
+
+Create/Edit Activity now separates notification-only fields from activity detail content.
+
+Delivered behavior:
+
+- notification reminder and signup-notice threshold now sit under a shared `Notification settings` section.
+- the section explains that these values are only used for notifications and are not shown on Activity Detail.
+- `Notification reminder` was renamed to `Activity proceeding notice reminder`.
+- the notification reminder control is now a single-line 20-character input instead of a large textarea.
+- Chinese copy uses `通知设置`, `仅用于通知消息，不会展示在活动详情页。`, and `活动举行通知温馨提示`.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this UI-only grouping change.
+
+Verification:
+
+- targeted red/green coverage was added for notification-settings grouping, single-line reminder input, and Chinese notification-settings copy.

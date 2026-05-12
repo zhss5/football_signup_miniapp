@@ -253,12 +253,16 @@ module.exports.errors.repeatSignupLimitExceeded =
 module.exports.activity.descriptionTitle = '\u6d3b\u52a8\u8bf4\u660e';
 module.exports.activity.activityImagesTitle = '\u6d3b\u52a8\u56fe\u7247';
 module.exports.activity.actions.confirmProceeding = '\u786e\u8ba4\u4e3e\u884c';
-module.exports.activityCreate.notificationHint = '\u901a\u77e5\u6e29\u99a8\u63d0\u793a';
+module.exports.activityCreate.notificationSettings = '\u901a\u77e5\u8bbe\u7f6e';
+module.exports.activityCreate.notificationSettingsHint =
+  '\u4ec5\u7528\u4e8e\u901a\u77e5\u6d88\u606f\uff0c\u4e0d\u4f1a\u5c55\u793a\u5728\u6d3b\u52a8\u8be6\u60c5\u9875\u3002';
+module.exports.activityCreate.notificationHint =
+  '\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5\u6e29\u99a8\u63d0\u793a';
 module.exports.errors.activityDescriptionTooLong = '\u6d3b\u52a8\u8bf4\u660e\u6700\u591a\u652f\u6301 2000 \u5b57';
 module.exports.activityCreate.notificationHintPlaceholder =
-  '\u53ef\u9009\uff0c\u7528\u4e8e\u786e\u8ba4\u4e3e\u884c\u901a\u77e5';
+  '\u53ef\u9009\uff0c\u7528\u4e8e\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5';
 module.exports.activityCreate.notificationHintHint =
-  '\u6700\u591a 20 \u4e2a\u5b57\u7b26\uff1b\u6362\u884c\u548c Tab \u4f1a\u81ea\u52a8\u66ff\u6362\u4e3a\u7a7a\u683c\u3002\u786e\u8ba4\u4e3e\u884c\u901a\u77e5\u4f7f\u7528\u8fd9\u6bb5\u5185\u5bb9\uff1b\u53d6\u6d88\u901a\u77e5\u4f7f\u7528\u9ed8\u8ba4\u53d6\u6d88\u6587\u6848\u3002';
+  '\u6700\u591a 20 \u4e2a\u5b57\u7b26\uff1b\u6362\u884c\u548c Tab \u4f1a\u81ea\u52a8\u66ff\u6362\u4e3a\u7a7a\u683c\u3002';
 module.exports.activityCreate.registrationNoticeThreshold = '\u62a5\u540d\u901a\u77e5\u9608\u503c';
 module.exports.activityCreate.registrationNoticeThresholdPlaceholder = '\u62a5\u540d\u901a\u77e5\u9608\u503c';
 module.exports.activityCreate.registrationNoticeThresholdHint =
