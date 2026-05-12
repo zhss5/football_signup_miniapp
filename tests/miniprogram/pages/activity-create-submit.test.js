@@ -33,6 +33,10 @@ jest.mock('../../../miniprogram/utils/activity-draft', () => ({
   getDefaultRegistrationNoticeThreshold: jest.fn(total =>
     Number(total || 0) > 0 ? Math.ceil(Number(total || 0) * 0.8) : 0
   ),
+  normalizeNotificationHint: jest.fn(value => {
+    const text = String(value || '').replace(/[\u0000-\u001F\u007F]+/g, ' ').trim();
+    return Array.from(text).slice(0, 20).join('');
+  }),
   summarizeTeamSlots: jest.fn(() => ({
     namedTeamSlots: 12,
     benchSlots: 0,
@@ -173,6 +177,9 @@ describe('activity create submit flow', () => {
 
     expect(wxml).toContain('data-field="notificationHint"');
     expect(wxml).toContain('{{i18n.activityCreate.notificationHint}}');
+    expect(wxml).toMatch(
+      /<textarea[\s\S]*data-field="notificationHint"[\s\S]*maxlength="20"[\s\S]*\/>/
+    );
   });
 
   test('renders the team editor when editing an existing activity', () => {
@@ -712,6 +719,38 @@ describe('activity create submit flow', () => {
       location: null
     });
     expect(ctx.data.selectedPinText).toBe('');
+  });
+
+  test('notification hint input replaces control characters and caps at 20 characters', () => {
+    const ctx = {
+      data: {
+        form: {
+          notificationHint: ''
+        },
+        validationErrors: {},
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+
+    pageConfig.onFieldInput.call(ctx, {
+      currentTarget: {
+        dataset: {
+          field: 'notificationHint'
+        }
+      },
+      detail: {
+        value: '12345\n67890\t1234567890abc'
+      }
+    });
+
+    expect(ctx.data.form.notificationHint).toBe('12345 67890 12345678');
   });
 
   test('onSubmit uploads a selected cover before creating the activity', async () => {

@@ -105,7 +105,7 @@ module.exports = {
     insuranceLinkPlaceholder: 'Optional insurance signup link',
     notificationHint: 'Notification reminder',
     notificationHintPlaceholder: 'Optional reminder for confirmed activity notices',
-    notificationHintHint: 'Used in the confirmation notice. Cancellation notices use the default cancellation text.',
+    notificationHintHint: 'Up to 20 characters. Line breaks and tabs are converted to spaces. Used in confirmation notices; cancellation notices use the default cancellation text.',
     teams: 'Teams',
     teamsHint: 'Default to one team. Add more teams if needed.',
     totalSignupLimit: 'Total signup limit',

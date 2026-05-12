@@ -11,6 +11,7 @@ const {
   buildActivityPayload,
   createDefaultActivityForm,
   getDefaultRegistrationNoticeThreshold,
+  normalizeNotificationHint,
   summarizeTeamSlots
 } = require('../../utils/activity-draft');
 const {
@@ -422,7 +423,10 @@ Page({
 
   onFieldInput(event) {
     const field = event.currentTarget.dataset.field;
-    const value = event.detail.value;
+    const value =
+      field === 'notificationHint'
+        ? normalizeNotificationHint(event.detail.value)
+        : event.detail.value;
     const numericFields = new Set(['signupLimitTotal', 'registrationNoticeThreshold']);
     const form = {
       ...this.data.form,
@@ -451,6 +455,12 @@ Page({
         }
       });
     }
+
+    if (field === 'notificationHint') {
+      return value;
+    }
+
+    return undefined;
   },
 
   onPickerChange(event) {

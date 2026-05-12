@@ -1,7 +1,8 @@
 const {
   buildActivityEditForm,
   buildActivityPayload,
-  createDefaultActivityForm
+  createDefaultActivityForm,
+  normalizeNotificationHint
 } = require('../../../miniprogram/utils/activity-draft');
 
 test('createDefaultActivityForm defaults activity and signup deadline dates to tomorrow', () => {
@@ -59,6 +60,22 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
   expect(payload).not.toHaveProperty('requirePhone');
   expect(new Date(payload.startAt).getTime()).toBeLessThan(new Date(payload.endAt).getTime());
   expect(new Date(payload.signupDeadlineAt).getTime()).toBeLessThanOrEqual(new Date(payload.startAt).getTime());
+});
+
+test('normalizeNotificationHint replaces control characters and caps at 20 characters', () => {
+  expect(normalizeNotificationHint('12345\n67890\r\n12345\t67890extra')).toBe(
+    '12345 67890 12345 67'
+  );
+  expect(normalizeNotificationHint('12345678901234567890extra')).toBe('12345678901234567890');
+});
+
+test('buildActivityPayload normalizes notification hint for subscription template limits', () => {
+  const payload = buildActivityPayload({
+    ...createDefaultActivityForm(),
+    notificationHint: '12345\n67890\t1234567890abc'
+  });
+
+  expect(payload.notificationHint).toBe('12345 67890 12345678');
 });
 
 test('buildActivityPayload defaults the registration notice threshold to 80 percent of capacity', () => {

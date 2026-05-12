@@ -1982,3 +1982,24 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for edit-form joined-count preservation, submit-time team safety checks, and wrapped CloudBase team-safety error translation.
+
+## 2026-05-12 - Notification Hint Template Limit
+
+Create/Edit Activity now enforces the WeChat subscription template limit for the notification hint field.
+
+Delivered behavior:
+
+- the notification hint textarea is capped at 20 characters in the mini program form.
+- notification hint input replaces line breaks, tabs, and other control characters with spaces before storing in page state.
+- activity payload building applies the same normalization as a submit-time guard.
+- participant notification sending also sanitizes template text before calling WeChat, so older activity data cannot send raw control characters.
+- the field hint copy now explains the 20-character limit and automatic line-break/tab replacement.
+
+Deployment note:
+
+- upload a new mini program frontend build for the input cap and updated copy.
+- upload `notifyActivityParticipants` so real subscription-message sends get the backend sanitization guard.
+
+Verification:
+
+- targeted red/green coverage was added for form markup, input normalization, payload normalization, and notification send normalization.

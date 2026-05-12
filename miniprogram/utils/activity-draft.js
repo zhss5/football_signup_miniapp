@@ -1,6 +1,18 @@
 const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES } = require('./constants');
 const { normalizeTeamColorKey } = require('./team-colors');
 
+const MAX_NOTIFICATION_HINT_LENGTH = 20;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
+
+function limitTextLength(value, maxLength) {
+  return Array.from(String(value || '')).slice(0, maxLength).join('');
+}
+
+function normalizeNotificationHint(value) {
+  const text = String(value || '').replace(CONTROL_CHARACTER_PATTERN, ' ').trim();
+  return limitTextLength(text, MAX_NOTIFICATION_HINT_LENGTH);
+}
+
 function resolveNow(nowOption) {
   return typeof nowOption === 'function' ? nowOption() : new Date();
 }
@@ -135,7 +147,7 @@ function buildActivityPayload(form) {
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
     insuranceLink: String(form.insuranceLink || '').trim(),
-    notificationHint: String(form.notificationHint || '').trim(),
+    notificationHint: normalizeNotificationHint(form.notificationHint),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       form.registrationNoticeThreshold,
       form.signupLimitTotal
@@ -182,7 +194,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
     location: activity.location || null,
     description: activity.description || '',
     insuranceLink: activity.insuranceLink || '',
-    notificationHint: activity.notificationHint || '',
+    notificationHint: normalizeNotificationHint(activity.notificationHint),
     coverImage: imageList[0] || activity.coverImage || '',
     coverThumbImage: activity.coverThumbImage || '',
     shareImage: activity.shareImage || '',
@@ -203,6 +215,7 @@ module.exports = {
   buildActivityPayload,
   createDefaultActivityForm,
   getDefaultRegistrationNoticeThreshold,
+  normalizeNotificationHint,
   normalizeRegistrationNoticeThreshold,
   summarizeTeamSlots
 };

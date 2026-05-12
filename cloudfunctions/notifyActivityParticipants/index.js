@@ -15,11 +15,12 @@ const NOTIFICATION_COLLECTIONS = [
   COLLECTIONS.NOTIFICATION_LOGS
 ];
 const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
 let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
-  const text = String(value || '').trim();
-  return text.length > maxLength ? text.slice(0, maxLength) : text;
+  const text = String(value || '').replace(CONTROL_CHARACTER_PATTERN, ' ').trim();
+  return Array.from(text).slice(0, maxLength).join('');
 }
 
 function pad(value) {

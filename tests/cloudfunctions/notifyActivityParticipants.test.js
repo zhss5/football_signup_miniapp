@@ -122,6 +122,21 @@ test('buildMessageData uses the organizer notification hint for proceeding notic
   });
 });
 
+test('buildMessageData sanitizes organizer notification hint before sending', () => {
+  const activity = {
+    title: 'Saturday 8-10',
+    startAt: new Date(2026, 3, 26, 20, 0).toISOString(),
+    addressName: 'Half Stone',
+    notificationHint: '12345\n67890\t1234567890abc'
+  };
+
+  expect(notifyActivityParticipants.buildMessageData(activity, 'proceeding')).toMatchObject({
+    thing7: {
+      value: '12345 67890 12345678'
+    }
+  });
+});
+
 test('notifyActivityParticipants confirms the activity and sends proceeding notices to accepted joined users once', async () => {
   const fakeDb = createFakeDb({
     activities: {

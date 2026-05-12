@@ -82,6 +82,7 @@
       placeholder="{{i18n.activityCreate.notificationHintPlaceholder}}"
       data-field="notificationHint"
       value="{{form.notificationHint}}"
+      maxlength="20"
       bindinput="onFieldInput"
     />
     <text class="hint">{{i18n.activityCreate.notificationHintHint}}</text>
