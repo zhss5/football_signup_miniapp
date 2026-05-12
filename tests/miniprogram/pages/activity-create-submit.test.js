@@ -175,6 +175,19 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('{{i18n.activityCreate.notificationHint}}');
   });
 
+  test('renders the team editor when editing an existing activity', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('<team-editor');
+    expect(wxml).toContain('teams="{{form.teams}}"');
+    expect(wxml).not.toContain('<team-editor wx:if="{{!isEditMode}}"');
+  });
+
   test('lets the cover image frame open the chooser without a separate choose button', () => {
     const fs = require('fs');
     const path = require('path');

@@ -163,6 +163,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
   const editableTeams = teams
     .filter(team => team.status !== 'inactive' && team.teamType !== 'bench')
     .map((team, index) => ({
+      _id: team._id || '',
       teamName: team.teamName,
       maxMembers: Number(team.maxMembers) || 0,
       colorKey: normalizeTeamColorKey(team.colorKey, index)

@@ -170,8 +170,8 @@ test('buildActivityEditForm maps an existing activity detail into the create for
       inviteCode: 'ABC'
     },
     [
-      { teamName: 'White', maxMembers: 6, teamType: 'regular', status: 'active' },
-      { teamName: 'Red', maxMembers: 6, teamType: 'regular', status: 'active' },
+      { _id: 'team_white', teamName: 'White', maxMembers: 6, teamType: 'regular', status: 'active' },
+      { _id: 'team_red', teamName: 'Red', maxMembers: 6, teamType: 'regular', status: 'active' },
       { teamName: 'Bench', maxMembers: 8, teamType: 'bench', status: 'active' }
     ]
   );
@@ -196,8 +196,8 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     signupLimitTotal: 20,
     inviteCode: 'ABC',
     teams: [
-      { teamName: 'White', maxMembers: 6 },
-      { teamName: 'Red', maxMembers: 6 }
+      { _id: 'team_white', teamName: 'White', maxMembers: 6 },
+      { _id: 'team_red', teamName: 'Red', maxMembers: 6 }
     ]
   });
   expect(form).not.toHaveProperty('requirePhone');

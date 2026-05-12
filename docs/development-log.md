@@ -1897,3 +1897,27 @@ Verification:
 
 - targeted red/green coverage was added for the first-run Chinese default on an English runtime.
 - full regression suite passed with the bundled Node runtime: `57` test suites, `399` tests.
+
+## 2026-05-12 - Activity Editing Supports Team Changes
+
+Organizers and admins can now edit regular team settings from the existing activity edit flow.
+
+Delivered behavior:
+
+- Edit Activity shows the same team editor used during creation.
+- loaded edit forms preserve each regular team's `_id`, so `updateActivity` can update existing team documents instead of creating unrelated replacements.
+- organizers/admins can rename teams, change team colors, adjust team capacity, add teams, and remove empty teams.
+- `updateActivity` rejects reducing a team's capacity below its current joined count.
+- `updateActivity` rejects removing a regular team that still has joined members.
+- removed empty regular teams are marked inactive, preserving historical references.
+- newly added teams are stored as active regular teams with `joinedCount: 0`.
+- local mock mode mirrors the CloudBase team-editing rules.
+
+Deployment note:
+
+- upload `updateActivity` after running `npm run copy:cloud-shared`.
+- upload a new mini program frontend build so Edit Activity renders the team editor.
+
+Verification:
+
+- targeted red/green coverage was added for edit-page team-editor visibility, edit-form team `_id` preservation, CloudBase team sync and safety checks, and local mock parity.

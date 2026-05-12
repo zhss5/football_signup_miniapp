@@ -246,6 +246,114 @@ test('updateActivity lets an admin edit another organizer activity', async () =>
   expect(db.state.activities.activity_1.title).toBe('Admin Updated Match');
 });
 
+test('updateActivity syncs editable regular team names colors capacities and additions', async () => {
+  const db = createFakeDb();
+
+  const result = await updateActivity.main(
+    buildUpdatePayload({
+      signupLimitTotal: 20,
+      teams: [
+        { _id: 'team_white', teamName: 'Green', maxMembers: 5, colorKey: 'green' },
+        { _id: 'team_red', teamName: 'Blue', maxMembers: 7, colorKey: 'blue' },
+        { teamName: 'Yellow', maxMembers: 4, colorKey: 'yellow' }
+      ]
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(result.changedFields).toContain('teams');
+  expect(db.state.teams.team_white).toMatchObject({
+    teamName: 'Green',
+    maxMembers: 5,
+    colorKey: 'green',
+    sort: 0,
+    status: 'active',
+    updatedAt: '2026-04-20T10:00:00.000Z'
+  });
+  expect(db.state.teams.team_red).toMatchObject({
+    teamName: 'Blue',
+    maxMembers: 7,
+    colorKey: 'blue',
+    sort: 1,
+    status: 'active'
+  });
+  expect(Object.values(db.state.teams)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        activityId: 'activity_1',
+        teamName: 'Yellow',
+        maxMembers: 4,
+        colorKey: 'yellow',
+        sort: 2,
+        teamType: 'regular',
+        joinedCount: 0,
+        status: 'active'
+      }),
+      expect.objectContaining({
+        activityId: 'activity_1',
+        teamName: '替补',
+        maxMembers: 4,
+        colorKey: 'neutral',
+        teamType: 'bench',
+        status: 'active'
+      })
+    ])
+  );
+});
+
+test('updateActivity marks removed empty teams inactive', async () => {
+  const db = createFakeDb();
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      signupLimitTotal: 10,
+      registrationNoticeThreshold: 8,
+      teams: [
+        { _id: 'team_white', teamName: 'White', maxMembers: 6, colorKey: 'white' }
+      ]
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.teams.team_red).toMatchObject({
+    status: 'inactive',
+    updatedAt: '2026-04-20T10:00:00.000Z'
+  });
+});
+
+test('updateActivity rejects shrinking or deleting teams with joined members', async () => {
+  await expect(
+    updateActivity.main(
+      buildUpdatePayload({
+        signupLimitTotal: 12,
+        registrationNoticeThreshold: 10,
+        teams: [
+          { _id: 'team_white', teamName: 'White', maxMembers: 1, colorKey: 'white' },
+          { _id: 'team_red', teamName: 'Red', maxMembers: 6, colorKey: 'red' }
+        ]
+      }),
+      { OPENID: 'openid_owner' },
+      { db: createFakeDb(), now: '2026-04-20T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Team capacity cannot be lower than joined members');
+
+  await expect(
+    updateActivity.main(
+      buildUpdatePayload({
+        signupLimitTotal: 6,
+        registrationNoticeThreshold: 5,
+        teams: [
+          { _id: 'team_red', teamName: 'Red', maxMembers: 6, colorKey: 'red' }
+        ]
+      }),
+      { OPENID: 'openid_owner' },
+      { db: createFakeDb(), now: '2026-04-20T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Teams with joined members cannot be removed');
+});
+
 test('updateActivity does not keep a stale addressName when only addressText changes', async () => {
   const db = createFakeDb({
     activity: {

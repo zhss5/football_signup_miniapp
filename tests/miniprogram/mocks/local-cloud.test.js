@@ -218,6 +218,99 @@ test('local cloud client lets an organizer update an activity without changing r
   });
 });
 
+test('local cloud client lets organizers edit regular teams with the same safety rules as CloudBase', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    registrationNoticeThreshold: 10,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6, colorKey: 'white' },
+      { teamName: 'Red', maxMembers: 6, colorKey: 'red' }
+    ]
+  });
+  const detailBefore = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detailBefore.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+
+  await expect(
+    ownerClient.call('updateActivity', {
+      activityId: created.activityId,
+      title: 'Saturday Updated',
+      startAt: '2026-04-27T20:00:00.000Z',
+      endAt: '2026-04-27T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+      addressText: 'New Field',
+      coverImage: '',
+      imageList: [],
+      signupLimitTotal: 12,
+      registrationNoticeThreshold: 10,
+      teams: [
+        { _id: detailBefore.teams[1]._id, teamName: 'Red', maxMembers: 6, colorKey: 'red' }
+      ]
+    })
+  ).rejects.toThrow('Teams with joined members cannot be removed');
+
+  await ownerClient.call('updateActivity', {
+    activityId: created.activityId,
+    title: 'Saturday Updated',
+    startAt: '2026-04-27T20:00:00.000Z',
+    endAt: '2026-04-27T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+    addressText: 'New Field',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 16,
+    registrationNoticeThreshold: 13,
+    teams: [
+      { _id: detailBefore.teams[0]._id, teamName: 'Green', maxMembers: 6, colorKey: 'green' },
+      { teamName: 'Blue', maxMembers: 6, colorKey: 'blue' }
+    ]
+  });
+
+  const detailAfter = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detailAfter.teams.map(team => ({
+    teamName: team.teamName,
+    maxMembers: team.maxMembers,
+    colorKey: team.colorKey,
+    joinedCount: team.joinedCount
+  }))).toEqual([
+    { teamName: 'Green', maxMembers: 6, colorKey: 'green', joinedCount: 1 },
+    { teamName: 'Blue', maxMembers: 6, colorKey: 'blue', joinedCount: 0 },
+    { teamName: '替补', maxMembers: 4, colorKey: 'neutral', joinedCount: 0 }
+  ]);
+});
+
 test('local cloud client lets an organizer add a proxy participant', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

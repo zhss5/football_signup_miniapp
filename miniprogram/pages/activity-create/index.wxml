@@ -87,11 +87,11 @@
     <text class="hint">{{i18n.activityCreate.notificationHintHint}}</text>
   </view>
 
-  <view wx:if="{{!isEditMode}}" class="field">
+  <view class="field">
     <text class="label">{{i18n.activityCreate.teams}}</text>
     <text class="hint">{{i18n.activityCreate.teamsHint}}</text>
   </view>
-  <team-editor wx:if="{{!isEditMode}}" teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
+  <team-editor teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
 
   <view class="field">
     <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
