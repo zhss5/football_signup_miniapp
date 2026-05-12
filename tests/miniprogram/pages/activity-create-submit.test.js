@@ -259,6 +259,24 @@ describe('activity create submit flow', () => {
     expect(wxml).toContain('bindtap="onRemoveDetailImage"');
   });
 
+  test('team member fallback avatars use the team color class', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('member-avatar-fallback {{item.teamColorClass}}');
+    expect(wxml).toContain('member-avatar-fallback-bordered');
+    expect(wxss).toContain('.member-avatar-fallback.team-color-red');
+    expect(wxss).toContain('.member-avatar-fallback.team-color-yellow');
+  });
+
   test('onChooseActivityImage chooses an image before opening the cropper', async () => {
     global.wx.chooseMedia = jest.fn(({ success }) => {
       success({

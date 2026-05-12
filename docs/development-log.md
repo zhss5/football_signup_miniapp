@@ -2043,3 +2043,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was updated to assert the visual group class, group styling, and field ordering.
+
+## 2026-05-12 - Team-Colored Default Member Avatars
+
+Activity Detail now uses team color for member fallback avatars.
+
+Delivered behavior:
+
+- members with real avatar URLs still render their uploaded avatar image.
+- members without an avatar now render the fallback initial with the team's color palette.
+- light team colors keep a visible fallback-avatar border for separation.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this component-only visual change.
+
+Verification:
+
+- targeted red/green coverage was added for team-color fallback avatar classes and styles.

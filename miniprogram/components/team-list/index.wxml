@@ -49,7 +49,10 @@
         <block wx:for="{{item.members}}" wx:key="userOpenId" wx:for-item="member">
           <view class="member-row">
             <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
-            <view wx:else class="member-avatar-fallback">{{member.avatarText}}</view>
+            <view
+              wx:else
+              class="member-avatar-fallback {{item.teamColorClass}} {{item.teamColorRequiresBorder ? 'member-avatar-fallback-bordered' : ''}}"
+            >{{member.avatarText}}</view>
             <view class="member-info">
               <view class="member-name-row">
                 <text class="member-name">{{member.signupName}}</text>

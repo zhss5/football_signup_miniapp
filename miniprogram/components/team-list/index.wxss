@@ -57,10 +57,66 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
   background: #dcfce7;
   color: #166534;
   font-size: 24rpx;
   font-weight: 700;
+}
+
+.member-avatar-fallback.team-color-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.member-avatar-fallback.team-color-white {
+  background: #ffffff;
+  color: #334155;
+}
+
+.member-avatar-fallback.team-color-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.member-avatar-fallback.team-color-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.member-avatar-fallback.team-color-black {
+  background: #111827;
+  color: #ffffff;
+}
+
+.member-avatar-fallback.team-color-yellow {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.member-avatar-fallback.team-color-orange {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.member-avatar-fallback.team-color-purple {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.member-avatar-fallback.team-color-gray {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.member-avatar-fallback.team-color-pink {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.member-avatar-fallback-bordered {
+  border-color: #cbd5e1;
 }
 
 .member-info {
