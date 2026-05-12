@@ -634,6 +634,19 @@ Page({
     });
   },
 
+  onPreviewActivityCover() {
+    const coverImage = this.data.activityCoverImage;
+
+    if (!coverImage) {
+      return;
+    }
+
+    wx.previewImage({
+      current: coverImage,
+      urls: [coverImage]
+    });
+  },
+
   async onCancelActivity() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const confirmed = await new Promise(resolve => {

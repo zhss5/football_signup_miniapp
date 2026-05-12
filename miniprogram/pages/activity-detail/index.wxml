@@ -6,6 +6,7 @@
         class="cover-image"
         src="{{activityCoverImage}}"
         mode="aspectFill"
+        bindtap="onPreviewActivityCover"
         binderror="onActivityCoverError"
       />
       <view wx:else class="cover-placeholder"></view>

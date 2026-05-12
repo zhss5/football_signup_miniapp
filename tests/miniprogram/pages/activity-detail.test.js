@@ -61,6 +61,7 @@ describe('activity detail page', () => {
       showToast: jest.fn(),
       showModal: jest.fn(),
       showShareMenu: jest.fn(),
+      previewImage: jest.fn(),
       setClipboardData: jest.fn()
     };
 
@@ -748,6 +749,21 @@ describe('activity detail page', () => {
 
     expect(detailImageRule).not.toBeNull();
     expect(detailImageRule[0]).not.toContain('border-radius');
+  });
+
+  test('onPreviewActivityCover previews the currently displayed cover image', () => {
+    const ctx = {
+      data: {
+        activityCoverImage: 'https://tmp.example.com/cover.jpg'
+      }
+    };
+
+    pageConfig.onPreviewActivityCover.call(ctx);
+
+    expect(global.wx.previewImage).toHaveBeenCalledWith({
+      current: 'https://tmp.example.com/cover.jpg',
+      urls: ['https://tmp.example.com/cover.jpg']
+    });
   });
 
   test('onConfirmActivityProceeding confirms the activity, notifies subscribers, and reloads detail', async () => {

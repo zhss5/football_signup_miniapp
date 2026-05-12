@@ -1921,3 +1921,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for edit-page team-editor visibility, edit-form team `_id` preservation, CloudBase team sync and safety checks, and local mock parity.
+
+## 2026-05-12 - Activity Detail Cover Preview
+
+Activity Detail cover images can now be opened in WeChat's native image preview.
+
+Delivered behavior:
+
+- tapping the displayed Activity Detail cover calls `wx.previewImage`.
+- the preview uses the currently displayed resolved cover image, so CloudBase temporary URLs and fallback cover candidates work consistently.
+- if no cover image is currently displayed, tapping does nothing.
+- detail gallery preview behavior is unchanged.
+
+Deployment note:
+
+- upload a new mini program frontend build so Activity Detail includes the cover tap binding.
+
+Verification:
+
+- targeted red/green coverage was added for the cover tap binding and the `onPreviewActivityCover` preview call.

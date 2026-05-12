@@ -11,6 +11,7 @@ describe('activity detail page hero', () => {
     expect(wxml).toContain('wx:if="{{activityCoverImage || activity.coverImage}}"');
     expect(wxml).toContain('wx:if="{{activityCoverImage && !activityCoverLoadFailed}}"');
     expect(wxml).toContain('src="{{activityCoverImage}}"');
+    expect(wxml).toContain('bindtap="onPreviewActivityCover"');
     expect(wxml).toContain('binderror="onActivityCoverError"');
     expect(wxml).not.toContain('src="{{activity.coverDisplayImage || activity.coverImage}}"');
 
