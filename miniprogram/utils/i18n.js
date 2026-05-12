@@ -253,6 +253,8 @@ function translateErrorMessage(error, translate) {
     'Too many teams': 'errors.tooManyTeams',
     'Team name is required': 'errors.teamNameRequired',
     'Team capacity must be greater than 0': 'errors.teamCapacityRequired',
+    'Teams with joined members cannot be removed': 'errors.joinedTeamCannotBeRemoved',
+    'Team capacity cannot be lower than joined members': 'errors.teamCapacityBelowJoined',
     'Total signup limit must cover all team slots': 'errors.totalSignupLimitCoverTeams',
     'Signup name is required': 'errors.signupNameRequired',
     'Activity not found': 'errors.activityNotFound',

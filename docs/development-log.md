@@ -1961,3 +1961,24 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for admin detail permissions, backend cancellation authorization, and local mock parity.
+
+## 2026-05-12 - Edit Team Safety Errors Before Submit
+
+Edit Activity now blocks unsafe team changes before calling CloudBase.
+
+Delivered behavior:
+
+- edit forms keep each regular team's `joinedCount` from Activity Detail.
+- saving an edit now blocks deleting a team that already has joined members.
+- saving an edit now blocks lowering an existing team's capacity below its joined member count.
+- these checks show user-facing Chinese errors instead of the raw `cloud.callFunction:fail` wrapper.
+- backend team-safety errors are also mapped to localized copy if they are still returned, for example after stale detail data.
+
+Deployment note:
+
+- no cloud function upload is required for this frontend-only guard.
+- upload a new mini program frontend build so Edit Activity performs the local safety checks and shows the new copy.
+
+Verification:
+
+- targeted red/green coverage was added for edit-form joined-count preservation, submit-time team safety checks, and wrapped CloudBase team-safety error translation.

@@ -220,6 +220,8 @@ module.exports = {
     tooManyTeams: '队伍数量超出上限',
     teamNameRequired: '队伍名称不能为空',
     teamCapacityRequired: '每队人数必须大于 0',
+    joinedTeamCannotBeRemoved: '不能删除已有报名成员的队伍',
+    teamCapacityBelowJoined: '队伍人数不能低于已报名人数',
     totalSignupLimitCoverTeams: '总报名人数必须覆盖所有队伍人数',
     signupNameRequired: '报名名称不能为空',
     activityNotFound: '活动不存在',

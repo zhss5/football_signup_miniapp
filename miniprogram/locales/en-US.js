@@ -252,6 +252,8 @@ module.exports = {
     tooManyTeams: 'Too many teams',
     teamNameRequired: 'Team name is required',
     teamCapacityRequired: 'Team capacity must be greater than 0',
+    joinedTeamCannotBeRemoved: 'Teams with joined members cannot be removed',
+    teamCapacityBelowJoined: 'Team capacity cannot be lower than joined members',
     totalSignupLimitCoverTeams: 'Total signup limit must cover all team slots',
     signupNameRequired: 'Signup name is required',
     activityNotFound: 'Activity not found',

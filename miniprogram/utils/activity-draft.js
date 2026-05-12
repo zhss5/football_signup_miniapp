@@ -166,6 +166,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
       _id: team._id || '',
       teamName: team.teamName,
       maxMembers: Number(team.maxMembers) || 0,
+      joinedCount: Number(team.joinedCount) || 0,
       colorKey: normalizeTeamColorKey(team.colorKey, index)
     }));
 

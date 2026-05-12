@@ -113,6 +113,47 @@ function getValidationErrors(error) {
   return {};
 }
 
+function cloneTeams(teams = []) {
+  return teams.map(team => ({ ...team }));
+}
+
+function buildEditTeamSafetyError(form, originalTeams, translate) {
+  if (!Array.isArray(originalTeams) || originalTeams.length === 0) {
+    return null;
+  }
+
+  const currentTeamsById = new Map(
+    (Array.isArray(form.teams) ? form.teams : [])
+      .filter(team => team && team._id)
+      .map(team => [team._id, team])
+  );
+
+  for (let index = 0; index < originalTeams.length; index += 1) {
+    const originalTeam = originalTeams[index];
+    const joinedCount = Number(originalTeam.joinedCount) || 0;
+
+    if (!originalTeam._id || joinedCount <= 0) {
+      continue;
+    }
+
+    if (!currentTeamsById.has(originalTeam._id)) {
+      return new Error(translate('errors.joinedTeamCannotBeRemoved'));
+    }
+  }
+
+  for (let index = 0; index < originalTeams.length; index += 1) {
+    const originalTeam = originalTeams[index];
+    const joinedCount = Number(originalTeam.joinedCount) || 0;
+    const currentTeam = originalTeam._id ? currentTeamsById.get(originalTeam._id) : null;
+
+    if (currentTeam && Number(currentTeam.maxMembers) < joinedCount) {
+      return new Error(translate('errors.teamCapacityBelowJoined'));
+    }
+  }
+
+  return null;
+}
+
 function getCoverFileExtension(filePath) {
   const cleanPath = String(filePath || '').split('?')[0];
   const match = cleanPath.match(/\.(jpe?g|png|webp)$/i);
@@ -252,6 +293,7 @@ Page({
     canSubmitActivity: false,
     isEditMode: false,
     editActivityId: '',
+    editOriginalTeams: [],
     teamEditorLabels: {}
   },
 
@@ -345,7 +387,11 @@ Page({
         return;
       }
 
-      this.syncDerivedState(buildActivityEditForm(detail.activity, detail.teams), translate);
+      const editForm = buildActivityEditForm(detail.activity, detail.teams);
+      this.setData({
+        editOriginalTeams: cloneTeams(editForm.teams)
+      });
+      this.syncDerivedState(editForm, translate);
     } catch (error) {
       this.setData({
         authorizationChecked: true,
@@ -634,6 +680,14 @@ Page({
       const payload = buildActivityPayload(this.data.form);
       this.setData({ validationErrors: {} });
       validateActivityDraft(payload, translate);
+      const editTeamSafetyError = this.data.isEditMode
+        ? buildEditTeamSafetyError(payload, this.data.editOriginalTeams, translate)
+        : null;
+
+      if (editTeamSafetyError) {
+        throw editTeamSafetyError;
+      }
+
       this.setData({ submitting: true });
       const managerSubscription = this.data.isEditMode
         ? null

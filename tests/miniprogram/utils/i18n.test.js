@@ -96,4 +96,25 @@ describe('i18n utilities', () => {
 
     expect(message).toBe('\u91cd\u590d\u62a5\u540d\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7\u8054\u7cfb\u7ec4\u7ec7\u8005');
   });
+
+  test('translates wrapped team edit safety errors to Chinese', () => {
+    const translate = (key, params) => t(key, params, 'zh-CN');
+
+    expect(
+      translateErrorMessage(
+        new Error(
+          'cloud.callFunction:fail Error: errCode: -504002 functions execute fail | errMsg: Error: Teams with joined members cannot be removed'
+        ),
+        translate
+      )
+    ).toBe('不能删除已有报名成员的队伍');
+    expect(
+      translateErrorMessage(
+        new Error(
+          'cloud.callFunction:fail Error: errCode: -504002 functions execute fail | errMsg: Error: Team capacity cannot be lower than joined members'
+        ),
+        translate
+      )
+    ).toBe('队伍人数不能低于已报名人数');
+  });
 });

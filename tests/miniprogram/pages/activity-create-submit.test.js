@@ -578,6 +578,100 @@ describe('activity create submit flow', () => {
     expect(global.wx.redirectTo).not.toHaveBeenCalled();
   });
 
+  test('onSubmit blocks removing an existing team that already has joined members', async () => {
+    const ctx = {
+      data: {
+        form: {
+          title: 'Updated Thursday Match',
+          teams: [
+            {
+              _id: 'team_red',
+              teamName: 'Red',
+              maxMembers: 6,
+              joinedCount: 0
+            }
+          ]
+        },
+        editOriginalTeams: [
+          {
+            _id: 'team_white',
+            teamName: 'White',
+            maxMembers: 6,
+            joinedCount: 2
+          },
+          {
+            _id: 'team_red',
+            teamName: 'Red',
+            maxMembers: 6,
+            joinedCount: 0
+          }
+        ],
+        canSubmitActivity: true,
+        isEditMode: true,
+        editActivityId: 'activity_123'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(updateActivity).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: '不能删除已有报名成员的队伍',
+      icon: 'none'
+    });
+  });
+
+  test('onSubmit blocks lowering an existing team capacity below joined members', async () => {
+    const ctx = {
+      data: {
+        form: {
+          title: 'Updated Thursday Match',
+          teams: [
+            {
+              _id: 'team_white',
+              teamName: 'White',
+              maxMembers: 1,
+              joinedCount: 2
+            }
+          ]
+        },
+        editOriginalTeams: [
+          {
+            _id: 'team_white',
+            teamName: 'White',
+            maxMembers: 6,
+            joinedCount: 2
+          }
+        ],
+        canSubmitActivity: true,
+        isEditMode: true,
+        editActivityId: 'activity_123'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(updateActivity).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: '队伍人数不能低于已报名人数',
+      icon: 'none'
+    });
+  });
+
   test('manual address edits clear stale map pin metadata', () => {
     const ctx = {
       data: {
