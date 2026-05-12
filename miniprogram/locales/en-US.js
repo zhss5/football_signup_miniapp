@@ -271,7 +271,7 @@ module.exports = {
     noActiveRegistrationToMove: 'No active registration to move',
     activityRosterClosed: 'Activity is not open for roster changes',
     alreadyInTargetTeam: 'Already in target team',
-    organizerCancelOnly: 'Only the organizer can cancel this activity',
+    organizerCancelOnly: 'Only the organizer or an admin can cancel this activity',
     organizerDeleteOnly: 'Only the organizer can delete this activity',
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',
     createActivityNotAllowed: 'Only organizers can create activities',

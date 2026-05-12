@@ -273,6 +273,7 @@ function translateErrorMessage(error, translate) {
     'Activity is not open for roster changes': 'errors.activityRosterClosed',
     'Already in target team': 'errors.alreadyInTargetTeam',
     'Only the organizer can cancel this activity': 'errors.organizerCancelOnly',
+    'Only the organizer or an admin can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',
     'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty',
     'Only organizers can create activities': 'errors.createActivityNotAllowed',

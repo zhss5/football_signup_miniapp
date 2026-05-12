@@ -237,7 +237,7 @@ module.exports = {
     noActiveRegistrationToMove: '没有可调整的报名记录',
     activityRosterClosed: '当前活动不可调整队伍',
     alreadyInTargetTeam: '已在目标队伍中',
-    organizerCancelOnly: '只有组织者可以取消活动',
+    organizerCancelOnly: '只有组织者或管理员可以取消活动',
     organizerDeleteOnly: '只有组织者可以删除活动',
     deleteOnlyEmpty: '只有无人报名的活动才可以删除'
   }

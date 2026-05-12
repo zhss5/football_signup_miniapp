@@ -143,8 +143,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       isOrganizer: activity.data.organizerOpenId === openid,
       canEditActivity: canManageRegistrations,
       canManageRegistrations,
-      canCancelActivity:
-        activity.data.organizerOpenId === openid && activity.data.status === 'published',
+      canCancelActivity: canManageRegistrations && activity.data.status === 'published',
       canDeleteActivity:
         activity.data.organizerOpenId === openid && Number(activity.data.joinedCount) === 0,
       canCancelSignup,

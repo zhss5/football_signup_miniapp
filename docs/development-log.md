@@ -1940,3 +1940,24 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for the cover tap binding and the `onPreviewActivityCover` preview call.
+
+## 2026-05-12 - Admin Activity Cancellation Permission
+
+Activity Detail now shows and enforces cancellation permission consistently for admins.
+
+Delivered behavior:
+
+- `getActivityDetail` sets `viewer.canCancelActivity` for viewers who can manage/edit the activity while it is still published.
+- `cancelActivity` now uses the same edit/manage permission check instead of only allowing the original creator.
+- regular users still cannot cancel activities.
+- local mock mode mirrors the CloudBase permission behavior.
+- cancellation error copy now mentions organizers/admins.
+
+Deployment note:
+
+- upload `getActivityDetail` and `cancelActivity`.
+- upload a new mini program frontend build only if the target build does not already include the existing Activity Detail cancel button rendering.
+
+Verification:
+
+- targeted red/green coverage was added for admin detail permissions, backend cancellation authorization, and local mock parity.

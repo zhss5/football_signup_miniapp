@@ -1238,6 +1238,57 @@ test('local cloud client keeps soft-deleted activities in created history but hi
   expect(homeList.items).toHaveLength(0);
 });
 
+test('local cloud client lets admins cancel another organizer activity', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const adminClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_admin',
+    defaultRoles: ['admin']
+  });
+
+  await adminClient.call('ensureUserProfile');
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const adminDetail = await adminClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(adminDetail.viewer).toMatchObject({
+    canEditActivity: true,
+    canCancelActivity: true
+  });
+
+  const cancelled = await adminClient.call('cancelActivity', {
+    activityId: created.activityId
+  });
+
+  expect(cancelled).toMatchObject({
+    activityId: created.activityId,
+    status: 'cancelled'
+  });
+});
+
 test('local cloud client excludes deleted activities from joined activities and denies deleted detail to non-organizers', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

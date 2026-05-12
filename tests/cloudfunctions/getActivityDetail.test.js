@@ -423,7 +423,8 @@ test('getActivityDetail exposes edit permission for admins', async () => {
   expect(result.viewer).toMatchObject({
     isOrganizer: false,
     canEditActivity: true,
-    canManageRegistrations: true
+    canManageRegistrations: true,
+    canCancelActivity: true
   });
 });
 

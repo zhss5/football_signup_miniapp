@@ -713,7 +713,7 @@ function createLocalCloudClient(options = {}) {
         isOrganizer: activity.organizerOpenId === openid,
         canEditActivity: canManageRegistrations,
         canManageRegistrations,
-        canCancelActivity: activity.organizerOpenId === openid && activity.status === 'published',
+        canCancelActivity: canManageRegistrations && activity.status === 'published',
         canDeleteActivity: activity.organizerOpenId === openid && Number(activity.joinedCount) === 0,
         canCancelSignup,
         registrationNotificationSubscribed
@@ -1105,8 +1105,8 @@ function createLocalCloudClient(options = {}) {
       throw new Error('Activity not found');
     }
 
-    if (activity.organizerOpenId !== openid) {
-      throw new Error('Only the organizer can cancel this activity');
+    if (!canEditActivity(activity, state.users[openid], openid)) {
+      throw new Error('Only the organizer or an admin can cancel this activity');
     }
 
     activity.status = 'cancelled';
