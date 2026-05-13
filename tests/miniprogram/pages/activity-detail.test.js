@@ -1326,12 +1326,14 @@ describe('activity detail page', () => {
     expect(ctx.reload).toHaveBeenCalled();
   });
 
-  test('onShareAppMessage shares the current activity detail page', () => {
+  test('onShareAppMessage shares the current activity detail page with activity time', () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
         activity: {
           title: 'Thursday Match',
+          startAt: '2026-05-13T12:00:00.000Z',
+          endAt: '2026-05-13T14:00:00.000Z',
           coverImage: 'cloud://cover-image'
         },
         locale: 'en'
@@ -1339,7 +1341,7 @@ describe('activity detail page', () => {
     };
 
     expect(pageConfig.onShareAppMessage.call(ctx)).toEqual({
-      title: 'Thursday Match',
+      title: 'Thursday Match 2026-05-13 20:00-22:00',
       imageUrl: 'cloud://cover-image',
       path: '/pages/activity-detail/index?activityId=activity_123'
     });
@@ -1366,12 +1368,14 @@ describe('activity detail page', () => {
     });
   });
 
-  test('onShareTimeline shares the current activity id in the timeline query', () => {
+  test('onShareTimeline shares the current activity id and time in the timeline query', () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
         activity: {
           title: 'Thursday Match',
+          startAt: '2026-05-13T12:00:00.000Z',
+          endAt: '2026-05-13T14:00:00.000Z',
           coverImage: 'cloud://cover-image'
         },
         locale: 'en'
@@ -1379,7 +1383,7 @@ describe('activity detail page', () => {
     };
 
     expect(pageConfig.onShareTimeline.call(ctx)).toEqual({
-      title: 'Thursday Match',
+      title: 'Thursday Match 2026-05-13 20:00-22:00',
       imageUrl: 'cloud://cover-image',
       query: 'activityId=activity_123'
     });

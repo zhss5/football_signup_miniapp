@@ -2102,3 +2102,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for activity-time rendering and the proxy signup cancel binding.
+
+## 2026-05-13 - Share Title Activity Time
+
+Activity Detail sharing now includes the scheduled activity time in WeChat share titles.
+
+Delivered behavior:
+
+- `onShareAppMessage` appends the formatted activity time to the shared title when the activity has time data.
+- `onShareTimeline` uses the same title format so chat shares and timeline shares stay consistent.
+- activities without valid time data keep the previous title-only share behavior.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this frontend share payload change.
+
+Verification:
+
+- targeted red/green coverage was added for chat-share and timeline-share titles with activity time.

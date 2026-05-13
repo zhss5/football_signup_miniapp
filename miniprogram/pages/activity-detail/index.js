@@ -181,6 +181,13 @@ function getShareImageUrl(activity = {}) {
   return activity.shareDisplayImage || activity.coverDisplayImage || activity.coverImage || undefined;
 }
 
+function buildActivityShareTitle(activity = {}, translate) {
+  const baseTitle = activity.title || translate('nav.home');
+  const timeText = buildActivityTimeText(activity);
+
+  return timeText ? `${baseTitle} ${timeText}` : baseTitle;
+}
+
 function buildColorPaletteOptions(translate) {
   return TEAM_COLOR_OPTIONS.map(option => ({
     ...option,
@@ -799,7 +806,7 @@ Page({
     const translate = makeTranslator(this.data.locale || getAppLocale());
 
     return {
-      title: activity.title || translate('nav.home'),
+      title: buildActivityShareTitle(activity, translate),
       imageUrl: getShareImageUrl(activity),
       path: `/pages/activity-detail/index?activityId=${this.data.activityId}`
     };
@@ -810,7 +817,7 @@ Page({
     const translate = makeTranslator(this.data.locale || getAppLocale());
 
     return {
-      title: activity.title || translate('nav.home'),
+      title: buildActivityShareTitle(activity, translate),
       imageUrl: getShareImageUrl(activity),
       query: `activityId=${this.data.activityId}`
     };
