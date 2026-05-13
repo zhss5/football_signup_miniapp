@@ -1341,7 +1341,7 @@ describe('activity detail page', () => {
     };
 
     expect(pageConfig.onShareAppMessage.call(ctx)).toEqual({
-      title: 'Thursday Match 2026-05-13 20:00-22:00',
+      title: 'Thursday Match\n2026-05-13 20:00-22:00',
       imageUrl: 'cloud://cover-image',
       path: '/pages/activity-detail/index?activityId=activity_123'
     });
@@ -1383,7 +1383,7 @@ describe('activity detail page', () => {
     };
 
     expect(pageConfig.onShareTimeline.call(ctx)).toEqual({
-      title: 'Thursday Match 2026-05-13 20:00-22:00',
+      title: 'Thursday Match\n2026-05-13 20:00-22:00',
       imageUrl: 'cloud://cover-image',
       query: 'activityId=activity_123'
     });

@@ -185,7 +185,7 @@ function buildActivityShareTitle(activity = {}, translate) {
   const baseTitle = activity.title || translate('nav.home');
   const timeText = buildActivityTimeText(activity);
 
-  return timeText ? `${baseTitle} ${timeText}` : baseTitle;
+  return timeText ? `${baseTitle}\n${timeText}` : baseTitle;
 }
 
 function buildColorPaletteOptions(translate) {

@@ -2121,3 +2121,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for chat-share and timeline-share titles with activity time.
+
+## 2026-05-13 - Share Title Line Break
+
+Activity Detail share titles now separate the activity name and activity time with a line break.
+
+Delivered behavior:
+
+- share titles use `activity title + newline + activity time` when valid time data exists.
+- chat shares and timeline shares use the same line-break title format.
+- activities without valid time data still share the activity title only.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this share-title formatting change.
+
+Verification:
+
+- targeted red/green coverage was updated for newline-separated chat-share and timeline-share titles.
