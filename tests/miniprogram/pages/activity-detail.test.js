@@ -14,6 +14,14 @@ jest.mock('../../../miniprogram/services/registration-service', () => ({
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildTeamListVm: jest.fn((teams) => teams),
+  formatDateTime: jest.fn(value => {
+    const map = {
+      '2026-05-13T12:00:00.000Z': '2026-05-13 20:00',
+      '2026-05-13T14:00:00.000Z': '2026-05-13 22:00'
+    };
+
+    return map[value] || '';
+  }),
   getActivitySignupState: jest.fn(() => ({
     statusText: 'Joinable',
     joinEnabled: true,
@@ -44,6 +52,7 @@ describe('activity detail page', () => {
   let moveRegistration;
   let removeRegistration;
   let buildTeamListVm;
+  let formatDateTime;
   let getActivitySignupState;
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
@@ -75,6 +84,7 @@ describe('activity detail page', () => {
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
+    ({ formatDateTime } = require('../../../miniprogram/utils/formatters'));
     ({ getActivitySignupState } = require('../../../miniprogram/utils/formatters'));
     ({
       getManagerRegistrationNoticeTemplateId,
@@ -723,6 +733,58 @@ describe('activity detail page', () => {
     expect(wxml).toContain('bindtap="onPreviewDetailImage"');
   });
 
+  test('activity detail template renders the activity time in the hero', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{activityTimeText}}"');
+    expect(wxml).toContain('{{i18n.activity.timeLabel}}');
+    expect(wxml).toContain('{{activityTimeText}}');
+    expect(wxss).toContain('.activity-time-row');
+  });
+
+  test('reload exposes an activity time range for detail display', async () => {
+    getActivityDetail.mockResolvedValue({
+      activity: {
+        _id: 'activity_123',
+        title: 'Wednesday Match',
+        startAt: '2026-05-13T12:00:00.000Z',
+        endAt: '2026-05-13T14:00:00.000Z',
+        status: 'published'
+      },
+      teams: [],
+      myRegistration: null,
+      viewer: {
+        isOrganizer: true
+      }
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.reload.call(ctx);
+
+    expect(formatDateTime).toHaveBeenCalledWith('2026-05-13T12:00:00.000Z');
+    expect(formatDateTime).toHaveBeenCalledWith('2026-05-13T14:00:00.000Z');
+    expect(ctx.data.activityTimeText).toBe('2026-05-13 20:00-22:00');
+  });
+
   test('renders share and signup sections before description and detail images', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
@@ -925,6 +987,7 @@ describe('activity detail page', () => {
     expect(wxml).toContain('wx:for="{{proxySignupPositionOptions}}"');
     expect(wxml).toContain('bindtap="onProxySignupPositionTap"');
     expect(wxml).toContain('bindtap="onProxySignupSubmit"');
+    expect(wxml).toContain('{{i18n.modal.proxySignup.cancel}}');
     expect(wxss).toContain('.proxy-signup-panel');
     expect(wxss).toContain('.proxy-position-option-selected');
   });

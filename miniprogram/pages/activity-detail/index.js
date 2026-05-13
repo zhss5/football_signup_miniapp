@@ -18,6 +18,7 @@ const {
 const { downloadFile } = require('../../services/cloud');
 const {
   buildTeamListVm,
+  formatDateTime,
   getActivitySignupState,
   isActivityExpired
 } = require('../../utils/formatters');
@@ -95,6 +96,21 @@ function buildLocationMapState(activity = {}) {
       }
     ]
   };
+}
+
+function buildActivityTimeText(activity = {}) {
+  const startText = formatDateTime(activity.startAt);
+  const endText = formatDateTime(activity.endAt);
+
+  if (startText && endText) {
+    if (startText.slice(0, 10) === endText.slice(0, 10) && endText.length > 11) {
+      return `${startText}-${endText.slice(11)}`;
+    }
+
+    return `${startText} - ${endText}`;
+  }
+
+  return startText || endText;
 }
 
 function buildParticipantNameList(teams = []) {
@@ -223,6 +239,7 @@ Page({
     activityCoverImage: '',
     activityCoverLoadFailed: false,
     activityCoverSourceIndex: 0,
+    activityTimeText: '',
     activityDescriptionText: '',
     activityDetailImages: [],
     activityExpiredVisible: false,
@@ -292,6 +309,7 @@ Page({
       activityCoverImage: activityCoverCandidates[0] || '',
       activityCoverLoadFailed: false,
       activityCoverSourceIndex: 0,
+      activityTimeText: buildActivityTimeText(activityWithDisplayCover),
       ...buildLocationMapState(activityWithDisplayCover),
       activityDetailImages,
       activityExpiredVisible: isActivityExpired(activityWithDisplayCover),

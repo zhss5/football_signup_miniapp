@@ -63,6 +63,7 @@ module.exports = {
       copyAction: 'Insurance purchase link \ud83d\udd17'
     },
     descriptionTitle: 'Description',
+    timeLabel: 'Activity time',
     activityImagesTitle: 'Activity images',
     actions: {
       edit: 'Edit',
@@ -215,7 +216,8 @@ module.exports = {
     },
     proxySignup: {
       title: 'Add participant',
-      placeholder: 'Participant name'
+      placeholder: 'Participant name',
+      cancel: 'Cancel'
     }
   },
   toast: {

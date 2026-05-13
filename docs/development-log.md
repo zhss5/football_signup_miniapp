@@ -2083,3 +2083,22 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for the proxy signup form, position limit behavior, CloudBase persistence, and local mock parity.
+
+## 2026-05-13 - Activity Detail Time and Proxy Cancel Label
+
+Activity Detail now shows the scheduled activity time and the proxy signup form has an explicit cancel label.
+
+Delivered behavior:
+
+- the detail hero renders the activity time from `startAt` and `endAt`.
+- same-day time ranges are shown compactly, for example `2026-05-13 20:00-22:00`.
+- the proxy signup form's gray secondary button now uses the proxy signup cancel copy instead of a missing cover-crop key.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- no cloud function upload is required for this UI-only fix.
+
+Verification:
+
+- targeted red/green coverage was added for activity-time rendering and the proxy signup cancel binding.
