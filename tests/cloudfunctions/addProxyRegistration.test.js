@@ -78,7 +78,8 @@ test('addProxyRegistration lets an organizer add a proxy participant', async () 
     {
       activityId: 'activity_1',
       teamId: 'team_white',
-      signupName: 'Guest Player'
+      signupName: 'Guest Player',
+      preferredPositions: ['\u524d\u950b', '\u95e8\u5c06']
     },
     {},
     {
@@ -97,6 +98,7 @@ test('addProxyRegistration lets an organizer add a proxy participant', async () 
       status: 'joined',
       source: 'proxy',
       profileSource: 'proxy',
+      preferredPositions: ['\u524d\u950b', '\u95e8\u5c06'],
       proxyRegistration: true,
       createdByOpenId: 'openid_owner'
     })
@@ -118,6 +120,38 @@ test('addProxyRegistration lets an organizer add a proxy participant', async () 
     proxyRegistration: true
   });
 
+  jest.dontMock('wx-server-sdk');
+});
+
+test('addProxyRegistration rejects more than two preferred positions', async () => {
+  jest.resetModules();
+
+  const runAddProxyRegistration = jest.fn();
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_owner' }))
+  }));
+
+  const addProxyRegistration = require('../../cloudfunctions/addProxyRegistration/index');
+
+  await expect(
+    addProxyRegistration.main(
+      {
+        activityId: 'activity_1',
+        teamId: 'team_white',
+        signupName: 'Guest Player',
+        preferredPositions: ['\u524d\u950b', '\u4e2d\u573a', '\u95e8\u5c06']
+      },
+      {},
+      {
+        runAddProxyRegistration
+      }
+    )
+  ).rejects.toThrow('At most two preferred positions are allowed');
+
+  expect(runAddProxyRegistration).not.toHaveBeenCalled();
   jest.dontMock('wx-server-sdk');
 });
 

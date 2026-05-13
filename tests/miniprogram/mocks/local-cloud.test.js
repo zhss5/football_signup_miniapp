@@ -349,7 +349,8 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   const added = await ownerClient.call('addProxyRegistration', {
     activityId: created.activityId,
     teamId: detailBefore.teams[0]._id,
-    signupName: '  Guest\nPlayer😀123456789  '
+    signupName: '  Guest\nPlayer😀123456789  ',
+    preferredPositions: ['\u524d\u950b', '\u95e8\u5c06']
   });
   const detailAfter = await ownerClient.call('getActivityDetail', {
     activityId: created.activityId
@@ -365,6 +366,7 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   expect(detailAfter.teams[0].members[0]).toMatchObject({
     signupName: 'Guest Player😀123',
     userOpenId: expect.stringMatching(/^proxy_/),
+    preferredPositions: ['\u524d\u950b', '\u95e8\u5c06'],
     proxyRegistration: true
   });
 
@@ -373,6 +375,42 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   });
 
   expect(regularDetail.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
+});
+
+test('local cloud client rejects proxy preferred positions above the limit', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [{ teamName: 'White', maxMembers: 6 }]
+  });
+  const detail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await expect(
+    ownerClient.call('addProxyRegistration', {
+      activityId: created.activityId,
+      teamId: detail.teams[0]._id,
+      signupName: 'Guest Player',
+      preferredPositions: ['\u524d\u950b', '\u4e2d\u573a', '\u95e8\u5c06']
+    })
+  ).rejects.toThrow('At most two preferred positions are allowed');
 });
 
 test('local cloud client blocks regular users from adding proxy participants', async () => {

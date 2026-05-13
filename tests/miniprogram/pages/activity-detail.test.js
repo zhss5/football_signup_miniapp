@@ -910,73 +910,176 @@ describe('activity detail page', () => {
     expect(ctx.reload).toHaveBeenCalled();
   });
 
-  test('onProxySignup prompts for a name, adds the participant, and reloads detail', async () => {
-    addProxyRegistration.mockResolvedValue({
-      status: 'joined'
-    });
-    global.wx.showModal.mockImplementation(({ success }) => {
-      success({
-        confirm: true,
-        content: ' Guest Player '
-      });
-    });
+  test('renders proxy signup form with optional preferred positions', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
 
+    expect(wxml).toContain('wx:if="{{proxySignupVisible}}"');
+    expect(wxml).toContain('value="{{proxySignupName}}"');
+    expect(wxml).toContain('wx:for="{{proxySignupPositionOptions}}"');
+    expect(wxml).toContain('bindtap="onProxySignupPositionTap"');
+    expect(wxml).toContain('bindtap="onProxySignupSubmit"');
+    expect(wxss).toContain('.proxy-signup-panel');
+    expect(wxss).toContain('.proxy-position-option-selected');
+  });
+
+  test('onProxySignup opens the proxy signup form for the selected team', () => {
     const ctx = {
       data: {
-        activityId: 'activity_123',
         locale: 'en-US'
       },
-      reload: jest.fn().mockResolvedValue()
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
     };
 
-    await pageConfig.onProxySignup.call(ctx, {
+    pageConfig.onProxySignup.call(ctx, {
       detail: {
         teamId: 'team_white',
         teamName: 'White'
       }
     });
 
-    expect(global.wx.showModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Add participant',
-        editable: true,
-        placeholderText: 'Participant name'
-      })
+    expect(ctx.data).toMatchObject({
+      proxySignupVisible: true,
+      proxySignupTeamId: 'team_white',
+      proxySignupTeamName: 'White',
+      proxySignupName: '',
+      proxySignupPreferredPositions: []
+    });
+    expect(ctx.data.proxySignupPositionOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: '\u524d\u950b',
+          selected: false
+        })
+      ])
     );
+  });
+
+  test('onProxySignupPositionTap lets managers select up to two optional positions', () => {
+    const ctx = {
+      data: {
+        locale: 'zh-CN',
+        proxySignupPreferredPositions: [],
+        proxySignupPositionOptions: []
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onProxySignupPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '\u524d\u950b'
+        }
+      }
+    });
+    pageConfig.onProxySignupPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '\u95e8\u5c06'
+        }
+      }
+    });
+    pageConfig.onProxySignupPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '\u4e2d\u573a'
+        }
+      }
+    });
+
+    expect(ctx.data.proxySignupPreferredPositions).toEqual(['\u524d\u950b', '\u95e8\u5c06']);
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: '\u6700\u591a\u9009 2 \u4e2a\u4f4d\u7f6e',
+      icon: 'none'
+    });
+
+    pageConfig.onProxySignupPositionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          value: '\u524d\u950b'
+        }
+      }
+    });
+
+    expect(ctx.data.proxySignupPreferredPositions).toEqual(['\u95e8\u5c06']);
+  });
+
+  test('onProxySignupSubmit adds the participant with selected positions and reloads detail', async () => {
+    addProxyRegistration.mockResolvedValue({
+      status: 'joined'
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        proxySignupVisible: true,
+        proxySignupTeamId: 'team_white',
+        proxySignupName: ' Guest Player ',
+        proxySignupPreferredPositions: ['\u524d\u950b', '\u95e8\u5c06']
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      closeProxySignup: pageConfig.closeProxySignup,
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onProxySignupSubmit.call(ctx);
+
     expect(addProxyRegistration).toHaveBeenCalledWith(
       'activity_123',
       'team_white',
-      'Guest Player'
+      'Guest Player',
+      ['\u524d\u950b', '\u95e8\u5c06']
     );
     expect(global.wx.showToast).toHaveBeenCalledWith({
       title: 'Participant added',
       icon: 'success'
     });
+    expect(ctx.data.proxySignupVisible).toBe(false);
     expect(ctx.reload).toHaveBeenCalled();
   });
 
-  test('onProxySignup requires a participant name', async () => {
-    global.wx.showModal.mockImplementation(({ success }) => {
-      success({
-        confirm: true,
-        content: '   '
-      });
-    });
-
+  test('onProxySignupSubmit requires a participant name', async () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
-        locale: 'en-US'
+        locale: 'en-US',
+        proxySignupVisible: true,
+        proxySignupTeamId: 'team_white',
+        proxySignupName: '   ',
+        proxySignupPreferredPositions: ['\u524d\u950b']
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
       },
       reload: jest.fn().mockResolvedValue()
     };
 
-    await pageConfig.onProxySignup.call(ctx, {
-      detail: {
-        teamId: 'team_white',
-        teamName: 'White'
-      }
-    });
+    await pageConfig.onProxySignupSubmit.call(ctx);
 
     expect(addProxyRegistration).not.toHaveBeenCalled();
     expect(global.wx.showToast).toHaveBeenCalledWith({

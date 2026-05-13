@@ -8,6 +8,45 @@ const { normalizeSignupName, validateSignupPayload } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const POSITION_VALUES = ['\u524d\u950b', '\u4e2d\u573a', '\u8fb9\u950b', '\u540e\u8170', '\u4e2d\u536b', '\u8fb9\u536b', '\u95e8\u5c06'];
+const MAX_PREFERRED_POSITIONS = 2;
+
+function normalizeText(value) {
+  return String(value || '').trim();
+}
+
+function normalizePreferredPositions(value) {
+  const seen = new Set();
+  const input = Array.isArray(value) ? value : [];
+
+  return input.reduce((positions, item) => {
+    const position = normalizeText(item);
+
+    if (!POSITION_VALUES.includes(position) || seen.has(position)) {
+      return positions;
+    }
+
+    seen.add(position);
+    positions.push(position);
+    return positions;
+  }, []);
+}
+
+function validatePreferredPositions(value) {
+  const input = Array.isArray(value) ? value : [];
+  const normalized = normalizePreferredPositions(input);
+
+  if (normalized.length > MAX_PREFERRED_POSITIONS) {
+    throw businessError('At most two preferred positions are allowed');
+  }
+
+  if (input.some(item => !POSITION_VALUES.includes(normalizeText(item)))) {
+    throw businessError('Unsupported preferred position');
+  }
+
+  return normalized;
+}
+
 function buildProxyUserOpenId(activityId, stamp, deps = {}) {
   const suffix =
     deps.idSuffix ||
@@ -23,10 +62,11 @@ function buildProxyUserOpenId(activityId, stamp, deps = {}) {
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
+  const preferredPositions = validatePreferredPositions(event.preferredPositions);
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
 
   if (deps.runAddProxyRegistration) {
-    return deps.runAddProxyRegistration(event, openid);
+    return deps.runAddProxyRegistration({ ...event, preferredPositions }, openid);
   }
 
   const db = deps.db || cloud.database();
@@ -94,6 +134,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         signupName,
         avatarUrl: '',
         profileSource: 'proxy',
+        preferredPositions,
         source: 'proxy',
         proxyRegistration: true,
         createdByOpenId: openid,

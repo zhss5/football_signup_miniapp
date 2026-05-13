@@ -2062,3 +2062,24 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for team-color fallback avatar classes and styles.
+
+## 2026-05-13 - Proxy Signup Preferred Positions
+
+Organizer/admin proxy signup now supports the same optional preferred-position selection as regular signup.
+
+Delivered behavior:
+
+- proxy signup uses an in-page form instead of the native single-input modal.
+- managers still only need to enter a participant name.
+- managers can optionally select up to two preferred positions.
+- `addProxyRegistration` stores validated `preferredPositions` on proxy registration documents.
+- local mock mode mirrors the preferred-position storage and validation.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- upload `addProxyRegistration` so real CloudBase proxy signups persist preferred positions.
+
+Verification:
+
+- targeted red/green coverage was added for the proxy signup form, position limit behavior, CloudBase persistence, and local mock parity.

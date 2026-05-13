@@ -4,8 +4,8 @@ function joinActivity(payload) {
   return call('joinActivity', payload);
 }
 
-function addProxyRegistration(activityId, teamId, signupName) {
-  return call('addProxyRegistration', { activityId, teamId, signupName });
+function addProxyRegistration(activityId, teamId, signupName, preferredPositions = []) {
+  return call('addProxyRegistration', { activityId, teamId, signupName, preferredPositions });
 }
 
 function moveRegistration(activityId, userOpenId, targetTeamId) {

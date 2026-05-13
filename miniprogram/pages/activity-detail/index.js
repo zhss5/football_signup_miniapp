@@ -23,6 +23,13 @@ const {
 } = require('../../utils/formatters');
 const { TEAM_COLOR_OPTIONS, isTeamColorKey } = require('../../utils/team-colors');
 const {
+  MAX_PREFERRED_POSITIONS,
+  POSITION_VALUES,
+  buildPositionOptions,
+  normalizePreferredPositions
+} = require('../../utils/positions');
+const { normalizeSignupName } = require('../../utils/signup-name');
+const {
   getAppLocale,
   getMessages,
   makeTranslator,
@@ -222,7 +229,14 @@ Page({
     activitySignupClosedVisible: false,
     colorPaletteVisible: false,
     colorPaletteTeamId: '',
-    colorPaletteOptions: []
+    colorPaletteOptions: [],
+    proxySignupVisible: false,
+    proxySignupTeamId: '',
+    proxySignupTeamName: '',
+    proxySignupName: '',
+    proxySignupPreferredPositions: [],
+    proxySignupPositionOptions: buildPositionOptions([]),
+    proxySignupSubmitting: false
   },
 
   async onLoad(query) {
@@ -438,27 +452,83 @@ Page({
     }
   },
 
-  async onProxySignup(event) {
-    const translate = makeTranslator(this.data.locale || getAppLocale());
+  onProxySignup(event) {
     const detail = event.detail || {};
 
     if (!detail.teamId) {
       return;
     }
 
-    const signupName = await new Promise(resolve => {
-      wx.showModal({
-        title: translate('modal.proxySignup.title'),
-        content: detail.teamName || '',
-        editable: true,
-        placeholderText: translate('modal.proxySignup.placeholder'),
-        success: result => resolve(result.confirm ? String(result.content || '').trim() : null)
-      });
+    this.setData({
+      proxySignupVisible: true,
+      proxySignupTeamId: detail.teamId,
+      proxySignupTeamName: detail.teamName || '',
+      proxySignupName: '',
+      proxySignupPreferredPositions: [],
+      proxySignupPositionOptions: buildPositionOptions([]),
+      proxySignupSubmitting: false
     });
+  },
 
-    if (signupName === null) {
+  onProxySignupNameInput(event) {
+    this.setData({
+      proxySignupName: event.detail.value
+    });
+  },
+
+  onProxySignupPositionTap(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const value = String(event.currentTarget.dataset.value || '').trim();
+
+    if (!POSITION_VALUES.includes(value)) {
       return;
     }
+
+    const current = normalizePreferredPositions(this.data.proxySignupPreferredPositions);
+    const next = current.includes(value)
+      ? current.filter(item => item !== value)
+      : current.length < MAX_PREFERRED_POSITIONS
+        ? current.concat(value)
+        : current;
+
+    if (!current.includes(value) && current.length >= MAX_PREFERRED_POSITIONS) {
+      wx.showToast({
+        title: translate('activityJoin.preferredPositionsLimit'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    this.setData({
+      proxySignupPreferredPositions: next,
+      proxySignupPositionOptions: buildPositionOptions(next)
+    });
+  },
+
+  onProxySignupCancel() {
+    if (this.data.proxySignupSubmitting) {
+      return;
+    }
+
+    this.closeProxySignup();
+  },
+
+  closeProxySignup() {
+    this.setData({
+      proxySignupVisible: false,
+      proxySignupTeamId: '',
+      proxySignupTeamName: '',
+      proxySignupName: '',
+      proxySignupPreferredPositions: [],
+      proxySignupPositionOptions: buildPositionOptions([]),
+      proxySignupSubmitting: false
+    });
+  },
+
+  async onProxySignupSubmit() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const signupName = normalizeSignupName(this.data.proxySignupName);
+    const preferredPositions = normalizePreferredPositions(this.data.proxySignupPreferredPositions);
 
     if (!signupName) {
       wx.showToast({
@@ -469,13 +539,21 @@ Page({
     }
 
     try {
-      await addProxyRegistration(this.data.activityId, detail.teamId, signupName);
+      this.setData({ proxySignupSubmitting: true });
+      await addProxyRegistration(
+        this.data.activityId,
+        this.data.proxySignupTeamId,
+        signupName,
+        preferredPositions
+      );
       wx.showToast({
         title: translate('toast.proxySignupSuccess'),
         icon: 'success'
       });
+      this.closeProxySignup();
       await this.reload();
     } catch (error) {
+      this.setData({ proxySignupSubmitting: false });
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },

@@ -117,6 +117,50 @@
     </view>
   </view>
 
+  <view wx:if="{{proxySignupVisible}}" class="proxy-signup-backdrop" catchtap="onProxySignupCancel">
+    <view class="proxy-signup-panel" catchtap="noop">
+      <text class="proxy-signup-title">{{i18n.modal.proxySignup.title}}</text>
+      <text wx:if="{{proxySignupTeamName}}" class="proxy-signup-team">{{proxySignupTeamName}}</text>
+
+      <view class="proxy-signup-field">
+        <text class="proxy-signup-label">{{i18n.modal.proxySignup.placeholder}}</text>
+        <input
+          class="proxy-signup-input"
+          placeholder="{{i18n.modal.proxySignup.placeholder}}"
+          value="{{proxySignupName}}"
+          bindinput="onProxySignupNameInput"
+        />
+      </view>
+
+      <view class="proxy-signup-field">
+        <text class="proxy-signup-label">{{i18n.activityJoin.preferredPositions}}</text>
+        <text class="proxy-signup-hint">{{i18n.activityJoin.preferredPositionsHint}}</text>
+        <view class="proxy-position-grid">
+          <button
+            wx:for="{{proxySignupPositionOptions}}"
+            wx:key="value"
+            class="proxy-position-option {{item.selected ? 'proxy-position-option-selected' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onProxySignupPositionTap"
+          >{{item.label}}</button>
+        </view>
+      </view>
+
+      <view class="proxy-signup-actions">
+        <button class="proxy-signup-cancel" bindtap="onProxySignupCancel">
+          {{i18n.activityCoverCrop.actions.cancel}}
+        </button>
+        <button
+          class="proxy-signup-confirm"
+          loading="{{proxySignupSubmitting}}"
+          bindtap="onProxySignupSubmit"
+        >
+          {{i18n.activityJoin.confirm}}
+        </button>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{viewer && (viewer.canManageRegistrations || viewer.canEditActivity || viewer.canCancelActivity)}}" class="action-panel">
     <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
       {{i18n.activity.actions.copyParticipantNames}}

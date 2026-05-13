@@ -347,3 +347,127 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.proxy-signup-backdrop {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.36);
+}
+
+.proxy-signup-panel {
+  width: 100%;
+  max-width: 640rpx;
+  padding: 28rpx;
+  box-sizing: border-box;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.proxy-signup-title {
+  display: block;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.proxy-signup-team {
+  display: block;
+  margin-top: 6rpx;
+  color: #6b7280;
+  font-size: 24rpx;
+}
+
+.proxy-signup-field {
+  margin-top: 24rpx;
+}
+
+.proxy-signup-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #374151;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.proxy-signup-input {
+  width: 100%;
+  height: 84rpx;
+  line-height: 84rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  border-radius: 20rpx;
+  background: #f9fafb;
+}
+
+.proxy-signup-hint {
+  display: block;
+  color: #6b7280;
+  font-size: 22rpx;
+}
+
+.proxy-position-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.proxy-position-option {
+  flex: 0 0 auto;
+  min-width: 124rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  margin: 0;
+  padding: 0 22rpx;
+  box-sizing: border-box;
+  border: 1rpx solid transparent;
+  border-radius: 32rpx;
+  color: #374151;
+  background: #f9fafb;
+  font-size: 24rpx;
+}
+
+.proxy-position-option::after,
+.proxy-signup-cancel::after,
+.proxy-signup-confirm::after {
+  border: none;
+}
+
+.proxy-position-option-selected {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  font-weight: 700;
+}
+
+.proxy-signup-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.proxy-signup-cancel,
+.proxy-signup-confirm {
+  flex: 1;
+  margin: 0;
+  border-radius: 20rpx;
+}
+
+.proxy-signup-cancel {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.proxy-signup-confirm {
+  color: #ffffff;
+  background: #16a34a;
+}

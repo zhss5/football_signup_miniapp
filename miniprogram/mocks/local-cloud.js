@@ -837,6 +837,7 @@ function createLocalCloudClient(options = {}) {
 
   function addProxyRegistration(payload) {
     validateSignupPayload(payload);
+    const preferredPositions = validatePreferredPositions(payload.preferredPositions);
     const state = readState();
     const openid = getOpenId();
     const stamp = now();
@@ -885,6 +886,7 @@ function createLocalCloudClient(options = {}) {
       signupName,
       avatarUrl: '',
       profileSource: 'proxy',
+      preferredPositions,
       source: 'proxy',
       proxyRegistration: true,
       createdByOpenId: openid,
