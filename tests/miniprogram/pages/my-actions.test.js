@@ -36,4 +36,21 @@ describe('my activities page', () => {
     expect(wxss).toContain('.activity-action-footer');
     expect(wxml).not.toContain('<text class="section-title">Joined Activities</text>');
   });
+
+  test('keeps user id logic without rendering the user id panel', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/my/index.wxml'),
+      'utf8'
+    );
+    const js = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/my/index.js'),
+      'utf8'
+    );
+
+    expect(wxml).not.toContain('identity-card');
+    expect(wxml).not.toContain('{{userOpenId}}');
+    expect(wxml).not.toContain('bindtap="onCopyUserId"');
+    expect(js).toContain('userOpenId');
+    expect(js).toContain('onCopyUserId()');
+  });
 });
