@@ -17,6 +17,23 @@ describe('tab bar layout', () => {
     );
   });
 
+  test('uses Chinese labels for the native tab bar', () => {
+    const appConfig = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../miniprogram/app.json'), 'utf8')
+    );
+
+    expect(appConfig.tabBar.list).toEqual([
+      expect.objectContaining({
+        pagePath: 'pages/home/index',
+        text: '首页'
+      }),
+      expect.objectContaining({
+        pagePath: 'pages/my/index',
+        text: '我的'
+      })
+    ]);
+  });
+
   test('tab pages reserve bottom space above the native tab bar', () => {
     const homeStyles = fs.readFileSync(
       path.join(__dirname, '../../miniprogram/pages/home/index.wxss'),
