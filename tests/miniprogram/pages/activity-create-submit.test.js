@@ -1062,6 +1062,41 @@ describe('activity create submit flow', () => {
     expect(textareaRule).toContain('maxlength="2000"');
   });
 
+  test('activity description textarea keeps the focused input above the iOS keyboard', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+    const textareaRule = Array.from(wxml.matchAll(/<textarea[\s\S]*?\/>/g))
+      .map(match => match[0])
+      .find(markup => markup.includes('data-field="description"'));
+
+    expect(wxml).toContain('id="activity-description-field"');
+    expect(textareaRule).toBeDefined();
+    expect(textareaRule).toContain('bindfocus="onDescriptionFocus"');
+    expect(textareaRule).toContain('adjust-position="{{true}}"');
+    expect(textareaRule).toContain('cursor-spacing="220"');
+    expect(textareaRule).toContain('show-confirm-bar="{{false}}"');
+  });
+
+  test('scrolls the activity description field into view when it receives focus', () => {
+    jest.useFakeTimers();
+    global.wx.pageScrollTo = jest.fn();
+
+    pageConfig.onDescriptionFocus();
+
+    expect(global.wx.pageScrollTo).toHaveBeenCalledWith({
+      selector: '#activity-description-field',
+      offsetTop: -24,
+      duration: 160
+    });
+
+    jest.runOnlyPendingTimers();
+
+    expect(global.wx.pageScrollTo).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
   test('cover image upload appears before the activity description field', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxml'),

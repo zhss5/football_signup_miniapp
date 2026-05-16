@@ -29,6 +29,8 @@ const {
 } = require('../../utils/i18n');
 const { canCreateActivity } = require('../../utils/roles');
 
+const DESCRIPTION_FIELD_SELECTOR = '#activity-description-field';
+
 function getImagePath(result) {
   if (Array.isArray(result.tempFiles) && result.tempFiles[0]) {
     return result.tempFiles[0].tempFilePath || result.tempFiles[0].path || '';
@@ -270,6 +272,18 @@ function returnToEditedActivityDetail(activityId) {
   });
 }
 
+function scrollDescriptionFieldIntoView() {
+  if (typeof wx === 'undefined' || !wx || typeof wx.pageScrollTo !== 'function') {
+    return;
+  }
+
+  wx.pageScrollTo({
+    selector: DESCRIPTION_FIELD_SELECTOR,
+    offsetTop: -24,
+    duration: 160
+  });
+}
+
 Page({
   data: {
     form: createDefaultActivityForm(),
@@ -461,6 +475,11 @@ Page({
     }
 
     return undefined;
+  },
+
+  onDescriptionFocus() {
+    scrollDescriptionFieldIntoView();
+    setTimeout(scrollDescriptionFieldIntoView, 280);
   },
 
   onPickerChange(event) {

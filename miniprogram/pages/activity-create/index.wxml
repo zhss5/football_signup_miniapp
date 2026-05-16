@@ -141,7 +141,7 @@
     </view>
   </view>
 
-  <view class="field">
+  <view id="activity-description-field" class="field">
     <text class="label">{{i18n.activityCreate.description}}</text>
     <textarea
       class="textarea"
@@ -149,7 +149,11 @@
       data-field="description"
       value="{{form.description}}"
       maxlength="2000"
+      adjust-position="{{true}}"
+      cursor-spacing="220"
+      show-confirm-bar="{{false}}"
       bindinput="onFieldInput"
+      bindfocus="onDescriptionFocus"
     />
   </view>
 
