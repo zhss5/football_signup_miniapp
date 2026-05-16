@@ -1087,7 +1087,7 @@ describe('activity create submit flow', () => {
     const textareaRule = wxss.match(/\.textarea\s*{[^}]*}/);
 
     expect(textareaRule).not.toBeNull();
-    expect(textareaRule[0]).toContain('min-height: 420rpx');
+    expect(textareaRule[0]).toContain('min-height: 500rpx');
   });
 
   test('scrolls the activity description field into view when it receives focus', () => {
