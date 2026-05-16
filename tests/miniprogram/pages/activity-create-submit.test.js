@@ -1079,6 +1079,17 @@ describe('activity create submit flow', () => {
     expect(textareaRule).toContain('show-confirm-bar="{{false}}"');
   });
 
+  test('activity description textarea is tall enough for multi-line notes', () => {
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-create/index.wxss'),
+      'utf8'
+    );
+    const textareaRule = wxss.match(/\.textarea\s*{[^}]*}/);
+
+    expect(textareaRule).not.toBeNull();
+    expect(textareaRule[0]).toContain('min-height: 280rpx');
+  });
+
   test('scrolls the activity description field into view when it receives focus', () => {
     jest.useFakeTimers();
     global.wx.pageScrollTo = jest.fn();
