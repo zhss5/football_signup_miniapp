@@ -2140,3 +2140,25 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was updated for newline-separated chat-share and timeline-share titles.
+
+## 2026-05-17 - WeChat Review Private API Permission
+
+The WeChat review flow flagged `wx.chooseLocation` because the mini program used the API without declaring it in `app.json`.
+
+Decision:
+
+- declare the location picker private API in `miniprogram/app.json` with `requiredPrivateInfos: ["chooseLocation"]`.
+- keep the existing `permission.scope.userLocation.desc` explanation for the user-facing location permission prompt.
+- do not list cloud functions in `requiredPrivateInfos`; this setting is only for mini program frontend private APIs.
+- do not list avatar selection, nickname input, or subscription-message consent in `requiredPrivateInfos`.
+- keep avatar, nickname, location, and subscription-message usage aligned with the WeChat privacy guide and platform capability settings.
+
+Deployment note:
+
+- upload a new mini program frontend build before submitting review again.
+- no cloud function upload is required for this configuration-only change.
+- request/confirm the `wx.chooseLocation` capability in the WeChat platform review prompt or backend when required.
+
+Verification:
+
+- targeted red/green coverage was added to assert that `app.json` declares `chooseLocation` in `requiredPrivateInfos`.
