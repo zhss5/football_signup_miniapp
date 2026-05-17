@@ -2162,3 +2162,28 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added to assert that `app.json` declares `chooseLocation` in `requiredPrivateInfos`.
+
+## 2026-05-17 - WeChat Privacy Guide Review Checklist
+
+The WeChat review/privacy setup discussion clarified where each capability is configured and what should be declared before public release.
+
+Configuration map:
+
+- avatar selection is handled by the mini program `open-type="chooseAvatar"` UI and should be described in the WeChat privacy guide.
+- nickname entry is handled by `input type="nickname"` and should be described in the WeChat privacy guide.
+- subscription-message consent is handled by `wx.requestSubscribeMessage`; templates are configured in WeChat Public Platform, while template IDs stay in local-only deployment config.
+- cloud functions are not privacy APIs in `requiredPrivateInfos`; deploy them through DevTools/CloudBase and keep OpenAPI permissions in each function's `config.json`.
+- `wx.chooseLocation` is the frontend private API that must be declared in `app.json` and approved in the WeChat platform flow.
+
+Privacy guide fields:
+
+- contact methods: use the public support/contact email configured for the mini program account.
+- data retention: prefer the platform option that commits to keeping personal information only for the minimum period necessary to fulfill the processing purpose, unless a fixed retention period is required later.
+- change-of-purpose notice: choose email as the baseline notice channel; an in-app notice can be added later if the product adds a dedicated notification surface.
+- complaint/suggestion contact: use the same public support/contact email unless a separate support mailbox is created.
+
+Review notes:
+
+- do not put AppSecret, tokens, private keys, or local-only deployment config in GitHub documentation.
+- do not add avatar, nickname, subscription messages, or cloud functions to `requiredPrivateInfos`.
+- keep the WeChat privacy guide aligned with the real data collected by the MVP: nickname, avatar, selected activity location, signup records, preferred positions, and subscription-message consent records.
