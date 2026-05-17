@@ -13,6 +13,8 @@ const MAX_REPEAT_EXIT_COUNT = 3;
 const REPEAT_SIGNUP_LIMIT_MESSAGE = 'Too many repeat signups. Please contact the organizer';
 const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
+const DEFAULT_ACTIVITY_LIST_LIMIT = 20;
+const MAX_ACTIVITY_LIST_LIMIT = 50;
 
 function validateSignupPayload(payload) {
   if (!payload.activityId) {
@@ -37,6 +39,41 @@ function normalizeSource(value) {
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function normalizeListLimit(value) {
+  const limit = Number(value);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return DEFAULT_ACTIVITY_LIST_LIMIT;
+  }
+
+  return Math.min(Math.floor(limit), MAX_ACTIVITY_LIST_LIMIT);
+}
+
+function normalizeListSkip(value) {
+  const skip = Number(value);
+  if (!Number.isFinite(skip) || skip <= 0) {
+    return 0;
+  }
+
+  return Math.floor(skip);
+}
+
+function sortActivitiesByStartDesc(items) {
+  return items.slice().sort((left, right) => {
+    const startCompare = String(right.startAt || '').localeCompare(String(left.startAt || ''));
+    if (startCompare !== 0) {
+      return startCompare;
+    }
+
+    return String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+  });
+}
+
+function pageActivityList(items, payload) {
+  const skip = normalizeListSkip(payload && payload.skip);
+  const limit = normalizeListLimit(payload && payload.limit);
+  return sortActivitiesByStartDesc(items).slice(skip, skip + limit);
 }
 
 function getDefaultRegistrationNoticeThreshold(signupLimitTotal) {
@@ -608,22 +645,26 @@ function createLocalCloudClient(options = {}) {
     const state = readState();
     const openid = getOpenId();
     const activities = Object.values(state.activities);
+    const request = payload || {};
 
-    if (payload.scope === 'home') {
+    if (request.scope === 'home') {
       return {
         items: clone(
-          activities.filter(item => item.status === 'published' || item.status === 'cancelled')
+          pageActivityList(
+            activities.filter(item => item.status === 'published' || item.status === 'cancelled'),
+            request
+          )
         )
       };
     }
 
-    if (payload.scope === 'created') {
+    if (request.scope === 'created') {
       return {
-        items: clone(activities.filter(item => item.organizerOpenId === openid))
+        items: clone(pageActivityList(activities.filter(item => item.organizerOpenId === openid), request))
       };
     }
 
-    if (payload.scope === 'joined') {
+    if (request.scope === 'joined') {
       const joinedIds = new Set(
         Object.values(state.registrations)
           .filter(item => item.userOpenId === openid && item.status === 'joined')
@@ -631,12 +672,18 @@ function createLocalCloudClient(options = {}) {
       );
 
       return {
-        items: clone(activities.filter(item => joinedIds.has(item._id) && item.status !== 'deleted'))
+        items: clone(pageActivityList(
+          activities.filter(item => joinedIds.has(item._id) && item.status !== 'deleted'),
+          request
+        ))
       };
     }
 
     return {
-      items: clone(activities.filter(item => item.status === (payload.status || 'published')))
+      items: clone(pageActivityList(
+        activities.filter(item => item.status === (request.status || 'published')),
+        request
+      ))
     };
   }
 

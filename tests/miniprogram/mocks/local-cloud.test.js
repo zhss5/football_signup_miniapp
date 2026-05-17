@@ -61,6 +61,37 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].notificationHint).toBe('Bring both kits');
 });
 
+test('local cloud client sorts activity lists by newest start time and honors limit', async () => {
+  const client = createLocalCloudClient({
+    storage: createMemoryStorage(),
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  async function createActivity(title, startAt) {
+    await client.call('createActivity', {
+      title,
+      startAt,
+      endAt: startAt.replace('20:00:00.000Z', '22:00:00.000Z'),
+      signupDeadlineAt: startAt.replace('20:00:00.000Z', '19:30:00.000Z'),
+      addressText: 'Half Stone',
+      signupLimitTotal: 12,
+      teams: [{ teamName: 'White', maxMembers: 12 }]
+    });
+  }
+
+  await createActivity('Old game', '2026-05-01T20:00:00.000Z');
+  await createActivity('Middle game', '2026-05-02T20:00:00.000Z');
+  await createActivity('Newest game', '2026-05-03T20:00:00.000Z');
+
+  const list = await client.call('listActivities', {
+    scope: 'created',
+    limit: 2
+  });
+
+  expect(list.items.map(item => item.title)).toEqual(['Newest game', 'Middle game']);
+});
+
 test('local cloud client lets an organizer update a team color', async () => {
   const storage = createMemoryStorage();
   const client = createLocalCloudClient({

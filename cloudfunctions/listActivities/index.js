@@ -3,23 +3,69 @@ const { resolveOpenId } = require('./auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-async function main(event, context = cloud.getWXContext(), deps = {}) {
-  const db = cloud.database();
-  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
 
-  if (event.scope === 'home') {
+function normalizeLimit(value) {
+  const limit = Number(value);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return DEFAULT_LIMIT;
+  }
+
+  return Math.min(Math.floor(limit), MAX_LIMIT);
+}
+
+function normalizeSkip(value) {
+  const skip = Number(value);
+  if (!Number.isFinite(skip) || skip <= 0) {
+    return 0;
+  }
+
+  return Math.floor(skip);
+}
+
+function sortActivitiesByStartDesc(items) {
+  return items.slice().sort((left, right) => {
+    const startCompare = String(right.startAt || '').localeCompare(String(left.startAt || ''));
+    if (startCompare !== 0) {
+      return startCompare;
+    }
+
+    return String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+  });
+}
+
+function pageActivities(items, event) {
+  const skip = normalizeSkip(event.skip);
+  const limit = normalizeLimit(event.limit);
+  return sortActivitiesByStartDesc(items).slice(skip, skip + limit);
+}
+
+async function main(event, context = cloud.getWXContext(), deps = {}) {
+  const payload = event || {};
+  const db = deps.db || cloud.database();
+  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  const limit = normalizeLimit(payload.limit);
+  const skip = normalizeSkip(payload.skip);
+
+  if (payload.scope === 'home') {
     const res = await db.collection('activities').where({
       status: db.command.in(['published', 'cancelled'])
-    }).get();
+    }).orderBy('startAt', 'desc').skip(skip).limit(limit).get();
     return { items: res.data };
   }
 
-  if (event.scope === 'created') {
-    const res = await db.collection('activities').where({ organizerOpenId: openid }).get();
+  if (payload.scope === 'created') {
+    const res = await db.collection('activities')
+      .where({ organizerOpenId: openid })
+      .orderBy('startAt', 'desc')
+      .skip(skip)
+      .limit(limit)
+      .get();
     return { items: res.data };
   }
 
-  if (event.scope === 'joined') {
+  if (payload.scope === 'joined') {
     const regRes = await db.collection('registrations').where({ userOpenId: openid, status: 'joined' }).get();
     const activityIds = regRes.data.map(item => item.activityId);
     if (activityIds.length === 0) {
@@ -31,11 +77,16 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }).get();
 
     return {
-      items: activityRes.data.filter(item => item.status !== 'deleted')
+      items: pageActivities(activityRes.data.filter(item => item.status !== 'deleted'), payload)
     };
   }
 
-  const res = await db.collection('activities').where({ status: event.status || 'published' }).get();
+  const res = await db.collection('activities')
+    .where({ status: payload.status || 'published' })
+    .orderBy('startAt', 'desc')
+    .skip(skip)
+    .limit(limit)
+    .get();
   return { items: res.data };
 }
 

@@ -2187,3 +2187,32 @@ Review notes:
 - do not put AppSecret, tokens, private keys, or local-only deployment config in GitHub documentation.
 - do not add avatar, nickname, subscription messages, or cloud functions to `requiredPrivateInfos`.
 - keep the WeChat privacy guide aligned with the real data collected by the MVP: nickname, avatar, selected activity location, signup records, preferred positions, and subscription-message consent records.
+
+## 2026-05-17 - My Activity List First-Batch Performance
+
+Preview-build testing showed that the My page could take more than 10 seconds to display `Created by me` and `Joined by me` when the account had accumulated more activities.
+
+Root cause:
+
+- the mini program already called `listActivities` with `limit: 20`.
+- the cloud function ignored `event.limit`, so `created`, `joined`, `home`, and default scopes returned all matching activities available to the query.
+- the My page then resolved cover-image URLs for both tabs before rendering, making larger result sets noticeably slow on real preview builds.
+
+Delivered behavior:
+
+- `listActivities` now normalizes `limit` with a default of `20` and a cap of `50`.
+- `listActivities` supports optional `skip` for later pagination work.
+- `home`, `created`, and default scopes query CloudBase ordered by `startAt` descending and apply `skip`/`limit` in the query.
+- `joined` scope still looks up joined registrations first, then filters deleted activities, sorts by `startAt` descending, and returns only the requested page.
+- the local mock now mirrors the same sort and first-batch limit behavior.
+
+Deployment note:
+
+- deploy the `listActivities` cloud function for the preview build to get the performance improvement.
+- no mini program frontend upload is required for the first-batch fix because the frontend already passes `limit: 20`.
+- infinite scroll / load-more remains a separate TODO for accounts with more than the first returned page.
+
+Verification:
+
+- targeted red/green coverage was added for cloud `listActivities` ordering/limit behavior and local mock parity.
+- full regression suite passed: `58` test suites, `435` tests.
