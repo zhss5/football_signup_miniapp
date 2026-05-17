@@ -6,6 +6,8 @@
 - Confirm cancelled, full, deleted, and signup-closed activities do not appear on Home
 - Confirm Home activities are sorted by activity creation time, newest first
 - Confirm created and joined lists load correctly on the `My` page
+- Confirm the first batch of `My` created/joined activities appears quickly in the experience build after deploying `listActivities`
+- If the account has more than 20 created or joined activities, confirm older activities may wait for the future pagination/load-more work
 
 ## Activity Creation
 

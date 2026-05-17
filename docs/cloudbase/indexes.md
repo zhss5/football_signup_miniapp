@@ -1,9 +1,10 @@
 # CloudBase Index Checklist
 
 - activities: status + startAt
-- activities: organizerOpenId + createdAt
+- activities: organizerOpenId + startAt
 - activity_teams: activityId + sort
 - registrations: activityId + status
+- registrations: userOpenId + status
 - registrations: userOpenId + updatedAt
 - activity_logs: activityId + createdAt
 - notification_subscriptions: activityId + templateKey + status

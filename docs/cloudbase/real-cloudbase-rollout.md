@@ -111,6 +111,7 @@ The deployment output should show `success: true` for each function.
 
 Current deployment notes:
 
+- Deploy `listActivities` for the preview-build first-batch performance fix. The mini program already sends `limit: 20`, so this cloud-function deployment is enough for the first-batch speedup.
 - `createActivity`, `updateActivity`, and `updateTeamColor` must be deployed together after running `npm run copy:cloud-shared`; they share the ten-color team palette: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
 - The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
 - Notification configuration uses two template IDs: `activityNotice` for participant proceeding/cancellation notices, and `managerRegistrationNotice` for organizer/admin signup-change notices.
@@ -169,6 +170,12 @@ Organizer access is controlled by `users.roles`:
 Create indexes from:
 
 - `docs/cloudbase/indexes.md`
+
+The first-batch list performance fix expects these indexes to exist before activity volume grows:
+
+- `activities`: `status + startAt`
+- `activities`: `organizerOpenId + startAt`
+- `registrations`: `userOpenId + status`
 
 Apply the database rule baseline from:
 

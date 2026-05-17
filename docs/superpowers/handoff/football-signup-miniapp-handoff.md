@@ -1,15 +1,15 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-05-02
+- Date: 2026-05-17
 - Branch: `main`
-- Workspace: `D:/workspaces/football_signup_miniapp`
+- Workspace: `D:/workspace/Nautilus`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 
 ## 1. Current State
 
 The repository is on `main`.
 
-`origin/main` may be behind the local branch. Push local commits when they are ready to share.
+`origin/main` is currently aligned with local `main` before the documentation-only handoff refresh.
 
 Recent local work includes role-gated activity creation, dynamic default activity dates, highlighted activity signup status, activity editing, media optimization, organizer roster tools, insurance links, and the first activity confirmation/notification implementation.
 
@@ -26,6 +26,8 @@ The codebase supports:
 - list cards and Activity Detail can retry direct CloudBase file IDs when temporary HTTPS cover URLs fail to load on real devices
 - fallback CloudBase file IDs are downloaded with `wx.cloud.downloadFile` and rendered from local temporary file paths
 - if fallback download fails, the original `cloud://` file ID is still attempted before the placeholder is shown
+- `listActivities` honors `limit` with a default first batch of 20 and a cap of 50, so Home/My do not resolve cover URLs for unnecessarily large result sets
+- `listActivities` accepts `skip` as a future pagination hook, but Home/My `onReachBottom` loading is not implemented yet
 - automatic CloudBase collection bootstrap from `ensureUserProfile`
 - organizer cancellation and soft delete
 - role-gated activity creation for `organizer` and `admin` users
@@ -141,6 +143,13 @@ Latest mobile cover-upload fix:
 - upload a new mini program frontend build before creating more activities with covers.
 - affected existing activities whose cover fields point to temporary paths need manual repair or reselecting/reuploading the cover image, because their files were never uploaded to CloudBase.
 
+Latest activity-list performance fix:
+
+- `listActivities` now uses the `limit` that the frontend already sends, defaulting to `20` and capping at `50`.
+- Home, Created, and default list scopes apply cloud-side ordering plus `skip`/`limit`; Joined filters the current user's joined activity IDs, excludes deleted activities, then sorts and slices the returned batch.
+- deploy `listActivities` after running `npm run copy:cloud-shared`; no mini program frontend upload is required for this first-batch speedup because the frontend already passes `limit: 20`.
+- apply or confirm the CloudBase indexes in `docs/cloudbase/indexes.md`, especially `activities: organizerOpenId + startAt` and `registrations: userOpenId + status`.
+
 Earlier rollout reference:
 
 - `5587bf0` `Bootstrap CloudBase collections on startup`
@@ -209,18 +218,17 @@ WeChat verification note:
 
 The following local state should not be committed unless there is a deliberate decision:
 
-- `D:/workspaces/football_signup_miniapp/project.config.json`
-- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.local.js`
+- `D:/workspace/Nautilus/project.config.json`
+- `D:/workspace/Nautilus/miniprogram/config/env.local.js`
 
 Current git status includes:
 
 - `project.config.json` modified locally and intentionally uncommitted
-- `miniprogram/config/env.local.js.example` deleted locally and intentionally uncommitted
-- `miniprogram/config/env.local.js.sample` untracked locally and intentionally uncommitted
+- `miniprogram/config/env.local.js.mock` untracked locally and intentionally uncommitted
 
 The local override file is ignored by git and should be recreated from:
 
-- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.local.js.example`
+- `D:/workspace/Nautilus/miniprogram/config/env.local.js.example`
 
 ## 6. Deployment Commands
 
@@ -236,7 +244,7 @@ Deploy all cloud functions from PowerShell:
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions deploy `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspaces\football_signup_miniapp' `
+  --project 'D:\workspace\Nautilus' `
   --remote-npm-install `
   --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
@@ -248,7 +256,7 @@ Check one function:
 $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 & $devtoolsCli cloud functions info `
   --env 'your-cloud-env-id' `
-  --project 'D:\workspaces\football_signup_miniapp' `
+  --project 'D:\workspace\Nautilus' `
   --names updateActivity `
   --lang zh
 ```
@@ -258,15 +266,15 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 Latest verified command:
 
 ```bash
-node scripts/copy-cloud-shared.mjs && node node_modules/jest/bin/jest.js --runInBand
+npm test
 ```
 
 Latest result:
 
-- `57` test suites passed
-- `385` tests passed
+- `58` test suites passed
+- `435` tests passed
 
-The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, manager signup-change notification behavior, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, and cover source fallback behavior.
+The latest verification includes the role-gated create flow, default-tomorrow activity dates, one-team default activity setup, default team naming and same-row team remove controls, highlighted signup status view models, Home joinable filtering and newest-created sorting, My active filter exclusion for expired published activities, native tab bar style and bottom spacing, local mock behavior, `createActivity` authorization, `updateActivity` organizer/admin editing behavior, organizer/admin registration removal, organizer/admin repeat-signup exemption, manager signup-change notification behavior, organizer participant-name copy, organizer proxy signup, signup-name normalization, team-header proxy-signup button placement, team-header join button rendering and joined-state hiding, organizer action button ordering, manager-only proxy participant badge behavior, participant preferred-position visibility for regular users, organizer team reassignment, compact member action button border rendering, preferred-position chip border rendering, hidden reserved invite-code field, signup profile fields without phone collection, signup profile prefill including preferred positions, optional insurance-link persistence and detail-page web-view opening, direct cover-frame image choosing, detail-image upload/display, activity confirmation and notification V1 behavior, cancelled activity confirmation-banner suppression, notification reminder persistence and confirmation-message reminder behavior, real-device subscription prompt timing, CloudBase cover display URL resolution, cover source fallback behavior, and `listActivities` first-batch ordering/limit behavior.
 
 ## 8. Current Implementation Snapshot
 
@@ -418,9 +426,10 @@ Current activity experience polish:
 Current My list behavior:
 
 - My loads one batch each for created activities and joined activities.
+- Each My list call requests `limit: 20`; the cloud function now honors that first-batch limit.
 - My sorts the returned activities by `startAt`, newest first.
 - My `Active` / `Published` created filter excludes published activities whose `endAt` has passed; those activities remain visible in `All` with a red expired badge.
-- TODO: add real pagination to `listActivities` and Home/My `onReachBottom` loading before activity volume regularly exceeds one returned batch.
+- TODO: add Home/My `onReachBottom` loading before activity volume regularly exceeds one returned batch.
 
 Problems encountered during cover-display testing:
 
@@ -443,27 +452,27 @@ Continue in this order:
 1. Confirm CloudBase storage permissions allow mini-program client reads for `activity-covers/`, `activity-cover-thumbs/`, `activity-share-images/`, and `activity-detail-images/`.
 2. Confirm the database collections exist; notification functions can now create `notification_subscriptions` and `notification_logs`, but manual creation remains a valid recovery path.
 3. Grant organizer access manually by editing the target `users.roles` array in CloudBase to include `organizer`.
-4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the repeat-signup guard specifically requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the threshold-based manager-notification path requires uploading `createActivity`, `updateActivity`, `joinActivity`, and `cancelRegistration`.
+4. Run `npm run copy:cloud-shared`, then deploy all active cloud functions listed in section 6; the first-batch list performance fix specifically requires uploading `listActivities`, the repeat-signup guard requires uploading `joinActivity`, `cancelRegistration`, and `removeRegistration`, and the threshold-based manager-notification path requires uploading `createActivity`, `updateActivity`, `joinActivity`, and `cancelRegistration`.
 5. Apply indexes from:
-   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/indexes.md`
+   - `D:/workspace/Nautilus/docs/cloudbase/indexes.md`
 6. Apply database rules from:
-   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/security-rules.json`
+   - `D:/workspace/Nautilus/docs/cloudbase/security-rules.json`
 7. Run the smoke checklist on DevTools and a real device:
-   - `D:/workspaces/football_signup_miniapp/docs/cloudbase/manual-smoke-checklist.md`
+   - `D:/workspace/Nautilus/docs/cloudbase/manual-smoke-checklist.md`
 8. Add experience members and distribute the experience-version QR code for temporary tester access.
 9. Validate `5:4` cover image loading, detail-image upload/display, WeChat sharing, signup profile entry without phone, organizer/admin activity editing, organizer/admin member removal, repeat signup blocking after three exits for regular participants, organizer/admin repeat-signup exemption, threshold-based manager signup-change notification opt-in, organizer proxy signup, organizer team reassignment, and ten-color team palette behavior after CloudBase deployment.
 10. Validate repeat signup profile behavior: sign up with preferred positions, cancel or use another activity, confirm the same user's positions are prefilled and still editable.
 11. Configure and validate participant notification subscriptions using:
-   - `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+   - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
    - keep the participant proceeding/cancellation template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.activityNotice`
    - keep the organizer/admin signup-change template ID in local-only config as `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
    - deploy `recordNotificationSubscription`, `notifyActivityParticipants`, `joinActivity`, `cancelRegistration`, `createActivity`, and `updateActivity`
    - validate signup subscription prompt, manager signup-change opt-in, threshold-triggered regular-user join manager notices, participant cancel no-notify behavior, one-shot manager consent consumption and re-subscription, the `thing7`/`phrase1`/`thing5`/`thing6` manager template mapping, custom confirmation reminder, cancellation notice, and duplicate-send skipping on a real device
 12. Keep `resolvePhoneNumber` as a dormant extension point; only deploy or reconnect it when a future phone-number feature is deliberately added.
 13. Keep historical cover-thumbnail backfill deferred until CloudBase image processing is available or a non-CloudInfinite implementation is chosen.
-14. Add activity-list pagination when activity volume exceeds one returned batch:
-   - make `listActivities` accept a stable `limit` plus `skip` or cursor
-   - sort cloud-side before pagination
+14. Add page-level activity-list pagination when activity volume exceeds one returned batch:
+   - reuse the existing `listActivities` `limit` plus `skip` support or replace it with a cursor if stable ordering requires it
+   - keep cloud-side sorting before pagination
    - add `onReachBottom` loading to Home and My while preserving current filters
 15. Add an overdue unresolved organizer workflow:
    - detect `published` plus `confirmStatus: pending` after `endAt`
@@ -481,26 +490,27 @@ Continue in this order:
 
 For the next session, these files are the fastest orientation points:
 
-- `D:/workspaces/football_signup_miniapp/README.md`
-- `D:/workspaces/football_signup_miniapp/miniprogram/services/cloud.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/services/activity-service.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/services/notification-service.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-create/index.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/pages/activity-detail/index.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/config/env.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/ensureUserProfile/index.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/createActivity/index.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/updateActivity/index.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/recordNotificationSubscription/index.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/notifyActivityParticipants/index.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/database.js`
-- `D:/workspaces/football_signup_miniapp/cloudfunctions/_shared/roles.js`
-- `D:/workspaces/football_signup_miniapp/miniprogram/utils/roles.js`
-- `D:/workspaces/football_signup_miniapp/scripts/copy-cloud-shared.mjs`
-- `D:/workspaces/football_signup_miniapp/docs/cloudbase/real-cloudbase-rollout.md`
-- `D:/workspaces/football_signup_miniapp/docs/cloudbase/wechat-devtools-setup.md`
-- `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
-- `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- `D:/workspace/Nautilus/README.md`
+- `D:/workspace/Nautilus/miniprogram/services/cloud.js`
+- `D:/workspace/Nautilus/miniprogram/services/activity-service.js`
+- `D:/workspace/Nautilus/miniprogram/services/notification-service.js`
+- `D:/workspace/Nautilus/miniprogram/pages/activity-create/index.js`
+- `D:/workspace/Nautilus/miniprogram/pages/activity-detail/index.js`
+- `D:/workspace/Nautilus/miniprogram/config/env.js`
+- `D:/workspace/Nautilus/cloudfunctions/ensureUserProfile/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/listActivities/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/createActivity/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/updateActivity/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/recordNotificationSubscription/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/notifyActivityParticipants/index.js`
+- `D:/workspace/Nautilus/cloudfunctions/_shared/database.js`
+- `D:/workspace/Nautilus/cloudfunctions/_shared/roles.js`
+- `D:/workspace/Nautilus/miniprogram/utils/roles.js`
+- `D:/workspace/Nautilus/scripts/copy-cloud-shared.mjs`
+- `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
+- `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
+- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 
 ## 11. Important Notes
 

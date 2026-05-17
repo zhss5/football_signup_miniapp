@@ -1,10 +1,10 @@
 # Football Signup Mini Program Progress
 
-- Date: 2026-05-02
+- Date: 2026-05-17
 - Status: In active MVP iteration
 - Active branch: `main`
-- Main workspace: `D:/workspaces/football_signup_miniapp`
-- Current implementation workspace: `D:/workspaces/football_signup_miniapp`
+- Main workspace: `D:/workspace/Nautilus`
+- Current implementation workspace: `D:/workspace/Nautilus`
 
 ## 1. Current Summary
 
@@ -122,6 +122,7 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - the Active/Published created filter excludes published activities whose `endAt` has passed
 - current user ID can be copied from My page to support manual organizer role grants
 - My page shows a readable role summary
+- Created and Joined each request a first batch of 20 activities before resolving cover images, which keeps the preview build responsive for first-version trial usage.
 
 ### 2.10 Organizer Permission Gate
 
@@ -239,6 +240,13 @@ The current focus is shifting from CloudBase bring-up to real-device validation,
 - the Activity Detail manager subscription action disables and greys out after the manager has an accepted subscription for the current activity
 - participant activity proceeding/cancellation notices and organizer/admin signup-change notices use separate subscription template IDs and separate `notification_subscriptions.templateKey` values
 
+### 2.21 Activity List First-Batch Performance
+
+- `listActivities` now respects `limit` with a default of 20 and a cap of 50.
+- `listActivities` supports optional `skip` for the later pagination/load-more implementation.
+- Home, Created, Joined, and default list scopes return a bounded first batch instead of all matching activities.
+- My page still renders one batch per tab today; full `onReachBottom` pagination remains deferred.
+
 ## 3. Behavior Changes From the Original MVP Draft
 
 The current implementation differs from the original early MVP assumptions in these important ways:
@@ -267,14 +275,15 @@ The current implementation differs from the original early MVP assumptions in th
 - cancelled activities suppress the previous confirmed-state banner on Activity Detail
 - confirmation notifications can use an organizer-provided reminder, while cancellation notifications keep default cancellation wording
 - participants can optionally choose up to two preferred playing positions during signup, all viewers can see submitted position choices on Activity Detail, and the participant's latest choices are prefilled on future signups
+- activity list cloud calls now return bounded first batches so cover URL resolution does not wait on an unnecessarily large result set
 
 ## 4. Verification Status
 
 Latest verified test result:
 
-- command: `npm test -- --runInBand`
-- result: `57` test suites passed
-- result: `385` tests passed
+- command: `npm test`
+- result: `58` test suites passed
+- result: `435` tests passed
 
 Covered areas include:
 
@@ -315,6 +324,7 @@ Covered areas include:
 - notification reminder persistence and confirmation-message reminder behavior
 - real-device subscription prompt timing and cover-image fallback candidates
 - preferred-position profile persistence and future-signup prefill behavior
+- `listActivities` limit/sort behavior and local mock parity for first-batch activity lists
 
 ## 4.1 Current Media Progress
 
@@ -353,7 +363,7 @@ The MVP still has known non-blocking gaps:
 - CloudBase cost should be reviewed after the first real usage period; keep CloudBase for MVP unless cost, lock-in, or backend-control requirements outweigh the integrated WeChat deployment benefit
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 - invite-code enforcement is not implemented yet; keep the field hidden until signup entry, backend validation, and Home visibility rules are designed
-- activity lists do not have real pagination yet; add `listActivities` pagination and page-level `onReachBottom` loading before activity volume regularly exceeds one returned batch
+- activity lists have a server-limited first batch but do not have real pagination yet; add page-level `onReachBottom` loading before activity volume regularly exceeds one returned batch
 
 ## 6. Recommended Next Steps
 
@@ -363,7 +373,7 @@ The MVP still has known non-blocking gaps:
 - one real environment has already been created locally
 - target CloudBase has been upgraded to the personal plan
 - verify storage read rules for both `activity-covers/` and `activity-cover-thumbs/`
-- deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `moveRegistration`, `addProxyRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
+- deploy `listActivities` for the first-batch performance fix, then deploy all currently changed cloud functions after `npm run copy:cloud-shared`, including `createActivity`, `updateActivity`, `removeRegistration`, `moveRegistration`, `addProxyRegistration`, `joinActivity`, `getActivityDetail`, and any functions not yet uploaded in the target environment
 - validate permissions, cover image loading, sharing, signup, organizer/admin removal, organizer proxy signup, organizer team reassignment, and end-to-end data writes on a real device
 
 ### Option B: Organizer Operations
@@ -438,9 +448,9 @@ The MVP still has known non-blocking gaps:
 
 ## 7. Related Documents
 
-- Design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/football-signup-miniapp-design.md`
-- Activity editing design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
-- Notification design: `D:/workspaces/football_signup_miniapp/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
-- Plan: `D:/workspaces/football_signup_miniapp/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
-- CloudBase rollout: `D:/workspaces/football_signup_miniapp/docs/cloudbase/real-cloudbase-rollout.md`
-- Handoff: `D:/workspaces/football_signup_miniapp/docs/superpowers/handoff/football-signup-miniapp-handoff.md`
+- Design: `D:/workspace/Nautilus/docs/superpowers/specs/football-signup-miniapp-design.md`
+- Activity editing design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
+- Notification design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
+- CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
+- Handoff: `D:/workspace/Nautilus/docs/superpowers/handoff/football-signup-miniapp-handoff.md`
