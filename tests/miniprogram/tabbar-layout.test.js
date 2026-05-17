@@ -34,6 +34,16 @@ describe('tab bar layout', () => {
     ]);
   });
 
+  test('declares the location picker private API permission', () => {
+    const appConfig = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../miniprogram/app.json'), 'utf8')
+    );
+
+    expect(appConfig.requiredPrivateInfos).toEqual(
+      expect.arrayContaining(['chooseLocation'])
+    );
+  });
+
   test('tab pages reserve bottom space above the native tab bar', () => {
     const homeStyles = fs.readFileSync(
       path.join(__dirname, '../../miniprogram/pages/home/index.wxss'),

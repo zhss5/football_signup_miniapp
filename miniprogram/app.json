@@ -16,6 +16,9 @@
       "desc": "用于选择活动地点"
     }
   },
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
   "sitemapLocation": "sitemap.json",
   "tabBar": {
     "color": "#4b5563",
