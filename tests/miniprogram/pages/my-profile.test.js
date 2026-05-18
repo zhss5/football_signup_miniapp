@@ -272,6 +272,71 @@ describe('my page profile marker', () => {
     );
   });
 
+  test('renders each activity list as soon as that list request resolves', async () => {
+    let resolveJoined;
+    const joinedListRequest = new Promise(resolve => {
+      resolveJoined = resolve;
+    });
+
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user']
+      }
+    });
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'created_fast',
+              title: 'Created Fast',
+              startAt: '2026-05-03T12:00:00.000Z',
+              status: 'published'
+            }
+          ]
+        });
+      }
+
+      return joinedListRequest;
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    const showPromise = pageConfig.onShow.call(ctx);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_fast']);
+    expect(ctx.data.joinedItems).toEqual([]);
+
+    resolveJoined({
+      items: [
+        {
+          _id: 'joined_slow',
+          title: 'Joined Slow',
+          startAt: '2026-05-04T12:00:00.000Z',
+          status: 'published'
+        }
+      ]
+    });
+    await showPromise;
+
+    expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_slow']);
+  });
+
   test('excludes expired published activities from the active created filter', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
     ensureUserProfile.mockResolvedValue({

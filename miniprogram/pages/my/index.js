@@ -102,22 +102,47 @@ Page({
     const loadToken = (this.myActivitiesLoadToken || 0) + 1;
     this.myActivitiesLoadToken = loadToken;
     const profilePromise = this.refreshUserProfile();
-    const [created, joined] = await Promise.all([
-      listActivities({ scope: 'created', limit: 20 }),
-      listActivities({ scope: 'joined', limit: 20 })
+    await Promise.all([
+      profilePromise,
+      this.loadMyActivityList('created', translate, loadToken),
+      this.loadMyActivityList('joined', translate, loadToken)
     ]);
-    const createdItems = Array.isArray(created.items) ? created.items : [];
-    const joinedItems = Array.isArray(joined.items) ? joined.items : [];
-    const createdItemsAll = prepareMyActivityItems(createdItems, translate);
+  },
+
+  async loadMyActivityList(scope, translate, loadToken) {
+    try {
+      const result = await listActivities({ scope, limit: 20 });
+
+      if (this.myActivitiesLoadToken !== loadToken) {
+        return;
+      }
+
+      const items = Array.isArray(result.items) ? result.items : [];
+      this.applyMyActivityItems(scope, items, translate);
+      this.resolveMyActivityCovers(scope, items, translate, loadToken);
+    } catch (error) {
+      if (this.myActivitiesLoadToken !== loadToken) {
+        return;
+      }
+
+      this.applyMyActivityItems(scope, [], translate);
+    }
+  },
+
+  applyMyActivityItems(scope, items, translate) {
+    const preparedItems = prepareMyActivityItems(items, translate);
+
+    if (scope === 'created') {
+      this.setData({
+        createdItemsAll: preparedItems
+      });
+      this.applyCreatedFilter(this.data.createdFilter, preparedItems);
+      return;
+    }
 
     this.setData({
-      createdItemsAll,
-      joinedItems: prepareMyActivityItems(joinedItems, translate)
+      joinedItems: preparedItems
     });
-    this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
-    this.resolveMyActivityCovers('created', createdItems, translate, loadToken);
-    this.resolveMyActivityCovers('joined', joinedItems, translate, loadToken);
-    await profilePromise;
   },
 
   async resolveMyActivityCovers(scope, items, translate, loadToken) {
@@ -130,19 +155,7 @@ Page({
         return;
       }
 
-      const preparedItems = prepareMyActivityItems(itemsWithCovers, translate);
-
-      if (scope === 'created') {
-        this.setData({
-          createdItemsAll: preparedItems
-        });
-        this.applyCreatedFilter(this.data.createdFilter, preparedItems);
-        return;
-      }
-
-      this.setData({
-        joinedItems: preparedItems
-      });
+      this.applyMyActivityItems(scope, itemsWithCovers, translate);
     } catch (error) {
       // Keep the already-rendered text list visible when cover resolution is slow or unavailable.
     }
