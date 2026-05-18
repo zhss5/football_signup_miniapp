@@ -87,10 +87,10 @@ function getActivityDetailImageSources(activity = {}) {
   return Array.isArray(activity.detailImages) ? activity.detailImages.filter(Boolean) : [];
 }
 
-function getActivityMediaSources(activity = {}, preferredCover = 'thumb') {
+function getActivityMediaSources(activity = {}, preferredCover = 'thumb', options = {}) {
   return dedupeSources([
     ...getActivityCoverSources(activity, preferredCover),
-    activity.shareImage || ''
+    options.includeShareImage === false ? '' : activity.shareImage || ''
   ]);
 }
 
@@ -127,7 +127,7 @@ async function resolveActivityCoverImages(items = [], options = {}) {
   const coverSources = Array.from(
     new Set(
       items.reduce(
-        (sources, item) => sources.concat(getActivityMediaSources(item, preferredCover)),
+        (sources, item) => sources.concat(getActivityMediaSources(item, preferredCover, options)),
         []
       )
     )
@@ -142,7 +142,7 @@ async function resolveActivityCoverImages(items = [], options = {}) {
       ...item,
       coverDisplayImage: getResolvedCoverDisplayImage(coverSourceCandidates, urlByFileId),
       coverImageSources,
-      ...(item.shareImage
+      ...(options.includeShareImage !== false && item.shareImage
         ? { shareDisplayImage: getResolvedCoverUrl(item.shareImage, urlByFileId) }
         : {})
     };

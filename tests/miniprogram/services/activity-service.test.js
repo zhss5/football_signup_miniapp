@@ -229,6 +229,29 @@ describe('activity service cover display urls', () => {
     ]);
   });
 
+  test('can skip share image resolution for list views that only render covers', async () => {
+    resolveFileUrls.mockResolvedValue({
+      'cloud://prod-env-123/activity-covers/thumb.jpg': 'https://tmp.example.com/thumb.jpg'
+    });
+
+    const [activity] = await activityService.resolveActivityCoverImages(
+      [
+        {
+          _id: 'activity_1',
+          coverThumbImage: 'cloud://prod-env-123/activity-covers/thumb.jpg',
+          shareImage: 'cloud://prod-env-123/activity-share-images/share.jpg'
+        }
+      ],
+      { includeShareImage: false }
+    );
+
+    expect(activity.coverDisplayImage).toBe('https://tmp.example.com/thumb.jpg');
+    expect(activity).not.toHaveProperty('shareDisplayImage');
+    expect(resolveFileUrls).toHaveBeenCalledWith([
+      'cloud://prod-env-123/activity-covers/thumb.jpg'
+    ]);
+  });
+
   test('updateTeamColor delegates to the CloudBase service', async () => {
     const cloud = require('../../../miniprogram/services/cloud');
     cloud.call.mockResolvedValue({

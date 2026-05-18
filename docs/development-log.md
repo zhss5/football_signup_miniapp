@@ -2238,3 +2238,28 @@ Documentation:
 Verification:
 
 - documentation-only change; reviewed with `git diff --check`.
+
+## 2026-05-18 - My Activity List Perceived Load Performance
+
+The My page could feel slow because it waited for both activity lists and cover temporary URL resolution before rendering any list rows.
+
+Root cause:
+
+- `pages/my/index.js` fetched created and joined activities, then waited for `resolveActivityCoverImages` for both lists before calling `setData`.
+- list cards do not render share-card images, but list cover resolution still included `shareImage` file IDs.
+
+Delivered behavior:
+
+- My now renders created and joined activity rows as soon as the list cloud calls return.
+- cover images are resolved in the background and patched back into the existing list when ready.
+- stale cover-resolution results are ignored if a newer My page refresh starts.
+- Home/My list cover resolution skips share-card images because cards only need cover/thumbnail images.
+
+Deployment note:
+
+- upload a new mini program frontend build.
+- deploy the latest `listActivities` cloud function if the target CloudBase environment has not yet received the first-batch limit/sort fix.
+
+Verification:
+
+- targeted red/green coverage was added for early My list rendering before cover resolution and for skipping share-image resolution in list views.

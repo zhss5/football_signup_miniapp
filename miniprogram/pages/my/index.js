@@ -99,24 +99,53 @@ Page({
 
   async onShow() {
     const translate = this.applyI18n();
+    const loadToken = (this.myActivitiesLoadToken || 0) + 1;
+    this.myActivitiesLoadToken = loadToken;
     const profilePromise = this.refreshUserProfile();
     const [created, joined] = await Promise.all([
       listActivities({ scope: 'created', limit: 20 }),
       listActivities({ scope: 'joined', limit: 20 })
     ]);
-    const [createdItemsWithCovers, joinedItemsWithCovers] = await Promise.all([
-      resolveActivityCoverImages(created.items),
-      resolveActivityCoverImages(joined.items)
-    ]);
-
-    const createdItemsAll = prepareMyActivityItems(createdItemsWithCovers, translate);
+    const createdItems = Array.isArray(created.items) ? created.items : [];
+    const joinedItems = Array.isArray(joined.items) ? joined.items : [];
+    const createdItemsAll = prepareMyActivityItems(createdItems, translate);
 
     this.setData({
       createdItemsAll,
-      joinedItems: prepareMyActivityItems(joinedItemsWithCovers, translate)
+      joinedItems: prepareMyActivityItems(joinedItems, translate)
     });
     this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
+    this.resolveMyActivityCovers('created', createdItems, translate, loadToken);
+    this.resolveMyActivityCovers('joined', joinedItems, translate, loadToken);
     await profilePromise;
+  },
+
+  async resolveMyActivityCovers(scope, items, translate, loadToken) {
+    try {
+      const itemsWithCovers = await resolveActivityCoverImages(items, {
+        includeShareImage: false
+      });
+
+      if (this.myActivitiesLoadToken !== loadToken) {
+        return;
+      }
+
+      const preparedItems = prepareMyActivityItems(itemsWithCovers, translate);
+
+      if (scope === 'created') {
+        this.setData({
+          createdItemsAll: preparedItems
+        });
+        this.applyCreatedFilter(this.data.createdFilter, preparedItems);
+        return;
+      }
+
+      this.setData({
+        joinedItems: preparedItems
+      });
+    } catch (error) {
+      // Keep the already-rendered text list visible when cover resolution is slow or unavailable.
+    }
   },
 
   async refreshUserProfile() {

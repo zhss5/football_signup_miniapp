@@ -54,7 +54,9 @@ Page({
     try {
       const { items } = await listActivities({ scope: 'home', limit: 20 });
       const visibleItems = prepareVisibleHomeActivities(items, translate);
-      const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems);
+      const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems, {
+        includeShareImage: false
+      });
       this.setData({
         items: itemsWithDisplayCovers,
         loading: false,

@@ -79,13 +79,16 @@ describe('home page', () => {
 
     expect(ensureUserProfile).toHaveBeenCalled();
     expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
-    expect(resolveActivityCoverImages).toHaveBeenCalledWith([
-      expect.objectContaining({
-        id: 'activity_123',
-        title: 'Thursday Match',
-        statusTone: 'joinable'
-      })
-    ]);
+    expect(resolveActivityCoverImages).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          id: 'activity_123',
+          title: 'Thursday Match',
+          statusTone: 'joinable'
+        })
+      ],
+      { includeShareImage: false }
+    );
     expect(ctx.data.loading).toBe(false);
     expect(ctx.data.canCreateActivity).toBe(true);
     expect(ctx.data.items).toEqual([

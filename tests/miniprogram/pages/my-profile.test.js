@@ -11,6 +11,7 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
 
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildActivityCardVm: jest.fn(item => ({
+    ...item,
     id: item._id,
     title: item.title,
     startAt: item.startAt,
@@ -48,6 +49,7 @@ describe('my page profile marker', () => {
   let pageConfig;
   let ensureUserProfile;
   let listActivities;
+  let resolveActivityCoverImages;
 
   beforeEach(() => {
     pageConfig = null;
@@ -62,7 +64,7 @@ describe('my page profile marker', () => {
     jest.resetModules();
     require('../../../miniprogram/pages/my/index');
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
-    ({ listActivities } = require('../../../miniprogram/services/activity-service'));
+    ({ listActivities, resolveActivityCoverImages } = require('../../../miniprogram/services/activity-service'));
   });
 
   afterEach(() => {
@@ -181,6 +183,93 @@ describe('my page profile marker', () => {
 
     expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_new', 'created_old']);
     expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_new', 'joined_old']);
+  });
+
+  test('renders my activity lists before cover url resolution finishes', async () => {
+    let resolveCovers;
+    const coverResolution = new Promise(resolve => {
+      resolveCovers = resolve;
+    });
+
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user']
+      }
+    });
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'created_1',
+              title: 'Created 1',
+              startAt: '2026-05-03T12:00:00.000Z',
+              status: 'published',
+              coverThumbImage: 'cloud://cover-thumb-created'
+            }
+          ]
+        });
+      }
+
+      return Promise.resolve({
+        items: [
+          {
+            _id: 'joined_1',
+            title: 'Joined 1',
+            startAt: '2026-05-04T12:00:00.000Z',
+            status: 'published',
+            coverThumbImage: 'cloud://cover-thumb-joined'
+          }
+        ]
+      });
+    });
+    resolveActivityCoverImages.mockImplementation(items =>
+      coverResolution.then(() =>
+        items.map(item => ({
+          ...item,
+          coverDisplayImage: `https://tmp.example.com/${item._id}.jpg`
+        }))
+      )
+    );
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    const showPromise = pageConfig.onShow.call(ctx);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_1']);
+    expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_1']);
+    expect(ctx.data.createdItems[0].coverDisplayImage).toBeUndefined();
+    expect(ctx.data.joinedItems[0].coverDisplayImage).toBeUndefined();
+    expect(resolveActivityCoverImages).toHaveBeenCalledWith(
+      expect.any(Array),
+      { includeShareImage: false }
+    );
+
+    resolveCovers();
+    await showPromise;
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ctx.data.createdItems[0].coverDisplayImage).toBe(
+      'https://tmp.example.com/created_1.jpg'
+    );
+    expect(ctx.data.joinedItems[0].coverDisplayImage).toBe(
+      'https://tmp.example.com/joined_1.jpg'
+    );
   });
 
   test('excludes expired published activities from the active created filter', async () => {
