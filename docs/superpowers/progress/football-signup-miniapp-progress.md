@@ -378,6 +378,8 @@ Planned Version 2 scope:
 - introduce a Version 2 `super_admin` role for root user-role administration; this role is not part of the Version 1 implementation
 - seed the first `super_admin` manually in CloudBase, then allow `super_admin` to grant/revoke `admin` and `organizer`
 - allow `admin` to grant/revoke `organizer`, but not `admin` or `super_admin`
+- implement role management as adding/removing elevated permissions on existing regular `user` accounts; revoking elevated roles leaves the target as a regular participant
+- audit every role change with operator, target user, previous roles, next roles, and timestamp
 - add attendance tracking on registrations with `attendanceStatus: 'present' | 'absent'`, `attendanceMarkedAt`, and `attendanceMarkedBy`
 - count active registrations in confirmed activities as present by default unless manually marked absent
 - allow activity organizer/admin attendance edits in the mini program after the activity is confirmed
@@ -467,7 +469,7 @@ Planned Version 2 scope:
 ### Option D: Full Operations Backend
 
 - use the Version 2 lightweight web admin plan before building a full operations backend
-- Version 2 admin scope should include user and organizer role management, activity review, roster export, attendance management, and attendance-rate statistics
+- Version 2 admin scope should include user search, adding/removing elevated user permissions, activity review, roster export, attendance management, and attendance-rate statistics
 - keep payment/refund operations, fee settlement, and complex reporting deferred until real operations data justifies them
 
 ## 7. Related Documents

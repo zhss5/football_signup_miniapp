@@ -2281,3 +2281,21 @@ Documentation:
 
 - updated the Version 2 lightweight web admin plan.
 - updated progress and handoff docs so future implementation starts from the `super_admin` role model.
+
+## 2026-05-18 - Version 2 User Permission Management Planning Update
+
+The Version 2 web-admin plan now specifies how administrators add or remove elevated permissions from regular users.
+
+Decision:
+
+- manage permissions on existing `users` documents instead of creating a separate account system.
+- use user search to find regular users by nickname, display name, copied user ID/openid, or current role.
+- let `super_admin` add or remove `admin` and `organizer` permissions.
+- let `admin` add or remove only `organizer` permissions.
+- keep the base `user` role when elevated permissions are revoked, so the person remains a normal participant.
+- audit every role change with operator, target user, previous roles, next roles, and timestamp.
+
+Documentation:
+
+- updated the Version 2 lightweight web admin plan.
+- updated progress and handoff docs for the regular-user permission add/remove workflow.

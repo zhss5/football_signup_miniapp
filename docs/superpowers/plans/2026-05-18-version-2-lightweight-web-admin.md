@@ -22,7 +22,7 @@ The web admin should cover the highest-friction operational tasks first:
 
 - admin login and access control.
 - user list and user search.
-- role management for `user`, `organizer`, `admin`, and `super_admin`.
+- role management for adding or removing elevated permissions from regular `user` accounts.
 - activity list with filters for date range, status, organizer, and keyword.
 - activity detail view with teams, registrations, proxy signups, preferred positions, and notification status.
 - roster export as CSV/XLSX.
@@ -46,6 +46,17 @@ Guardrails:
 - Do not allow any user to remove their own highest administrative role in a way that could lock the system out.
 - Do not allow deleting or downgrading the last active `super_admin`.
 - All role changes must go through cloud functions that verify the caller's current role server-side.
+
+User role management workflow:
+
+- Web admin should provide user search by nickname, display name, copied user ID/openid, and role.
+- Search results should show the user's current roles and the date they first used the mini program when available.
+- The target is usually a regular `user`; admins should add or remove elevated roles on that existing user record.
+- Do not delete the base `user` role when revoking `organizer` or `admin`; role removal means the user returns to ordinary participant access.
+- `super_admin` can add or remove `admin` and `organizer` permissions for regular users.
+- `admin` can add or remove only `organizer` permission for regular users.
+- `organizer` and `user` cannot change any user's roles.
+- Every role change should write an audit log with operator openid, target openid, previous roles, next roles, and timestamp.
 
 ### 2. Attendance Management
 
@@ -167,7 +178,7 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 
 1. Add attendance fields, update APIs/cloud functions, and add tests for the default-present attendance rules.
 2. Add mini program attendance editing for confirmed activities.
-3. Build the web admin foundation: login, role guard, user list, `super_admin`/`admin`/`organizer` role management, and activity list.
+3. Build the web admin foundation: login, role guard, user search, regular-user permission add/remove, and activity list.
 4. Add web admin activity detail and attendance management.
 5. Add web admin attendance statistics with date range filters and export.
 6. Add Home/My pagination.
@@ -182,6 +193,7 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 - A seeded `super_admin` can grant or revoke `admin` access without manually editing CloudBase documents.
 - Admins can grant or revoke organizer access without manually editing CloudBase documents.
 - Admins cannot grant or revoke `admin` or `super_admin` access.
+- Removing elevated permissions leaves the user as a regular participant instead of deleting the account.
 - Organizers/admins can mark attendance from the mini program after a confirmed activity.
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.
