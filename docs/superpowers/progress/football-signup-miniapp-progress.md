@@ -375,6 +375,9 @@ Planned Version 2 scope:
 
 - keep CloudBase document database; do not migrate to MySQL for Version 2
 - add a lightweight web admin for login, user search, role management, activity review, roster export, attendance management, attendance statistics, and notification-log review
+- introduce a Version 2 `super_admin` role for root user-role administration; this role is not part of the Version 1 implementation
+- seed the first `super_admin` manually in CloudBase, then allow `super_admin` to grant/revoke `admin` and `organizer`
+- allow `admin` to grant/revoke `organizer`, but not `admin` or `super_admin`
 - add attendance tracking on registrations with `attendanceStatus: 'present' | 'absent'`, `attendanceMarkedAt`, and `attendanceMarkedBy`
 - count active registrations in confirmed activities as present by default unless manually marked absent
 - allow activity organizer/admin attendance edits in the mini program after the activity is confirmed

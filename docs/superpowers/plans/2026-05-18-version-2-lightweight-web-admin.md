@@ -22,7 +22,7 @@ The web admin should cover the highest-friction operational tasks first:
 
 - admin login and access control.
 - user list and user search.
-- role management for `user`, `organizer`, and `admin`.
+- role management for `user`, `organizer`, `admin`, and `super_admin`.
 - activity list with filters for date range, status, organizer, and keyword.
 - activity detail view with teams, registrations, proxy signups, preferred positions, and notification status.
 - roster export as CSV/XLSX.
@@ -31,6 +31,21 @@ The web admin should cover the highest-friction operational tasks first:
 - basic notification-log review for troubleshooting.
 
 The web admin does not require moving to MySQL. It should use the existing CloudBase collections and the same role rules as the mini program.
+
+Recommended role model for Version 2:
+
+- `super_admin`: root administrator. Can enter the web admin, manage all activities, grant or revoke `admin` and `organizer`, and manage all user roles except removing the last `super_admin`.
+- `admin`: operations administrator. Can enter the web admin, manage all activities, manage attendance and exports, and grant or revoke `organizer`. Cannot grant or revoke `admin` or `super_admin`.
+- `organizer`: activity manager. Can enter the web admin, but only for activities they created. Can manage rosters and attendance for their own activities. Cannot manage user roles.
+- `user`: regular participant. Cannot enter the web admin.
+
+Guardrails:
+
+- Version 2 introduces `super_admin`; it is not part of the Version 1 implemented role set.
+- Seed the first `super_admin` manually in CloudBase before enabling web-admin role management.
+- Do not allow any user to remove their own highest administrative role in a way that could lock the system out.
+- Do not allow deleting or downgrading the last active `super_admin`.
+- All role changes must go through cloud functions that verify the caller's current role server-side.
 
 ### 2. Attendance Management
 
@@ -152,7 +167,7 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 
 1. Add attendance fields, update APIs/cloud functions, and add tests for the default-present attendance rules.
 2. Add mini program attendance editing for confirmed activities.
-3. Build the web admin foundation: login, role guard, user list, role management, and activity list.
+3. Build the web admin foundation: login, role guard, user list, `super_admin`/`admin`/`organizer` role management, and activity list.
 4. Add web admin activity detail and attendance management.
 5. Add web admin attendance statistics with date range filters and export.
 6. Add Home/My pagination.
@@ -164,7 +179,9 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 
 ## Version 2 Success Criteria
 
-- Admins can grant organizer access without manually editing CloudBase documents.
+- A seeded `super_admin` can grant or revoke `admin` access without manually editing CloudBase documents.
+- Admins can grant or revoke organizer access without manually editing CloudBase documents.
+- Admins cannot grant or revoke `admin` or `super_admin` access.
 - Organizers/admins can mark attendance from the mini program after a confirmed activity.
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.

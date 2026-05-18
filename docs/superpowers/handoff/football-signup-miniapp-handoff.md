@@ -436,7 +436,10 @@ Version 2 planning:
 - a dedicated Version 2 plan exists at `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`.
 - Version 2 should add a lightweight web admin while keeping CloudBase document database.
 - do not migrate to MySQL for Version 2 unless real reporting, consistency, or integration requirements outgrow CloudBase.
-- web admin scope should start with admin login, user search, organizer/admin role management, activity review, roster export, attendance management, attendance statistics, and notification-log review.
+- web admin scope should start with admin login, user search, `super_admin`/`admin`/`organizer` role management, activity review, roster export, attendance management, attendance statistics, and notification-log review.
+- Version 2 should introduce `super_admin` as a new root role; Version 1 currently implements only `user`, `organizer`, and `admin`.
+- seed the first `super_admin` manually in CloudBase, then let `super_admin` grant or revoke `admin` and `organizer`; regular `admin` users can grant or revoke only `organizer`.
+- protect against removing the last active `super_admin` or letting a user downgrade their own highest administrative role in a way that locks out role management.
 - attendance should be tracked on registration records with `attendanceStatus: 'present' | 'absent'`, `attendanceMarkedAt`, and `attendanceMarkedBy`.
 - after a confirmed activity, active registrations count as present by default unless manually marked absent.
 - only confirmed activities should be included in attendance-rate statistics.
@@ -489,7 +492,7 @@ Continue in this order:
    - add `onReachBottom` loading to Home and My while preserving current filters
 15. Use the Version 2 plan for lightweight web admin and attendance operations:
    - `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
-   - add admin login, user role management, activity review, roster export, attendance management, and attendance statistics
+   - add admin login, `super_admin`-guarded user role management, activity review, roster export, attendance management, and attendance statistics
    - keep CloudBase document database for Version 2
    - allow attendance edits in both mini program Activity Detail and web admin
    - default confirmed active registrations to present unless marked absent

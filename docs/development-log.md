@@ -2263,3 +2263,21 @@ Deployment note:
 Verification:
 
 - targeted red/green coverage was added for early My list rendering before cover resolution and for skipping share-image resolution in list views.
+
+## 2026-05-18 - Version 2 Super Admin Planning Update
+
+The Version 2 web-admin plan now includes a root `super_admin` role for administrator-account management.
+
+Decision:
+
+- keep Version 1 as-is with `user`, `organizer`, and `admin`.
+- introduce `super_admin` in Version 2 for root user-role administration.
+- seed the first `super_admin` manually in CloudBase.
+- allow `super_admin` to grant or revoke `admin` and `organizer`.
+- allow `admin` to grant or revoke only `organizer`.
+- block removal of the last active `super_admin`.
+
+Documentation:
+
+- updated the Version 2 lightweight web admin plan.
+- updated progress and handoff docs so future implementation starts from the `super_admin` role model.
