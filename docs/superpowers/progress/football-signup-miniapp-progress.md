@@ -351,8 +351,8 @@ The MVP still has known non-blocking gaps:
 
 - cover crop interaction currently uses sliders rather than direct drag/pinch gestures
 - production role grants still require manual CloudBase edits to `users.roles`
-- a full admin capability for granting `organizer` roles is not implemented yet; defer it until manual CloudBase edits become too costly
-- a full operations backend is intentionally deferred; add it later when activity volume, payment/refund handling, user management, or data export needs justify the extra surface area
+- a full admin capability for granting `organizer` roles is not implemented yet; Version 2 should move this into a lightweight web admin
+- a full operations backend is intentionally deferred, but Version 2 should add a lightweight web admin for role management, activity review, attendance statistics, and roster export
 - bench promotion is not implemented as a dedicated workflow yet; organizers can move participants manually between non-full teams
 - real WeChat subscription-message template configuration and real-device notification smoke testing are still pending
 - automatic pre-activity reminders are still deferred until manual notifications are stable
@@ -364,6 +364,27 @@ The MVP still has known non-blocking gaps:
 - operations/admin reporting is not implemented yet: participant export, attendance rate, and activity fee calculation
 - invite-code enforcement is not implemented yet; keep the field hidden until signup entry, backend validation, and Home visibility rules are designed
 - activity lists have a server-limited first batch but do not have real pagination yet; add page-level `onReachBottom` loading before activity volume regularly exceeds one returned batch
+
+## 5.1 Version 2 Plan
+
+Version 2 should be an operations enhancement release with a lightweight web admin. The plan is documented in:
+
+- `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
+
+Planned Version 2 scope:
+
+- keep CloudBase document database; do not migrate to MySQL for Version 2
+- add a lightweight web admin for login, user search, role management, activity review, roster export, attendance management, attendance statistics, and notification-log review
+- add attendance tracking on registrations with `attendanceStatus: 'present' | 'absent'`, `attendanceMarkedAt`, and `attendanceMarkedBy`
+- count active registrations in confirmed activities as present by default unless manually marked absent
+- allow activity organizer/admin attendance edits in the mini program after the activity is confirmed
+- allow attendance review, correction, statistics, and export in the web admin
+- add date-range attendance statistics with signup count, present count, absent count, and attendance rate
+- include proxy signups in attendance statistics, aggregating by signup display name for Version 2
+- add Home/My paginated loading
+- add an overdue unresolved activity prompt after `endAt` for still-published pending activities
+- improve roster export formats
+- keep automatic scheduled reminders, payments, refunds, full operations backend, MySQL migration, and complex participant identity unification deferred
 
 ## 6. Recommended Next Steps
 
@@ -442,9 +463,9 @@ The MVP still has known non-blocking gaps:
 
 ### Option D: Full Operations Backend
 
-- defer a full backend/admin console until there is real operational demand
-- future scope should include activity management, user and organizer management, signup data review, activity revocation, exports, and payment/refund operations
-- first reporting needs are participant roster export, attendance-rate calculation, and activity-fee calculation
+- use the Version 2 lightweight web admin plan before building a full operations backend
+- Version 2 admin scope should include user and organizer role management, activity review, roster export, attendance management, and attendance-rate statistics
+- keep payment/refund operations, fee settlement, and complex reporting deferred until real operations data justifies them
 
 ## 7. Related Documents
 
@@ -452,5 +473,6 @@ The MVP still has known non-blocking gaps:
 - Activity editing design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
 - Notification design: `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
 - Plan: `D:/workspace/Nautilus/docs/superpowers/plans/football-signup-miniapp-mvp-implementation.md`
+- Version 2 plan: `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
 - CloudBase rollout: `D:/workspace/Nautilus/docs/cloudbase/real-cloudbase-rollout.md`
 - Handoff: `D:/workspace/Nautilus/docs/superpowers/handoff/football-signup-miniapp-handoff.md`

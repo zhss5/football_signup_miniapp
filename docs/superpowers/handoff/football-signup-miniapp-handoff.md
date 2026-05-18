@@ -431,6 +431,19 @@ Current My list behavior:
 - My `Active` / `Published` created filter excludes published activities whose `endAt` has passed; those activities remain visible in `All` with a red expired badge.
 - TODO: add Home/My `onReachBottom` loading before activity volume regularly exceeds one returned batch.
 
+Version 2 planning:
+
+- a dedicated Version 2 plan exists at `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`.
+- Version 2 should add a lightweight web admin while keeping CloudBase document database.
+- do not migrate to MySQL for Version 2 unless real reporting, consistency, or integration requirements outgrow CloudBase.
+- web admin scope should start with admin login, user search, organizer/admin role management, activity review, roster export, attendance management, attendance statistics, and notification-log review.
+- attendance should be tracked on registration records with `attendanceStatus: 'present' | 'absent'`, `attendanceMarkedAt`, and `attendanceMarkedBy`.
+- after a confirmed activity, active registrations count as present by default unless manually marked absent.
+- only confirmed activities should be included in attendance-rate statistics.
+- attendance edits should be available in both places: mini program Activity Detail for quick post-activity organizer edits, and web admin for review, correction, export, and date-range statistics.
+- proxy signups should be included in attendance statistics; Version 2 can aggregate by signup display name before a later participant identity model exists.
+- keep payments, refunds, full operations backend, automatic scheduled reminders, MySQL migration, and complex participant identity unification deferred.
+
 Problems encountered during cover-display testing:
 
 - The mini-program renderer tried to load raw CloudBase file IDs as local component resources.
@@ -474,16 +487,22 @@ Continue in this order:
    - reuse the existing `listActivities` `limit` plus `skip` support or replace it with a cursor if stable ordering requires it
    - keep cloud-side sorting before pagination
    - add `onReachBottom` loading to Home and My while preserving current filters
-15. Add an overdue unresolved organizer workflow:
+15. Use the Version 2 plan for lightweight web admin and attendance operations:
+   - `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
+   - add admin login, user role management, activity review, roster export, attendance management, and attendance statistics
+   - keep CloudBase document database for Version 2
+   - allow attendance edits in both mini program Activity Detail and web admin
+   - default confirmed active registrations to present unless marked absent
+16. Add an overdue unresolved organizer workflow:
    - detect `published` plus `confirmStatus: pending` after `endAt`
    - remind organizers to confirm or cancel manually
    - keep automatic confirmation disabled by default
-16. Keep the future operations/backend backlog visible but deferred:
+17. Keep the future operations/backend backlog visible but deferred:
    - export participant rosters
    - calculate attendance rate
    - calculate activity fees
-17. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
-18. Push local commits if they should be shared:
+18. Revisit CloudBase monthly cost after the first real usage period and decide whether to stay on CloudBase or plan an HTTP API/backend migration checkpoint.
+19. Push local commits if they should be shared:
    - `git push origin main`
 
 ## 10. Key Files To Read First
@@ -511,6 +530,7 @@ For the next session, these files are the fastest orientation points:
 - `D:/workspace/Nautilus/docs/cloudbase/wechat-devtools-setup.md`
 - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-activity-editing-design.md`
 - `D:/workspace/Nautilus/docs/superpowers/specs/2026-04-28-subscription-notifications-design.md`
+- `D:/workspace/Nautilus/docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
 
 ## 11. Important Notes
 

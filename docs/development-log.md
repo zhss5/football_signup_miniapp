@@ -2216,3 +2216,25 @@ Verification:
 
 - targeted red/green coverage was added for cloud `listActivities` ordering/limit behavior and local mock parity.
 - full regression suite passed: `58` test suites, `435` tests.
+
+## 2026-05-18 - Version 2 Lightweight Web Admin Plan
+
+Version 2 planning now documents a lightweight web admin and attendance operations path.
+
+Decision:
+
+- keep CloudBase document database for Version 2; do not migrate to MySQL before real operational demand requires it.
+- add a lightweight web admin for user role management, activity review, roster export, attendance management, attendance statistics, and notification-log review.
+- track attendance on registration records with `attendanceStatus`, `attendanceMarkedAt`, and `attendanceMarkedBy`.
+- count active registrations in confirmed activities as present by default unless manually marked absent.
+- allow organizer/admin attendance edits in both the mini program Activity Detail page and the web admin.
+- include proxy signups in attendance statistics, aggregating by signup display name for Version 2.
+
+Documentation:
+
+- added `docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`.
+- updated the progress and handoff docs to point future work at the Version 2 plan.
+
+Verification:
+
+- documentation-only change; reviewed with `git diff --check`.
