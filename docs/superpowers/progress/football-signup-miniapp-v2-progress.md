@@ -16,7 +16,13 @@ Version 2 focuses on lightweight operations tooling, especially web-admin access
 
 Version 2 development branch has been created.
 
+Version 2 execution planning has been completed.
+
 No Version 2 implementation code has been added yet.
+
+Implementation plan:
+
+- `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
 
 ## 4. Planned Version 2 Scope
 
@@ -71,4 +77,9 @@ No Version 2 implementation code has been added yet.
 
 ## 5. Next Implementation Step
 
-Before coding, turn the Version 2 plan into a concrete implementation plan with file-level steps and verification commands.
+Start implementation from Milestone 1 in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+
+Recommended first coding task:
+
+- extend shared role helpers for `super_admin`, `admin`, `organizer`, and base `user` behavior.
+- add red/green tests before changing production code.

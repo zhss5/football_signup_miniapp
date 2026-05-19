@@ -29,3 +29,29 @@ Initial Version 2 scope:
 - regular-user permission add/remove workflow for `admin` and `organizer`.
 - activity review, attendance management, attendance statistics, roster export, and notification-log review.
 - CloudBase document database remains the data store for Version 2.
+
+## 2026-05-19 - Version 2 Execution Plan Prepared
+
+The Version 2 requirements were converted into an execution plan for V2.0 development.
+
+Plan:
+
+- `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
+
+The plan keeps V2.0 focused on:
+
+- shared `super_admin` role model.
+- user search and elevated-permission management.
+- attendance backend and mini-program attendance editing.
+- web-admin foundation.
+- activity review, attendance statistics, roster export, and notification-log review.
+- Home/My pagination and overdue unresolved activity prompts.
+
+Deferred out of V2.0:
+
+- invite-code signup.
+- automatic scheduled reminders.
+- payments, refunds, and fee settlement.
+- MySQL migration.
+- account-password login.
+- player technical analysis.
