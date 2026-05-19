@@ -41,6 +41,10 @@ Completed:
 - mini-program Activity Detail shows confirmed-activity attendance state to registration managers.
 - mini-program Activity Detail lets registration managers toggle members between present and absent.
 - attendance editing remains hidden from regular users and before activity confirmation.
+- `getAttendanceStats` cloud function returns date-range attendance statistics.
+- admin and super admin statistics include all confirmed activities.
+- organizer statistics include only their own confirmed activities.
+- statistics include proxy signups, count blank attendance status as present, and exclude cancelled/deleted/pending activities.
 
 ## 4. Planned Version 2 Scope
 
@@ -99,7 +103,6 @@ Continue implementation from Milestone 3 in `docs/superpowers/plans/2026-05-19-v
 
 Recommended first coding task:
 
-- add `getAttendanceStats` for date-range attendance statistics.
-- count only confirmed activities.
-- treat blank attendance status as present.
+- add `exportActivityRoster` for roster export data.
+- include preferred positions, proxy flag, and attendance status.
 - keep using red/green tests before production changes.

@@ -158,3 +158,33 @@ Verification:
 
 - red/green tests added for service delegation, manager-only view-model state, team-list event wiring, Activity Detail handler behavior, and manager-only registration IDs.
 - target regression passed: `5` test suites, `92` tests.
+
+## 2026-05-19 - Attendance Statistics API
+
+Implemented the Version 2 attendance statistics backend.
+
+New cloud function:
+
+- `getAttendanceStats`
+
+Delivered behavior:
+
+- admins and super admins can query attendance statistics across all confirmed activities in a date range.
+- organizers can query attendance statistics only for activities they created.
+- regular users cannot query attendance statistics.
+- only `confirmStatus: confirmed` activities count.
+- cancelled, deleted, pending, out-of-range, and invalid-start-time activities are excluded.
+- only active joined registrations count.
+- blank attendance status counts as `present`.
+- proxy signups are included by their signup display name.
+- rows include `participantName`, `signupCount`, `presentCount`, `absentCount`, and `attendanceRate`.
+
+Deployment note:
+
+- deploy `getAttendanceStats` after running `copy-cloud-shared`.
+- the first web-admin attendance statistics view should call this function with `startAt` and `endAt`.
+
+Verification:
+
+- red/green tests added for admin global visibility, organizer scope, blank attendance defaults, excluded activity states, proxy signups, and regular-user rejection.
+- target regression passed: `1` test suite, `6` tests.
