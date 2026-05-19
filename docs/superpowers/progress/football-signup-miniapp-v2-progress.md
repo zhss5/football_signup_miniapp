@@ -18,11 +18,17 @@ Version 2 development branch has been created.
 
 Version 2 execution planning has been completed.
 
-No Version 2 implementation code has been added yet.
+Milestone 1 implementation has started.
 
 Implementation plan:
 
 - `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
+
+Completed:
+
+- shared cloud role helpers now support `super_admin`, role normalization, admin checks, and role-management boundary helpers.
+- mini-program role helpers mirror the shared role behavior.
+- role helper tests cover the `super_admin` behavior and management boundaries.
 
 ## 4. Planned Version 2 Scope
 
@@ -81,5 +87,6 @@ Start implementation from Milestone 1 in `docs/superpowers/plans/2026-05-19-vers
 
 Recommended first coding task:
 
-- extend shared role helpers for `super_admin`, `admin`, `organizer`, and base `user` behavior.
-- add red/green tests before changing production code.
+- add user search and role mutation cloud functions.
+- enforce `super_admin` versus `admin` role-management boundaries server-side.
+- write audit logs for every role change.

@@ -55,3 +55,21 @@ Deferred out of V2.0:
 - MySQL migration.
 - account-password login.
 - player technical analysis.
+
+## 2026-05-19 - Shared Version 2 Role Helpers
+
+Implemented the first Version 2 execution-plan task: shared role helpers for `super_admin`.
+
+Delivered behavior:
+
+- `normalizeRoles` keeps the base `user` role, removes duplicates, drops unknown roles, and returns roles in a stable order.
+- `super_admin` is treated as an admin for activity creation and activity management.
+- `isAdmin`, `isSuperAdmin`, `hasRole`, `canManageOrganizerRole`, and `canManageAdminRole` are available in shared cloud helpers.
+- `admin` can manage organizer permissions but cannot manage admin permissions.
+- `super_admin` can manage both organizer and admin permissions.
+- mini-program role helpers mirror the shared server-side behavior for UI gating and display.
+
+Verification:
+
+- red/green tests added for cloud shared roles and mini-program role helpers.
+- full regression passed: `59` test suites, `442` tests.

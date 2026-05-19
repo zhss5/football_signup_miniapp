@@ -1,32 +1,64 @@
+const ROLE_ORDER = ['user', 'organizer', 'admin', 'super_admin'];
+
+function normalizeRoles(roles) {
+  const values = Array.isArray(roles) ? roles : [];
+  const unique = new Set(values.filter(role => ROLE_ORDER.includes(role)));
+  unique.add('user');
+  return ROLE_ORDER.filter(role => unique.has(role));
+}
+
 function getRoles(user) {
   if (Array.isArray(user)) {
-    return user.filter(Boolean);
+    return normalizeRoles(user);
   }
 
   if (user && Array.isArray(user.roles)) {
-    return user.roles.filter(Boolean);
+    return normalizeRoles(user.roles);
   }
 
-  return [];
+  return ['user'];
+}
+
+function hasRole(user, role) {
+  return getRoles(user).includes(role);
+}
+
+function isSuperAdmin(user) {
+  return hasRole(user, 'super_admin');
+}
+
+function isAdmin(user) {
+  return hasRole(user, 'admin') || isSuperAdmin(user);
 }
 
 function canCreateActivity(user) {
-  const roles = getRoles(user);
-  return roles.includes('organizer') || roles.includes('admin');
+  return hasRole(user, 'organizer') || isAdmin(user);
 }
 
 function canEditActivity(activity, user, openid) {
-  const roles = getRoles(user);
-
-  if (roles.includes('admin')) {
+  if (isAdmin(user)) {
     return true;
   }
 
   return Boolean(activity && activity.organizerOpenId && activity.organizerOpenId === openid);
 }
 
+function canManageOrganizerRole(user) {
+  return isAdmin(user);
+}
+
+function canManageAdminRole(user) {
+  return isSuperAdmin(user);
+}
+
 module.exports = {
   canCreateActivity,
   canEditActivity,
-  getRoles
+  canManageAdminRole,
+  canManageOrganizerRole,
+  getRoles,
+  hasRole,
+  isAdmin,
+  isSuperAdmin,
+  normalizeRoles
 };
