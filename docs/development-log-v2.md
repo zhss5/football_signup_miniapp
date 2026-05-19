@@ -73,3 +73,34 @@ Verification:
 
 - red/green tests added for cloud shared roles and mini-program role helpers.
 - full regression passed: `59` test suites, `442` tests.
+
+## 2026-05-19 - User Search And Role Mutation APIs
+
+Implemented the Version 2 user permission backend.
+
+New cloud functions:
+
+- `listUsers`
+- `updateUserRoles`
+
+Delivered behavior:
+
+- admins and super admins can search users by keyword, copied openid/user ID, and role.
+- ordinary users and organizers cannot list users.
+- `super_admin` can grant or revoke `admin` and `organizer`.
+- `admin` can grant or revoke only `organizer`.
+- elevated-role removal keeps the base `user` role.
+- the last active `super_admin` cannot be removed.
+- users cannot remove their own highest administrative role in a way that could lock out role management.
+- every role change writes a `user_role_logs` audit row with operator, target, previous roles, next roles, and timestamp.
+
+Deployment note:
+
+- deploy `listUsers` and `updateUserRoles` after running `copy-cloud-shared`.
+- ensure or create the `user_role_logs` collection before production role-change testing.
+- seed the first `super_admin` manually in CloudBase before using the web-admin role-management workflow.
+
+Verification:
+
+- red/green tests added for user search, role mutation boundaries, last-super-admin protection, and role-change audit logs.
+- full regression passed: `61` test suites, `457` tests.
