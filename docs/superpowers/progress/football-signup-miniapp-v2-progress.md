@@ -18,7 +18,7 @@ Version 2 development branch has been created.
 
 Version 2 execution planning has been completed.
 
-Milestone 1 implementation has started.
+Milestone 2 implementation is in progress.
 
 Implementation plan:
 
@@ -37,6 +37,10 @@ Completed:
 - `setRegistrationAttendance` cloud function lets organizers/admins mark confirmed-activity registrations present or absent.
 - attendance updates write registration fields and `activity_logs` audit rows.
 - `getActivityDetail` exposes attendance fields only to registration managers.
+- `getActivityDetail` exposes manager-only `registrationId` values needed for attendance edits.
+- mini-program Activity Detail shows confirmed-activity attendance state to registration managers.
+- mini-program Activity Detail lets registration managers toggle members between present and absent.
+- attendance editing remains hidden from regular users and before activity confirmation.
 
 ## 4. Planned Version 2 Scope
 
@@ -91,10 +95,11 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Start implementation from Milestone 1 in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue implementation from Milestone 3 in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add mini-program Activity Detail controls for quick attendance editing.
-- call `setRegistrationAttendance` from the activity service.
+- add `getAttendanceStats` for date-range attendance statistics.
+- count only confirmed activities.
+- treat blank attendance status as present.
 - keep using red/green tests before production changes.

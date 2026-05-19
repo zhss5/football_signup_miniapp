@@ -75,6 +75,8 @@ module.exports = {
       confirmProceeding: 'Confirm Activity',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
+      markPresent: 'Mark present',
+      markAbsent: 'Mark absent',
       moveMember: 'Move',
       removeMember: 'Remove',
       delete: 'Delete'
@@ -85,6 +87,10 @@ module.exports = {
     teamColorTitle: 'Team color',
     member: {
       proxySignup: 'Proxy'
+    },
+    attendance: {
+      present: 'Present',
+      absent: 'Absent'
     },
     moveTarget: {
       label: '{{teamName}} ({{joined}} / {{total}})'
@@ -235,6 +241,7 @@ module.exports = {
     moveRegistrationSuccess: 'Participant moved',
     noMoveTargetTeam: 'No available target team',
     activityConfirmed: 'Activity confirmed',
+    attendanceUpdated: 'Attendance updated',
     notificationFailed: 'Notification failed',
     registrationNotificationSubscribed: 'Signup notifications enabled',
     registrationNotificationNotEnabled: 'Signup notifications not enabled'

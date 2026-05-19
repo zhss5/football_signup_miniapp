@@ -135,6 +135,7 @@ test('getActivityDetail groups joined members under each team', async () => {
 
   expect(result.teams).toHaveLength(2);
   expect(result.teams[0].members[0]).toMatchObject({
+    registrationId: 'activity_1_openid_a',
     signupName: 'Alex',
     avatarUrl: 'https://example.com/avatar-a.png',
     preferredPositions: ['前锋', '门将'],
@@ -154,6 +155,7 @@ test('getActivityDetail groups joined members under each team', async () => {
     preferredPositions: result.teams[0].members[0].preferredPositions
   });
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
+  expect(regularResult.teams[0].members[0]).not.toHaveProperty('registrationId');
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('attendanceStatus');
 });
 

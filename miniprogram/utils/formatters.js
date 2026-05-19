@@ -150,9 +150,14 @@ function buildMemberVm(member, context = {}) {
     ? member.preferredPositions.filter(Boolean)
     : [];
   const preferredPositionsVisible = preferredPositions.length > 0;
+  const attendanceStatus = member.attendanceStatus === 'absent' ? 'absent' : 'present';
+  const attendanceStatusVisible = Boolean(context.canManageAttendance);
+  const attendanceActionVisible = Boolean(context.canManageAttendance && member.registrationId);
+  const attendanceActionStatus = attendanceStatus === 'absent' ? 'present' : 'absent';
 
   return {
     ...member,
+    attendanceStatus,
     avatarText: sourceName ? sourceName.charAt(0).toUpperCase() : DEFAULT_MEMBER_AVATAR_TEXT,
     isCurrentUser,
     memberAction,
@@ -162,7 +167,20 @@ function buildMemberVm(member, context = {}) {
     proxyBadgeVisible,
     proxyBadgeText: proxyBadgeVisible ? context.translate('activity.member.proxySignup') : '',
     preferredPositionsVisible,
-    preferredPositionsText: preferredPositionsVisible ? preferredPositions.join(' / ') : ''
+    preferredPositionsText: preferredPositionsVisible ? preferredPositions.join(' / ') : '',
+    attendanceStatusVisible,
+    attendanceStatusText: attendanceStatusVisible
+      ? context.translate(`activity.attendance.${attendanceStatus}`)
+      : '',
+    attendanceActionVisible,
+    attendanceActionStatus,
+    attendanceActionText: attendanceActionVisible
+      ? context.translate(
+          attendanceActionStatus === 'present'
+            ? 'activity.actions.markPresent'
+            : 'activity.actions.markAbsent'
+        )
+      : ''
   };
 }
 
@@ -180,6 +198,9 @@ function buildTeamListVm(
   const memberContext = {
     canCancelSignup: Boolean(options.canCancelSignup),
     canManageRegistrations: Boolean(options.canManageRegistrations),
+    canManageAttendance: Boolean(
+      options.canManageRegistrations && activity && activity.confirmStatus === 'confirmed'
+    ),
     currentUserOpenId,
     translate
   };

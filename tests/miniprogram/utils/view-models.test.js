@@ -443,6 +443,108 @@ test('buildTeamListVm marks proxy members for managers only', () => {
   });
 });
 
+test('buildTeamListVm exposes attendance actions for managers after an activity is confirmed', () => {
+  const teams = [
+    {
+      _id: 'team_green',
+      teamName: 'Green',
+      joinedCount: 2,
+      maxMembers: 6,
+      members: [
+        {
+          registrationId: 'registration_present',
+          userOpenId: 'openid_present',
+          signupName: 'Alex',
+          attendanceStatus: 'present'
+        },
+        {
+          registrationId: 'registration_absent',
+          userOpenId: 'openid_absent',
+          signupName: 'Ben',
+          attendanceStatus: 'absent'
+        }
+      ]
+    }
+  ];
+
+  const vm = buildTeamListVm(
+    teams,
+    null,
+    {
+      status: 'published',
+      confirmStatus: 'confirmed'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(vm[0].members[0]).toMatchObject({
+    attendanceStatusVisible: true,
+    attendanceStatusText: 'Present',
+    attendanceActionVisible: true,
+    attendanceActionStatus: 'absent',
+    attendanceActionText: 'Mark absent'
+  });
+  expect(vm[0].members[1]).toMatchObject({
+    attendanceStatusVisible: true,
+    attendanceStatusText: 'Absent',
+    attendanceActionVisible: true,
+    attendanceActionStatus: 'present',
+    attendanceActionText: 'Mark present'
+  });
+});
+
+test('buildTeamListVm hides attendance actions before confirmation and from regular users', () => {
+  const teams = [
+    {
+      _id: 'team_green',
+      teamName: 'Green',
+      joinedCount: 1,
+      maxMembers: 6,
+      members: [
+        {
+          registrationId: 'registration_present',
+          userOpenId: 'openid_present',
+          signupName: 'Alex',
+          attendanceStatus: 'present'
+        }
+      ]
+    }
+  ];
+
+  const pendingManagerVm = buildTeamListVm(
+    teams,
+    null,
+    {
+      status: 'published',
+      confirmStatus: 'pending'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+  const regularVm = buildTeamListVm(teams, null, {
+    status: 'published',
+    confirmStatus: 'confirmed'
+  });
+
+  expect(pendingManagerVm[0].members[0]).toMatchObject({
+    attendanceStatusVisible: false,
+    attendanceActionVisible: false,
+    attendanceActionText: ''
+  });
+  expect(regularVm[0].members[0]).toMatchObject({
+    attendanceStatusVisible: false,
+    attendanceActionVisible: false,
+    attendanceActionText: ''
+  });
+});
+
 test('buildTeamListVm shows preferred positions to regular users and managers', () => {
   const teams = [
     {

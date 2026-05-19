@@ -57,9 +57,24 @@
               <view class="member-name-row">
                 <text class="member-name">{{member.signupName}}</text>
                 <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
+                <text
+                  wx:if="{{member.attendanceStatusVisible}}"
+                  class="member-attendance-status {{member.attendanceStatus === 'absent' ? 'member-attendance-absent' : 'member-attendance-present'}}"
+                >{{member.attendanceStatusText}}</text>
               </view>
               <text wx:if="{{member.preferredPositionsVisible}}" class="member-position-text">{{member.preferredPositionsText}}</text>
             </view>
+            <button
+              wx:if="{{member.attendanceActionVisible}}"
+              class="member-action-button member-action-attendance {{member.attendanceActionStatus === 'present' ? 'member-action-present' : 'member-action-absent'}}"
+              size="mini"
+              data-action="attendance"
+              data-registration-id="{{member.registrationId}}"
+              data-attendance-status="{{member.attendanceActionStatus}}"
+              data-user-open-id="{{member.userOpenId}}"
+              data-signup-name="{{member.signupName}}"
+              catchtap="onMemberActionTap"
+            >{{member.attendanceActionText}}</button>
             <button
               wx:if="{{member.moveActionVisible}}"
               class="member-action-button member-action-move"

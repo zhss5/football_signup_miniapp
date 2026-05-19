@@ -1,6 +1,7 @@
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   getActivityDetail: jest.fn(),
   cancelActivity: jest.fn(),
+  setRegistrationAttendance: jest.fn(),
   updateTeamColor: jest.fn(),
   resolveActivityCoverImage: jest.fn(activity => Promise.resolve(activity))
 }));
@@ -47,6 +48,7 @@ describe('activity detail page', () => {
   let pageConfig;
   let getActivityDetail;
   let cancelActivity;
+  let setRegistrationAttendance;
   let updateTeamColor;
   let addProxyRegistration;
   let moveRegistration;
@@ -78,6 +80,9 @@ describe('activity detail page', () => {
     require('../../../miniprogram/pages/activity-detail/index');
     ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ cancelActivity } = require('../../../miniprogram/services/activity-service'));
+    ({
+      setRegistrationAttendance
+    } = require('../../../miniprogram/services/activity-service'));
     ({ updateTeamColor } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
@@ -554,6 +559,49 @@ describe('activity detail page', () => {
       })
     );
     expect(ctx.data.viewer.canManageRegistrations).toBe(true);
+  });
+
+  test('activity detail template wires attendance changes from team list', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('bind:attendancechange="onAttendanceChange"');
+  });
+
+  test('onAttendanceChange updates member attendance and reloads detail', async () => {
+    setRegistrationAttendance.mockResolvedValue({
+      registration: {
+        _id: 'registration_1',
+        attendanceStatus: 'absent'
+      }
+    });
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onAttendanceChange.call(ctx, {
+      detail: {
+        registrationId: 'registration_1',
+        attendanceStatus: 'absent'
+      }
+    });
+
+    expect(setRegistrationAttendance).toHaveBeenCalledWith(
+      'activity_123',
+      'registration_1',
+      'absent'
+    );
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Attendance updated',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('reload lets managers resubscribe when the saved manager notice template is stale', async () => {

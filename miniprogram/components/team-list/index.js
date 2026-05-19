@@ -50,6 +50,7 @@ Component({
       const dataset = event.currentTarget.dataset;
       const eventNameByAction = {
         cancelSignup: 'cancelsignup',
+        attendance: 'attendancechange',
         move: 'movemember',
         remove: 'removemember'
       };
@@ -66,6 +67,11 @@ Component({
 
       if (dataset.action === 'move') {
         detail.currentTeamId = dataset.currentTeamId;
+      }
+
+      if (dataset.action === 'attendance') {
+        detail.registrationId = dataset.registrationId;
+        detail.attendanceStatus = dataset.attendanceStatus;
       }
 
       this.triggerEvent(eventName, detail);

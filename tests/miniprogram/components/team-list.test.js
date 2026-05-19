@@ -24,6 +24,19 @@ describe('team list component', () => {
     expect(wxml).toContain('wx:else');
   });
 
+  test('renders attendance controls for member attendance actions', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.attendanceStatusVisible}}"');
+    expect(wxml).toContain('wx:if="{{member.attendanceActionVisible}}"');
+    expect(wxml).toContain('data-action="attendance"');
+    expect(wxml).toContain('data-registration-id="{{member.registrationId}}"');
+    expect(wxml).toContain('data-attendance-status="{{member.attendanceActionStatus}}"');
+  });
+
   test('does not emit team color taps for non-editable teams', () => {
     const triggerEvent = jest.fn();
     const ctx = {
@@ -75,6 +88,32 @@ describe('team list component', () => {
 
     expect(triggerEvent).toHaveBeenCalledWith('teamcolortap', {
       teamId: 'team_white'
+    });
+  });
+
+  test('emits attendance changes with registration id and target status', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      triggerEvent
+    };
+
+    componentConfig.methods.onMemberActionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          action: 'attendance',
+          registrationId: 'registration_1',
+          attendanceStatus: 'absent',
+          userOpenId: 'openid_player',
+          signupName: 'Alex'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('attendancechange', {
+      registrationId: 'registration_1',
+      attendanceStatus: 'absent',
+      userOpenId: 'openid_player',
+      signupName: 'Alex'
     });
   });
 });

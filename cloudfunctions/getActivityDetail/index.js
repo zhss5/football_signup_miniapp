@@ -122,6 +122,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       };
 
       if (canManageRegistrations) {
+        member.registrationId = registration._id || '';
         member.proxyRegistration = Boolean(registration.proxyRegistration);
         member.attendanceStatus = registration.attendanceStatus || 'present';
         member.attendanceMarkedAt = registration.attendanceMarkedAt || '';

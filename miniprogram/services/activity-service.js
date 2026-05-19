@@ -16,6 +16,14 @@ function updateTeamColor(activityId, teamId, colorKey) {
   });
 }
 
+function setRegistrationAttendance(activityId, registrationId, attendanceStatus) {
+  return call('setRegistrationAttendance', {
+    activityId,
+    registrationId,
+    attendanceStatus
+  });
+}
+
 function cancelActivity(activityId) {
   return call('cancelActivity', { activityId });
 }
@@ -184,6 +192,7 @@ module.exports = {
   getActivityStats,
   resolveActivityCoverImage,
   resolveActivityCoverImages,
+  setRegistrationAttendance,
   updateActivity,
   updateTeamColor
 };

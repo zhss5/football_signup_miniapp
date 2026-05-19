@@ -134,3 +134,27 @@ Verification:
 
 - red/green tests added for organizer/admin permission, confirmed-activity guard, status validation, activity-log writes, and manager-only Activity Detail attendance fields.
 - full regression passed: `62` test suites, `466` tests.
+
+## 2026-05-19 - Mini-Program Attendance Editing
+
+Implemented the Version 2 mini-program quick attendance editing surface.
+
+Delivered behavior:
+
+- `getActivityDetail` returns `registrationId` on roster members only to viewers who can manage registrations.
+- mini-program activity service can call `setRegistrationAttendance`.
+- confirmed activity managers see each roster member's attendance state in Activity Detail.
+- confirmed activity managers can toggle a member between `present` and `absent` from the team list.
+- attendance controls stay hidden before activity confirmation and for regular users.
+- attendance updates show a success toast and refresh Activity Detail after the cloud function returns.
+
+Deployment note:
+
+- redeploy `getActivityDetail` because the manager roster payload now includes `registrationId`.
+- keep `setRegistrationAttendance` deployed from the attendance backend task.
+- upload a new mini-program build for the Activity Detail attendance controls.
+
+Verification:
+
+- red/green tests added for service delegation, manager-only view-model state, team-list event wiring, Activity Detail handler behavior, and manager-only registration IDs.
+- target regression passed: `5` test suites, `92` tests.

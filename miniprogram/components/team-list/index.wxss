@@ -154,6 +154,26 @@
   font-weight: 600;
 }
 
+.member-attendance-status {
+  flex: 0 0 auto;
+  margin-left: 10rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  font-weight: 600;
+}
+
+.member-attendance-present {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.member-attendance-absent {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 .member-position-text {
   display: block;
   margin-top: 4rpx;
@@ -183,6 +203,22 @@
 }
 
 .member-action-move {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.member-action-attendance {
+  min-width: 148rpx;
+}
+
+.member-action-absent {
+  color: #991b1b;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.member-action-present {
   color: #166534;
   background: #f0fdf4;
   border-color: #bbf7d0;

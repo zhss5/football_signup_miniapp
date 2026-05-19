@@ -268,4 +268,29 @@ describe('activity service cover display urls', () => {
       colorKey: 'red'
     });
   });
+
+  test('setRegistrationAttendance delegates to the CloudBase service', async () => {
+    const cloud = require('../../../miniprogram/services/cloud');
+    cloud.call.mockResolvedValue({
+      registration: {
+        _id: 'registration_1',
+        attendanceStatus: 'absent'
+      }
+    });
+
+    await expect(
+      activityService.setRegistrationAttendance('activity_1', 'registration_1', 'absent')
+    ).resolves.toEqual({
+      registration: {
+        _id: 'registration_1',
+        attendanceStatus: 'absent'
+      }
+    });
+
+    expect(cloud.call).toHaveBeenCalledWith('setRegistrationAttendance', {
+      activityId: 'activity_1',
+      registrationId: 'registration_1',
+      attendanceStatus: 'absent'
+    });
+  });
 });

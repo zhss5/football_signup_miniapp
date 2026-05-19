@@ -1,6 +1,7 @@
 const {
   getActivityDetail,
   cancelActivity,
+  setRegistrationAttendance,
   updateTeamColor,
   resolveActivityCoverImage
 } = require('../../services/activity-service');
@@ -471,6 +472,30 @@ Page({
 
     try {
       await removeRegistration(this.data.activityId, detail.userOpenId);
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onAttendanceChange(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = event.detail || {};
+
+    if (!detail.registrationId || !detail.attendanceStatus) {
+      return;
+    }
+
+    try {
+      await setRegistrationAttendance(
+        this.data.activityId,
+        detail.registrationId,
+        detail.attendanceStatus
+      );
+      wx.showToast({
+        title: translate('toast.attendanceUpdated'),
+        icon: 'success'
+      });
       await this.reload();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
