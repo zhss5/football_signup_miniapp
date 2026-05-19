@@ -34,6 +34,9 @@ Completed:
 - role removal keeps base `user` access.
 - the last active `super_admin` is protected.
 - role changes write `user_role_logs` audit records.
+- `setRegistrationAttendance` cloud function lets organizers/admins mark confirmed-activity registrations present or absent.
+- attendance updates write registration fields and `activity_logs` audit rows.
+- `getActivityDetail` exposes attendance fields only to registration managers.
 
 ## 4. Planned Version 2 Scope
 
@@ -92,6 +95,6 @@ Start implementation from Milestone 1 in `docs/superpowers/plans/2026-05-19-vers
 
 Recommended first coding task:
 
-- start attendance backend work with `setRegistrationAttendance`.
-- expose manager-visible attendance state from Activity Detail.
+- add mini-program Activity Detail controls for quick attendance editing.
+- call `setRegistrationAttendance` from the activity service.
 - keep using red/green tests before production changes.

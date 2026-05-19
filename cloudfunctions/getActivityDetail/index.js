@@ -123,6 +123,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
       if (canManageRegistrations) {
         member.proxyRegistration = Boolean(registration.proxyRegistration);
+        member.attendanceStatus = registration.attendanceStatus || 'present';
+        member.attendanceMarkedAt = registration.attendanceMarkedAt || '';
+        member.attendanceMarkedBy = registration.attendanceMarkedBy || '';
       }
 
       acc[registration.teamId].push(member);

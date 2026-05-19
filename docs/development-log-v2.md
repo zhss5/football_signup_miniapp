@@ -104,3 +104,33 @@ Verification:
 
 - red/green tests added for user search, role mutation boundaries, last-super-admin protection, and role-change audit logs.
 - full regression passed: `61` test suites, `457` tests.
+
+## 2026-05-19 - Attendance Mutation Backend
+
+Implemented the Version 2 attendance mutation backend.
+
+New cloud function:
+
+- `setRegistrationAttendance`
+
+Delivered behavior:
+
+- activity organizers can mark active registrations as `present` or `absent` after the activity is confirmed.
+- admins and super admins can mark attendance for any confirmed activity.
+- regular users cannot update attendance.
+- attendance cannot be changed before `confirmStatus: confirmed`.
+- attendance updates write `attendanceStatus`, `attendanceMarkedAt`, and `attendanceMarkedBy` on the registration.
+- attendance updates write an `activity_logs` row with action `attendance_update`.
+- `getActivityDetail` now returns attendance fields on roster members only to viewers who can manage registrations.
+- regular viewers do not receive member attendance fields.
+
+Deployment note:
+
+- deploy `setRegistrationAttendance`.
+- redeploy `getActivityDetail`.
+- run `copy-cloud-shared` before CloudBase deployment.
+
+Verification:
+
+- red/green tests added for organizer/admin permission, confirmed-activity guard, status validation, activity-log writes, and manager-only Activity Detail attendance fields.
+- full regression passed: `62` test suites, `466` tests.

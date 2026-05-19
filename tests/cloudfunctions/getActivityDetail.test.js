@@ -57,6 +57,9 @@ test('getActivityDetail groups joined members under each team', async () => {
       signupName: 'Alex',
       preferredPositions: ['前锋', '门将'],
       proxyRegistration: true,
+      attendanceStatus: 'absent',
+      attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
+      attendanceMarkedBy: 'openid_owner',
       joinedAt: '2026-04-19T10:00:00.000Z'
     }
   ];
@@ -135,7 +138,10 @@ test('getActivityDetail groups joined members under each team', async () => {
     signupName: 'Alex',
     avatarUrl: 'https://example.com/avatar-a.png',
     preferredPositions: ['前锋', '门将'],
-    proxyRegistration: true
+    proxyRegistration: true,
+    attendanceStatus: 'absent',
+    attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
+    attendanceMarkedBy: 'openid_owner'
   });
 
   const regularResult = await getActivityDetail.main(
@@ -148,6 +154,7 @@ test('getActivityDetail groups joined members under each team', async () => {
     preferredPositions: result.teams[0].members[0].preferredPositions
   });
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
+  expect(regularResult.teams[0].members[0]).not.toHaveProperty('attendanceStatus');
 });
 
 test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {
