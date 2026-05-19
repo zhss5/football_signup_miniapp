@@ -45,6 +45,7 @@ Completed:
 - admin and super admin statistics include all confirmed activities.
 - organizer statistics include only their own confirmed activities.
 - statistics include proxy signups, count blank attendance status as present, and exclude cancelled/deleted/pending activities.
+- environment strategy decision recorded: continue with one CloudBase environment for now, avoid deploying changed existing functions during Version 1 review, and use function-name isolation such as `getActivityDetailV2` when testing changed existing behavior in a trial build.
 
 ## 4. Planned Version 2 Scope
 
@@ -96,6 +97,14 @@ Completed:
 - Add Home/My paginated loading.
 - Add overdue unresolved activity prompts after `endAt` for still-published pending activities.
 - Keep invite-code signup, automatic reminders, payments, refunds, MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
+
+### 4.7 Environment And Deployment Strategy
+
+- Continue using the current single CloudBase environment until a second paid environment is justified.
+- Treat formal, trial, and development builds as sharing cloud functions and data whenever they use the same `CLOUD_ENV_ID`.
+- Avoid deploying changed existing cloud functions while a Version 1 build is under review.
+- Prefer temporary V2 function names for changed existing behavior that must be tested before formal deployment.
+- Keep self-hosted backend migration as a later option for stronger `dev` / `test` / `prod` isolation, not as an immediate Version 2 dependency.
 
 ## 5. Next Implementation Step
 

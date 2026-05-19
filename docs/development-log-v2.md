@@ -188,3 +188,31 @@ Verification:
 
 - red/green tests added for admin global visibility, organizer scope, blank attendance defaults, excluded activity states, proxy signups, and regular-user rejection.
 - target regression passed: `1` test suite, `6` tests.
+
+## 2026-05-19 - Environment And Deployment Strategy Decision
+
+Recorded the Version 2 environment strategy after reviewing CloudBase environment isolation costs and the current Version 1 review status.
+
+Decision:
+
+- keep using the existing single CloudBase environment for now.
+- do not create a second paid CloudBase environment immediately.
+- while a Version 1 mini-program build is under review, avoid deploying changed existing cloud functions that the review build calls.
+- new cloud functions that no released or under-review frontend calls are lower risk, but can still wait until the review window closes if they are not needed immediately.
+- when testing Version 2 against the same CloudBase environment, prefer function-name isolation for changed existing functions, for example `getActivityDetailV2`, so the formal build can continue calling `getActivityDetail`.
+- keep test data separated by test users and test activities when sharing one database.
+- do not rely on one CloudBase environment for strong isolation between formal, trial, and development builds.
+
+Deployment guidance:
+
+- uploading a mini-program trial build uploads frontend code only; it does not deploy cloud functions.
+- formal, trial, and development builds call the cloud environment configured by `CLOUD_ENV_ID`.
+- if formal and trial builds use the same `CLOUD_ENV_ID`, they share the same cloud functions, database, storage, and subscription configuration.
+- cloud functions must be deployed separately to the target CloudBase environment.
+- if a paid second environment is created later, deploy cloud functions and seed required data separately in both environments.
+
+Longer-term note:
+
+- self-hosted backend services would make standard `dev` / `test` / `prod` isolation, database separation, rollout, and rollback easier.
+- do not migrate away from CloudBase only to avoid the second-environment fee; migration would require replacing cloud-function calls, database access, openid-based auth wiring, storage handling, subscription-message sending, request-domain configuration, and operational hosting.
+- reconsider a self-hosted backend when the web admin, statistics, permission workflows, or release-management needs become complex enough to justify the migration cost.

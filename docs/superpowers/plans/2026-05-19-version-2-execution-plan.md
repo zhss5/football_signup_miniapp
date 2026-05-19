@@ -4,7 +4,7 @@
 
 **Goal:** Build the Version 2 operations release: role-managed web admin, attendance management, attendance statistics, roster export, and the minimum mini-program attendance editing surface.
 
-**Architecture:** Keep CloudBase document database and existing cloud-function style. Add role and attendance backend capabilities first, then add mini-program attendance editing, then add a standalone `web-admin/` frontend that talks to controlled cloud functions. Keep each milestone shippable and independently testable.
+**Architecture:** Keep CloudBase document database and existing cloud-function style. Add role and attendance backend capabilities first, then add mini-program attendance editing, then add a standalone `web-admin/` frontend that talks to controlled cloud functions. Keep each milestone shippable and independently testable. The project currently uses a single CloudBase environment; Version 2 testing must avoid disrupting the formal mini-program build and any build under review.
 
 **Tech Stack:** WeChat Mini Program, CloudBase cloud functions, CloudBase document database, Jest, lightweight web-admin frontend under `web-admin/`.
 
@@ -885,6 +885,30 @@ Manual production setup:
 - Confirm `user_role_logs` exists or is bootstrapped before testing web-admin role changes.
 - Upload a mini-program frontend build for mini-program attendance editing, pagination, and overdue prompts.
 - Deploy or host `web-admin/` according to the chosen CloudBase hosting path.
+
+### Single-Environment Testing Policy
+
+Current decision:
+
+- Use the existing single CloudBase environment for now.
+- Do not create a second paid CloudBase environment until live testing or release risk justifies the cost.
+- Do not deploy changed existing functions during an active Version 1 review window unless the deployment is needed to fix the review build.
+
+Testing rules while sharing one CloudBase environment:
+
+- Trial and formal mini-program builds are separated by frontend code package only.
+- They are not separated at the cloud-function or database layer when they use the same `CLOUD_ENV_ID`.
+- Uploading a trial build does not deploy cloud functions.
+- Cloud functions are deployed separately and affect every frontend build that calls the same function in that environment.
+- New functions are lower risk because existing formal builds do not call them.
+- Changed existing functions, especially `getActivityDetail`, can affect formal users and the review build.
+- For Version 2 testing of changed existing behavior, prefer temporary function-name isolation, such as calling `getActivityDetailV2` from a trial build while the formal build keeps calling `getActivityDetail`.
+- Keep test users and test activities clearly separated from production activity data.
+
+Future option:
+
+- A self-hosted backend can provide cleaner `dev` / `test` / `prod` separation, independent databases, safer rollback, and standard CI/CD release controls.
+- Defer self-hosted migration until the operational complexity of the web admin, analytics, permissions, or release management outweighs CloudBase's lower early-stage operating cost.
 
 ## Self-Review
 
