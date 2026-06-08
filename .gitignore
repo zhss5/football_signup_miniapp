@@ -17,3 +17,4 @@ cloudfunctions/*/validators.js
 !cloudfunctions/_shared/team-colors.js
 project.private.config.json
 miniprogram/config/env.local.js
+miniprogram/config/env.cloudbase.js
