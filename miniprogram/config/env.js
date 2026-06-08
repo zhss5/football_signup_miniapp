@@ -22,10 +22,15 @@ function getRuntimeEnv(envVersion = getMiniProgramEnvVersion()) {
   return envVersion === 'release' ? 'prod' : 'test';
 }
 
+function normalizeCloudEnvId(value) {
+  const envId = String(value || '').trim();
+  return envId.startsWith('your-') ? '' : envId;
+}
+
 function normalizeCloudEnvIds(value = {}) {
   return {
-    test: String(value.test || ''),
-    prod: String(value.prod || '')
+    test: normalizeCloudEnvId(value.test),
+    prod: normalizeCloudEnvId(value.prod)
   };
 }
 

@@ -283,6 +283,7 @@ describe('cloud service runtime', () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       USE_LOCAL_MOCK: false,
       CLOUD_ENV_ID: 'prod-env-123',
+      RUNTIME_ENV: 'test',
       LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
       ENABLE_CLOUD_DIAGNOSTICS: true
     }));
@@ -380,6 +381,7 @@ describe('cloud service runtime', () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       USE_LOCAL_MOCK: false,
       CLOUD_ENV_ID: 'prod-env-123',
+      RUNTIME_ENV: 'test',
       LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
       ENABLE_CLOUD_DIAGNOSTICS: true
     }));
@@ -397,8 +399,15 @@ describe('cloud service runtime', () => {
       items: []
     });
 
-    expect(info).toHaveBeenCalledWith('[cloud] init:start', { envId: 'prod-env-123' });
-    expect(info).toHaveBeenCalledWith('[cloud] init:success', { envId: 'prod-env-123' });
+    expect(info).toHaveBeenCalledWith('[cloud] init:start', {
+      runtimeEnv: 'test',
+      envId: 'prod-e***-123'
+    });
+    expect(info).toHaveBeenCalledWith('[cloud] init:success', {
+      runtimeEnv: 'test',
+      envId: 'prod-e***-123'
+    });
+    expect(info).not.toHaveBeenCalledWith('[cloud] init:start', { envId: 'prod-env-123' });
     expect(info).toHaveBeenCalledWith('[cloud] call:start', { name: 'listActivities' });
     expect(info).toHaveBeenCalledWith(
       '[cloud] call:success',

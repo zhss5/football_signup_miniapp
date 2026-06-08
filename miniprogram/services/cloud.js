@@ -2,6 +2,7 @@ const {
   USE_LOCAL_MOCK,
   LOCAL_STORAGE_KEY,
   CLOUD_ENV_ID,
+  RUNTIME_ENV,
   ENABLE_CLOUD_DIAGNOSTICS
 } = require('../config/env');
 const { buildStorageAdapter, createLocalCloudClient } = require('../mocks/local-cloud');
@@ -73,6 +74,23 @@ function logCloudDiagnostic(event, details) {
   console.info(`[cloud] ${event}`, details || {});
 }
 
+function maskCloudEnvId(envId) {
+  const value = String(envId || '');
+
+  if (value.length <= 10) {
+    return value ? '***' : '';
+  }
+
+  return `${value.slice(0, 6)}***${value.slice(-4)}`;
+}
+
+function getCloudEnvDiagnostic() {
+  return {
+    runtimeEnv: RUNTIME_ENV || '',
+    envId: maskCloudEnvId(CLOUD_ENV_ID)
+  };
+}
+
 function initializeCloudRuntime() {
   if (USE_LOCAL_MOCK) {
     return {
@@ -91,7 +109,7 @@ function initializeCloudRuntime() {
   }
 
   if (!cloudRuntime) {
-    logCloudDiagnostic('init:start', { envId: CLOUD_ENV_ID });
+    logCloudDiagnostic('init:start', getCloudEnvDiagnostic());
 
     try {
       wxRuntime.cloud.init({
@@ -100,13 +118,13 @@ function initializeCloudRuntime() {
       });
     } catch (error) {
       logCloudDiagnostic('init:failure', {
-        envId: CLOUD_ENV_ID,
+        ...getCloudEnvDiagnostic(),
         error: summarizeError(error)
       });
       throw error;
     }
 
-    logCloudDiagnostic('init:success', { envId: CLOUD_ENV_ID });
+    logCloudDiagnostic('init:success', getCloudEnvDiagnostic());
 
     cloudRuntime = {
       mode: 'cloudbase',
