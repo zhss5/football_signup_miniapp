@@ -2,9 +2,6 @@ describe('env config', () => {
   beforeEach(() => {
     jest.resetModules();
     delete global.wx;
-    jest.doMock('../../../miniprogram/config/env.cloudbase', () => ({}), {
-      virtual: true
-    });
   });
 
   afterEach(() => {
@@ -37,14 +34,6 @@ describe('env config', () => {
   });
 
   test('selects the test CloudBase environment for trial builds', () => {
-    jest.doMock('../../../miniprogram/config/env.cloudbase', () => ({
-      CLOUD_ENV_IDS: {
-        test: 'test-env-id',
-        prod: 'prod-env-id'
-      }
-    }), {
-      virtual: true
-    });
     global.wx = {
       getAccountInfoSync: jest.fn(() => ({
         miniProgram: {
@@ -52,7 +41,12 @@ describe('env config', () => {
         }
       }))
     };
-    jest.doMock('../../../miniprogram/config/env.local', () => ({}));
+    jest.doMock('../../../miniprogram/config/env.local', () => ({
+      CLOUD_ENV_IDS: {
+        test: 'test-env-id',
+        prod: 'prod-env-id'
+      }
+    }));
 
     const env = require('../../../miniprogram/config/env');
 
@@ -62,14 +56,6 @@ describe('env config', () => {
   });
 
   test('selects the production CloudBase environment for release builds', () => {
-    jest.doMock('../../../miniprogram/config/env.cloudbase', () => ({
-      CLOUD_ENV_IDS: {
-        test: 'test-env-id',
-        prod: 'prod-env-id'
-      }
-    }), {
-      virtual: true
-    });
     global.wx = {
       getAccountInfoSync: jest.fn(() => ({
         miniProgram: {
@@ -77,7 +63,12 @@ describe('env config', () => {
         }
       }))
     };
-    jest.doMock('../../../miniprogram/config/env.local', () => ({}));
+    jest.doMock('../../../miniprogram/config/env.local', () => ({
+      CLOUD_ENV_IDS: {
+        test: 'test-env-id',
+        prod: 'prod-env-id'
+      }
+    }));
 
     const env = require('../../../miniprogram/config/env');
 
@@ -87,15 +78,11 @@ describe('env config', () => {
   });
 
   test('merges local overrides on top of the runtime repository config', () => {
-    jest.doMock('../../../miniprogram/config/env.cloudbase', () => ({
+    jest.doMock('../../../miniprogram/config/env.local', () => ({
       CLOUD_ENV_IDS: {
         test: 'test-env-id',
         prod: 'prod-env-id'
-      }
-    }), {
-      virtual: true
-    });
-    jest.doMock('../../../miniprogram/config/env.local', () => ({
+      },
       USE_LOCAL_MOCK: true,
       ENABLE_CLOUD_DIAGNOSTICS: true
     }));
@@ -114,4 +101,5 @@ describe('env config', () => {
       }
     });
   });
+
 });

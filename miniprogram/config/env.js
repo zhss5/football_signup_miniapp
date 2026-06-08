@@ -34,17 +34,6 @@ function normalizeCloudEnvIds(value = {}) {
   };
 }
 
-let cloudbaseConfig = {};
-
-try {
-  // Optional sample-compatible config for non-secret local wiring.
-  cloudbaseConfig = require('./env.cloudbase');
-} catch (error) {
-  if (error.code !== 'MODULE_NOT_FOUND') {
-    throw error;
-  }
-}
-
 let localOverrides = {};
 
 try {
@@ -58,7 +47,7 @@ try {
 
 const runtimeEnv = getRuntimeEnv();
 const CLOUD_ENV_IDS = normalizeCloudEnvIds({
-  ...(cloudbaseConfig.CLOUD_ENV_IDS || EMPTY_CLOUD_ENV_IDS),
+  ...EMPTY_CLOUD_ENV_IDS,
   ...(localOverrides.CLOUD_ENV_IDS || {})
 });
 const cloudEnvId = String(localOverrides.CLOUD_ENV_ID || CLOUD_ENV_IDS[runtimeEnv] || '');
