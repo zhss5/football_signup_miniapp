@@ -71,6 +71,7 @@ Completed:
 - Add web-admin activity list and filters.
 - Support filtering by date range, status, organizer, and keyword.
 - Add activity detail review with teams, registrations, proxy signups, preferred positions, and notification state.
+- Add activity duplication so managers can create a new activity from a previous activity's reusable settings.
 - Keep `admin` visibility global.
 - Keep `organizer` visibility limited to activities they created.
 
@@ -106,6 +107,7 @@ Completed:
 - Add notification-log review.
 - Add Home/My paginated loading.
 - Add overdue unresolved activity prompts after `endAt` for still-published pending activities.
+- Add copy-activity flow that copies reusable setup data but not registrations, attendance state, participant operation logs, notification logs, or subscription state.
 - Keep invite-code signup, automatic reminders, payments, refunds, MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
 
 ### 4.8 Environment And Deployment Strategy

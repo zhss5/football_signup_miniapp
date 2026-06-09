@@ -17,6 +17,7 @@ This plan covers V2.0 only:
 - role model with `super_admin`.
 - regular-user permission add/remove workflow.
 - shared participant manager aliases and participant operation audit history.
+- activity duplication for creating new activities from previous reusable settings.
 - attendance fields and backend mutation.
 - mini-program quick attendance editing after confirmed activities.
 - web-admin foundation, user role management, activity review, attendance management, statistics, and exports.
@@ -42,6 +43,7 @@ This plan excludes invite-code signup, automatic reminders, payments, refunds, M
 - `cloudfunctions/listActivities/index.js`: add role-aware admin filters for web-admin use without breaking mini-program scopes.
 - `cloudfunctions/getActivityDetail/index.js`: expose attendance state and manager permissions.
 - `miniprogram/pages/activity-detail/*`: add quick attendance editing for confirmed activities.
+- `miniprogram/pages/activity-create/*`: support copy-from-existing draft initialization.
 - `miniprogram/pages/home/*`: add paginated loading and keep first page responsive.
 - `miniprogram/pages/my/*`: add paginated loading for Created and Joined tabs.
 - `web-admin/`: new web-admin frontend subproject.
@@ -705,6 +707,48 @@ git add -- cloudfunctions/listActivities/index.js web-admin tests/cloudfunctions
 git commit -m "Add web admin activity attendance review"
 ```
 
+### Task 9A: Add Activity Duplication Flow
+
+**Files:**
+
+- Modify: `miniprogram/pages/activity-detail/index.js`
+- Modify: `miniprogram/pages/activity-detail/index.wxml`
+- Modify: `miniprogram/pages/activity-create/index.js`
+- Modify: `miniprogram/pages/activity-create/index.wxml`
+- Modify: `miniprogram/services/activity-service.js`
+- Modify: `miniprogram/utils/i18n.js`
+- Test: `tests/miniprogram/pages/activity-detail.test.js`
+- Test: `tests/miniprogram/pages/activity-create.test.js`
+
+- [ ] **Step 1: Write failing copy-activity tests**
+
+Cover:
+
+```js
+test('organizer can start a copied activity draft from an activity they manage', async () => {});
+test('regular users cannot see the copy activity action', async () => {});
+test('copied draft includes reusable setup fields but no registrations or attendance state', async () => {});
+test('copied draft requires a new activity time before save', async () => {});
+```
+
+- [ ] **Step 2: Implement copy draft initialization**
+
+Rules:
+
+- Show the copy action only to users who can manage the source activity.
+- Copy reusable setup fields: title, description, venue, location, cover/detail images, team names, team colors, team capacities, signup limits, registration notice threshold, and activity notice prompt.
+- Do not copy registrations, attendance state, participant operation logs, notification logs, notification subscription state, confirm status, or cancellation state.
+- Initialize the create page in copy mode with a clear draft state and a new activity ID generated only when the manager saves.
+- Require the manager to review or change `startAt` and `endAt` before saving the copied activity.
+
+- [ ] **Step 3: Run tests and commit**
+
+```powershell
+& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/pages/activity-create.test.js
+git add -- miniprogram/pages/activity-detail miniprogram/pages/activity-create miniprogram/services/activity-service.js miniprogram/utils/i18n.js tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/pages/activity-create.test.js
+git commit -m "Add activity duplication flow"
+```
+
 ### Task 10: Add Web Admin Statistics, Export, And Notification Logs
 
 **Files:**
@@ -890,6 +934,7 @@ Manual production setup:
 - Seed the first `super_admin` by editing the target user document in CloudBase.
 - Confirm `user_role_logs` exists or is bootstrapped before testing web-admin role changes.
 - Upload a mini-program frontend build for mini-program attendance editing, pagination, and overdue prompts.
+- Upload a mini-program frontend build for the copy-activity flow.
 - Deploy or host `web-admin/` according to the chosen CloudBase hosting path.
 
 ### Single-Environment Testing Policy

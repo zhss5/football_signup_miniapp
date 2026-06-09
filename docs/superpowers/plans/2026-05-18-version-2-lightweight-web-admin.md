@@ -27,6 +27,7 @@ The web admin should cover the highest-friction operational tasks first:
 - participant operation history for signup, cancellation, re-signup, removal, team movement, and attendance edits.
 - activity list with filters for date range, status, organizer, and keyword.
 - activity detail view with teams, registrations, proxy signups, preferred positions, and notification status.
+- activity duplication so organizers/admins can create a new activity from a previous activity's reusable settings.
 - roster export as CSV/XLSX.
 - attendance management for confirmed activities.
 - attendance statistics by participant over a selected date range.
@@ -164,7 +165,20 @@ Home and My should support loading additional activity batches.
 - Add `onReachBottom` loading in Home and My.
 - Preserve current filters while loading more.
 
-### 6. Overdue Activity Handling
+### 6. Activity Duplication
+
+Organizers often create recurring activities with similar teams, capacity, venue, images, and descriptions. Version 2 should let managers copy an existing activity into a new activity draft.
+
+Copy rules:
+
+- Activity creators can copy their own activities.
+- Admins and super admins can copy any activity.
+- Copy reusable setup fields: title, description, venue, location, images, team names, team colors, team capacities, signup limits, and notification settings.
+- Do not copy registrations, attendance state, participant operation logs, notification logs, or subscription state.
+- The copied activity must be reviewed before saving, and the UI should force the manager to confirm or change the new activity time.
+- The copied activity is a new activity with a new ID; later changes to either activity must not affect the other.
+
+### 7. Overdue Activity Handling
 
 After `endAt` passes, if an activity is still `published` and `confirmStatus: 'pending'`, organizers should see a clear action prompt:
 
@@ -173,7 +187,7 @@ After `endAt` passes, if an activity is still `published` and `confirmStatus: 'p
 
 No automatic confirmation should run in Version 2.
 
-### 7. Roster Export Improvements
+### 8. Roster Export Improvements
 
 Improve participant exports for organizers:
 
@@ -184,7 +198,7 @@ Improve participant exports for organizers:
 - support copy format in the mini program.
 - support CSV/XLSX export in the web admin.
 
-### 8. Notification Operations
+### 9. Notification Operations
 
 Keep the existing notification model and add operational visibility:
 
@@ -192,7 +206,7 @@ Keep the existing notification model and add operational visibility:
 - show send status and failure reason when available.
 - keep automatic pre-activity reminders deferred until manual notification behavior is stable.
 
-### 9. Invite-Code Signup
+### 10. Invite-Code Signup
 
 Add invite-code signup only after the operational core is stable:
 
@@ -201,7 +215,7 @@ Add invite-code signup only after the operational core is stable:
 - backend validates the code.
 - Home visibility rules can remain simple in Version 2: show the activity, but require code before signup.
 
-### 10. Cover Crop UX
+### 11. Cover Crop UX
 
 Replace slider-only cover crop controls with drag/zoom gestures when time allows. This is useful polish, but it is lower priority than web admin and attendance operations.
 
@@ -221,14 +235,15 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 2. Add mini program attendance editing for confirmed activities.
 3. Add shared participant manager aliases and participant operation audit logs.
 4. Build the web admin foundation: login, role guard, user search, regular-user permission add/remove, and activity list.
-5. Add web admin activity detail and attendance management.
-6. Add web admin attendance statistics with date range filters and export.
-7. Add Home/My pagination.
-8. Add overdue activity prompt.
-9. Improve roster export formats.
-10. Add notification-log review.
-11. Add invite-code signup.
-12. Improve cover-crop gestures.
+5. Add activity duplication for creating new activities from previous reusable settings.
+6. Add web admin activity detail and attendance management.
+7. Add web admin attendance statistics with date range filters and export.
+8. Add Home/My pagination.
+9. Add overdue activity prompt.
+10. Improve roster export formats.
+11. Add notification-log review.
+12. Add invite-code signup.
+13. Improve cover-crop gestures.
 
 ## Version 2 Success Criteria
 
@@ -238,6 +253,7 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 - Removing elevated permissions leaves the user as a regular participant instead of deleting the account.
 - Organizers/admins can set a shared management alias for a real WeChat signup user and see it across later activities.
 - Participant signup, cancellation, re-signup, removal, team movement, attendance change, and alias changes leave operation history.
+- Organizers/admins can copy an existing activity into a new activity draft without copying registrations or attendance history.
 - Organizers/admins can mark attendance from the mini program after a confirmed activity.
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.

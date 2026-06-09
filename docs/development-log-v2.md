@@ -4,6 +4,24 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-09 - Activity Duplication Added To Version 2 Scope
+
+Version 2 requirements now include copying an existing activity to create a new activity draft.
+
+Requirement decisions:
+
+- organizers often create recurring activities with similar setup, so the copy action should reuse previous activity settings.
+- activity creators can copy their own activities; admins and super admins can copy any activity.
+- the copied draft can reuse title, description, venue, location, images, team names, team colors, team capacities, signup limits, and notification settings.
+- registrations, attendance state, participant operation logs, notification logs, and subscription state must not be copied.
+- the copied activity is a new activity, and the manager must review or update the activity time before saving.
+
+Updated docs:
+
+- `docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
+- `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
+- `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`
+
 ## 2026-06-09 - Participant Identification And Operation Audit Added To Version 2
 
 Version 2 requirements now include shared participant manager aliases and participant operation audit history.
