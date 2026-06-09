@@ -4,6 +4,25 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-09 - Participant Identification And Operation Audit Added To Version 2
+
+Version 2 requirements now include shared participant manager aliases and participant operation audit history.
+
+Requirement decisions:
+
+- organizers/admins need a stable management-facing alias for real WeChat signup users because participants can change nickname and avatar between activities.
+- the alias is shared by organizers, admins, and super admins, and is hidden from ordinary users.
+- the alias follows the real WeChat user across activities.
+- proxy signup cross-activity identification remains deferred until a later participant-profile model exists.
+- current registration state and historical participant operations must stay separate.
+- participant self signup, self cancellation, re-signup, proxy signup, manager removal, team movement, attendance change, and manager alias changes should leave audit history.
+
+Updated docs:
+
+- `docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
+- `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
+- `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`
+
 ## 2026-05-19 - Version 2 Branch Start
 
 Branch:

@@ -4,7 +4,7 @@
 
 This file tracks Version 2 implementation progress separately from the Version 1 progress file.
 
-Version 2 focuses on lightweight operations tooling, especially web-admin access, role management, attendance management, attendance statistics, exports, and operational review workflows.
+Version 2 focuses on lightweight operations tooling, especially web-admin access, role management, participant identification, participant operation audit history, attendance management, attendance statistics, exports, and operational review workflows.
 
 ## 2. Branch
 
@@ -74,7 +74,17 @@ Completed:
 - Keep `admin` visibility global.
 - Keep `organizer` visibility limited to activities they created.
 
-### 4.4 Attendance Management
+### 4.4 Participant Identification And Operation Audit
+
+- Add shared participant manager aliases for real WeChat signup users.
+- Store the shared alias on the user record so it follows the same participant across activities even if they change nickname or avatar.
+- Keep manager aliases visible only to activity managers, admins, and super admins.
+- Keep proxy signup cross-activity identification deferred until a later participant-profile model exists.
+- Record participant operation history separately from current registration state.
+- Audit participant self signup, self cancellation, re-signup, proxy signup, manager removal, team movement, attendance change, and manager alias change.
+- Capture operator, target participant, activity, registration, action type, timestamp, and before/after data where useful.
+
+### 4.5 Attendance Management
 
 - Track attendance on active registration records.
 - After an activity is confirmed as held, count active registrations as present by default.
@@ -83,22 +93,22 @@ Completed:
 - Add review and correction workflows in the web admin.
 - Count only confirmed activities in attendance statistics.
 
-### 4.5 Attendance Statistics And Export
+### 4.6 Attendance Statistics And Export
 
 - Add date-range attendance statistics.
 - Aggregate by signup display name for Version 2.
 - Include proxy signups in attendance statistics.
 - Show signup count, present count, absent count, and attendance rate.
-- Export rosters and attendance data as CSV/XLSX.
+- Export rosters and attendance data as CSV/XLSX, including manager aliases where visible.
 
-### 4.6 Operational Enhancements
+### 4.7 Operational Enhancements
 
 - Add notification-log review.
 - Add Home/My paginated loading.
 - Add overdue unresolved activity prompts after `endAt` for still-published pending activities.
 - Keep invite-code signup, automatic reminders, payments, refunds, MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
 
-### 4.7 Environment And Deployment Strategy
+### 4.8 Environment And Deployment Strategy
 
 - Continue using the current single CloudBase environment until a second paid environment is justified.
 - Treat formal, trial, and development builds as sharing cloud functions and data whenever they use the same `CLOUD_ENV_ID`.

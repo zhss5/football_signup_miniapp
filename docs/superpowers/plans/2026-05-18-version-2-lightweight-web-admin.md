@@ -23,6 +23,8 @@ The web admin should cover the highest-friction operational tasks first:
 - admin login and access control.
 - user list and user search.
 - role management for adding or removing elevated permissions from regular `user` accounts.
+- participant manager aliases so organizers/admins can recognize real WeChat signup users even after nickname or avatar changes.
+- participant operation history for signup, cancellation, re-signup, removal, team movement, and attendance edits.
 - activity list with filters for date range, status, organizer, and keyword.
 - activity detail view with teams, registrations, proxy signups, preferred positions, and notification status.
 - roster export as CSV/XLSX.
@@ -58,7 +60,45 @@ User role management workflow:
 - `organizer` and `user` cannot change any user's roles.
 - Every role change should write an audit log with operator openid, target openid, previous roles, next roles, and timestamp.
 
-### 2. Attendance Management
+### 2. Participant Identity And Operation Audit
+
+Version 2 should help organizers identify repeat participants reliably.
+
+Recommended shared user fields:
+
+```js
+managerAlias,
+managerAliasUpdatedAt,
+managerAliasUpdatedBy
+```
+
+Rules:
+
+- `managerAlias` is a management-facing identity note, not a legal real-name field.
+- The alias is stored on the real WeChat user record and follows that user across activities.
+- Organizers, admins, and super admins share the same alias value.
+- Ordinary users cannot see or edit management aliases.
+- Proxy signups do not have a stable real WeChat identity yet, so cross-activity aliasing for proxy participants is deferred until a later participant-profile model exists.
+
+Participant operations should keep current state separate from historical trace data:
+
+- `registrations` remains the current state used by activity detail, capacity, team counts, and attendance state.
+- Participant action logs record the history used for audit and dispute resolution.
+
+Actions that should leave a trace:
+
+- participant self signup.
+- participant self cancellation.
+- participant re-signup after cancellation.
+- organizer/admin proxy signup.
+- organizer/admin participant removal.
+- organizer/admin team movement.
+- organizer/admin attendance change.
+- manager alias change.
+
+Each operation log should capture operator, target participant, activity, registration, action type, timestamp, and enough before/after data to explain what changed.
+
+### 3. Attendance Management
 
 Attendance should be tracked on registration records.
 
@@ -101,7 +141,7 @@ present count = signup count - absent count
 attendance rate = present count / signup count
 ```
 
-### 3. Where Attendance Is Edited
+### 4. Where Attendance Is Edited
 
 Add attendance editing in both places, with different purposes:
 
@@ -115,7 +155,7 @@ Recommended guardrails:
 - Regular users cannot edit attendance.
 - The UI should make the default visible: everyone is counted as present unless marked absent.
 
-### 4. Activity List Pagination
+### 5. Activity List Pagination
 
 Home and My should support loading additional activity batches.
 
@@ -124,7 +164,7 @@ Home and My should support loading additional activity batches.
 - Add `onReachBottom` loading in Home and My.
 - Preserve current filters while loading more.
 
-### 5. Overdue Activity Handling
+### 6. Overdue Activity Handling
 
 After `endAt` passes, if an activity is still `published` and `confirmStatus: 'pending'`, organizers should see a clear action prompt:
 
@@ -133,17 +173,18 @@ After `endAt` passes, if an activity is still `published` and `confirmStatus: 'p
 
 No automatic confirmation should run in Version 2.
 
-### 6. Roster Export Improvements
+### 7. Roster Export Improvements
 
 Improve participant exports for organizers:
 
 - group by team.
+- include manager aliases when visible to the exporter.
 - include preferred positions.
 - identify proxy signups.
 - support copy format in the mini program.
 - support CSV/XLSX export in the web admin.
 
-### 7. Notification Operations
+### 8. Notification Operations
 
 Keep the existing notification model and add operational visibility:
 
@@ -151,7 +192,7 @@ Keep the existing notification model and add operational visibility:
 - show send status and failure reason when available.
 - keep automatic pre-activity reminders deferred until manual notification behavior is stable.
 
-### 8. Invite-Code Signup
+### 9. Invite-Code Signup
 
 Add invite-code signup only after the operational core is stable:
 
@@ -160,7 +201,7 @@ Add invite-code signup only after the operational core is stable:
 - backend validates the code.
 - Home visibility rules can remain simple in Version 2: show the activity, but require code before signup.
 
-### 9. Cover Crop UX
+### 10. Cover Crop UX
 
 Replace slider-only cover crop controls with drag/zoom gestures when time allows. This is useful polish, but it is lower priority than web admin and attendance operations.
 
@@ -178,15 +219,16 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 
 1. Add attendance fields, update APIs/cloud functions, and add tests for the default-present attendance rules.
 2. Add mini program attendance editing for confirmed activities.
-3. Build the web admin foundation: login, role guard, user search, regular-user permission add/remove, and activity list.
-4. Add web admin activity detail and attendance management.
-5. Add web admin attendance statistics with date range filters and export.
-6. Add Home/My pagination.
-7. Add overdue activity prompt.
-8. Improve roster export formats.
-9. Add notification-log review.
-10. Add invite-code signup.
-11. Improve cover-crop gestures.
+3. Add shared participant manager aliases and participant operation audit logs.
+4. Build the web admin foundation: login, role guard, user search, regular-user permission add/remove, and activity list.
+5. Add web admin activity detail and attendance management.
+6. Add web admin attendance statistics with date range filters and export.
+7. Add Home/My pagination.
+8. Add overdue activity prompt.
+9. Improve roster export formats.
+10. Add notification-log review.
+11. Add invite-code signup.
+12. Improve cover-crop gestures.
 
 ## Version 2 Success Criteria
 
@@ -194,6 +236,8 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 - Admins can grant or revoke organizer access without manually editing CloudBase documents.
 - Admins cannot grant or revoke `admin` or `super_admin` access.
 - Removing elevated permissions leaves the user as a regular participant instead of deleting the account.
+- Organizers/admins can set a shared management alias for a real WeChat signup user and see it across later activities.
+- Participant signup, cancellation, re-signup, removal, team movement, attendance change, and alias changes leave operation history.
 - Organizers/admins can mark attendance from the mini program after a confirmed activity.
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.

@@ -16,6 +16,7 @@ This plan covers V2.0 only:
 
 - role model with `super_admin`.
 - regular-user permission add/remove workflow.
+- shared participant manager aliases and participant operation audit history.
 - attendance fields and backend mutation.
 - mini-program quick attendance editing after confirmed activities.
 - web-admin foundation, user role management, activity review, attendance management, statistics, and exports.
@@ -32,6 +33,8 @@ This plan excludes invite-code signup, automatic reminders, payments, refunds, M
 - `cloudfunctions/ensureUserProfile/index.js`: keep new users on base `user` role.
 - `cloudfunctions/listUsers/index.js`: new web-admin user search API.
 - `cloudfunctions/updateUserRoles/index.js`: new role mutation API.
+- `cloudfunctions/updateParticipantManagerAlias/index.js`: new manager-alias mutation API for real WeChat signup users.
+- `cloudfunctions/listActivityLogs/index.js`: new activity operation history API for web-admin review.
 - `cloudfunctions/setRegistrationAttendance/index.js`: new attendance mutation API.
 - `cloudfunctions/getAttendanceStats/index.js`: new attendance statistics API.
 - `cloudfunctions/exportActivityRoster/index.js`: new export-data API returning CSV/XLSX-ready rows.
@@ -553,7 +556,7 @@ Cover:
 test('organizer can export roster rows grouped by team', async () => {});
 test('admin can export another organizer activity roster', async () => {});
 test('regular user cannot export roster rows', async () => {});
-test('export rows include preferred positions, proxy flag, and attendance status', async () => {});
+test('export rows include manager alias, preferred positions, proxy flag, and attendance status', async () => {});
 ```
 
 - [ ] **Step 2: Implement export row generation**
@@ -565,6 +568,7 @@ Return JSON rows first. Let the web admin convert rows to CSV/XLSX client-side i
   activityTitle: 'Match',
   teamName: 'Green',
   participantName: 'Player A',
+  managerAlias: 'Zhang San',
   preferredPositions: ['Forward', 'Midfield'],
   proxyRegistration: false,
   attendanceStatus: 'present'
@@ -873,6 +877,8 @@ listActivities
 getActivityDetail
 listUsers
 updateUserRoles
+updateParticipantManagerAlias
+listActivityLogs
 setRegistrationAttendance
 getAttendanceStats
 exportActivityRoster
