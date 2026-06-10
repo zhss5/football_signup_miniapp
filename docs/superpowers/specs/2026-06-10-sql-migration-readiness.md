@@ -382,10 +382,11 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 4. Never repurpose an existing field with a different meaning.
 5. Use stable enum strings and document each new value before writing it.
 6. Keep manager-only fields server-filtered. Do not rely on the client to hide `managerAlias`, attendance controls, or audit details.
-7. Add audit rows for state-changing operations instead of overwriting the only copy of historical information.
-8. Avoid broad nested objects in new fields unless the data is low-query and belongs in JSON later.
-9. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
-10. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+7. Route `managerAlias` edits from both the mini program and web admin through the same backend permission checks; do not let either client write the field directly.
+8. Add audit rows for state-changing operations instead of overwriting the only copy of historical information.
+9. Avoid broad nested objects in new fields unless the data is low-query and belongs in JSON later.
+10. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
+11. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 

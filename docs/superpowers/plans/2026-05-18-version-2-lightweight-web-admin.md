@@ -79,6 +79,7 @@ Rules:
 - `managerAlias` is a management-facing identity note, not a legal real-name field.
 - The alias is stored on the real WeChat user record and follows that user across activities.
 - Organizers, admins, and super admins share the same alias value.
+- The alias can be edited from both the mini-program manager roster surface and the web admin. Both surfaces must call the same controlled backend API instead of writing directly to CloudBase.
 - Ordinary users cannot see or edit management aliases.
 - Proxy signups do not have a stable real WeChat identity yet, so cross-activity aliasing for proxy participants is deferred until a later participant-profile model exists.
 

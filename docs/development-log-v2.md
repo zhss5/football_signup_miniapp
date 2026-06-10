@@ -4,6 +4,17 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Participant Manager Alias Editing Surface Clarified
+
+Updated the Version 2 participant identification requirements.
+
+Requirement decision:
+
+- management-facing participant aliases can be edited from both the mini-program manager roster surface and the web admin.
+- both clients must call the same backend API and permission checks; neither client should write `users.managerAlias` directly.
+- ordinary users still cannot see or edit management aliases.
+- proxy signup cross-activity aliasing remains deferred until a later participant-profile model exists.
+
 ## 2026-06-10 - Roster Export Backend
 
 Implemented the Version 2 roster export data API.

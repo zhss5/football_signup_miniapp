@@ -16,7 +16,7 @@ This plan covers V2.0 only:
 
 - role model with `super_admin`.
 - regular-user permission add/remove workflow.
-- shared participant manager aliases and participant operation audit history.
+- shared participant manager aliases editable from both the mini-program manager roster surface and the web admin, plus participant operation audit history.
 - activity duplication for creating new activities from previous reusable settings.
 - attendance fields and backend mutation.
 - mini-program quick attendance editing after confirmed activities.
@@ -43,11 +43,11 @@ This plan excludes invite-code signup, automatic reminders, payments, refunds, r
 - `cloudfunctions/listNotificationLogs/index.js`: new notification-log review API.
 - `cloudfunctions/listActivities/index.js`: add role-aware admin filters for web-admin use without breaking mini-program scopes.
 - `cloudfunctions/getActivityDetail/index.js`: expose attendance state and manager permissions.
-- `miniprogram/pages/activity-detail/*`: add quick attendance editing for confirmed activities.
+- `miniprogram/pages/activity-detail/*`: add quick attendance editing for confirmed activities and manager-alias editing for roster managers.
 - `miniprogram/pages/activity-create/*`: support copy-from-existing draft initialization.
 - `miniprogram/pages/home/*`: add paginated loading and keep first page responsive.
 - `miniprogram/pages/my/*`: add paginated loading for Created and Joined tabs.
-- `web-admin/`: new web-admin frontend subproject.
+- `web-admin/`: new web-admin frontend subproject, including manager-alias editing in activity or participant views.
 - `tests/cloudfunctions/*.test.js`: backend red/green coverage.
 - `tests/miniprogram/pages/*.test.js`: mini-program page behavior coverage.
 - `tests/web-admin/*.test.js`: web-admin UI/service behavior coverage when the web-admin test harness exists.

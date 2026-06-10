@@ -83,6 +83,7 @@ Completed:
 
 - Add shared participant manager aliases for real WeChat signup users.
 - Store the shared alias on the user record so it follows the same participant across activities even if they change nickname or avatar.
+- Allow activity managers to edit the shared alias from both the mini-program roster surface and the web admin, using the same backend permission checks.
 - Keep manager aliases visible only to activity managers, admins, and super admins.
 - Keep proxy signup cross-activity identification deferred until a later participant-profile model exists.
 - Record participant operation history separately from current registration state.
