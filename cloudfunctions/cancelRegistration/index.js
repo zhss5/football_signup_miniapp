@@ -1,5 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
+const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
 
@@ -8,6 +9,10 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+async function writeActivityLog(transaction, data) {
+  await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -60,6 +65,25 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         joinedCount: Math.max(teamRes.data.joinedCount - 1, 0)
       }
+    });
+
+    const cancelCount = normalizeCount(registrationRes.data.cancelCount) + 1;
+    await writeActivityLog(transaction, {
+      activityId: event.activityId,
+      action: 'signup_cancelled',
+      operatorOpenId: openid,
+      targetOpenId: registrationRes.data.userOpenId || openid,
+      registrationId,
+      teamId: registrationRes.data.teamId || '',
+      before: {
+        status: 'joined',
+        teamId: registrationRes.data.teamId || ''
+      },
+      after: {
+        status: 'cancelled',
+        cancelCount
+      },
+      createdAt: stamp
     });
 
     return {

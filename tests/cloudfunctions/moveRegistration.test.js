@@ -9,6 +9,7 @@ function createDb({ activity, actorUser, registration, sourceTeam, targetTeam })
   };
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(documentId => {
         if (collectionName === 'activities') {
           return {

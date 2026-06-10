@@ -21,6 +21,10 @@ function validatePayload(event = {}) {
   }
 }
 
+async function writeActivityLog(transaction, data) {
+  await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validatePayload(event);
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
@@ -124,6 +128,23 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         updatedAt: stamp
       }
+    });
+
+    await writeActivityLog(transaction, {
+      activityId: event.activityId,
+      action: 'registration_moved',
+      operatorOpenId: openid,
+      targetOpenId: event.userOpenId,
+      registrationId,
+      fromTeamId: registration.teamId,
+      toTeamId: event.targetTeamId,
+      before: {
+        teamId: registration.teamId
+      },
+      after: {
+        teamId: event.targetTeamId
+      },
+      createdAt: stamp
     });
 
     return {

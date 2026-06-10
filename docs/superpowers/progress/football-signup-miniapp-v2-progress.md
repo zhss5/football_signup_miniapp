@@ -53,6 +53,9 @@ Completed:
 - `updateParticipantManagerAlias` cloud function lets authorized activity managers update shared manager aliases for real WeChat signup users.
 - manager alias updates write `users.managerAlias`, `managerAliasUpdatedAt`, `managerAliasUpdatedBy`, and `activity_logs` audit rows with before/after values.
 - manager alias edits reject ordinary users, out-of-scope organizers, proxy signups, and values longer than the future SQL `VARCHAR(128)` target.
+- participant operation audit writes now cover self signup, re-signup, self cancellation, proxy signup, manager removal, team movement, attendance updates, and manager alias changes.
+- `listActivityLogs` cloud function provides manager-only operation history review with admin/global and organizer/own-activity boundaries.
+- SQL migration readiness mapping now documents `activity_logs.targetOpenId`, `operatorOpenId`, before/after data, and operation-specific payload fields.
 
 ## 4. Planned Version 2 Scope
 
@@ -142,6 +145,5 @@ Continue implementation from the participant identity and operations slice in `d
 
 Recommended first coding task:
 
-- add or extend `activity_logs` reads for participant operation history review.
-- add missing participant operation audit writes for signup, cancellation, re-signup, proxy signup, manager removal, and team movement.
+- add the mini-program manager alias editing surface in Activity Detail.
 - keep using red/green tests before production changes.

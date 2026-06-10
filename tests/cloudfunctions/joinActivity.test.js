@@ -66,6 +66,7 @@ test('joinActivity rejects rejoin after three prior cancellations or removals wi
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -162,6 +163,7 @@ test('joinActivity lets the activity organizer rejoin without the repeat-exit li
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -263,6 +265,7 @@ test('joinActivity lets an admin rejoin without the repeat-exit limit', async ()
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -364,6 +367,7 @@ test('joinActivity uses the document id and does not write phone data into regis
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(documentId => {
         if (collectionName === 'activities') {
           return {
@@ -497,6 +501,7 @@ test('joinActivity notifies managers when a regular participant reaches the noti
   };
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -606,6 +611,7 @@ test('joinActivity does not notify managers before the registration notice thres
   };
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -714,6 +720,7 @@ test('joinActivity preserves optional phone fields when a future signup flow pro
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(documentId => {
         if (collectionName === 'activities') {
           return {
@@ -815,6 +822,7 @@ test('joinActivity normalizes signup names with line breaks and length limits', 
   const updateUser = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {

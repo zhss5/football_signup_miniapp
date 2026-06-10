@@ -52,6 +52,7 @@ test('cancelRegistration increments the participant cancellation count', async (
   const updateTeam = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'registrations') {
           return {
@@ -133,6 +134,7 @@ test('cancelRegistration does not notify managers when a regular participant can
   };
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'registrations') {
           return {
@@ -226,6 +228,7 @@ test('cancelRegistration does not notify managers when an admin cancels their ow
   };
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'registrations') {
           return {

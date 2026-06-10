@@ -368,7 +368,9 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `registrations.attendanceStatus` | `registrations.attendance_status` | Empty means present in confirmed activities. |
 | `registrations.attendanceMarkedAt` | `registrations.attendance_marked_at` | Nullable. |
 | `registrations.attendanceMarkedBy` | `registrations.attendance_marked_by` | Empty string allowed. |
-| `activity_logs.payload` | `activity_logs.payload` | JSON object for before/after details. |
+| `activity_logs.targetOpenId` / `activity_logs.userOpenId` | `activity_logs.user_openid` | Prefer `targetOpenId`; fall back to legacy `userOpenId`. |
+| `activity_logs.operatorOpenId` | `activity_logs.operator_openid` | Actor who performed the operation. |
+| `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `fromTeamId`, `toTeamId`, and attendance status. |
 | `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
 | `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`. |
 

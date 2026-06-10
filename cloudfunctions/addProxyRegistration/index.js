@@ -60,6 +60,10 @@ function buildProxyUserOpenId(activityId, stamp, deps = {}) {
   return `proxy_${activityId}_${stableTimePart}_${suffix}`;
 }
 
+async function writeActivityLog(transaction, data) {
+  await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   validateSignupPayload(event);
   const preferredPositions = validatePreferredPositions(event.preferredPositions);
@@ -154,6 +158,26 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         joinedCount: Number(team.joinedCount || 0) + 1
       }
+    });
+
+    await writeActivityLog(transaction, {
+      activityId: event.activityId,
+      action: 'proxy_signup_created',
+      operatorOpenId: openid,
+      targetOpenId: proxyUserOpenId,
+      registrationId,
+      teamId: event.teamId,
+      before: {
+        status: ''
+      },
+      after: {
+        status: 'joined',
+        teamId: event.teamId,
+        signupName,
+        preferredPositions,
+        proxyRegistration: true
+      },
+      createdAt: stamp
     });
 
     return {

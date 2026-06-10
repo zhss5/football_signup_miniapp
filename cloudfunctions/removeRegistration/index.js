@@ -12,6 +12,10 @@ function normalizeCount(value) {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
+async function writeActivityLog(transaction, data) {
+  await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
+}
+
 function validatePayload(event = {}) {
   if (!event.activityId) {
     throw new Error('activityId is required');
@@ -95,6 +99,25 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         joinedCount: Math.max(Number(team.joinedCount || 0) - 1, 0)
       }
+    });
+
+    const removedCount = normalizeCount(registration.removedCount) + 1;
+    await writeActivityLog(transaction, {
+      activityId: event.activityId,
+      action: 'registration_removed',
+      operatorOpenId: openid,
+      targetOpenId: event.userOpenId,
+      registrationId,
+      teamId: registration.teamId || '',
+      before: {
+        status: 'joined',
+        teamId: registration.teamId || ''
+      },
+      after: {
+        status: 'cancelled',
+        removedCount
+      },
+      createdAt: stamp
     });
 
     return {

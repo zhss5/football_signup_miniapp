@@ -4,6 +4,39 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Participant Operation Logs
+
+Implemented the Version 2 participant operation history backend.
+
+Cloud function added:
+
+- `listActivityLogs`
+
+Delivered behavior:
+
+- participant operation audit writes now cover `signup_joined`, `signup_rejoined`, `signup_cancelled`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, and `manager_alias_update`.
+- operation logs keep current registration state separate from historical trace data.
+- `listActivityLogs` lets admins and super admins review logs across activities.
+- organizers can review only logs for activities they manage.
+- ordinary users are rejected.
+- log rows expose API-shaped fields and keep before/after data under structured objects for later SQL JSON payload migration.
+
+SQL readiness:
+
+- updated the SQL migration readiness mapping for `activity_logs.targetOpenId`, `operatorOpenId`, before/after data, and operation-specific payload fields.
+
+Deployment note:
+
+- deploy changed functions: `joinActivity`, `cancelRegistration`, `addProxyRegistration`, `removeRegistration`, `moveRegistration`.
+- deploy new function: `listActivityLogs`.
+- run `copy-cloud-shared` before CloudBase deployment.
+
+Verification:
+
+- red operation-log tests first failed because existing operations did not write `activity_logs`.
+- red `listActivityLogs` test first failed because `cloudfunctions/listActivityLogs/index` did not exist.
+- target and affected regression tests passed: `activityOperationLogs`, `joinActivity`, `cancelRegistration`, `addProxyRegistration`, `removeRegistration`, `moveRegistration`, `listActivityLogs`, and `package-json`, with `112` tests.
+
 ## 2026-06-10 - Participant Manager Alias Backend
 
 Implemented the Version 2 manager-facing participant alias mutation API.

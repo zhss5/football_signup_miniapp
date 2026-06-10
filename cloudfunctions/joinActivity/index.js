@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { COLLECTIONS } = require('./collections');
 const { resolveOpenId } = require('./auth');
 const { normalizeSignupName, validateSignupPayload } = require('./validators');
 const { businessError } = require('./errors');
@@ -85,6 +86,10 @@ function validatePreferredPositions(value) {
   }
 
   return normalized;
+}
+
+async function writeSignupActivityLog(transaction, data) {
+  await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
 }
 
 async function syncUserProfile(transaction, openid, profile, stamp) {
@@ -246,6 +251,31 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       data: {
         joinedCount: teamRes.data.joinedCount + 1
       }
+    });
+
+    const previousRegistration = registrationRes.data || null;
+    const logAction = previousRegistration ? 'signup_rejoined' : 'signup_joined';
+    await writeSignupActivityLog(transaction, {
+      activityId: event.activityId,
+      action: logAction,
+      operatorOpenId: openid,
+      targetOpenId: openid,
+      registrationId,
+      teamId: event.teamId,
+      before: {
+        status: previousRegistration ? previousRegistration.status || '' : '',
+        teamId: previousRegistration ? previousRegistration.teamId || '' : '',
+        cancelCount: normalizeCount(previousRegistration && previousRegistration.cancelCount),
+        removedCount: normalizeCount(previousRegistration && previousRegistration.removedCount)
+      },
+      after: {
+        status: 'joined',
+        teamId: event.teamId,
+        signupName,
+        preferredPositions,
+        source: event.source || 'direct'
+      },
+      createdAt: stamp
     });
 
     const joinedCountAfter = normalizeCount(activityRes.data.joinedCount) + 1;

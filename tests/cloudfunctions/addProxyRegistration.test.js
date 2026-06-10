@@ -8,6 +8,7 @@ test('addProxyRegistration lets an organizer add a proxy participant', async () 
 
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(documentId => {
         if (collectionName === 'activities') {
           return {
@@ -160,6 +161,7 @@ test('addProxyRegistration rejects regular users', async () => {
 
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
@@ -229,6 +231,7 @@ test('addProxyRegistration normalizes proxy participant names', async () => {
   const updateTeam = jest.fn().mockResolvedValue({});
   const transaction = {
     collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
       doc: jest.fn(() => {
         if (collectionName === 'activities') {
           return {
