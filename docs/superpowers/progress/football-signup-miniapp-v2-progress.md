@@ -18,7 +18,7 @@ Version 2 development branch has been created.
 
 Version 2 execution planning has been completed.
 
-Milestone 2 implementation is in progress.
+Milestone 5 implementation is complete. Milestone 6 is next.
 
 Implementation plan:
 
@@ -67,6 +67,16 @@ Completed:
 - web-admin identity loading calls `ensureUserProfile`; ordinary users are denied before the workspace renders.
 - web-admin user search calls `listUsers` with API-shaped keyword, role, limit, and skip parameters.
 - web-admin role updates call `updateUserRoles`; super admins can manage `admin` and `organizer`, while admins can manage only `organizer`.
+- web-admin activity list calls `listActivities` with `scope: web-admin` and API-shaped date, status, organizer, keyword, limit, and skip filters.
+- web-admin access now allows organizers into activity operations while keeping user-role management limited to admins and super admins.
+- `listActivities` enforces organizer own-activity visibility and admin/super-admin global visibility for web-admin activity review.
+- web-admin activity detail shows teams, real/proxy registrations, position preferences, manager aliases, and attendance status using `getActivityDetail`.
+- web-admin manager alias edits call `updateParticipantManagerAlias`; attendance edits call `setRegistrationAttendance`.
+- web-admin attendance statistics call `getAttendanceStats` with date-range parameters.
+- web-admin roster export calls `exportActivityRoster` and generates CSV text in the browser; the backend still returns rows only.
+- `listNotificationLogs` cloud function provides notification-log review with admin/global and organizer/own-activity boundaries.
+- web-admin activity-log review calls `listActivityLogs`; notification-log review calls `listNotificationLogs`.
+- SQL migration readiness mapping now documents web-admin activity/log API boundaries and notification-log field mapping.
 
 ## 4. Planned Version 2 Scope
 
@@ -152,9 +162,10 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue implementation from the web-admin activity operations slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue implementation from the list pagination and overdue prompts slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add web-admin activity list/detail operations, including filters, roster detail, manager alias editing, and attendance management.
+- add Home/My paginated loading.
+- add overdue unresolved activity prompts for managers after `endAt` when activities remain published or pending.
 - keep using red/green tests before production changes.

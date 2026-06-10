@@ -65,6 +65,54 @@
           targetOpenId,
           roles: Array.isArray(roles) ? roles : []
         });
+      },
+
+      listActivities(params = {}) {
+        return invoke('listActivities', {
+          ...params
+        });
+      },
+
+      getActivityDetail(activityId) {
+        return invoke('getActivityDetail', { activityId });
+      },
+
+      setRegistrationAttendance(activityId, registrationId, attendanceStatus) {
+        return invoke('setRegistrationAttendance', {
+          activityId,
+          registrationId,
+          attendanceStatus
+        });
+      },
+
+      updateParticipantManagerAlias(activityId, targetOpenId, managerAlias) {
+        return invoke('updateParticipantManagerAlias', {
+          activityId,
+          targetOpenId,
+          managerAlias
+        });
+      },
+
+      getAttendanceStats(params = {}) {
+        return invoke('getAttendanceStats', {
+          ...params
+        });
+      },
+
+      exportActivityRoster(activityId) {
+        return invoke('exportActivityRoster', { activityId });
+      },
+
+      listActivityLogs(params = {}) {
+        return invoke('listActivityLogs', {
+          ...params
+        });
+      },
+
+      listNotificationLogs(params = {}) {
+        return invoke('listNotificationLogs', {
+          ...params
+        });
       }
     };
   }

@@ -312,6 +312,8 @@ CREATE TABLE notification_logs (
 
 Allowed `status` values: `sent`, `failed`, `skipped`.
 
+`listNotificationLogs` exposes notification history through an API-shaped read contract for the web admin. It accepts optional `activityId`, `notificationType`, `status`, `limit`, and `skip` filters. Organizers can read only logs for activities they manage, while admins and super admins can read all logs. The response returns stable scalar fields such as `_id`, `activityId`, `notificationType`, `targetOpenId`, `status`, `templateId`, `errorMessage`, and `createdAt`; it does not expose raw CloudBase document layouts.
+
 ## CloudBase-To-SQL Mapping
 
 ### Collection Mapping
@@ -375,6 +377,12 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `fromTeamId`, `toTeamId`, and attendance status. |
 | `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
 | `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`. |
+| `notification_logs.targetOpenId` / `notification_logs.userOpenId` / `notification_logs.recipientOpenId` | `notification_logs.recipient_openid` | Prefer `targetOpenId`, then `recipientOpenId`, then legacy `userOpenId`. |
+| `notification_logs.operatorOpenId` / `notification_logs.actorOpenId` | `notification_logs.actor_openid` | Actor who triggered the notification where available. |
+| `notification_logs.templateKey` | `notification_logs.template_key` | Stable template category. |
+| `notification_logs.templateId` | `notification_logs.template_id` | WeChat template ID. |
+| `notification_logs.status` | `notification_logs.status` | `sent`, `failed`, or `skipped`. |
+| `notification_logs.errorMessage` / `notification_logs.error` | `notification_logs.error_message` | Preserve failure details for operations review. |
 
 All timestamp fields should be stored in UTC. The current CloudBase values are ISO strings and should be parsed during export or migration rehearsal.
 
@@ -392,8 +400,9 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 10. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
 11. Keep activity duplication as a white-listed API draft operation: copy reusable setup fields only, do not copy registrations, attendance state, activity logs, notification logs, subscription rows, confirmation metadata, cancellation state, or source document IDs.
 12. Keep copy drafts API-shaped so a future self-hosted backend can implement the same contract over SQL without mini-program page-specific payloads.
-13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, and `updateUserRoles`; do not couple the web-admin views to CloudBase collection layouts.
-14. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, and `listNotificationLogs`; do not couple the web-admin views to CloudBase collection layouts.
+14. Keep backend export functions row-based. CSV/XLSX file generation belongs in the web-admin or another client layer so a future self-hosted API can return the same rows from SQL.
+15. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 
@@ -426,8 +435,11 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - No user loses the base `user` role.
 - At least one `super_admin` exists before enabling the self-hosted admin path.
 - Attendance stats in MySQL match CloudBase `getAttendanceStats` for the same date range.
+- Web-admin activity filters in SQL match CloudBase `listActivities` with `scope: web-admin` for the same role, date range, status, organizer, keyword, limit, and skip.
+- Roster export rows in SQL-backed APIs match CloudBase `exportActivityRoster` rows for the same activity and viewer role.
 - Empty `registrations.attendance_status` is counted as present only for confirmed activities.
 - Cancelled, deleted, and pending-confirmation activities are excluded from attendance statistics.
+- Activity-log and notification-log API responses match CloudBase `listActivityLogs` and `listNotificationLogs` permission boundaries and pagination for organizer, admin, super-admin, and ordinary-user callers.
 - Notification-log status counts match CloudBase for `sent`, `failed`, and `skipped`.
 
 ### Spot Checks

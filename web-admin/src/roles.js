@@ -33,7 +33,7 @@
   }
 
   function canAccessWebAdmin(user) {
-    return isAdmin(user);
+    return hasRole(user, 'organizer') || isAdmin(user);
   }
 
   function getEditableRoles(operator) {

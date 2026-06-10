@@ -1,5 +1,8 @@
 const cloud = require('wx-server-sdk');
 const { resolveOpenId } = require('./auth');
+const { COLLECTIONS } = require('./collections');
+const { businessError } = require('./errors');
+const { hasRole, isAdmin } = require('./roles');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -41,12 +44,92 @@ function pageActivities(items, event) {
   return sortActivitiesByStartDesc(items).slice(skip, skip + limit);
 }
 
+async function loadUser(db, openid) {
+  const res = await db.collection(COLLECTIONS.USERS).doc(openid).get();
+  return res && res.data ? res.data : null;
+}
+
+function parseTimestamp(value) {
+  const timestamp = Date.parse(value || '');
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function matchesKeyword(activity, keyword) {
+  if (!keyword) {
+    return true;
+  }
+
+  return [
+    activity._id,
+    activity.title,
+    activity.addressText,
+    activity.addressName,
+    activity.organizerOpenId
+  ]
+    .filter(Boolean)
+    .some(value => String(value).toLowerCase().includes(keyword));
+}
+
+function matchesDateRange(activity, startAtFrom, startAtTo) {
+  const startAt = parseTimestamp(activity.startAt);
+  const rangeStart = parseTimestamp(startAtFrom);
+  const rangeEnd = parseTimestamp(startAtTo);
+
+  if (startAt === null) {
+    return false;
+  }
+
+  if (rangeStart !== null && startAt < rangeStart) {
+    return false;
+  }
+
+  if (rangeEnd !== null && startAt > rangeEnd) {
+    return false;
+  }
+
+  return true;
+}
+
+async function listWebAdminActivities(db, payload, openid, limit, skip) {
+  const caller = await loadUser(db, openid);
+  const callerIsAdmin = isAdmin(caller);
+
+  if (!callerIsAdmin && !hasRole(caller, 'organizer')) {
+    throw businessError('Only organizers or admins can list web admin activities');
+  }
+
+  const res = await db.collection(COLLECTIONS.ACTIVITIES).get();
+  const keyword = String(payload.keyword || '').trim().toLowerCase();
+  const status = String(payload.status || '').trim();
+  const organizerOpenId = String(payload.organizerOpenId || '').trim();
+  const filtered = (Array.isArray(res.data) ? res.data : [])
+    .filter(activity => (status ? activity.status === status : activity.status !== 'deleted'))
+    .filter(activity => (callerIsAdmin ? true : activity.organizerOpenId === openid))
+    .filter(activity =>
+      organizerOpenId && callerIsAdmin ? activity.organizerOpenId === organizerOpenId : true
+    )
+    .filter(activity =>
+      matchesDateRange(activity, payload.startAtFrom || payload.startAt, payload.startAtTo || payload.endAt)
+    )
+    .filter(activity => matchesKeyword(activity, keyword));
+  const sorted = sortActivitiesByStartDesc(filtered);
+
+  return {
+    items: sorted.slice(skip, skip + limit),
+    hasMore: sorted.length > skip + limit
+  };
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const payload = event || {};
   const db = deps.db || cloud.database();
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
+
+  if (payload.scope === 'web-admin') {
+    return listWebAdminActivities(db, payload, openid, limit, skip);
+  }
 
   if (payload.scope === 'home') {
     const res = await db.collection('activities').where({

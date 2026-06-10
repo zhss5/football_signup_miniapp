@@ -681,17 +681,20 @@ git commit -m "Add web admin role management view"
 **Files:**
 
 - Modify: `cloudfunctions/listActivities/index.js`
-- Modify: `web-admin/src/main.js`
+- Modify: `web-admin/src/app.js`
 - Modify: `web-admin/src/api.js`
-- Modify: `web-admin/src/styles.css`
+- Modify: `web-admin/src/activity-management.js`
+- Modify: `web-admin/styles.css`
 - Test: `tests/cloudfunctions/listActivities.test.js`
-- Test: `tests/web-admin/activity-review.test.js`
+- Test: `tests/web-admin/activity-management.test.js`
+- Test: `tests/web-admin/api.test.js`
+- Test: `tests/web-admin/static.test.js`
 
-- [ ] **Step 1: Extend `listActivities` tests for web-admin filters**
+- [x] **Step 1: Extend `listActivities` tests for web-admin filters**
 
 Cover admin global list, organizer own-list restriction, date range, status, organizer, and keyword filters.
 
-- [ ] **Step 2: Add web-admin activity list/detail views**
+- [x] **Step 2: Add web-admin activity list/detail views**
 
 Rules:
 
@@ -701,11 +704,11 @@ Rules:
 - Allow attendance edits only for confirmed activities.
 - Use `setRegistrationAttendance`.
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/cloudfunctions/listActivities.test.js tests/web-admin/activity-review.test.js
-git add -- cloudfunctions/listActivities/index.js web-admin tests/cloudfunctions/listActivities.test.js tests/web-admin/activity-review.test.js
+node node_modules\jest\bin\jest.js --runInBand tests/cloudfunctions/listActivities.test.js tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/roles.test.js tests/web-admin/api.test.js tests/web-admin/activity-management.test.js tests/web-admin/static.test.js
+git add -- cloudfunctions/listActivities/index.js web-admin tests/cloudfunctions/listActivities.test.js tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/api.test.js tests/web-admin/activity-management.test.js tests/web-admin/static.test.js
 git commit -m "Add web admin activity attendance review"
 ```
 
@@ -757,16 +760,19 @@ git commit -m "Add activity duplication flow"
 
 - Create: `cloudfunctions/listNotificationLogs/index.js`
 - Create: `cloudfunctions/listNotificationLogs/package.json`
-- Modify: `web-admin/src/main.js`
+- Modify: `web-admin/src/app.js`
 - Modify: `web-admin/src/api.js`
+- Modify: `web-admin/src/activity-management.js`
 - Test: `tests/cloudfunctions/listNotificationLogs.test.js`
-- Test: `tests/web-admin/attendance-statistics.test.js`
+- Test: `tests/web-admin/activity-management.test.js`
+- Test: `tests/web-admin/api.test.js`
+- Test: `tests/web-admin/static.test.js`
 
-- [ ] **Step 1: Add notification-log API tests**
+- [x] **Step 1: Add notification-log API tests**
 
 Cover admin global visibility, organizer own-activity visibility, date filters, and failure reason display fields.
 
-- [ ] **Step 2: Implement statistics and export views**
+- [x] **Step 2: Implement statistics and export views**
 
 Rules:
 
@@ -775,11 +781,11 @@ Rules:
 - Export roster rows from `exportActivityRoster` to CSV in browser.
 - Notification log view shows activity, recipient, notification type, status, and failure reason.
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/attendance-statistics.test.js
-git add -- cloudfunctions/listNotificationLogs web-admin tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/attendance-statistics.test.js
+node node_modules\jest\bin\jest.js --runInBand tests/cloudfunctions/listActivities.test.js tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/roles.test.js tests/web-admin/api.test.js tests/web-admin/activity-management.test.js tests/web-admin/static.test.js
+git add -- cloudfunctions/listNotificationLogs web-admin tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/activity-management.test.js tests/web-admin/api.test.js tests/web-admin/static.test.js
 git commit -m "Add web admin statistics export and logs"
 ```
 

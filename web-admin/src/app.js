@@ -3,7 +3,8 @@
     module.exports = factory(
       require('./api'),
       require('./roles'),
-      require('./user-management')
+      require('./user-management'),
+      require('./activity-management')
     );
     return;
   }
@@ -11,9 +12,10 @@
   root.WebAdminApp = factory(
     root.WebAdminApi,
     root.WebAdminRoles,
-    root.WebAdminUserManagement
+    root.WebAdminUserManagement,
+    root.WebAdminActivityManagement
   );
-})(typeof globalThis !== 'undefined' ? globalThis : this, function appFactory(apiModule, roles, users) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function appFactory(apiModule, roles, users, activityUi) {
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -45,7 +47,15 @@
       currentUser: null,
       rows: [],
       hasMore: false,
-      search: users.buildSearchParams({})
+      search: users.buildSearchParams({}),
+      activities: [],
+      activitySearch: activityUi.buildActivitySearchParams({}),
+      selectedActivityId: '',
+      rosterRows: [],
+      statsRows: [],
+      activityLogRows: [],
+      notificationLogRows: [],
+      exportCsv: ''
     };
 
     function query(selector) {
@@ -73,6 +83,9 @@
       if (label) {
         label.textContent = `${user._id || ''} (${access.roles.join(', ')})`;
       }
+
+      setHidden(query('[data-view="users"]'), !roles.isAdmin(user));
+      setHidden(query('[data-view="activities"]'), false);
 
       return true;
     }
@@ -131,6 +144,233 @@
       renderRows();
     }
 
+    function getActivityFormValues() {
+      const keyword = query('[name="activityKeyword"]');
+      const status = query('[name="activityStatus"]');
+      const organizerOpenId = query('[name="activityOrganizerOpenId"]');
+      const startAtFrom = query('[name="activityStartAtFrom"]');
+      const startAtTo = query('[name="activityStartAtTo"]');
+
+      return activityUi.buildActivitySearchParams({
+        keyword: keyword ? keyword.value : '',
+        status: status ? status.value : '',
+        organizerOpenId: organizerOpenId ? organizerOpenId.value : '',
+        startAtFrom: startAtFrom ? startAtFrom.value : '',
+        startAtTo: startAtTo ? startAtTo.value : '',
+        limit: 20,
+        skip: 0
+      });
+    }
+
+    function renderActivityRows() {
+      const table = query('[data-activities-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = state.activities
+        .map(row => (
+          `<tr data-activity-id="${escapeHtml(row.activityId)}">` +
+          `<td>${escapeHtml(row.title)}</td>` +
+          `<td>${escapeHtml(row.startAt)}</td>` +
+          `<td>${escapeHtml(row.statusText)}</td>` +
+          `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
+          `<td>${escapeHtml(row.joinedCount)}</td>` +
+          `<td><button type="button" data-action="load-activity-detail" ` +
+          `data-activity-id="${escapeHtml(row.activityId)}">Open</button></td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function renderRosterRows() {
+      const table = query('[data-roster-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = activityUi.buildAttendanceRows(state.rosterRows)
+        .map(row => (
+          `<tr data-registration-id="${escapeHtml(row.registrationId)}">` +
+          `<td>${escapeHtml(row.teamName)}</td>` +
+          `<td>${escapeHtml(row.signupName)}</td>` +
+          `<td>` +
+          `<input type="text" data-manager-alias="${escapeHtml(row.userOpenId)}" ` +
+          `value="${escapeHtml(row.managerAlias)}" ${row.proxyRegistration ? 'disabled ' : ''}/>` +
+          `</td>` +
+          `<td>${escapeHtml(row.preferredPositions)}</td>` +
+          `<td>${row.proxyRegistration ? 'Yes' : 'No'}</td>` +
+          `<td>${escapeHtml(row.attendanceStatus)}</td>` +
+          `<td>` +
+          `<button type="button" data-action="toggle-attendance" ` +
+          `data-registration-id="${escapeHtml(row.registrationId)}" ` +
+          `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
+          `${escapeHtml(row.nextAttendanceStatus)}` +
+          `</button>` +
+          `<button type="button" data-action="save-manager-alias" ` +
+          `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
+          `${row.proxyRegistration ? 'disabled ' : ''}>Save Alias</button>` +
+          `</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function renderStatsRows() {
+      const table = query('[data-attendance-stats-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = state.statsRows
+        .map(row => (
+          `<tr>` +
+          `<td>${escapeHtml(row.participantName)}</td>` +
+          `<td>${escapeHtml(row.signupCount)}</td>` +
+          `<td>${escapeHtml(row.presentCount)}</td>` +
+          `<td>${escapeHtml(row.absentCount)}</td>` +
+          `<td>${escapeHtml(row.attendanceRateText)}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function renderActivityLogRows() {
+      const table = query('[data-activity-logs-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = state.activityLogRows
+        .map(row => (
+          `<tr>` +
+          `<td>${escapeHtml(row.type)}</td>` +
+          `<td><code>${escapeHtml(row.operatorOpenId)}</code></td>` +
+          `<td><code>${escapeHtml(row.targetOpenId)}</code></td>` +
+          `<td>${escapeHtml(row.createdAt)}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function renderNotificationLogRows() {
+      const table = query('[data-notification-logs-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = state.notificationLogRows
+        .map(row => (
+          `<tr>` +
+          `<td>${escapeHtml(row.type)}</td>` +
+          `<td><code>${escapeHtml(row.targetOpenId)}</code></td>` +
+          `<td>${escapeHtml(row.status)}</td>` +
+          `<td>${escapeHtml(row.createdAt)}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function getSelectedActivityId() {
+      return state.selectedActivityId || '';
+    }
+
+    async function searchActivities() {
+      state.activitySearch = getActivityFormValues();
+      const result = await api.listActivities(state.activitySearch);
+      state.activities = activityUi.buildActivityRows(result.items || []);
+      renderActivityRows();
+    }
+
+    async function loadActivityDetail(activityId) {
+      const detail = await api.getActivityDetail(activityId);
+      state.selectedActivityId = activityId;
+      state.rosterRows = activityUi.buildRosterRows(detail);
+      state.exportCsv = '';
+
+      const detailPanel = query('[data-activity-detail]');
+      setHidden(detailPanel, false);
+
+      const title = query('[data-activity-title]');
+      if (title) {
+        title.textContent = detail.activity && detail.activity.title ? detail.activity.title : activityId;
+      }
+
+      const output = query('[data-export-output]');
+      if (output) {
+        output.value = '';
+      }
+
+      renderRosterRows();
+    }
+
+    async function toggleAttendance(registrationId, nextStatus) {
+      const activityId = getSelectedActivityId();
+      if (!activityId || !registrationId || !nextStatus) {
+        return;
+      }
+
+      await api.setRegistrationAttendance(activityId, registrationId, nextStatus);
+      await loadActivityDetail(activityId);
+    }
+
+    async function saveManagerAlias(targetOpenId) {
+      const activityId = getSelectedActivityId();
+      const input = query(`[data-manager-alias="${escapeSelectorValue(targetOpenId)}"]`);
+      if (!activityId || !targetOpenId || !input) {
+        return;
+      }
+
+      await api.updateParticipantManagerAlias(activityId, targetOpenId, input.value || '');
+      await loadActivityDetail(activityId);
+    }
+
+    async function loadAttendanceStats() {
+      const startAt = query('[name="statsStartAt"]');
+      const endAt = query('[name="statsEndAt"]');
+      const result = await api.getAttendanceStats({
+        startAt: startAt ? startAt.value : '',
+        endAt: endAt ? endAt.value : ''
+      });
+      state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
+      renderStatsRows();
+    }
+
+    async function exportRoster() {
+      const activityId = getSelectedActivityId();
+      if (!activityId) {
+        return;
+      }
+
+      const result = await api.exportActivityRoster(activityId);
+      state.exportCsv = activityUi.rowsToCsv(result.rows || []);
+
+      const output = query('[data-export-output]');
+      if (output) {
+        output.value = state.exportCsv;
+      }
+    }
+
+    async function loadActivityLogs() {
+      const result = await api.listActivityLogs({
+        activityId: getSelectedActivityId(),
+        limit: 50,
+        skip: 0
+      });
+      state.activityLogRows = activityUi.buildActivityLogRows(result.items || []);
+      renderActivityLogRows();
+    }
+
+    async function loadNotificationLogs() {
+      const result = await api.listNotificationLogs({
+        activityId: getSelectedActivityId(),
+        limit: 50,
+        skip: 0
+      });
+      state.notificationLogRows = activityUi.buildNotificationLogRows(result.items || []);
+      renderNotificationLogRows();
+    }
+
     async function saveRoles(openid) {
       const row = (state.rows || []).find(item => item.openid === openid);
       if (!row) {
@@ -166,14 +406,58 @@
         });
       }
 
+      const activitiesForm = query('[data-action="search-activities"]');
+      if (activitiesForm) {
+        activitiesForm.addEventListener('submit', event => {
+          event.preventDefault();
+          searchActivities().catch(error => renderIdentity(error.message));
+        });
+      }
+
+      const statsForm = query('[data-action="load-attendance-stats"]');
+      if (statsForm) {
+        statsForm.addEventListener('submit', event => {
+          event.preventDefault();
+          loadAttendanceStats().catch(error => renderIdentity(error.message));
+        });
+      }
+
       if (appRoot) {
         appRoot.addEventListener('click', event => {
-          const button = event.target.closest('[data-action="save-roles"]');
+          const button = event.target.closest('[data-action]');
           if (!button) {
             return;
           }
 
-          saveRoles(button.dataset.openid).catch(error => renderIdentity(error.message));
+          if (button.dataset.action === 'save-roles') {
+            saveRoles(button.dataset.openid).catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'load-activity-detail') {
+            loadActivityDetail(button.dataset.activityId).catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'toggle-attendance') {
+            toggleAttendance(button.dataset.registrationId, button.dataset.nextStatus)
+              .catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'save-manager-alias') {
+            saveManagerAlias(button.dataset.targetOpenid)
+              .catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'export-roster') {
+            exportRoster().catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'load-activity-logs') {
+            loadActivityLogs().catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'load-notification-logs') {
+            loadNotificationLogs().catch(error => renderIdentity(error.message));
+          }
         });
       }
     }
@@ -191,12 +475,23 @@
         return state;
       }
 
-      await searchUsers();
+      await searchActivities();
+
+      if (roles.isAdmin(state.currentUser)) {
+        await searchUsers();
+      }
+
       return state;
     }
 
     return {
+      exportRoster,
+      loadActivityDetail,
+      loadActivityLogs,
+      loadAttendanceStats,
+      loadNotificationLogs,
       searchUsers,
+      searchActivities,
       start,
       state
     };

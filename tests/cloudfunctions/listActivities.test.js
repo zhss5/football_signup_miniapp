@@ -95,7 +95,18 @@ function createFakeDb(collections) {
       }
     },
     collection(name) {
-      return createCollectionQuery(collections[name] || []);
+      const query = createCollectionQuery(collections[name] || []);
+
+      return {
+        ...query,
+        doc(id) {
+          return {
+            async get() {
+              return { data: (collections[name] || []).find(item => item._id === id) || null };
+            }
+          };
+        }
+      };
     }
   };
 }
@@ -248,4 +259,89 @@ test('joined scope sorts activities after registration lookup and honors limit',
   );
 
   expect(result.items.map(item => item._id)).toEqual(['activity_new', 'activity_middle']);
+});
+
+test('web-admin scope lets admin filter activities by date status organizer and keyword', async () => {
+  cloud.database.mockReturnValue(
+    createFakeDb({
+      users: [
+        { _id: 'openid_admin', roles: ['user', 'admin'] }
+      ],
+      activities: [
+        {
+          _id: 'activity_a',
+          title: 'Monday Futsal',
+          organizerOpenId: 'openid_owner',
+          startAt: '2026-06-01T20:00:00.000Z',
+          status: 'published'
+        },
+        {
+          _id: 'activity_b',
+          title: 'Friday Football',
+          organizerOpenId: 'openid_owner',
+          startAt: '2026-06-05T20:00:00.000Z',
+          status: 'cancelled'
+        },
+        {
+          _id: 'activity_c',
+          title: 'Friday Football',
+          organizerOpenId: 'openid_other',
+          startAt: '2026-06-06T20:00:00.000Z',
+          status: 'published'
+        }
+      ]
+    })
+  );
+
+  const result = await listActivities.main(
+    {
+      scope: 'web-admin',
+      keyword: 'football',
+      status: 'cancelled',
+      organizerOpenId: 'openid_owner',
+      startAtFrom: '2026-06-01T00:00:00.000Z',
+      startAtTo: '2026-06-05T23:59:59.999Z'
+    },
+    { OPENID: 'openid_admin' }
+  );
+
+  expect(result.items.map(item => item._id)).toEqual(['activity_b']);
+  expect(result.hasMore).toBe(false);
+});
+
+test('web-admin scope limits organizers to their own activities and rejects regular users', async () => {
+  const db = createFakeDb({
+    users: [
+      { _id: 'openid_owner', roles: ['user', 'organizer'] },
+      { _id: 'openid_player', roles: ['user'] }
+    ],
+    activities: [
+      {
+        _id: 'owned_activity',
+        title: 'Owned',
+        organizerOpenId: 'openid_owner',
+        startAt: '2026-06-01T20:00:00.000Z',
+        status: 'published'
+      },
+      {
+        _id: 'other_activity',
+        title: 'Other',
+        organizerOpenId: 'openid_other',
+        startAt: '2026-06-02T20:00:00.000Z',
+        status: 'published'
+      }
+    ]
+  });
+  cloud.database.mockReturnValue(db);
+
+  const result = await listActivities.main(
+    { scope: 'web-admin' },
+    { OPENID: 'openid_owner' }
+  );
+
+  expect(result.items.map(item => item._id)).toEqual(['owned_activity']);
+
+  await expect(
+    listActivities.main({ scope: 'web-admin' }, { OPENID: 'openid_player' })
+  ).rejects.toThrow('Only organizers or admins can list web admin activities');
 });

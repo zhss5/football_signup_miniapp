@@ -28,7 +28,8 @@ test('regular users cannot access the web admin', () => {
   });
 });
 
-test('admins and super admins can access the web admin', () => {
+test('organizers, admins, and super admins can access the web admin', () => {
+  expect(canAccessWebAdmin({ roles: ['user', 'organizer'] })).toBe(true);
   expect(canAccessWebAdmin({ roles: ['user', 'admin'] })).toBe(true);
   expect(canAccessWebAdmin({ roles: ['user', 'super_admin'] })).toBe(true);
 });

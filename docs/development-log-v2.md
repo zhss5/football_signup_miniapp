@@ -4,6 +4,50 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Web Admin Activity Operations, Export, And Logs
+
+Implemented the Version 2 web-admin activity operations slice.
+
+Cloud function added:
+
+- `listNotificationLogs`
+
+Delivered behavior:
+
+- web-admin activity search calls `listActivities` with `scope: web-admin` and API-shaped keyword, status, organizer, date range, limit, and skip filters.
+- organizers can review only activities they manage.
+- admins and super admins can review all activities.
+- ordinary users are rejected before web-admin activity data is returned.
+- web-admin activity detail uses `getActivityDetail` to show teams, registrations, proxy signup markers, position preferences, notification subscription state, manager aliases, and attendance state.
+- web-admin manager alias edits call `updateParticipantManagerAlias`.
+- web-admin attendance edits call `setRegistrationAttendance`.
+- web-admin attendance statistics call `getAttendanceStats` with date-range parameters.
+- web-admin roster export calls `exportActivityRoster` and generates CSV text in the browser; the backend still returns CSV/XLSX-ready rows only.
+- activity operation history review calls `listActivityLogs`.
+- notification-log review calls `listNotificationLogs`, with admin/global and organizer/own-activity permission boundaries.
+- organizer accounts can access the web-admin workspace for activity operations; user role management remains hidden from non-admin organizers and remains backend-protected.
+
+SQL readiness:
+
+- no runtime MySQL migration, CloudBase/MySQL dual-write, or self-hosted HTTP API switch was introduced.
+- new web-admin contracts stay API-shaped and are not coupled to page-specific UI structures.
+- `listNotificationLogs` returns stable scalar fields that map to the existing `notification_logs` SQL target table.
+- current registration and activity state remain separate from `activity_logs` and `notification_logs` history.
+
+Deployment note:
+
+- deploy changed function: `listActivities`.
+- deploy new function: `listNotificationLogs`.
+- keep using existing deployed functions: `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, and `listActivityLogs`.
+- run `copy-cloud-shared` before CloudBase deployment.
+- host the updated `web-admin/` static files after configuring the CloudBase call-function adapter.
+
+Verification:
+
+- red tests first failed because web-admin activity helpers, static activity views, API delegates, `listActivities` web-admin filtering, and `listNotificationLogs` were missing.
+- target tests passed: `6` test suites, `25` tests.
+- related backend regression passed: `8` test suites, `119` tests.
+
 ## 2026-06-10 - Web Admin Foundation And Role Management
 
 Implemented the initial Version 2 web-admin foundation.
