@@ -50,6 +50,9 @@ Completed:
 - `exportActivityRoster` cloud function returns CSV/XLSX-ready roster rows for authorized organizers/admins.
 - roster export rows include team, signup name, manager alias, preferred positions, proxy flag, and attendance status.
 - roster export rejects regular users and keeps file generation out of the backend.
+- `updateParticipantManagerAlias` cloud function lets authorized activity managers update shared manager aliases for real WeChat signup users.
+- manager alias updates write `users.managerAlias`, `managerAliasUpdatedAt`, `managerAliasUpdatedBy`, and `activity_logs` audit rows with before/after values.
+- manager alias edits reject ordinary users, out-of-scope organizers, proxy signups, and values longer than the future SQL `VARCHAR(128)` target.
 
 ## 4. Planned Version 2 Scope
 
@@ -135,10 +138,10 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue implementation from Milestone 3 in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue implementation from the participant identity and operations slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add `updateParticipantManagerAlias` for shared manager-facing participant aliases.
 - add or extend `activity_logs` reads for participant operation history review.
+- add missing participant operation audit writes for signup, cancellation, re-signup, proxy signup, manager removal, and team movement.
 - keep using red/green tests before production changes.

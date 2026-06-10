@@ -4,6 +4,34 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Participant Manager Alias Backend
+
+Implemented the Version 2 manager-facing participant alias mutation API.
+
+Cloud function added:
+
+- `updateParticipantManagerAlias`
+
+Delivered behavior:
+
+- organizers can update manager aliases only for real WeChat signup users in activities they manage.
+- admins and super admins can update manager aliases for real WeChat signup users in any activity.
+- ordinary users are rejected.
+- proxy signups are rejected because Version 2 does not create a cross-activity identity model for proxy participants.
+- aliases are trimmed, can be cleared with an empty string, and are capped at `128` characters to match the future SQL target column size.
+- updates write `users.managerAlias`, `users.managerAliasUpdatedAt`, and `users.managerAliasUpdatedBy`.
+- updates write `activity_logs` rows with action `manager_alias_update`, operator, target user, activity, registration, before value, after value, and timestamp.
+
+Deployment note:
+
+- deploy `updateParticipantManagerAlias`.
+- run `copy-cloud-shared` before CloudBase deployment.
+
+Verification:
+
+- red test first failed because `cloudfunctions/updateParticipantManagerAlias/index` did not exist.
+- target test passed: `tests/cloudfunctions/updateParticipantManagerAlias.test.js` with `8` tests.
+
 ## 2026-06-10 - Participant Manager Alias Editing Surface Clarified
 
 Updated the Version 2 participant identification requirements.
