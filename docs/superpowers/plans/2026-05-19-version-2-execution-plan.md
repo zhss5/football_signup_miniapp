@@ -870,23 +870,23 @@ git commit -m "Add overdue unresolved activity prompt"
 
 ## Final Verification
 
-- [ ] **Step 1: Copy shared cloud helpers**
+- [x] **Step 1: Copy shared cloud helpers**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' scripts\copy-cloud-shared.mjs
+npm test
 ```
 
-Expected: exit code 0.
+Result: `npm test` ran `pretest` (`node scripts/copy-cloud-shared.mjs`) successfully.
 
-- [ ] **Step 2: Run full Jest suite**
+- [x] **Step 2: Run full Jest suite**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand
+npm test
 ```
 
-Expected: all test suites pass.
+Result: `74` suites and `571` tests passed.
 
-- [ ] **Step 3: Run web-admin verification**
+- [x] **Step 3: Run web-admin verification**
 
 If `web-admin/package.json` exists and defines test/build scripts:
 
@@ -899,7 +899,9 @@ Pop-Location
 
 Expected: both scripts pass.
 
-- [ ] **Step 4: Update Version 2 docs**
+Result: `web-admin/package.json` currently defines only `preview`; no web-admin `test` or `build` script exists.
+
+- [x] **Step 4: Update Version 2 docs**
 
 Update:
 

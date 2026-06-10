@@ -18,7 +18,7 @@ Version 2 development branch has been created.
 
 Version 2 execution planning has been completed.
 
-Milestone 6 implementation is complete. Final Version 2 regression is next.
+Version 2 implementation scope is complete on the `codex/version-2-web-admin` branch. Final regression has passed.
 
 Implementation plan:
 
@@ -81,6 +81,9 @@ Completed:
 - My Created and Joined tabs now maintain independent pagination state and load additional pages with stable `limit` and `skip` parameters.
 - My Created tab now marks overdue unresolved activities when `endAt` has passed while the activity is still `published` and not `confirmed`.
 - overdue unresolved prompts reuse existing confirm/cancel actions; confirmation calls `notifyActivityParticipants(activityId, 'proceeding')` and no automatic confirmation is introduced.
+- final full regression passed with `npm test`: `74` suites and `571` tests.
+- final SQL migration readiness audit confirms V2 fields, stable enum strings, API contracts, log actions, CloudBase-to-SQL mappings, compatibility rules, and validation checks are documented.
+- Version 2 still does not introduce runtime MySQL migration, CloudBase/MySQL dual-write, or a self-hosted HTTP API switch.
 
 ## 4. Planned Version 2 Scope
 
@@ -166,11 +169,11 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue with final Version 2 regression and documentation audit in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Prepare Version 2 deployment and acceptance using the deployment notes in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- run targeted V2 regression tests and, if feasible, the full Jest suite.
-- run `git diff --check`.
-- audit SQL migration readiness coverage for all V2 fields, API contracts, and log actions.
-- update final Version 2 progress and development-log entries.
+- review the CloudBase deployment set and deploy only when ready.
+- seed the first `super_admin` manually in CloudBase before using role management.
+- upload the mini-program build and host `web-admin/` after CloudBase function deployment.
+- keep invite-code signup, automatic reminders, payments/refunds, and runtime MySQL/self-hosted migration deferred.

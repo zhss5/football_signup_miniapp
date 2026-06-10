@@ -4,6 +4,30 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Final Version 2 Regression
+
+Completed final Version 2 regression and documentation audit.
+
+Verification:
+
+- `npm test` passed.
+- `npm test` also ran `pretest`, which executes `node scripts/copy-cloud-shared.mjs`.
+- Jest result: `74` test suites passed, `571` tests passed.
+- `web-admin/package.json` has no `test` or `build` script; it currently defines only `preview`.
+
+SQL readiness audit:
+
+- target MySQL 8.x tables cover users, roles, activities, teams, registrations, activity logs, role logs, notification subscriptions, and notification logs.
+- CloudBase-to-SQL mapping covers Version 2 fields including `users.managerAlias`, manager alias metadata, registration attendance fields, activity log payloads, notification log fields, and list/export/log API contracts.
+- expected V2 activity log actions are documented: `signup_joined`, `signup_cancelled`, `signup_rejoined`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, and `manager_alias_update`.
+- compatibility rules cover manager-only field filtering, same-backend alias mutation, API-shaped web-admin calls, row-based exports, mini-program pagination, and derived overdue prompts.
+
+Boundary confirmation:
+
+- no runtime MySQL migration was implemented.
+- no CloudBase/MySQL dual-write was implemented.
+- no self-hosted HTTP API switch was implemented.
+
 ## 2026-06-10 - Mini-Program Pagination And Overdue Prompts
 
 Implemented the Version 2 mini-program operational enhancements.
