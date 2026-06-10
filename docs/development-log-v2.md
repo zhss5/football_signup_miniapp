@@ -4,6 +4,34 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Roster Export Backend
+
+Implemented the Version 2 roster export data API.
+
+Cloud function added:
+
+- `exportActivityRoster`
+
+Delivered behavior:
+
+- organizers can export roster rows for activities they created.
+- admins and super admins can export roster rows for any activity.
+- regular users cannot export roster rows.
+- the cloud function returns CSV/XLSX-ready JSON rows only; file generation remains a frontend/web-admin responsibility.
+- export rows include activity title, team name, registration ID, user openid, signup name, manager alias, preferred positions, proxy signup flag, and attendance status.
+- cancelled registrations are excluded.
+- blank attendance status is normalized to `present` for export.
+
+Deployment note:
+
+- deploy `exportActivityRoster`.
+- run `copy-cloud-shared` before CloudBase deployment.
+
+Verification:
+
+- red test first failed because `cloudfunctions/exportActivityRoster/index` did not exist.
+- target test passed: `tests/cloudfunctions/exportActivityRoster.test.js` with `5` tests.
+
 ## 2026-06-10 - SQL Migration Readiness Added To Version 2 Scope
 
 Version 2 requirements now include SQL migration readiness for a later self-hosted backend.

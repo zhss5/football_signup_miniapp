@@ -47,6 +47,9 @@ Completed:
 - statistics include proxy signups, count blank attendance status as present, and exclude cancelled/deleted/pending activities.
 - environment strategy decision recorded: continue with one CloudBase environment for now, avoid deploying changed existing functions during Version 1 review, and use function-name isolation such as `getActivityDetailV2` when testing changed existing behavior in a trial build.
 - SQL migration readiness design documented in `docs/superpowers/specs/2026-06-10-sql-migration-readiness.md`.
+- `exportActivityRoster` cloud function returns CSV/XLSX-ready roster rows for authorized organizers/admins.
+- roster export rows include team, signup name, manager alias, preferred positions, proxy flag, and attendance status.
+- roster export rejects regular users and keeps file generation out of the backend.
 
 ## 4. Planned Version 2 Scope
 
@@ -135,6 +138,6 @@ Continue implementation from Milestone 3 in `docs/superpowers/plans/2026-05-19-v
 
 Recommended first coding task:
 
-- add `exportActivityRoster` for roster export data.
-- include preferred positions, proxy flag, and attendance status.
+- add `updateParticipantManagerAlias` for shared manager-facing participant aliases.
+- add or extend `activity_logs` reads for participant operation history review.
 - keep using red/green tests before production changes.
