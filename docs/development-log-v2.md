@@ -18,6 +18,7 @@ Requirement decisions:
 
 Updated docs:
 
+- `docs/superpowers/specs/2026-06-10-sql-migration-readiness.md`
 - `docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
 - `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
 - `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`

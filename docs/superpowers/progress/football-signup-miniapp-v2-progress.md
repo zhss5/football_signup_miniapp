@@ -46,6 +46,7 @@ Completed:
 - organizer statistics include only their own confirmed activities.
 - statistics include proxy signups, count blank attendance status as present, and exclude cancelled/deleted/pending activities.
 - environment strategy decision recorded: continue with one CloudBase environment for now, avoid deploying changed existing functions during Version 1 review, and use function-name isolation such as `getActivityDetailV2` when testing changed existing behavior in a trial build.
+- SQL migration readiness design documented in `docs/superpowers/specs/2026-06-10-sql-migration-readiness.md`.
 
 ## 4. Planned Version 2 Scope
 
