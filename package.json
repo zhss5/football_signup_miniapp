@@ -4,7 +4,8 @@
   "scripts": {
     "pretest": "node scripts/copy-cloud-shared.mjs",
     "test": "jest --runInBand",
-    "copy:cloud-shared": "node scripts/copy-cloud-shared.mjs"
+    "copy:cloud-shared": "node scripts/copy-cloud-shared.mjs",
+    "deploy:v2-bootstrap": "powershell -ExecutionPolicy Bypass -File scripts/deploy-v2-bootstrap.ps1"
   },
   "dependencies": {
     "wx-server-sdk": "^3.0.1"

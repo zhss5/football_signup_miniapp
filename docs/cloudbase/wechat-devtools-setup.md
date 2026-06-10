@@ -101,7 +101,24 @@ npm run copy:cloud-shared
 
 The copy step is required because CloudBase packages each cloud function directory independently. Shared server helpers from `cloudfunctions/_shared/` must exist inside each uploaded function directory.
 
-7. Deploy the cloud functions under `cloudfunctions/`.
+7. For an existing Version 1 CloudBase environment that is being prepared for Version 2, deploy and run the explicit collection bootstrap once:
+
+```powershell
+npm install -g @cloudbase/cli
+tcb login
+npm run deploy:v2-bootstrap -- -EnvId 'your-cloud-env-id'
+```
+
+The script deploys `bootstrapV2Collections`, invokes it with the confirmation payload, and only creates missing Version 2 collections:
+
+- `activity_logs`
+- `user_role_logs`
+- `notification_logs`
+- `notification_subscriptions`
+
+It does not delete, clear, or recreate existing Version 1 data collections such as `users`, `activities`, `activity_teams`, or `registrations`. Use `-DeployOnly` if you only want to upload the bootstrap function and invoke it manually from the CloudBase console.
+
+8. Deploy the cloud functions under `cloudfunctions/`.
 
    In WeChat DevTools, right-click each cloud function folder and deploy it, or use the CLI for a one-shot deployment:
 
@@ -111,24 +128,27 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
-8. Confirm database collections exist:
+9. Confirm database collections exist:
    - `users`
    - `activities`
    - `activity_teams`
    - `registrations`
    - `activity_logs`
+   - `user_role_logs`
+   - `notification_logs`
+   - `notification_subscriptions`
 
-   `ensureUserProfile` attempts to create these collections on the first real CloudBase launch. You can still create them manually in the CloudBase console if you prefer a fully prepared environment before testing.
+   `ensureUserProfile` attempts to create baseline collections on the first real CloudBase launch. Existing Version 1 environments normally already have `users`, so use `bootstrapV2Collections` or create the new Version 2 collections manually instead of relying on first-launch bootstrap.
 
-9. Add the indexes from:
+10. Add the indexes from:
    - `docs/cloudbase/indexes.md`
-10. Apply database write restrictions based on:
+11. Apply database write restrictions based on:
    - `docs/cloudbase/security-rules.json`
-11. Run the manual checklist from:
+12. Run the manual checklist from:
    - `docs/cloudbase/manual-smoke-checklist.md`
 
 ## WeChat Verification And Test Access
@@ -154,7 +174,7 @@ Temporary testing flow before verification:
 
 - `FunctionName parameter could not be found`: deploy the missing cloud function.
 - `Cannot find module './collections'` or another shared helper: run `npm run copy:cloud-shared`, then redeploy the affected cloud function.
-- `database collection not exists`: create the required collection manually, or redeploy `ensureUserProfile` and let it bootstrap the collections.
+- `database collection not exists`: for existing Version 1 environments, run `npm run deploy:v2-bootstrap -- -EnvId 'your-cloud-env-id'` or create the required collection manually. For brand-new environments, redeploy `ensureUserProfile` and let it bootstrap the baseline collections.
 - `document.set:fail ... invalid parameters ... _id`: do not include `_id` in the `data` object passed to `doc(id).set({ data })`.
 - `Error: timeout` on first real-cloud launch: increase the `ensureUserProfile` cloud function timeout from the default 3 seconds to 20-60 seconds, or manually create the collections and retry.
 - Sharing is blocked because the mini program is unverified: complete WeChat verification, or use experience-version QR codes for temporary tester access.

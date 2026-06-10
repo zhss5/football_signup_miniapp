@@ -16,6 +16,21 @@ Version 2 must not:
 - move WeChat `openid` auth, CloudBase storage, or subscription-message sending to a self-hosted service.
 - remove existing CloudBase fields only because the SQL model has a cleaner shape.
 
+## CloudBase Bootstrap Readiness
+
+Version 2 includes `bootstrapV2Collections` and `scripts/deploy-v2-bootstrap.ps1` as explicit CloudBase deployment readiness tooling. This is a CloudBase collection bootstrap, not a SQL migration step.
+
+The bootstrap creates only missing Version 2 collections:
+
+- `activity_logs`
+- `user_role_logs`
+- `notification_logs`
+- `notification_subscriptions`
+
+It must not delete, truncate, rename, or recreate existing collections such as `users`, `activities`, `activity_teams`, or `registrations`. The cloud function returns API-shaped `created`, `existing`, and `skipped` arrays so the same readiness result can later be represented by a self-hosted migration endpoint or deployment job.
+
+Client-side mini-program invocations that include an `OPENID` must be from a `super_admin`. Maintenance invocations from the CloudBase CLI are allowed only with the explicit `confirm: "bootstrap-v2-collections"` payload. This keeps the operational schema step explicit while avoiding a dependency on runtime MySQL, dual-write, or self-hosted HTTP APIs.
+
 ## Design Principles
 
 - Use MySQL 8.x as the target engine.
@@ -408,7 +423,8 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 14. Keep backend export functions row-based. CSV/XLSX file generation belongs in the web-admin or another client layer so a future self-hosted API can return the same rows from SQL.
 15. Keep mini-program pagination API-shaped with `limit` and `skip`. If SQL cursor pagination replaces offset pagination later, expose it as an additive API parameter and keep `limit`/`skip` compatible until old clients age out.
 16. Treat overdue unresolved prompts as derived UI state. Do not add a stored prompt flag unless a later workflow needs assignment, snooze, or resolution tracking.
-17. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+17. Run `bootstrapV2Collections` as an explicit CloudBase readiness step for existing environments. It creates missing V2 collections only and does not perform runtime MySQL migration, dual-write, or HTTP API cutover.
+18. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 

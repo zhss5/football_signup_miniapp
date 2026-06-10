@@ -84,6 +84,8 @@ Completed:
 - final full regression passed with `npm test`: `74` suites and `571` tests.
 - final SQL migration readiness audit confirms V2 fields, stable enum strings, API contracts, log actions, CloudBase-to-SQL mappings, compatibility rules, and validation checks are documented.
 - Version 2 still does not introduce runtime MySQL migration, CloudBase/MySQL dual-write, or a self-hosted HTTP API switch.
+- `bootstrapV2Collections` cloud function now provides an explicit, idempotent CloudBase readiness step for missing V2 collections.
+- `scripts/deploy-v2-bootstrap.ps1` and `npm run deploy:v2-bootstrap` deploy and invoke the bootstrap step through CloudBase CLI without deleting or recreating existing V1 data collections.
 
 ## 4. Planned Version 2 Scope
 
@@ -173,6 +175,7 @@ Prepare Version 2 deployment and acceptance using the deployment notes in `docs/
 
 Recommended first coding task:
 
+- run `npm run deploy:v2-bootstrap -- -EnvId '<target-cloud-env-id>'` for existing CloudBase environments before V2 smoke testing, or use `-DeployOnly` and invoke `bootstrapV2Collections` manually.
 - review the CloudBase deployment set and deploy only when ready.
 - seed the first `super_admin` manually in CloudBase before using role management.
 - upload the mini-program build and host `web-admin/` after CloudBase function deployment.

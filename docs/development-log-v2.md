@@ -4,6 +4,39 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Explicit V2 Collection Bootstrap
+
+Added an explicit Version 2 CloudBase collection bootstrap path for existing Version 1 environments.
+
+Cloud function added:
+
+- `bootstrapV2Collections`
+
+Deployment tooling added:
+
+- `scripts/deploy-v2-bootstrap.ps1`
+- `npm run deploy:v2-bootstrap`
+
+Delivered behavior:
+
+- `bootstrapV2Collections` requires `confirm: "bootstrap-v2-collections"`.
+- mini-program or web calls with an `OPENID` must come from a `super_admin`.
+- CloudBase CLI maintenance invocation without `OPENID` is allowed only with the explicit confirmation payload.
+- the function creates only missing V2 readiness collections: `activity_logs`, `user_role_logs`, `notification_logs`, and `notification_subscriptions`.
+- the function returns API-shaped `created`, `existing`, and `skipped` arrays.
+- the bootstrap does not delete, clear, or recreate existing V1 collections.
+
+SQL readiness:
+
+- no runtime MySQL migration, CloudBase/MySQL dual-write, or self-hosted HTTP API switch was introduced.
+- the bootstrap result is API-shaped so it can later map to a self-hosted deployment or migration job.
+
+Verification:
+
+- red test first failed because `cloudfunctions/bootstrapV2Collections/index` did not exist.
+- target test passed: `tests/cloudfunctions/bootstrapV2Collections.test.js` with `4` tests.
+- PowerShell script parsing reached the CloudBase CLI dependency check; actual CloudBase deployment was not run locally because `tcb` is not installed on this workstation.
+
 ## 2026-06-10 - Final Version 2 Regression
 
 Completed final Version 2 regression and documentation audit.

@@ -70,24 +70,51 @@ The copy script removes stale per-function `_shared` folders and writes the shar
 
 Then deploy all cloud functions under `cloudfunctions/`.
 
+For Version 2 rollout on an existing Version 1 environment, run the explicit bootstrap before the main smoke pass:
+
+```powershell
+npm install -g @cloudbase/cli
+tcb login
+npm run deploy:v2-bootstrap -- -EnvId 'your-cloud-env-id'
+```
+
+This command deploys and invokes `bootstrapV2Collections` once. The cloud function only creates missing Version 2 readiness collections:
+
+- `activity_logs`
+- `user_role_logs`
+- `notification_logs`
+- `notification_subscriptions`
+
+It does not delete, clear, or recreate existing Version 1 collections. Use `-DeployOnly` if the function should be uploaded first and invoked manually from the CloudBase console.
+
 Recommended function set:
 
 1. `ensureUserProfile`
-2. `listActivities`
-3. `getActivityDetail`
-4. `createActivity`
-5. `updateActivity`
-6. `updateTeamColor`
-7. `joinActivity`
-8. `addProxyRegistration`
-9. `cancelRegistration`
-10. `removeRegistration`
-11. `moveRegistration`
-12. `cancelActivity`
-13. `deleteActivity`
-14. `recordNotificationSubscription`
-15. `notifyActivityParticipants`
-16. `getActivityStats`
+2. `bootstrapV2Collections`
+3. `listActivities`
+4. `getActivityDetail`
+5. `createActivity`
+6. `updateActivity`
+7. `updateTeamColor`
+8. `joinActivity`
+9. `addProxyRegistration`
+10. `cancelRegistration`
+11. `removeRegistration`
+12. `moveRegistration`
+13. `setRegistrationAttendance`
+14. `getAttendanceStats`
+15. `exportActivityRoster`
+16. `updateParticipantManagerAlias`
+17. `listActivityLogs`
+18. `getActivityCopyDraft`
+19. `listUsers`
+20. `updateUserRoles`
+21. `listNotificationLogs`
+22. `recordNotificationSubscription`
+23. `notifyActivityParticipants`
+24. `cancelActivity`
+25. `deleteActivity`
+26. `getActivityStats`
 
 Legacy note:
 
@@ -103,7 +130,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -157,8 +184,11 @@ The runtime expects these collections:
 - `activity_teams`
 - `registrations`
 - `activity_logs`
+- `user_role_logs`
+- `notification_logs`
+- `notification_subscriptions`
 
-`ensureUserProfile` attempts to create the collections during the first real CloudBase startup. For a predictable rollout, you may also create them manually in the CloudBase console before smoke testing.
+`ensureUserProfile` attempts to create baseline collections during the first real CloudBase startup. Existing Version 1 environments usually already have `users`, so `ensureUserProfile` will not necessarily run the full bootstrap path again. For Version 2, run `bootstrapV2Collections` or create the missing Version 2 collections manually before smoke testing.
 
 Organizer access is controlled by `users.roles`:
 
