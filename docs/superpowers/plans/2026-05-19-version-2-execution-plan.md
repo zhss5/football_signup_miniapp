@@ -23,8 +23,9 @@ This plan covers V2.0 only:
 - web-admin foundation, user role management, activity review, attendance management, statistics, and exports.
 - notification-log review.
 - Home/My paginated loading and overdue unresolved activity prompts.
+- SQL migration readiness documentation for a later self-hosted backend.
 
-This plan excludes invite-code signup, automatic reminders, payments, refunds, MySQL migration, full account-password login, and player technical analysis.
+This plan excludes invite-code signup, automatic reminders, payments, refunds, runtime MySQL migration, full account-password login, and player technical analysis.
 
 ## File Map
 
@@ -52,6 +53,7 @@ This plan excludes invite-code signup, automatic reminders, payments, refunds, M
 - `tests/web-admin/*.test.js`: web-admin UI/service behavior coverage when the web-admin test harness exists.
 - `docs/development-log-v2.md`: Version 2 development log.
 - `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`: Version 2 progress tracker.
+- `docs/superpowers/specs/2026-06-10-sql-migration-readiness.md`: target SQL schema, CloudBase-to-SQL mapping, compatibility rules, and migration validation checklist.
 
 ## Milestone 1: Shared Role Model And Role APIs
 
@@ -964,5 +966,5 @@ Future option:
 ## Self-Review
 
 - Spec coverage: V2.0 role management, attendance, web-admin foundation, activity review, statistics/export, notification logs, pagination, and overdue prompts are mapped to tasks.
-- Deferred scope is explicit: invite code, automatic reminders, payments/refunds, MySQL migration, account-password login, and player technical analysis are not part of this plan.
+- Deferred scope is explicit: invite code, automatic reminders, payments/refunds, runtime MySQL migration, account-password login, and player technical analysis are not part of this plan.
 - Placeholders avoided: each task lists files, expected tests, commands, and concrete behavior.

@@ -4,6 +4,24 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - SQL Migration Readiness Added To Version 2 Scope
+
+Version 2 requirements now include SQL migration readiness for a later self-hosted backend.
+
+Requirement decisions:
+
+- Version 2 still keeps CloudBase document database as the live runtime store.
+- Version 2 should prepare a MySQL 8.x target schema, CloudBase-to-SQL field mapping, backward-compatible schema rules, and migration validation checklist.
+- New Version 2 data fields should stay SQL-friendly where practical: explicit IDs, stable enum values, clear timestamps, and limited nested data.
+- Current state and history remain separate so future SQL tables can preserve the same model: `registrations` for current signup state, and audit logs for participant and role history.
+- Runtime migration, MySQL dual-write, self-hosted auth/storage/notification rewrites, and HTTP API replacement remain deferred.
+
+Updated docs:
+
+- `docs/superpowers/plans/2026-05-18-version-2-lightweight-web-admin.md`
+- `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`
+- `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`
+
 ## 2026-06-09 - Activity Duplication Added To Version 2 Scope
 
 Version 2 requirements now include copying an existing activity to create a new activity draft.
@@ -89,7 +107,7 @@ Deferred out of V2.0:
 - invite-code signup.
 - automatic scheduled reminders.
 - payments, refunds, and fee settlement.
-- MySQL migration.
+- runtime MySQL migration.
 - account-password login.
 - player technical analysis.
 

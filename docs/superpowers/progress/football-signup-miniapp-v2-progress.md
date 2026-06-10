@@ -4,7 +4,7 @@
 
 This file tracks Version 2 implementation progress separately from the Version 1 progress file.
 
-Version 2 focuses on lightweight operations tooling, especially web-admin access, role management, participant identification, participant operation audit history, attendance management, attendance statistics, exports, and operational review workflows.
+Version 2 focuses on lightweight operations tooling, especially web-admin access, role management, participant identification, participant operation audit history, attendance management, attendance statistics, exports, operational review workflows, and SQL migration readiness for a later self-hosted backend.
 
 ## 2. Branch
 
@@ -108,9 +108,19 @@ Completed:
 - Add Home/My paginated loading.
 - Add overdue unresolved activity prompts after `endAt` for still-published pending activities.
 - Add copy-activity flow that copies reusable setup data but not registrations, attendance state, participant operation logs, notification logs, or subscription state.
-- Keep invite-code signup, automatic reminders, payments, refunds, MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
+- Keep invite-code signup, automatic reminders, payments, refunds, runtime MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
 
-### 4.8 Environment And Deployment Strategy
+### 4.8 SQL Migration Readiness
+
+- Prepare a target MySQL 8.x schema for the current and planned Version 2 data model.
+- Map CloudBase collections and fields to SQL tables and columns.
+- Keep Version 2 data changes SQL-friendly with explicit IDs, stable enum values, clear timestamps, and limited nested data.
+- Preserve current-state versus history separation: `registrations` for current signup state and `activity_logs`/`user_role_logs` for audit history.
+- Document backward-compatible schema rollout rules: add first, keep old fields, default new fields, migrate data, and remove last.
+- Define migration validation checks for users, activities, teams, registrations, operation logs, role logs, notification subscriptions, and notification logs.
+- Do not dual-write to MySQL or move live runtime traffic to a self-hosted backend in the first Version 2 implementation slice.
+
+### 4.9 Environment And Deployment Strategy
 
 - Continue using the current single CloudBase environment until a second paid environment is justified.
 - Treat formal, trial, and development builds as sharing cloud functions and data whenever they use the same `CLOUD_ENV_ID`.

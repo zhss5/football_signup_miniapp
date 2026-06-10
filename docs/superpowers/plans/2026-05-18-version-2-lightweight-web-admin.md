@@ -12,7 +12,8 @@ Version 2 is an operations enhancement release, not a platform rewrite.
 - Add a lightweight web admin that reads and writes the existing CloudBase data through controlled APIs/cloud functions.
 - Add attendance management and attendance-rate reporting.
 - Improve list scalability and organizer follow-up workflows.
-- Defer payments, refunds, a full enterprise admin console, and MySQL migration.
+- Prepare SQL migration readiness artifacts for a later self-hosted backend.
+- Defer payments, refunds, a full enterprise admin console, and runtime MySQL migration.
 
 ## Recommended Scope
 
@@ -206,7 +207,36 @@ Keep the existing notification model and add operational visibility:
 - show send status and failure reason when available.
 - keep automatic pre-activity reminders deferred until manual notification behavior is stable.
 
-### 10. Invite-Code Signup
+### 10. SQL Migration Readiness
+
+Version 2 should prepare for a later self-hosted backend without moving the live runtime off CloudBase.
+
+Readiness scope:
+
+- Draft a target MySQL 8.x schema for the current and planned Version 2 data model.
+- Map CloudBase collections and fields to SQL tables and columns.
+- Keep new Version 2 fields SQL-friendly: explicit IDs, flat scalar fields where practical, clear timestamps, and stable enum values.
+- Preserve the separation between current state tables and history tables. For example, `registrations` remains the current signup state while `activity_logs` records participant operations.
+- Document backward-compatible schema rules: add fields first, keep old fields alive, make new fields optional with defaults, dual-write only when needed, migrate data, and remove old fields last.
+- Define migration validation checks for users, activities, teams, registrations, operation logs, role logs, notification subscriptions, and notification logs.
+
+Recommended target tables:
+
+```text
+users
+user_roles
+activities
+activity_teams
+registrations
+activity_logs
+user_role_logs
+notification_subscriptions
+notification_logs
+```
+
+This work is documentation and design readiness only. Version 2 should not dual-write to MySQL, replace CloudBase functions with HTTP APIs, or move storage/auth/notification integrations to a self-hosted service.
+
+### 11. Invite-Code Signup
 
 Add invite-code signup only after the operational core is stable:
 
@@ -215,13 +245,13 @@ Add invite-code signup only after the operational core is stable:
 - backend validates the code.
 - Home visibility rules can remain simple in Version 2: show the activity, but require code before signup.
 
-### 11. Cover Crop UX
+### 12. Cover Crop UX
 
 Replace slider-only cover crop controls with drag/zoom gestures when time allows. This is useful polish, but it is lower priority than web admin and attendance operations.
 
 ## Deferred From Version 2
 
-- MySQL migration.
+- Runtime migration to MySQL or a self-hosted backend.
 - full enterprise-grade backend/admin console.
 - payment, refund, and fee settlement flows.
 - automatic scheduled reminders.
@@ -242,8 +272,9 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 9. Add overdue activity prompt.
 10. Improve roster export formats.
 11. Add notification-log review.
-12. Add invite-code signup.
-13. Improve cover-crop gestures.
+12. Add SQL migration readiness documentation and keep it aligned with Version 2 data-model changes.
+13. Add invite-code signup.
+14. Improve cover-crop gestures.
 
 ## Version 2 Success Criteria
 
@@ -258,5 +289,6 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.
 - Organizers can export rosters and attendance data.
+- The Version 2 data model has a documented MySQL 8.x target schema, CloudBase-to-SQL field mapping, and migration validation checklist for future self-hosting work.
 - Home/My can handle more than the first activity batch.
 - The system still runs on the existing CloudBase document database.
