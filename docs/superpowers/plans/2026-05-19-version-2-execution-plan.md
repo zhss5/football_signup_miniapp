@@ -801,8 +801,9 @@ git commit -m "Add web admin statistics export and logs"
 - Modify: `miniprogram/pages/my/index.wxml`
 - Test: `tests/miniprogram/pages/home.test.js`
 - Test: `tests/miniprogram/pages/my-profile.test.js`
+- Test: `tests/miniprogram/pages/my-actions.test.js`
 
-- [ ] **Step 1: Write failing pagination tests**
+- [x] **Step 1: Write failing pagination tests**
 
 Cover:
 
@@ -812,7 +813,7 @@ test('my created tab loads the next created page independently', async () => {})
 test('my joined tab loads the next joined page independently', async () => {});
 ```
 
-- [ ] **Step 2: Implement page state**
+- [x] **Step 2: Implement page state**
 
 Track per-list values:
 
@@ -826,11 +827,11 @@ loadingMoreCreated: false,
 loadingMoreJoined: false
 ```
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/miniprogram/pages/home.test.js tests/miniprogram/pages/my-profile.test.js
-git add -- miniprogram/pages/home miniprogram/pages/my tests/miniprogram/pages/home.test.js tests/miniprogram/pages/my-profile.test.js
+node node_modules\jest\bin\jest.js --runInBand tests/miniprogram/pages/home.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js
+git add -- miniprogram/pages/home miniprogram/pages/my miniprogram/locales tests/miniprogram/pages/home.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js
 git commit -m "Add home and my pagination"
 ```
 
@@ -838,18 +839,19 @@ git commit -m "Add home and my pagination"
 
 **Files:**
 
-- Modify: `miniprogram/utils/formatters.js`
-- Modify: `miniprogram/pages/activity-detail/index.js`
-- Modify: `miniprogram/pages/activity-detail/index.wxml`
-- Modify: `miniprogram/utils/i18n.js`
-- Test: `tests/miniprogram/utils/formatters.test.js`
-- Test: `tests/miniprogram/pages/activity-detail.test.js`
+- Modify: `miniprogram/pages/my/index.js`
+- Modify: `miniprogram/pages/my/index.wxml`
+- Modify: `miniprogram/pages/my/index.wxss`
+- Modify: `miniprogram/locales/en-US.js`
+- Modify: `miniprogram/locales/zh-CN.js`
+- Test: `tests/miniprogram/pages/my-profile.test.js`
+- Test: `tests/miniprogram/pages/my-actions.test.js`
 
-- [ ] **Step 1: Write failing overdue tests**
+- [x] **Step 1: Write failing overdue tests**
 
 Cover published, pending-confirmation activities whose `endAt` is in the past.
 
-- [ ] **Step 2: Implement overdue prompt**
+- [x] **Step 2: Implement overdue prompt**
 
 Rules:
 
@@ -858,11 +860,11 @@ Rules:
 - Do not auto-confirm.
 - Do not show for cancelled, deleted, or already confirmed activities.
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
-& 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/miniprogram/utils/formatters.test.js tests/miniprogram/pages/activity-detail.test.js
-git add -- miniprogram/utils/formatters.js miniprogram/pages/activity-detail miniprogram/utils/i18n.js tests/miniprogram/utils/formatters.test.js tests/miniprogram/pages/activity-detail.test.js
+node node_modules\jest\bin\jest.js --runInBand tests/miniprogram/pages/home.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js
+git add -- miniprogram/pages/my miniprogram/locales tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js
 git commit -m "Add overdue unresolved activity prompt"
 ```
 

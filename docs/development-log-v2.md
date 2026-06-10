@@ -4,6 +4,39 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Mini-Program Pagination And Overdue Prompts
+
+Implemented the Version 2 mini-program operational enhancements.
+
+Delivered behavior:
+
+- Home now requests activities with API-shaped `scope`, `limit`, and `skip` parameters.
+- Home keeps the first page visible and appends additional pages through `onReachBottom` or the load-more button.
+- My Created and Joined tabs now maintain independent `nextSkip`, `hasMore`, and loading-more state.
+- My Created and Joined pagination preserves existing rows while fetching the next page.
+- My Created marks activities as overdue unresolved when `endAt` is in the past, `status` is `published`, and `confirmStatus` is not `confirmed`.
+- overdue unresolved prompts offer the existing confirm-held and cancel actions.
+- confirm-held prompts call `notifyActivityParticipants(activityId, 'proceeding')`, which keeps the existing CloudBase function as the only writer for confirmation state and notifications.
+- no automatic activity confirmation was added.
+
+SQL readiness:
+
+- no new persistent CloudBase fields, collections, log actions, MySQL writes, dual-write behavior, or self-hosted HTTP APIs were introduced.
+- pagination uses stable API parameters (`limit`, `skip`) that can map directly to a future SQL-backed HTTP API.
+- overdue unresolved prompts are derived from existing `activities.status`, `activities.confirmStatus`, and `activities.endAt` fields.
+- confirmation continues through the existing notification API boundary instead of page-level direct writes.
+
+Deployment note:
+
+- upload a new mini-program build for Home/My pagination and My overdue prompts.
+- keep the existing `listActivities` and `notifyActivityParticipants` cloud functions as the runtime API boundary.
+
+Verification:
+
+- red tests first failed because Home/My did not send `skip`, had no reach-bottom loaders, and did not mark overdue unresolved activities.
+- target tests passed: `3` test suites, `17` tests.
+- related regression passed: `4` test suites, `24` tests.
+
 ## 2026-06-10 - Web Admin Activity Operations, Export, And Logs
 
 Implemented the Version 2 web-admin activity operations slice.

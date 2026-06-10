@@ -4,6 +4,7 @@ const {
   listActivities,
   resolveActivityCoverImages
 } = require('../../services/activity-service');
+const { notifyActivityParticipants } = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
@@ -15,6 +16,8 @@ const {
   translateErrorMessage
 } = require('../../utils/i18n');
 const { formatRoles } = require('../../utils/roles');
+
+const MY_PAGE_SIZE = 20;
 
 function getActivityStartTime(item = {}) {
   const startAt = Date.parse(item.startAt || '');
@@ -51,9 +54,49 @@ function compareStartDesc(left, right) {
   return getActivityStartTime(right) - getActivityStartTime(left);
 }
 
-function prepareMyActivityItems(items = [], translate) {
+function isOverdueUnresolvedActivity(item = {}, now = Date.now()) {
+  if (item.status !== 'published' || item.confirmStatus === 'confirmed') {
+    return false;
+  }
+
+  const endAt = getActivityEndTime(item);
+  return Boolean(endAt && endAt < now);
+}
+
+function getActivityKey(item = {}) {
+  return item.id || item._id || '';
+}
+
+function mergeActivityItems(existingItems = [], nextItems = []) {
+  const byId = new Map();
+
+  existingItems.concat(nextItems).forEach(item => {
+    const key = getActivityKey(item);
+    if (key) {
+      byId.set(key, item);
+    }
+  });
+
+  return Array.from(byId.values()).sort(compareStartDesc);
+}
+
+function resolveHasMore(result = {}, itemCount, limit) {
+  if (typeof result.hasMore === 'boolean') {
+    return result.hasMore;
+  }
+
+  return itemCount >= limit;
+}
+
+function prepareMyActivityItems(items = [], translate, now = Date.now()) {
   return items
-    .map(item => buildActivityCardVm(item, undefined, translate))
+    .map(item => {
+      const viewModel = buildActivityCardVm(item, undefined, translate);
+      return {
+        ...viewModel,
+        overdueUnresolved: isOverdueUnresolvedActivity(viewModel, now)
+      };
+    })
     .sort(compareStartDesc);
 }
 
@@ -70,6 +113,12 @@ Page({
     createdItemsAll: [],
     createdItems: [],
     joinedItems: [],
+    createdHasMore: false,
+    joinedHasMore: false,
+    createdLoadingMore: false,
+    joinedLoadingMore: false,
+    createdNextSkip: 0,
+    joinedNextSkip: 0,
     userOpenId: '',
     userRoleText: ''
   },
@@ -101,6 +150,14 @@ Page({
     const translate = this.applyI18n();
     const loadToken = (this.myActivitiesLoadToken || 0) + 1;
     this.myActivitiesLoadToken = loadToken;
+    this.setData({
+      createdHasMore: false,
+      joinedHasMore: false,
+      createdLoadingMore: false,
+      joinedLoadingMore: false,
+      createdNextSkip: 0,
+      joinedNextSkip: 0
+    });
     const profilePromise = this.refreshUserProfile();
     await Promise.all([
       profilePromise,
@@ -109,43 +166,84 @@ Page({
     ]);
   },
 
-  async loadMyActivityList(scope, translate, loadToken) {
+  async loadMyActivityList(scope, translate, loadToken, options = {}) {
+    const append = Boolean(options.append);
+    const skipKey = scope === 'created' ? 'createdNextSkip' : 'joinedNextSkip';
+    const loadingKey = scope === 'created' ? 'createdLoadingMore' : 'joinedLoadingMore';
+    const hasMoreKey = scope === 'created' ? 'createdHasMore' : 'joinedHasMore';
+    const skip = append ? Number(this.data[skipKey] || MY_PAGE_SIZE) : 0;
+
+    if (append && (this.data[loadingKey] || !this.data[hasMoreKey])) {
+      return;
+    }
+
+    if (append) {
+      this.setData({ [loadingKey]: true });
+    }
+
     try {
-      const result = await listActivities({ scope, limit: 20 });
+      const result = await listActivities({
+        scope,
+        limit: MY_PAGE_SIZE,
+        skip
+      });
 
       if (this.myActivitiesLoadToken !== loadToken) {
         return;
       }
 
       const items = Array.isArray(result.items) ? result.items : [];
-      this.applyMyActivityItems(scope, items, translate);
-      this.resolveMyActivityCovers(scope, items, translate, loadToken);
+      this.applyMyActivityItems(scope, items, translate, { append });
+      this.setData({
+        [hasMoreKey]: resolveHasMore(result, items.length, MY_PAGE_SIZE),
+        [skipKey]: skip + MY_PAGE_SIZE,
+        [loadingKey]: false
+      });
+      this.resolveMyActivityCovers(scope, items, translate, loadToken, { append });
     } catch (error) {
       if (this.myActivitiesLoadToken !== loadToken) {
         return;
       }
 
-      this.applyMyActivityItems(scope, [], translate);
+      if (append) {
+        this.setData({ [loadingKey]: false });
+        return;
+      }
+
+      this.applyMyActivityItems(scope, [], translate, { append: false });
+      this.setData({
+        [hasMoreKey]: false,
+        [skipKey]: 0,
+        [loadingKey]: false
+      });
     }
   },
 
-  applyMyActivityItems(scope, items, translate) {
+  applyMyActivityItems(scope, items, translate, options = {}) {
     const preparedItems = prepareMyActivityItems(items, translate);
 
     if (scope === 'created') {
+      const createdItemsAll = options.append
+        ? mergeActivityItems(this.data.createdItemsAll, preparedItems)
+        : preparedItems;
+
       this.setData({
-        createdItemsAll: preparedItems
+        createdItemsAll
       });
-      this.applyCreatedFilter(this.data.createdFilter, preparedItems);
+      this.applyCreatedFilter(this.data.createdFilter, createdItemsAll);
       return;
     }
 
+    const joinedItems = options.append
+      ? mergeActivityItems(this.data.joinedItems, preparedItems)
+      : preparedItems;
+
     this.setData({
-      joinedItems: preparedItems
+      joinedItems
     });
   },
 
-  async resolveMyActivityCovers(scope, items, translate, loadToken) {
+  async resolveMyActivityCovers(scope, items, translate, loadToken, options = {}) {
     try {
       const itemsWithCovers = await resolveActivityCoverImages(items, {
         includeShareImage: false
@@ -155,7 +253,7 @@ Page({
         return;
       }
 
-      this.applyMyActivityItems(scope, itemsWithCovers, translate);
+      this.applyMyActivityItems(scope, itemsWithCovers, translate, options);
     } catch (error) {
       // Keep the already-rendered text list visible when cover resolution is slow or unavailable.
     }
@@ -215,6 +313,21 @@ Page({
     this.applyCreatedFilter(filterKey);
   },
 
+  async loadMoreMyActivities(eventOrScope) {
+    const scope =
+      typeof eventOrScope === 'string'
+        ? eventOrScope
+        : eventOrScope.currentTarget.dataset.scope;
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    await this.loadMyActivityList(scope || this.data.activeTab, translate, this.myActivitiesLoadToken || 0, {
+      append: true
+    });
+  },
+
+  async onReachBottom() {
+    await this.loadMoreMyActivities(this.data.activeTab);
+  },
+
   onLanguageChange(event) {
     const locale = event.currentTarget.dataset.locale;
     getApp().setLocale(locale);
@@ -238,6 +351,33 @@ Page({
 
     try {
       await cancelActivity(activityId);
+      await this.onShow();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onConfirmActivityProceeding(event) {
+    const activityId = event.currentTarget.dataset.activityId;
+    const translate = makeTranslator(this.data.locale);
+    const confirmed = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.confirmProceeding.title'),
+        content: translate('modal.confirmProceeding.content'),
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await notifyActivityParticipants(activityId, 'proceeding');
+      wx.showToast({
+        title: translate('toast.activityConfirmed'),
+        icon: 'success'
+      });
       await this.onShow();
     } catch (error) {
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });

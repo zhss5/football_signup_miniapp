@@ -127,6 +127,10 @@ Allowed `confirm_status` values: `pending`, `confirmed`.
 
 `getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
 
+Mini-program list pagination uses the existing `listActivities` API with stable `scope`, `limit`, and `skip` parameters. `home`, `created`, and `joined` scopes stay API-shaped and can later map to SQL `ORDER BY` plus `LIMIT/OFFSET` or cursor pagination without changing page-level payloads.
+
+Overdue unresolved prompts are derived state only. V2 computes them from existing `activities.status`, `activities.confirm_status`, and `activities.end_at` values; no CloudBase field or SQL column is added for the prompt itself.
+
 ### `activity_teams`
 
 Stores teams under each activity.
@@ -402,7 +406,9 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 12. Keep copy drafts API-shaped so a future self-hosted backend can implement the same contract over SQL without mini-program page-specific payloads.
 13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, and `listNotificationLogs`; do not couple the web-admin views to CloudBase collection layouts.
 14. Keep backend export functions row-based. CSV/XLSX file generation belongs in the web-admin or another client layer so a future self-hosted API can return the same rows from SQL.
-15. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+15. Keep mini-program pagination API-shaped with `limit` and `skip`. If SQL cursor pagination replaces offset pagination later, expose it as an additive API parameter and keep `limit`/`skip` compatible until old clients age out.
+16. Treat overdue unresolved prompts as derived UI state. Do not add a stored prompt flag unless a later workflow needs assignment, snooze, or resolution tracking.
+17. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 
@@ -436,6 +442,8 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - At least one `super_admin` exists before enabling the self-hosted admin path.
 - Attendance stats in MySQL match CloudBase `getAttendanceStats` for the same date range.
 - Web-admin activity filters in SQL match CloudBase `listActivities` with `scope: web-admin` for the same role, date range, status, organizer, keyword, limit, and skip.
+- Mini-program list pagination in SQL matches CloudBase `listActivities` for `home`, `created`, and `joined` scopes with the same `limit`, `skip`, sort order, and visibility rules.
+- Overdue unresolved prompt counts match activities where `status = 'published'`, `confirm_status <> 'confirmed'`, and `end_at` is earlier than the comparison timestamp.
 - Roster export rows in SQL-backed APIs match CloudBase `exportActivityRoster` rows for the same activity and viewer role.
 - Empty `registrations.attendance_status` is counted as present only for confirmed activities.
 - Cancelled, deleted, and pending-confirmation activities are excluded from attendance statistics.

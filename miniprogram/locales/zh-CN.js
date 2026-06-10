@@ -319,3 +319,10 @@ module.exports.errors.deletedActivityCannotBeCopied =
   '\u5df2\u5220\u9664\u7684\u6d3b\u52a8\u4e0d\u80fd\u590d\u5236';
 module.exports.errors.copyActivityTimeRequired =
   '\u53d1\u5e03\u524d\u8bf7\u786e\u8ba4\u6d3b\u52a8\u65f6\u95f4';
+module.exports.home.loadMore = '\u52a0\u8f7d\u66f4\u591a';
+module.exports.home.loadingMore = '\u52a0\u8f7d\u4e2d...';
+module.exports.my.loadMore = '\u52a0\u8f7d\u66f4\u591a';
+module.exports.my.loadingMore = '\u52a0\u8f7d\u4e2d...';
+module.exports.my.overdueUnresolvedTitle = '\u6d3b\u52a8\u9700\u8981\u5904\u7406\u7ed3\u679c';
+module.exports.my.overdueUnresolvedCopy =
+  '\u6d3b\u52a8\u5df2\u7ed3\u675f\uff0c\u8bf7\u786e\u8ba4\u4e3e\u884c\u6216\u53d6\u6d88\u6d3b\u52a8\u3002';

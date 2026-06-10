@@ -9,6 +9,10 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
   resolveActivityCoverImages: jest.fn(items => Promise.resolve(items))
 }));
 
+jest.mock('../../../miniprogram/services/notification-service', () => ({
+  notifyActivityParticipants: jest.fn()
+}));
+
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildActivityCardVm: jest.fn(item => ({
     ...item,
@@ -38,6 +42,15 @@ jest.mock('../../../miniprogram/utils/i18n', () => ({
         deleted: 'Deleted'
       },
       copyUserIdSuccess: 'User ID copied'
+    },
+    toast: {
+      activityConfirmed: 'Activity confirmed'
+    },
+    modal: {
+      confirmProceeding: {
+        title: 'Confirm Activity',
+        content: 'Mark this activity as confirmed?'
+      }
     }
   })),
   makeTranslator: jest.fn(() => key => key),
@@ -49,6 +62,7 @@ describe('my page profile marker', () => {
   let pageConfig;
   let ensureUserProfile;
   let listActivities;
+  let notifyActivityParticipants;
   let resolveActivityCoverImages;
 
   beforeEach(() => {
@@ -65,6 +79,7 @@ describe('my page profile marker', () => {
     require('../../../miniprogram/pages/my/index');
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ listActivities, resolveActivityCoverImages } = require('../../../miniprogram/services/activity-service'));
+    ({ notifyActivityParticipants } = require('../../../miniprogram/services/notification-service'));
   });
 
   afterEach(() => {
@@ -394,5 +409,147 @@ describe('my page profile marker', () => {
     await pageConfig.onShow.call(ctx);
 
     expect(ctx.data.createdItems.map(item => item.id)).toEqual(['future_published']);
+  });
+
+  test('loads more created activities from the next offset without replacing the first page', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user', 'organizer']
+      }
+    });
+    listActivities.mockImplementation(({ scope, skip }) => {
+      if (scope === 'joined') {
+        return Promise.resolve({ items: [], hasMore: false });
+      }
+
+      if (skip === 20) {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'created_second_page',
+              title: 'Created Second Page',
+              startAt: '2026-05-01T12:00:00.000Z',
+              status: 'published'
+            }
+          ],
+          hasMore: false
+        });
+      }
+
+      return Promise.resolve({
+        items: [
+          {
+            _id: 'created_first_page',
+            title: 'Created First Page',
+            startAt: '2026-05-03T12:00:00.000Z',
+            status: 'published'
+          }
+        ],
+        hasMore: true
+      });
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+    await pageConfig.onReachBottom.call(ctx);
+
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'created', limit: 20, skip: 0 });
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'created', limit: 20, skip: 20 });
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual([
+      'created_first_page',
+      'created_second_page'
+    ]);
+    expect(ctx.data.createdHasMore).toBe(false);
+    expect(ctx.data.createdLoadingMore).toBe(false);
+  });
+
+  test('marks overdue unresolved created activities and confirms them from the prompt', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user', 'organizer']
+      }
+    });
+    notifyActivityParticipants.mockResolvedValue({
+      confirmed: true
+    });
+    global.wx.showModal = jest.fn(({ success }) => success({ confirm: true }));
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'expired_pending',
+              title: 'Expired Pending',
+              startAt: '2026-05-01T12:00:00.000Z',
+              endAt: '2026-05-01T14:00:00.000Z',
+              status: 'published',
+              confirmStatus: 'pending'
+            },
+            {
+              _id: 'expired_confirmed',
+              title: 'Expired Confirmed',
+              startAt: '2026-05-02T12:00:00.000Z',
+              endAt: '2026-05-02T14:00:00.000Z',
+              status: 'published',
+              confirmStatus: 'confirmed'
+            }
+          ],
+          hasMore: false
+        });
+      }
+
+      return Promise.resolve({ items: [], hasMore: false });
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+
+    expect(ctx.data.createdItems.find(item => item.id === 'expired_pending')).toMatchObject({
+      overdueUnresolved: true
+    });
+    expect(ctx.data.createdItems.find(item => item.id === 'expired_confirmed')).toMatchObject({
+      overdueUnresolved: false
+    });
+
+    await pageConfig.onConfirmActivityProceeding.call(ctx, {
+      currentTarget: {
+        dataset: {
+          activityId: 'expired_pending'
+        }
+      }
+    });
+
+    expect(notifyActivityParticipants).toHaveBeenCalledWith('expired_pending', 'proceeding');
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'toast.activityConfirmed',
+      icon: 'success'
+    });
   });
 });

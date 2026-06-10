@@ -23,6 +23,9 @@ describe('my activities page', () => {
     expect(wxml).toContain('filter-heading');
     expect(wxml).toContain('created-activity-card');
     expect(wxml).toContain('activity-action-footer');
+    expect(wxml).toContain('overdue-unresolved-panel');
+    expect(wxml).toContain('catchtap="onConfirmActivityProceeding"');
+    expect(wxml).toContain('bindtap="loadMoreMyActivities"');
     expect(wxml.indexOf('activity-action-footer')).toBeGreaterThan(
       wxml.indexOf('created-activity-card')
     );
@@ -34,6 +37,8 @@ describe('my activities page', () => {
     expect(wxss).toContain('.filter-group');
     expect(wxss).toContain('.created-activity-card');
     expect(wxss).toContain('.activity-action-footer');
+    expect(wxss).toContain('.overdue-unresolved-panel');
+    expect(wxss).toContain('.pagination-row');
     expect(wxml).not.toContain('<text class="section-title">Joined Activities</text>');
   });
 

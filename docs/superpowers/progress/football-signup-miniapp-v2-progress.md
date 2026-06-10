@@ -18,7 +18,7 @@ Version 2 development branch has been created.
 
 Version 2 execution planning has been completed.
 
-Milestone 5 implementation is complete. Milestone 6 is next.
+Milestone 6 implementation is complete. Final Version 2 regression is next.
 
 Implementation plan:
 
@@ -77,6 +77,10 @@ Completed:
 - `listNotificationLogs` cloud function provides notification-log review with admin/global and organizer/own-activity boundaries.
 - web-admin activity-log review calls `listActivityLogs`; notification-log review calls `listNotificationLogs`.
 - SQL migration readiness mapping now documents web-admin activity/log API boundaries and notification-log field mapping.
+- Home activity list now loads additional pages with stable `limit` and `skip` parameters while preserving already-rendered cards.
+- My Created and Joined tabs now maintain independent pagination state and load additional pages with stable `limit` and `skip` parameters.
+- My Created tab now marks overdue unresolved activities when `endAt` has passed while the activity is still `published` and not `confirmed`.
+- overdue unresolved prompts reuse existing confirm/cancel actions; confirmation calls `notifyActivityParticipants(activityId, 'proceeding')` and no automatic confirmation is introduced.
 
 ## 4. Planned Version 2 Scope
 
@@ -162,10 +166,11 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue implementation from the list pagination and overdue prompts slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue with final Version 2 regression and documentation audit in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add Home/My paginated loading.
-- add overdue unresolved activity prompts for managers after `endAt` when activities remain published or pending.
-- keep using red/green tests before production changes.
+- run targeted V2 regression tests and, if feasible, the full Jest suite.
+- run `git diff --check`.
+- audit SQL migration readiness coverage for all V2 fields, API contracts, and log actions.
+- update final Version 2 progress and development-log entries.

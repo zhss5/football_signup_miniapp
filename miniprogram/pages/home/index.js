@@ -12,6 +12,8 @@ const {
 } = require('../../utils/i18n');
 const { canCreateActivity } = require('../../utils/roles');
 
+const HOME_PAGE_SIZE = 20;
+
 function getCreatedAtTime(item = {}) {
   const createdAt = Date.parse(item.createdAt || '');
   return Number.isFinite(createdAt) ? createdAt : 0;
@@ -28,10 +30,38 @@ function prepareVisibleHomeActivities(items = [], translate) {
     .sort(compareCreatedDesc);
 }
 
+function getActivityKey(item = {}) {
+  return item.id || item._id || '';
+}
+
+function mergeHomeActivities(existingItems = [], nextItems = []) {
+  const byId = new Map();
+
+  existingItems.concat(nextItems).forEach(item => {
+    const key = getActivityKey(item);
+    if (key) {
+      byId.set(key, item);
+    }
+  });
+
+  return Array.from(byId.values()).sort(compareCreatedDesc);
+}
+
+function resolveHasMore(result = {}, itemCount, limit) {
+  if (typeof result.hasMore === 'boolean') {
+    return result.hasMore;
+  }
+
+  return itemCount >= limit;
+}
+
 Page({
   data: {
     items: [],
     loading: false,
+    loadingMore: false,
+    hasMore: false,
+    nextSkip: 0,
     emptyVisible: false,
     canCreateActivity: false,
     locale: '',
@@ -48,23 +78,68 @@ Page({
 
   async onShow() {
     const translate = this.applyI18n();
-    this.setData({ loading: true });
+    const loadToken = (this.homeLoadToken || 0) + 1;
+    this.homeLoadToken = loadToken;
+    this.setData({
+      loading: true,
+      loadingMore: false,
+      hasMore: false,
+      nextSkip: 0
+    });
     const permissionPromise = this.refreshViewerPermissions();
 
+    await this.loadHomeActivities(translate, loadToken, { append: false });
+    await permissionPromise;
+  },
+
+  async loadHomeActivities(translate, loadToken, options = {}) {
+    const append = Boolean(options.append);
+    const skip = append ? Number(this.data.nextSkip || HOME_PAGE_SIZE) : 0;
+
+    if (append && (this.data.loadingMore || !this.data.hasMore)) {
+      return;
+    }
+
+    if (append) {
+      this.setData({ loadingMore: true });
+    }
+
     try {
-      const { items } = await listActivities({ scope: 'home', limit: 20 });
+      const result = await listActivities({
+        scope: 'home',
+        limit: HOME_PAGE_SIZE,
+        skip
+      });
+      const items = Array.isArray(result.items) ? result.items : [];
+
+      if (this.homeLoadToken !== loadToken) {
+        return;
+      }
+
       const visibleItems = prepareVisibleHomeActivities(items, translate);
       const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems, {
         includeShareImage: false
       });
+      const nextItems = append
+        ? mergeHomeActivities(this.data.items, itemsWithDisplayCovers)
+        : itemsWithDisplayCovers;
+
+      if (this.homeLoadToken !== loadToken) {
+        return;
+      }
+
       this.setData({
-        items: itemsWithDisplayCovers,
+        items: nextItems,
         loading: false,
-        emptyVisible: itemsWithDisplayCovers.length === 0
+        loadingMore: false,
+        hasMore: resolveHasMore(result, items.length, HOME_PAGE_SIZE),
+        nextSkip: skip + HOME_PAGE_SIZE,
+        emptyVisible: nextItems.length === 0
       });
     } catch (error) {
       this.setData({
         loading: false,
+        loadingMore: false,
         emptyVisible: this.data.items.length === 0
       });
 
@@ -75,8 +150,15 @@ Page({
         });
       }
     }
+  },
 
-    await permissionPromise;
+  async loadMore() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    await this.loadHomeActivities(translate, this.homeLoadToken || 0, { append: true });
+  },
+
+  async onReachBottom() {
+    await this.loadMore();
   },
 
   async refreshViewerPermissions() {

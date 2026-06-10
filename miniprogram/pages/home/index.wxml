@@ -11,4 +11,11 @@
     <text class="empty-title">{{i18n.home.emptyTitle}}</text>
     <text class="empty-copy">{{i18n.home.emptyCopy}}</text>
   </view>
+
+  <view wx:if="{{hasMore || loadingMore}}" class="pagination-row">
+    <button wx:if="{{hasMore && !loadingMore}}" class="load-more-button" bindtap="loadMore">
+      {{i18n.home.loadMore}}
+    </button>
+    <text wx:if="{{loadingMore}}" class="loading-more-text">{{i18n.home.loadingMore}}</text>
+  </view>
 </view>

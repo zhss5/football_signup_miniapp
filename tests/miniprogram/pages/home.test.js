@@ -78,7 +78,7 @@ describe('home page', () => {
     await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
 
     expect(ensureUserProfile).toHaveBeenCalled();
-    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20, skip: 0 });
     expect(resolveActivityCoverImages).toHaveBeenCalledWith(
       [
         expect.objectContaining({
@@ -126,7 +126,7 @@ describe('home page', () => {
 
     await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
 
-    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20, skip: 0 });
     expect(ctx.data.loading).toBe(false);
     expect(ctx.data.items).toEqual([]);
     expect(global.wx.showToast).toHaveBeenCalledWith({
@@ -233,6 +233,68 @@ describe('home page', () => {
 
     expect(wxml).toContain('wx:if="{{emptyVisible}}"');
     expect(wxml).toContain('{{i18n.home.emptyTitle}}');
+    expect(wxml).toContain('bindtap="loadMore"');
+  });
+
+  test('loads additional home activities from the next offset on reach bottom', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user']
+      }
+    });
+    listActivities
+      .mockResolvedValueOnce({
+        items: [
+          {
+            _id: 'home_first',
+            title: 'First',
+            statusTone: 'joinable',
+            createdAt: '2026-05-02T12:00:00.000Z'
+          }
+        ],
+        hasMore: true
+      })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            _id: 'home_second',
+            title: 'Second',
+            statusTone: 'joinable',
+            createdAt: '2026-05-01T12:00:00.000Z'
+          }
+        ],
+        hasMore: false
+      });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+    await pageConfig.onReachBottom.call(ctx);
+
+    expect(listActivities).toHaveBeenNthCalledWith(1, {
+      scope: 'home',
+      limit: 20,
+      skip: 0
+    });
+    expect(listActivities).toHaveBeenNthCalledWith(2, {
+      scope: 'home',
+      limit: 20,
+      skip: 20
+    });
+    expect(ctx.data.items.map(item => item.id)).toEqual(['home_first', 'home_second']);
+    expect(ctx.data.hasMore).toBe(false);
+    expect(ctx.data.loadingMore).toBe(false);
   });
 
   test('keeps the home page usable when create permission refresh fails', async () => {
@@ -258,7 +320,7 @@ describe('home page', () => {
 
     await expect(pageConfig.onShow.call(ctx)).resolves.toBeUndefined();
 
-    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20 });
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'home', limit: 20, skip: 0 });
     expect(ctx.data.loading).toBe(false);
     expect(ctx.data.canCreateActivity).toBe(false);
   });

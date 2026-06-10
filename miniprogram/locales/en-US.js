@@ -21,7 +21,9 @@ module.exports = {
   home: {
     createActivity: 'Create Activity',
     emptyTitle: 'No activities scheduled',
-    emptyCopy: 'New joinable activities will appear here.'
+    emptyCopy: 'New joinable activities will appear here.',
+    loadMore: 'Load more',
+    loadingMore: 'Loading...'
   },
   teamColors: {
     green: 'Green',
@@ -195,7 +197,11 @@ module.exports = {
     userIdLabel: 'User ID',
     copyUserId: 'Copy ID',
     copyUserIdSuccess: 'User ID copied',
-    roleLabel: 'Roles:'
+    roleLabel: 'Roles:',
+    loadMore: 'Load more',
+    loadingMore: 'Loading...',
+    overdueUnresolvedTitle: 'Activity needs a result',
+    overdueUnresolvedCopy: 'This activity has ended. Confirm it as held or cancel it.'
   },
   teamEditor: {
     addTeam: 'Add Team',

@@ -33,3 +33,21 @@
   margin-top: 16rpx;
   font-size: 26rpx;
 }
+
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0 48rpx;
+}
+
+.load-more-button {
+  min-width: 240rpx;
+  color: #374151;
+  background: #ffffff;
+  border: 2rpx solid #d1d5db;
+}
+
+.loading-more-text {
+  color: #6b7280;
+  font-size: 24rpx;
+}
