@@ -722,7 +722,7 @@ git commit -m "Add web admin activity attendance review"
 - Test: `tests/miniprogram/pages/activity-detail.test.js`
 - Test: `tests/miniprogram/pages/activity-create.test.js`
 
-- [ ] **Step 1: Write failing copy-activity tests**
+- [x] **Step 1: Write failing copy-activity tests**
 
 Cover:
 
@@ -733,7 +733,7 @@ test('copied draft includes reusable setup fields but no registrations or attend
 test('copied draft requires a new activity time before save', async () => {});
 ```
 
-- [ ] **Step 2: Implement copy draft initialization**
+- [x] **Step 2: Implement copy draft initialization**
 
 Rules:
 
@@ -743,7 +743,7 @@ Rules:
 - Initialize the create page in copy mode with a clear draft state and a new activity ID generated only when the manager saves.
 - Require the manager to review or change `startAt` and `endAt` before saving the copied activity.
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
 & 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/pages/activity-create.test.js

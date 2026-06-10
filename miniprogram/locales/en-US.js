@@ -12,6 +12,7 @@ module.exports = {
     home: 'Football Signup',
     createActivity: 'Create Activity',
     editActivity: 'Edit Activity',
+    copyActivity: 'Copy Activity',
     activityDetail: 'Activity Detail',
     myActivities: 'My Activities',
     adjustCover: 'Adjust Cover',
@@ -69,6 +70,7 @@ module.exports = {
       edit: 'Edit',
       join: 'Join',
       copyParticipantNames: 'Copy participant names',
+      copyActivity: 'Copy Activity',
       subscribeRegistrationNotifications: 'Subscribe signup notices',
       registrationNotificationsSubscribed: 'Signup notices subscribed',
       proxySignup: 'Add participant',
@@ -101,6 +103,7 @@ module.exports = {
     title: 'Activity title',
     activityDate: 'Activity date',
     activityTime: 'Activity time',
+    copyTimeReviewHint: 'Choose the new activity time before publishing.',
     startTime: 'Start time',
     endTime: 'End time',
     signupDeadline: 'Signup deadline',
@@ -297,6 +300,9 @@ module.exports = {
     deleteOnlyEmpty: 'Only activities without joined players can be deleted',
     createActivityNotAllowed: 'Only organizers can create activities',
     editActivityNotAllowed: 'Only the organizer or an admin can edit this activity',
+    copyActivityNotAllowed: 'Only the organizer or an admin can copy this activity',
+    deletedActivityCannotBeCopied: 'Deleted activities cannot be copied',
+    copyActivityTimeRequired: 'Review activity time before publishing',
     createPermissionCheckFailed: 'Unable to check create permission'
   }
 };

@@ -4,6 +4,43 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Activity Copy Draft Flow
+
+Implemented the Version 2 activity duplication flow.
+
+Cloud function added:
+
+- `getActivityCopyDraft`
+
+Delivered behavior:
+
+- organizers can copy activities they manage.
+- admins and super admins can copy any activity.
+- regular users and out-of-scope organizers are rejected.
+- deleted activities cannot be copied.
+- the backend returns an API-shaped copy draft and does not create or update any activity records.
+- copy drafts include reusable setup fields: title, description, venue, location, cover/detail images, team names, team colors, team capacities, signup limit, registration notice threshold, activity notice prompt, and insurance link.
+- copy drafts exclude source IDs, registrations, attendance state, participant operation logs, notification logs, notification subscription state, confirmation metadata, cancellation state, and dormant invite-code state.
+- mini-program Activity Detail shows the copy action only to activity managers.
+- mini-program Activity Create loads copy drafts through `getActivityCopyDraft` and requires the manager to choose the new activity time before publishing.
+
+SQL readiness:
+
+- no new persistent CloudBase fields were added.
+- `getActivityCopyDraft` is a read API contract and can map cleanly to a future HTTP API backed by SQL.
+- copied drafts use `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as API state, but V2 still does not introduce runtime MySQL writes or dual-write behavior.
+
+Deployment note:
+
+- deploy `getActivityCopyDraft`.
+- run `copy-cloud-shared` before CloudBase deployment.
+- upload a new mini-program build for the Activity Detail copy action and Activity Create copy mode.
+
+Verification:
+
+- red tests first failed because `getActivityCopyDraft`, mini-program service delegation, copy draft form mapping, Activity Detail copy navigation, and Activity Create copy mode did not exist.
+- target regression passed: `6` test suites, `193` tests.
+
 ## 2026-06-10 - Mini-Program Manager Alias Editing
 
 Implemented the mini-program manager alias editing surface for Activity Detail.

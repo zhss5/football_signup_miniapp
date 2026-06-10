@@ -181,12 +181,16 @@
       {{viewer.registrationNotificationSubscribed ? i18n.activity.actions.registrationNotificationsSubscribed : i18n.activity.actions.subscribeRegistrationNotifications}}
     </button>
 
-    <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
-      {{i18n.activity.actions.edit}}
-    </button>
+        <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
+          {{i18n.activity.actions.edit}}
+        </button>
 
-    <button
-      wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
+        <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="onCopyActivity">
+          {{i18n.activity.actions.copyActivity}}
+        </button>
+
+        <button
+          wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
       class="action-button confirm-action-button"
       bindtap="onConfirmActivityProceeding"
     >

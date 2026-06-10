@@ -3,6 +3,7 @@ const path = require('path');
 
 jest.mock('../../../miniprogram/services/activity-service', () => ({
   createActivity: jest.fn(),
+  getActivityCopyDraft: jest.fn(),
   getActivityDetail: jest.fn(),
   updateActivity: jest.fn()
 }));
@@ -21,6 +22,16 @@ jest.mock('../../../miniprogram/services/notification-service', () => ({
 }));
 
 jest.mock('../../../miniprogram/utils/activity-draft', () => ({
+  buildActivityCopyForm: jest.fn(draft => ({
+    title: draft.title || '',
+    activityDate: '',
+    startTime: '',
+    endTime: '',
+    signupDeadlineDate: '',
+    signupDeadlineTime: '',
+    addressText: draft.addressText || '',
+    teams: draft.teams || []
+  })),
   buildActivityEditForm: jest.fn(() => ({
     title: 'Existing Thursday Match',
     coverImage: 'cloud://cover-existing',
@@ -57,6 +68,7 @@ jest.mock('../../../miniprogram/utils/constants', () => ({
 describe('activity create submit flow', () => {
   let pageConfig;
   let createActivity;
+  let getActivityCopyDraft;
   let getActivityDetail;
   let updateActivity;
   let ensureUserProfile;
@@ -85,6 +97,7 @@ describe('activity create submit flow', () => {
     require('../../../miniprogram/pages/activity-create/index');
     ({
       createActivity,
+      getActivityCopyDraft,
       getActivityDetail,
       updateActivity
     } = require('../../../miniprogram/services/activity-service'));
@@ -595,6 +608,92 @@ describe('activity create submit flow', () => {
     expect(ctx.data.isEditMode).toBe(true);
     expect(ctx.data.canEditActivity).toBe(true);
     expect(ctx.data.form.title).toBe('Existing Thursday Match');
+  });
+
+  test('onLoad in copy mode loads a backend copy draft into the create form', async () => {
+    getActivityCopyDraft.mockResolvedValue({
+      sourceActivityId: 'activity_123',
+      draft: {
+        title: 'Original Match',
+        addressText: 'Half Stone',
+        status: 'draft',
+        confirmStatus: 'pending',
+        requiresTimeReview: true,
+        teams: [
+          {
+            teamName: 'White',
+            maxMembers: 6,
+            colorKey: 'white'
+          }
+        ]
+      }
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onLoad.call(ctx, {
+      mode: 'copy',
+      activityId: 'activity_123'
+    });
+
+    expect(getActivityCopyDraft).toHaveBeenCalledWith('activity_123');
+    expect(ctx.data.isCopyMode).toBe(true);
+    expect(ctx.data.copySourceActivityId).toBe('activity_123');
+    expect(ctx.data.isEditMode).toBe(false);
+    expect(ctx.data.canCreateActivity).toBe(true);
+    expect(ctx.data.canSubmitActivity).toBe(true);
+    expect(ctx.data.form).toMatchObject({
+      title: 'Original Match',
+      activityDate: '',
+      startTime: '',
+      endTime: ''
+    });
+  });
+
+  test('onSubmit requires copied activity time to be reviewed before publishing', async () => {
+    const ctx = {
+      data: {
+        form: {
+          title: 'Copied Match',
+          activityDate: '',
+          startTime: '',
+          endTime: '',
+          signupDeadlineDate: '',
+          signupDeadlineTime: ''
+        },
+        canSubmitActivity: true,
+        isCopyMode: true,
+        isEditMode: false,
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      syncDerivedState: jest.fn()
+    };
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(createActivity).not.toHaveBeenCalled();
+    expect(updateActivity).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Review activity time before publishing',
+      icon: 'none'
+    });
   });
 
   test('onSubmit updates an existing activity in edit mode without reuploading a CloudBase cover', async () => {

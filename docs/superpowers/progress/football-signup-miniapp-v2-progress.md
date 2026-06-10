@@ -59,6 +59,10 @@ Completed:
 - mini-program Activity Detail now shows manager aliases only to authorized registration managers.
 - mini-program Activity Detail lets organizers, admins, and super admins edit real-user manager aliases through `updateParticipantManagerAlias`.
 - mini-program manager alias editing remains hidden from regular users and proxy signup rows.
+- `getActivityCopyDraft` cloud function returns permission-checked copy drafts for organizers, admins, and super admins.
+- activity copy drafts include reusable setup fields only and exclude source IDs, registrations, attendance state, activity logs, notification logs, subscription state, confirmation state, and cancellation state.
+- mini-program Activity Detail exposes the copy action only to source activity managers.
+- mini-program Activity Create supports copy mode and requires the manager to choose the new activity time before publishing.
 
 ## 4. Planned Version 2 Scope
 
@@ -144,9 +148,9 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue implementation from the participant identity and operations slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue implementation from the web-admin foundation slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add the activity duplication backend and mini-program/web-admin entry points.
+- add or complete the `web-admin/` foundation with login/identity, role guard, user search, and role management UI.
 - keep using red/green tests before production changes.

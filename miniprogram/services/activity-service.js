@@ -52,6 +52,10 @@ function getActivityStats(activityId) {
   return call('getActivityStats', { activityId });
 }
 
+function getActivityCopyDraft(activityId) {
+  return call('getActivityCopyDraft', { activityId });
+}
+
 function getActivityCoverSources(activity = {}, preferredCover = 'thumb') {
   const coverImage = activity.coverImage || '';
   const coverThumbImage = activity.coverThumbImage || '';
@@ -195,6 +199,7 @@ module.exports = {
   cancelActivity,
   createActivity,
   deleteActivity,
+  getActivityCopyDraft,
   listActivities,
   getActivityDetail,
   getActivityStats,

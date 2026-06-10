@@ -1072,6 +1072,33 @@ describe('activity detail page', () => {
     });
   });
 
+  test('activity detail template renders copy activity action only for activity managers', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{viewer.canEditActivity}}"');
+    expect(wxml).toContain('bindtap="onCopyActivity"');
+    expect(wxml).toContain('{{i18n.activity.actions.copyActivity}}');
+  });
+
+  test('onCopyActivity opens the create page in copy mode for the current activity', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123'
+      }
+    };
+
+    global.wx.navigateTo = jest.fn();
+
+    pageConfig.onCopyActivity.call(ctx);
+
+    expect(global.wx.navigateTo).toHaveBeenCalledWith({
+      url: '/pages/activity-create/index?mode=copy&activityId=activity_123'
+    });
+  });
+
   test('onRemoveRegistration confirms removal, calls the service, and reloads detail', async () => {
     removeRegistration.mockResolvedValue({
       status: 'cancelled'

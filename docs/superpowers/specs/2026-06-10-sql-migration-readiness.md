@@ -125,6 +125,8 @@ Allowed `status` values: `draft`, `published`, `closed`, `finished`, `cancelled`
 
 Allowed `confirm_status` values: `pending`, `confirmed`.
 
+`getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
+
 ### `activity_teams`
 
 Stores teams under each activity.
@@ -388,6 +390,8 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 8. Add audit rows for state-changing operations instead of overwriting the only copy of historical information.
 9. Avoid broad nested objects in new fields unless the data is low-query and belongs in JSON later.
 10. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
+11. Keep activity duplication as a white-listed API draft operation: copy reusable setup fields only, do not copy registrations, attendance state, activity logs, notification logs, subscription rows, confirmation metadata, cancellation state, or source document IDs.
+12. Keep copy drafts API-shaped so a future self-hosted backend can implement the same contract over SQL without mini-program page-specific payloads.
 11. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist

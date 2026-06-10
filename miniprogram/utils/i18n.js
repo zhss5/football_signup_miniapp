@@ -279,7 +279,9 @@ function translateErrorMessage(error, translate) {
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',
     'Only activities without joined players can be deleted': 'errors.deleteOnlyEmpty',
     'Only organizers can create activities': 'errors.createActivityNotAllowed',
-    'Only the organizer or an admin can edit this activity': 'errors.editActivityNotAllowed'
+    'Only the organizer or an admin can edit this activity': 'errors.editActivityNotAllowed',
+    'Only the organizer or an admin can copy this activity': 'errors.copyActivityNotAllowed',
+    'Deleted activities cannot be copied': 'errors.deletedActivityCannotBeCopied'
   };
 
   const message = [

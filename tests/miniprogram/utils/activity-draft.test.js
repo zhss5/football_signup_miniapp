@@ -1,4 +1,5 @@
 const {
+  buildActivityCopyForm,
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
@@ -232,4 +233,76 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     ]
   });
   expect(form).not.toHaveProperty('requirePhone');
+});
+
+test('buildActivityCopyForm maps reusable setup into a new draft without source ids', () => {
+  const form = buildActivityCopyForm({
+    title: 'Original Match',
+    startAt: '',
+    endAt: '',
+    signupDeadlineAt: '',
+    addressText: 'Half Stone',
+    addressName: 'Half Stone Football Park',
+    location: {
+      latitude: 31.2,
+      longitude: 121.4
+    },
+    description: 'Original notes',
+    insuranceLink: 'https://insurance.example.com/original',
+    notificationHint: 'Bring both kits',
+    registrationNoticeThreshold: 16,
+    coverImage: 'cloud://cover-a',
+    coverThumbImage: 'cloud://cover-a-thumb',
+    shareImage: 'cloud://share-a',
+    imageList: ['cloud://cover-a'],
+    detailImages: ['cloud://detail-a'],
+    signupLimitTotal: 20,
+    inviteCode: '',
+    status: 'draft',
+    confirmStatus: 'pending',
+    requiresTimeReview: true,
+    teams: [
+      {
+        teamName: 'White',
+        maxMembers: 6,
+        colorKey: 'white'
+      },
+      {
+        teamName: 'Red',
+        maxMembers: 6,
+        colorKey: 'red'
+      }
+    ]
+  });
+
+  expect(form).toMatchObject({
+    title: 'Original Match',
+    activityDate: '',
+    startTime: '',
+    endTime: '',
+    signupDeadlineDate: '',
+    signupDeadlineTime: '',
+    addressText: 'Half Stone',
+    addressName: 'Half Stone Football Park',
+    description: 'Original notes',
+    insuranceLink: 'https://insurance.example.com/original',
+    notificationHint: 'Bring both kits',
+    registrationNoticeThreshold: 16,
+    coverImage: 'cloud://cover-a',
+    coverThumbImage: 'cloud://cover-a-thumb',
+    shareImage: 'cloud://share-a',
+    imageList: ['cloud://cover-a'],
+    detailImages: ['cloud://detail-a'],
+    signupLimitTotal: 20,
+    inviteCode: '',
+    teams: [
+      { teamName: 'White', maxMembers: 6, colorKey: 'white' },
+      { teamName: 'Red', maxMembers: 6, colorKey: 'red' }
+    ]
+  });
+  expect(form.teams[0]).not.toHaveProperty('_id');
+  expect(form.teams[0]).not.toHaveProperty('joinedCount');
+  expect(form).not.toHaveProperty('status');
+  expect(form).not.toHaveProperty('confirmStatus');
+  expect(form).not.toHaveProperty('requiresTimeReview');
 });

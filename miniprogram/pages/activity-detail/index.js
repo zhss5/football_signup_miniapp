@@ -388,6 +388,12 @@ Page({
     });
   },
 
+  onCopyActivity() {
+    wx.navigateTo({
+      url: `/pages/activity-create/index?mode=copy&activityId=${this.data.activityId}`
+    });
+  },
+
   onTeamColorTap(event) {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const viewer = this.data.viewer || {};

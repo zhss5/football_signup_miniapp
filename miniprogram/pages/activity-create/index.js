@@ -1,5 +1,6 @@
 const {
   createActivity,
+  getActivityCopyDraft,
   getActivityDetail,
   updateActivity
 } = require('../../services/activity-service');
@@ -7,6 +8,7 @@ const { uploadFile } = require('../../services/cloud');
 const { ensureUserProfile } = require('../../services/user-service');
 const { MAX_ACTIVITY_IMAGES, MAX_DETAIL_IMAGES, MAX_TEAMS } = require('../../utils/constants');
 const {
+  buildActivityCopyForm,
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
@@ -155,6 +157,16 @@ function buildEditTeamSafetyError(form, originalTeams, translate) {
   }
 
   return null;
+}
+
+function hasReviewedCopyActivityTime(form = {}) {
+  return Boolean(
+    form.activityDate &&
+      form.startTime &&
+      form.endTime &&
+      form.signupDeadlineDate &&
+      form.signupDeadlineTime
+  );
 }
 
 function getCoverFileExtension(filePath) {
@@ -307,22 +319,32 @@ Page({
     canEditActivity: false,
     canSubmitActivity: false,
     isEditMode: false,
+    isCopyMode: false,
     editActivityId: '',
+    copySourceActivityId: '',
     editOriginalTeams: [],
     teamEditorLabels: {}
   },
 
   async onLoad(query = {}) {
     const isEditMode = query.mode === 'edit';
+    const isCopyMode = query.mode === 'copy';
     this.setData({
       isEditMode,
-      editActivityId: query.activityId || ''
+      isCopyMode,
+      editActivityId: isEditMode ? query.activityId || '' : '',
+      copySourceActivityId: isCopyMode ? query.activityId || '' : ''
     });
 
-    const translate = this.applyI18n(!isEditMode);
+    const translate = this.applyI18n(!isEditMode && !isCopyMode);
 
     if (isEditMode) {
       await this.loadActivityForEdit(query.activityId, translate);
+      return;
+    }
+
+    if (isCopyMode) {
+      await this.loadActivityCopyDraft(query.activityId, translate);
       return;
     }
 
@@ -342,7 +364,12 @@ Page({
     ];
     const form = resetForm ? createDefaultActivityForm({ defaultTeams }) : this.data.form;
 
-    setPageNavigationTitle(this.data.isEditMode ? 'nav.editActivity' : 'nav.createActivity', locale);
+    const navKey = this.data.isEditMode
+      ? 'nav.editActivity'
+      : this.data.isCopyMode
+        ? 'nav.copyActivity'
+        : 'nav.createActivity';
+    setPageNavigationTitle(navKey, locale);
     this.setData({
       locale,
       i18n,
@@ -411,6 +438,31 @@ Page({
       this.setData({
         authorizationChecked: true,
         canEditActivity: false,
+        canSubmitActivity: false
+      });
+      wx.showToast({
+        title: translateErrorMessage(error, translate),
+        icon: 'none'
+      });
+    }
+  },
+
+  async loadActivityCopyDraft(activityId, translate = makeTranslator(this.data.locale || getAppLocale())) {
+    try {
+      const result = await getActivityCopyDraft(activityId);
+      const copyForm = buildActivityCopyForm(result.draft || {});
+
+      this.setData({
+        authorizationChecked: true,
+        canCreateActivity: true,
+        canSubmitActivity: true,
+        copySourceActivityId: result.sourceActivityId || activityId || ''
+      });
+      this.syncDerivedState(copyForm, translate);
+    } catch (error) {
+      this.setData({
+        authorizationChecked: true,
+        canCreateActivity: false,
         canSubmitActivity: false
       });
       wx.showToast({
@@ -708,6 +760,11 @@ Page({
     try {
       const payload = buildActivityPayload(this.data.form);
       this.setData({ validationErrors: {} });
+
+      if (this.data.isCopyMode && !hasReviewedCopyActivityTime(this.data.form)) {
+        throw new Error(translate('errors.copyActivityTimeRequired'));
+      }
+
       validateActivityDraft(payload, translate);
       const editTeamSafetyError = this.data.isEditMode
         ? buildEditTeamSafetyError(payload, this.data.editOriginalTeams, translate)

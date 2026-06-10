@@ -309,3 +309,13 @@ module.exports.modal.managerAlias = {
   defaultName: '\u8be5\u6210\u5458'
 };
 module.exports.toast.managerAliasUpdated = '\u5907\u6ce8\u5df2\u66f4\u65b0';
+module.exports.nav.copyActivity = '\u590d\u5236\u6d3b\u52a8';
+module.exports.activity.actions.copyActivity = '\u590d\u5236\u6d3b\u52a8';
+module.exports.activityCreate.copyTimeReviewHint =
+  '\u53d1\u5e03\u524d\u8bf7\u9009\u62e9\u65b0\u7684\u6d3b\u52a8\u65f6\u95f4\u3002';
+module.exports.errors.copyActivityNotAllowed =
+  '\u53ea\u6709\u7ec4\u7ec7\u8005\u6216\u7ba1\u7406\u5458\u53ef\u4ee5\u590d\u5236\u6d3b\u52a8';
+module.exports.errors.deletedActivityCannotBeCopied =
+  '\u5df2\u5220\u9664\u7684\u6d3b\u52a8\u4e0d\u80fd\u590d\u5236';
+module.exports.errors.copyActivityTimeRequired =
+  '\u53d1\u5e03\u524d\u8bf7\u786e\u8ba4\u6d3b\u52a8\u65f6\u95f4';

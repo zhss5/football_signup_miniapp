@@ -29,6 +29,7 @@
 
   <view class="field">
     <text class="label">{{i18n.activityCreate.activityTime}}</text>
+    <text wx:if="{{isCopyMode}}" class="hint">{{i18n.activityCreate.copyTimeReviewHint}}</text>
     <view class="picker-grid">
       <view class="picker-cell">
         <text class="sub-label">{{i18n.activityCreate.startTime}}</text>

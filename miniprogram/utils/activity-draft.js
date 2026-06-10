@@ -210,7 +210,53 @@ function buildActivityEditForm(activity = {}, teams = []) {
   };
 }
 
+function buildActivityCopyForm(draft = {}) {
+  const imageList = Array.isArray(draft.imageList)
+    ? draft.imageList.filter(Boolean).slice(0, MAX_ACTIVITY_IMAGES)
+    : draft.coverImage
+      ? [draft.coverImage]
+      : [];
+  const detailImages = Array.isArray(draft.detailImages)
+    ? draft.detailImages.filter(Boolean).slice(0, MAX_DETAIL_IMAGES)
+    : [];
+  const reusableTeams = Array.isArray(draft.teams)
+    ? draft.teams.map((team, index) => ({
+        teamName: String(team.teamName || '').trim(),
+        maxMembers: Number(team.maxMembers) || 0,
+        colorKey: normalizeTeamColorKey(team.colorKey, index)
+      }))
+    : [];
+
+  return {
+    title: draft.title || '',
+    activityDate: '',
+    startTime: '',
+    endTime: '',
+    signupDeadlineDate: '',
+    signupDeadlineTime: '',
+    addressText: draft.addressText || '',
+    addressName: draft.addressName || draft.addressText || '',
+    location: draft.location || null,
+    description: draft.description || '',
+    insuranceLink: draft.insuranceLink || '',
+    notificationHint: normalizeNotificationHint(draft.notificationHint),
+    coverImage: imageList[0] || draft.coverImage || '',
+    coverThumbImage: draft.coverThumbImage || '',
+    shareImage: draft.shareImage || '',
+    imageList,
+    detailImages,
+    signupLimitTotal: Number(draft.signupLimitTotal) || 0,
+    registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
+      draft.registrationNoticeThreshold,
+      Number(draft.signupLimitTotal) || 0
+    ),
+    inviteCode: '',
+    teams: reusableTeams
+  };
+}
+
 module.exports = {
+  buildActivityCopyForm,
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,

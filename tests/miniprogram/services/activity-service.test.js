@@ -322,4 +322,29 @@ describe('activity service cover display urls', () => {
       managerAlias: 'Zhang San'
     });
   });
+
+  test('getActivityCopyDraft delegates to the CloudBase service', async () => {
+    const cloud = require('../../../miniprogram/services/cloud');
+    cloud.call.mockResolvedValue({
+      sourceActivityId: 'activity_1',
+      draft: {
+        title: 'Original Match',
+        status: 'draft',
+        requiresTimeReview: true
+      }
+    });
+
+    await expect(activityService.getActivityCopyDraft('activity_1')).resolves.toEqual({
+      sourceActivityId: 'activity_1',
+      draft: {
+        title: 'Original Match',
+        status: 'draft',
+        requiresTimeReview: true
+      }
+    });
+
+    expect(cloud.call).toHaveBeenCalledWith('getActivityCopyDraft', {
+      activityId: 'activity_1'
+    });
+  });
 });
