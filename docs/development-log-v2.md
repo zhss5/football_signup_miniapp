@@ -4,6 +4,35 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Mini-Program Manager Alias Editing
+
+Implemented the mini-program manager alias editing surface for Activity Detail.
+
+Delivered behavior:
+
+- `getActivityDetail` includes `managerAlias` only in manager-visible roster member payloads for real WeChat signup users.
+- regular users continue to receive no manager-only alias field.
+- proxy signup rows do not expose or edit shared manager aliases because V2 has no proxy participant identity model.
+- Activity Detail team lists render manager aliases and alias edit controls only from manager-visible view-model fields.
+- alias edits call the shared `updateParticipantManagerAlias` backend API instead of writing `users.managerAlias` from the client.
+- successful edits show a toast and reload Activity Detail.
+
+SQL readiness:
+
+- no new storage fields were added in this milestone.
+- the existing `users.managerAlias` mapping and compatibility rule for routing both mini-program and web-admin edits through the same backend permission checks remain authoritative.
+
+Deployment note:
+
+- redeploy `getActivityDetail` because manager roster payloads now include `managerAlias`.
+- keep `updateParticipantManagerAlias` deployed from the backend milestone.
+- upload a new mini-program build for the Activity Detail alias controls.
+
+Verification:
+
+- red tests first failed because the mini-program service, Activity Detail binding/handler, team-list view model/event, and manager-visible detail payload were missing.
+- target regression passed: `5` test suites, `99` tests.
+
 ## 2026-06-10 - Participant Operation Logs
 
 Implemented the Version 2 participant operation history backend.

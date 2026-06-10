@@ -56,6 +56,9 @@ Completed:
 - participant operation audit writes now cover self signup, re-signup, self cancellation, proxy signup, manager removal, team movement, attendance updates, and manager alias changes.
 - `listActivityLogs` cloud function provides manager-only operation history review with admin/global and organizer/own-activity boundaries.
 - SQL migration readiness mapping now documents `activity_logs.targetOpenId`, `operatorOpenId`, before/after data, and operation-specific payload fields.
+- mini-program Activity Detail now shows manager aliases only to authorized registration managers.
+- mini-program Activity Detail lets organizers, admins, and super admins edit real-user manager aliases through `updateParticipantManagerAlias`.
+- mini-program manager alias editing remains hidden from regular users and proxy signup rows.
 
 ## 4. Planned Version 2 Scope
 
@@ -145,5 +148,5 @@ Continue implementation from the participant identity and operations slice in `d
 
 Recommended first coding task:
 
-- add the mini-program manager alias editing surface in Activity Detail.
+- add the activity duplication backend and mini-program/web-admin entry points.
 - keep using red/green tests before production changes.

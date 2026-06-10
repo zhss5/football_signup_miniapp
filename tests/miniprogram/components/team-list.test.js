@@ -37,6 +37,19 @@ describe('team list component', () => {
     expect(wxml).toContain('data-attendance-status="{{member.attendanceActionStatus}}"');
   });
 
+  test('renders manager alias text and edit action for prepared member view models', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.managerAliasVisible}}"');
+    expect(wxml).toContain('{{member.managerAliasText}}');
+    expect(wxml).toContain('wx:if="{{member.managerAliasActionVisible}}"');
+    expect(wxml).toContain('data-action="managerAlias"');
+    expect(wxml).toContain('data-manager-alias="{{member.managerAliasText}}"');
+  });
+
   test('does not emit team color taps for non-editable teams', () => {
     const triggerEvent = jest.fn();
     const ctx = {
@@ -114,6 +127,30 @@ describe('team list component', () => {
       attendanceStatus: 'absent',
       userOpenId: 'openid_player',
       signupName: 'Alex'
+    });
+  });
+
+  test('emits manager alias edits with current alias', () => {
+    const triggerEvent = jest.fn();
+    const ctx = {
+      triggerEvent
+    };
+
+    componentConfig.methods.onMemberActionTap.call(ctx, {
+      currentTarget: {
+        dataset: {
+          action: 'managerAlias',
+          userOpenId: 'openid_player',
+          signupName: 'Alex',
+          managerAlias: 'Zhang San'
+        }
+      }
+    });
+
+    expect(triggerEvent).toHaveBeenCalledWith('manageraliasedit', {
+      userOpenId: 'openid_player',
+      signupName: 'Alex',
+      managerAlias: 'Zhang San'
     });
   });
 });

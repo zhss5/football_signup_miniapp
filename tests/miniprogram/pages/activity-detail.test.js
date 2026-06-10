@@ -2,6 +2,7 @@ jest.mock('../../../miniprogram/services/activity-service', () => ({
   getActivityDetail: jest.fn(),
   cancelActivity: jest.fn(),
   setRegistrationAttendance: jest.fn(),
+  updateParticipantManagerAlias: jest.fn(),
   updateTeamColor: jest.fn(),
   resolveActivityCoverImage: jest.fn(activity => Promise.resolve(activity))
 }));
@@ -49,6 +50,7 @@ describe('activity detail page', () => {
   let getActivityDetail;
   let cancelActivity;
   let setRegistrationAttendance;
+  let updateParticipantManagerAlias;
   let updateTeamColor;
   let addProxyRegistration;
   let moveRegistration;
@@ -82,6 +84,9 @@ describe('activity detail page', () => {
     ({ cancelActivity } = require('../../../miniprogram/services/activity-service'));
     ({
       setRegistrationAttendance
+    } = require('../../../miniprogram/services/activity-service'));
+    ({
+      updateParticipantManagerAlias
     } = require('../../../miniprogram/services/activity-service'));
     ({ updateTeamColor } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
@@ -570,6 +575,15 @@ describe('activity detail page', () => {
     expect(wxml).toContain('bind:attendancechange="onAttendanceChange"');
   });
 
+  test('activity detail template wires manager alias edits from team list', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('bind:manageraliasedit="onManagerAliasEdit"');
+  });
+
   test('onAttendanceChange updates member attendance and reloads detail', async () => {
     setRegistrationAttendance.mockResolvedValue({
       registration: {
@@ -602,6 +616,77 @@ describe('activity detail page', () => {
       icon: 'success'
     });
     expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('onManagerAliasEdit prompts for an alias, updates it, and reloads detail', async () => {
+    updateParticipantManagerAlias.mockResolvedValue({
+      user: {
+        _id: 'openid_player',
+        managerAlias: 'Zhang San'
+      }
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true, content: '  Zhang San  ' });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onManagerAliasEdit.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        managerAlias: 'Old Alias'
+      }
+    });
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Manager alias',
+        editable: true,
+        placeholderText: 'Alias visible to managers'
+      })
+    );
+    expect(updateParticipantManagerAlias).toHaveBeenCalledWith(
+      'activity_123',
+      'openid_player',
+      'Zhang San'
+    );
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Alias updated',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
+  });
+
+  test('onManagerAliasEdit does not update when the prompt is cancelled', async () => {
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: false, content: 'Ignored' });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onManagerAliasEdit.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        managerAlias: ''
+      }
+    });
+
+    expect(updateParticipantManagerAlias).not.toHaveBeenCalled();
+    expect(ctx.reload).not.toHaveBeenCalled();
   });
 
   test('reload lets managers resubscribe when the saved manager notice template is stale', async () => {

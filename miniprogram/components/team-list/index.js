@@ -51,6 +51,7 @@ Component({
       const eventNameByAction = {
         cancelSignup: 'cancelsignup',
         attendance: 'attendancechange',
+        managerAlias: 'manageraliasedit',
         move: 'movemember',
         remove: 'removemember'
       };
@@ -72,6 +73,10 @@ Component({
       if (dataset.action === 'attendance') {
         detail.registrationId = dataset.registrationId;
         detail.attendanceStatus = dataset.attendanceStatus;
+      }
+
+      if (dataset.action === 'managerAlias') {
+        detail.managerAlias = dataset.managerAlias || '';
       }
 
       this.triggerEvent(eventName, detail);

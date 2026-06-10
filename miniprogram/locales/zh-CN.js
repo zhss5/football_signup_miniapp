@@ -301,3 +301,11 @@ module.exports.activityJoin.preferredPositionsHint =
   '\u53ef\u4e0d\u9009\uff0c\u6700\u591a\u9009 2 \u4e2a\u3002';
 module.exports.activityJoin.preferredPositionsLimit = '\u6700\u591a\u9009 2 \u4e2a\u4f4d\u7f6e';
 module.exports.modal.proxySignup.cancel = '\u53d6\u6d88';
+module.exports.activity.actions.managerAlias = '\u5907\u6ce8';
+module.exports.modal.managerAlias = {
+  title: '\u7ba1\u7406\u5907\u6ce8',
+  content: '\u4e3a {{name}} \u8bbe\u7f6e\u4ec5\u7ba1\u7406\u5458\u53ef\u89c1\u7684\u5907\u6ce8\u3002',
+  placeholder: '\u4ec5\u7ba1\u7406\u5458\u53ef\u89c1\u7684\u5907\u6ce8',
+  defaultName: '\u8be5\u6210\u5458'
+};
+module.exports.toast.managerAliasUpdated = '\u5907\u6ce8\u5df2\u66f4\u65b0';

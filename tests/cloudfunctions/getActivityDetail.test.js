@@ -44,7 +44,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       teamName: 'Red',
       sort: 1,
       maxMembers: 6,
-      joinedCount: 0
+      joinedCount: 1
     }
   ];
   const registrations = [
@@ -61,12 +61,27 @@ test('getActivityDetail groups joined members under each team', async () => {
       attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
       attendanceMarkedBy: 'openid_owner',
       joinedAt: '2026-04-19T10:00:00.000Z'
+    },
+    {
+      _id: 'activity_1_openid_c',
+      activityId: 'activity_1',
+      teamId: 'team_red',
+      userOpenId: 'openid_c',
+      status: 'joined',
+      signupName: 'Chris',
+      proxyRegistration: false,
+      joinedAt: '2026-04-19T10:05:00.000Z'
     }
   ];
   const users = [
     {
       _id: 'openid_a',
       avatarUrl: 'https://example.com/avatar-a.png'
+    },
+    {
+      _id: 'openid_c',
+      avatarUrl: '',
+      managerAlias: 'Zhang San'
     }
   ];
 
@@ -144,6 +159,10 @@ test('getActivityDetail groups joined members under each team', async () => {
     attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
     attendanceMarkedBy: 'openid_owner'
   });
+  expect(result.teams[1].members[0]).toMatchObject({
+    signupName: 'Chris',
+    managerAlias: 'Zhang San'
+  });
 
   const regularResult = await getActivityDetail.main(
     { activityId: 'activity_1' },
@@ -157,6 +176,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('registrationId');
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('attendanceStatus');
+  expect(regularResult.teams[1].members[0]).not.toHaveProperty('managerAlias');
 });
 
 test('getActivityDetail uses registration avatar when user profile avatar is unavailable', async () => {

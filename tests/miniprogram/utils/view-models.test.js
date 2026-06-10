@@ -545,6 +545,55 @@ test('buildTeamListVm hides attendance actions before confirmation and from regu
   });
 });
 
+test('buildTeamListVm exposes manager aliases only to registration managers for real users', () => {
+  const teams = [
+    {
+      _id: 'team_green',
+      teamName: 'Green',
+      joinedCount: 2,
+      maxMembers: 6,
+      members: [
+        {
+          userOpenId: 'openid_player',
+          signupName: 'Alex',
+          managerAlias: 'Zhang San'
+        },
+        {
+          userOpenId: 'proxy_1',
+          signupName: 'Guest',
+          managerAlias: '',
+          proxyRegistration: true
+        }
+      ]
+    }
+  ];
+  const activity = {
+    status: 'published'
+  };
+
+  const managerVm = buildTeamListVm(teams, null, activity, undefined, undefined, {
+    canManageRegistrations: true
+  });
+  const regularVm = buildTeamListVm(teams, null, activity);
+
+  expect(managerVm[0].members[0]).toMatchObject({
+    managerAliasVisible: true,
+    managerAliasText: 'Zhang San',
+    managerAliasActionVisible: true,
+    managerAliasActionText: 'Alias'
+  });
+  expect(managerVm[0].members[1]).toMatchObject({
+    managerAliasVisible: false,
+    managerAliasActionVisible: false
+  });
+  expect(regularVm[0].members[0]).toMatchObject({
+    managerAlias: '',
+    managerAliasVisible: false,
+    managerAliasActionVisible: false,
+    managerAliasText: ''
+  });
+});
+
 test('buildTeamListVm shows preferred positions to regular users and managers', () => {
   const teams = [
     {

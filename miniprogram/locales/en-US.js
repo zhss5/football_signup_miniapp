@@ -77,6 +77,7 @@ module.exports = {
       cancelSignup: 'Cancel Signup',
       markPresent: 'Mark present',
       markAbsent: 'Mark absent',
+      managerAlias: 'Alias',
       moveMember: 'Move',
       removeMember: 'Remove',
       delete: 'Delete'
@@ -220,6 +221,12 @@ module.exports = {
       content: 'Remove {{name}} from this activity?',
       defaultName: 'this member'
     },
+    managerAlias: {
+      title: 'Manager alias',
+      content: 'Set a manager-only alias for {{name}}.',
+      placeholder: 'Alias visible to managers',
+      defaultName: 'this member'
+    },
     proxySignup: {
       title: 'Add participant',
       placeholder: 'Participant name',
@@ -242,6 +249,7 @@ module.exports = {
     noMoveTargetTeam: 'No available target team',
     activityConfirmed: 'Activity confirmed',
     attendanceUpdated: 'Attendance updated',
+    managerAliasUpdated: 'Alias updated',
     notificationFailed: 'Notification failed',
     registrationNotificationSubscribed: 'Signup notifications enabled',
     registrationNotificationNotEnabled: 'Signup notifications not enabled'

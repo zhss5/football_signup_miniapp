@@ -127,6 +127,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         member.attendanceStatus = registration.attendanceStatus || 'present';
         member.attendanceMarkedAt = registration.attendanceMarkedAt || '';
         member.attendanceMarkedBy = registration.attendanceMarkedBy || '';
+
+        if (!registration.proxyRegistration) {
+          member.managerAlias = String(user.managerAlias || '').trim();
+        }
       }
 
       acc[registration.teamId].push(member);

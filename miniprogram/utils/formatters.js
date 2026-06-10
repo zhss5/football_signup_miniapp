@@ -154,10 +154,18 @@ function buildMemberVm(member, context = {}) {
   const attendanceStatusVisible = Boolean(context.canManageAttendance);
   const attendanceActionVisible = Boolean(context.canManageAttendance && member.registrationId);
   const attendanceActionStatus = attendanceStatus === 'absent' ? 'present' : 'absent';
+  const managerAliasText = String(member.managerAlias || '').trim();
+  const managerAliasActionVisible = Boolean(
+    context.canManageRegistrations &&
+      member.userOpenId &&
+      !member.proxyRegistration &&
+      !String(member.userOpenId).startsWith('proxy_')
+  );
 
   return {
     ...member,
     attendanceStatus,
+    managerAlias: managerAliasActionVisible ? managerAliasText : '',
     avatarText: sourceName ? sourceName.charAt(0).toUpperCase() : DEFAULT_MEMBER_AVATAR_TEXT,
     isCurrentUser,
     memberAction,
@@ -180,6 +188,12 @@ function buildMemberVm(member, context = {}) {
             ? 'activity.actions.markPresent'
             : 'activity.actions.markAbsent'
         )
+      : '',
+    managerAliasVisible: Boolean(managerAliasActionVisible && managerAliasText),
+    managerAliasText: managerAliasActionVisible ? managerAliasText : '',
+    managerAliasActionVisible,
+    managerAliasActionText: managerAliasActionVisible
+      ? context.translate('activity.actions.managerAlias')
       : ''
   };
 }

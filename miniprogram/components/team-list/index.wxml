@@ -63,6 +63,7 @@
                 >{{member.attendanceStatusText}}</text>
               </view>
               <text wx:if="{{member.preferredPositionsVisible}}" class="member-position-text">{{member.preferredPositionsText}}</text>
+              <text wx:if="{{member.managerAliasVisible}}" class="member-manager-alias">{{member.managerAliasText}}</text>
             </view>
             <button
               wx:if="{{member.attendanceActionVisible}}"
@@ -75,6 +76,16 @@
               data-signup-name="{{member.signupName}}"
               catchtap="onMemberActionTap"
             >{{member.attendanceActionText}}</button>
+            <button
+              wx:if="{{member.managerAliasActionVisible}}"
+              class="member-action-button member-action-alias"
+              size="mini"
+              data-action="managerAlias"
+              data-user-open-id="{{member.userOpenId}}"
+              data-signup-name="{{member.signupName}}"
+              data-manager-alias="{{member.managerAliasText}}"
+              catchtap="onMemberActionTap"
+            >{{member.managerAliasActionText}}</button>
             <button
               wx:if="{{member.moveActionVisible}}"
               class="member-action-button member-action-move"

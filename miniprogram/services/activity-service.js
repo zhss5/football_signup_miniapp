@@ -24,6 +24,14 @@ function setRegistrationAttendance(activityId, registrationId, attendanceStatus)
   });
 }
 
+function updateParticipantManagerAlias(activityId, targetOpenId, managerAlias) {
+  return call('updateParticipantManagerAlias', {
+    activityId,
+    targetOpenId,
+    managerAlias
+  });
+}
+
 function cancelActivity(activityId) {
   return call('cancelActivity', { activityId });
 }
@@ -194,5 +202,6 @@ module.exports = {
   resolveActivityCoverImages,
   setRegistrationAttendance,
   updateActivity,
+  updateParticipantManagerAlias,
   updateTeamColor
 };

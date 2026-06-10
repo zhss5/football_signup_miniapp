@@ -3,6 +3,7 @@ const {
   cancelActivity,
   setRegistrationAttendance,
   updateTeamColor,
+  updateParticipantManagerAlias,
   resolveActivityCoverImage
 } = require('../../services/activity-service');
 const {
@@ -494,6 +495,45 @@ Page({
       );
       wx.showToast({
         title: translate('toast.attendanceUpdated'),
+        icon: 'success'
+      });
+      await this.reload();
+    } catch (error) {
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onManagerAliasEdit(event) {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const detail = event.detail || {};
+
+    if (!detail.userOpenId) {
+      return;
+    }
+
+    const promptResult = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.managerAlias.title'),
+        content: translate('modal.managerAlias.content', {
+          name: detail.signupName || translate('modal.managerAlias.defaultName')
+        }),
+        editable: true,
+        placeholderText: translate('modal.managerAlias.placeholder'),
+        success: result => resolve(result),
+        fail: () => resolve({ confirm: false })
+      });
+    });
+
+    if (!promptResult.confirm) {
+      return;
+    }
+
+    const managerAlias = String(promptResult.content || '').trim();
+
+    try {
+      await updateParticipantManagerAlias(this.data.activityId, detail.userOpenId, managerAlias);
+      wx.showToast({
+        title: translate('toast.managerAliasUpdated'),
         icon: 'success'
       });
       await this.reload();

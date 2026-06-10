@@ -78,6 +78,7 @@
     bind:removemember="onRemoveRegistration"
     bind:cancelsignup="onCancelSignup"
     bind:attendancechange="onAttendanceChange"
+    bind:manageraliasedit="onManagerAliasEdit"
   />
 
   <view wx:if="{{activityDescriptionText}}" class="description-card">

@@ -182,6 +182,17 @@
   line-height: 30rpx;
 }
 
+.member-manager-alias {
+  display: block;
+  margin-top: 4rpx;
+  color: #1d4ed8;
+  font-size: 22rpx;
+  line-height: 30rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .member-action-button {
   flex: 0 0 auto;
   margin-left: 16rpx;
@@ -206,6 +217,12 @@
   color: #166534;
   background: #f0fdf4;
   border-color: #bbf7d0;
+}
+
+.member-action-alias {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .member-action-attendance {

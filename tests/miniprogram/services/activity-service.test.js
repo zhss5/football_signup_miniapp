@@ -293,4 +293,33 @@ describe('activity service cover display urls', () => {
       attendanceStatus: 'absent'
     });
   });
+
+  test('updateParticipantManagerAlias delegates to the CloudBase service', async () => {
+    const cloud = require('../../../miniprogram/services/cloud');
+    cloud.call.mockResolvedValue({
+      user: {
+        _id: 'openid_player',
+        managerAlias: 'Zhang San'
+      }
+    });
+
+    await expect(
+      activityService.updateParticipantManagerAlias(
+        'activity_1',
+        'openid_player',
+        'Zhang San'
+      )
+    ).resolves.toEqual({
+      user: {
+        _id: 'openid_player',
+        managerAlias: 'Zhang San'
+      }
+    });
+
+    expect(cloud.call).toHaveBeenCalledWith('updateParticipantManagerAlias', {
+      activityId: 'activity_1',
+      targetOpenId: 'openid_player',
+      managerAlias: 'Zhang San'
+    });
+  });
 });
