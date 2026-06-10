@@ -4,6 +4,42 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-10 - Web Admin Foundation And Role Management
+
+Implemented the initial Version 2 web-admin foundation.
+
+Subproject added:
+
+- `web-admin/`
+
+Delivered behavior:
+
+- the web admin is a no-build static frontend that can be hosted as static files.
+- identity loading calls `ensureUserProfile`.
+- ordinary `user` accounts are denied before the workspace renders.
+- admin and super-admin accounts can access the workspace.
+- user search calls `listUsers` with keyword, role, limit, and skip parameters.
+- role changes call `updateUserRoles`.
+- super admins can manage `admin` and `organizer` roles from the UI model.
+- admins can manage only `organizer`; `admin` toggles are disabled for them.
+- role boundary checks are mirrored in frontend view-model code but remain enforced by cloud functions.
+
+SQL readiness:
+
+- no new persistent CloudBase fields were added.
+- the web-admin API adapter keeps cloud-function payloads API-shaped so the same contracts can later be served by self-hosted HTTP endpoints backed by MySQL.
+- role history remains in `user_role_logs`; the web admin does not write role history directly.
+
+Deployment note:
+
+- host `web-admin/` as static files after configuring a CloudBase-compatible `callFunction` runtime.
+- keep using the existing `ensureUserProfile`, `listUsers`, and `updateUserRoles` cloud functions.
+
+Verification:
+
+- red tests first failed because `web-admin/` and its API, role, and user-management modules did not exist.
+- target and related backend regression passed: `6` test suites, `22` tests.
+
 ## 2026-06-10 - Activity Copy Draft Flow
 
 Implemented the Version 2 activity duplication flow.

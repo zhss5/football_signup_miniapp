@@ -63,6 +63,10 @@ Completed:
 - activity copy drafts include reusable setup fields only and exclude source IDs, registrations, attendance state, activity logs, notification logs, subscription state, confirmation state, and cancellation state.
 - mini-program Activity Detail exposes the copy action only to source activity managers.
 - mini-program Activity Create supports copy mode and requires the manager to choose the new activity time before publishing.
+- `web-admin/` static foundation has been added without introducing a new build/runtime dependency.
+- web-admin identity loading calls `ensureUserProfile`; ordinary users are denied before the workspace renders.
+- web-admin user search calls `listUsers` with API-shaped keyword, role, limit, and skip parameters.
+- web-admin role updates call `updateUserRoles`; super admins can manage `admin` and `organizer`, while admins can manage only `organizer`.
 
 ## 4. Planned Version 2 Scope
 
@@ -148,9 +152,9 @@ Completed:
 
 ## 5. Next Implementation Step
 
-Continue implementation from the web-admin foundation slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
+Continue implementation from the web-admin activity operations slice in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
 Recommended first coding task:
 
-- add or complete the `web-admin/` foundation with login/identity, role guard, user search, and role management UI.
+- add web-admin activity list/detail operations, including filters, roster detail, manager alias editing, and attendance management.
 - keep using red/green tests before production changes.

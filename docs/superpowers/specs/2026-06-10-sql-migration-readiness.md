@@ -392,7 +392,8 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 10. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
 11. Keep activity duplication as a white-listed API draft operation: copy reusable setup fields only, do not copy registrations, attendance state, activity logs, notification logs, subscription rows, confirmation metadata, cancellation state, or source document IDs.
 12. Keep copy drafts API-shaped so a future self-hosted backend can implement the same contract over SQL without mini-program page-specific payloads.
-11. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, and `updateUserRoles`; do not couple the web-admin views to CloudBase collection layouts.
+14. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 

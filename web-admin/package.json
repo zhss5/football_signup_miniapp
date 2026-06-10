@@ -1,0 +1,7 @@
+{
+  "name": "football-signup-web-admin",
+  "private": true,
+  "scripts": {
+    "preview": "python -m http.server 4173"
+  }
+}

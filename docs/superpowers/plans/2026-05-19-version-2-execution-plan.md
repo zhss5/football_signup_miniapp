@@ -601,11 +601,11 @@ git commit -m "Add roster export data API"
 - Create: `web-admin/index.html`
 - Create: `web-admin/README.md`
 
-- [ ] **Step 1: Create a minimal no-build frontend first**
+- [x] **Step 1: Create a minimal no-build frontend first**
 
 Use native browser modules and keep V2.0 setup lightweight. `web-admin/package.json` should include only scripts needed for local preview and test once a test harness is added.
 
-- [ ] **Step 2: Add API adapter**
+- [x] **Step 2: Add API adapter**
 
 `web-admin/src/api.js` should centralize cloud-function calls:
 
@@ -620,7 +620,7 @@ export async function callFunction(name, data = {}) {
 }
 ```
 
-- [ ] **Step 3: Add initial shell**
+- [x] **Step 3: Add initial shell**
 
 Initial views:
 
@@ -629,7 +629,7 @@ Initial views:
 - main content area.
 - denied state for non-admin users.
 
-- [ ] **Step 4: Commit scaffold**
+- [x] **Step 4: Commit scaffold**
 
 ```powershell
 git add -- web-admin
@@ -645,7 +645,7 @@ git commit -m "Scaffold version 2 web admin"
 - Modify: `web-admin/src/styles.css`
 - Test: `tests/web-admin/user-role-management.test.js`
 
-- [ ] **Step 1: Write UI behavior tests after choosing the web-admin test harness**
+- [x] **Step 1: Write UI behavior tests after choosing the web-admin test harness**
 
 Cover:
 
@@ -656,7 +656,7 @@ test('admin can see organizer toggle but not admin toggle', async () => {});
 test('saving role changes calls updateUserRoles', async () => {});
 ```
 
-- [ ] **Step 2: Implement user management view**
+- [x] **Step 2: Implement user management view**
 
 Rules:
 
@@ -666,7 +666,7 @@ Rules:
 - Show save progress and cloud-function error messages.
 - Refresh the selected row after save.
 
-- [ ] **Step 3: Run tests and commit**
+- [x] **Step 3: Run tests and commit**
 
 ```powershell
 & 'C:\Users\zhang\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' node_modules\jest\bin\jest.js --runInBand tests/web-admin/user-role-management.test.js

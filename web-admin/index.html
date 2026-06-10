@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Football Signup Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="admin-app" class="admin-shell">
+      <section data-view="identity" class="status-panel">Checking identity...</section>
+
+      <section data-view="forbidden" class="status-panel" hidden>
+        Admin access is required.
+      </section>
+
+      <section data-view="workspace" hidden>
+        <header class="topbar">
+          <div>
+            <h1>Football Signup Admin</h1>
+            <p data-current-user></p>
+          </div>
+        </header>
+
+        <form data-action="search-users" class="toolbar">
+          <label>
+            <span>Keyword</span>
+            <input name="keyword" type="search" placeholder="openid, name, nickname" />
+          </label>
+
+          <label>
+            <span>Role</span>
+            <select data-role-filter>
+              <option value="">All roles</option>
+              <option value="user">User</option>
+              <option value="organizer">Organizer</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super admin</option>
+            </select>
+          </label>
+
+          <button type="submit">Search</button>
+        </form>
+
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>OpenID</th>
+              <th>Current Roles</th>
+              <th>Manage Roles</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody data-users-table></tbody>
+        </table>
+
+        <template id="role-control-template">
+          <label class="role-toggle">
+            <input type="checkbox" data-role="organizer" />
+            <span>organizer</span>
+          </label>
+          <label class="role-toggle">
+            <input type="checkbox" data-role="admin" />
+            <span>admin</span>
+          </label>
+        </template>
+      </section>
+    </main>
+
+    <script src="./src/roles.js"></script>
+    <script src="./src/api.js"></script>
+    <script src="./src/user-management.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
