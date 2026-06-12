@@ -497,31 +497,71 @@
     };
   }
 
+  function getErrorMessage(error) {
+    if (!error) {
+      return 'Unknown error';
+    }
+
+    if (typeof error === 'string') {
+      return error;
+    }
+
+    const message = error.message || error.errMsg || error.msg;
+    if (message) {
+      return String(message);
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch (jsonError) {
+      return String(error);
+    }
+  }
+
+  async function startBrowserApp(browserRoot = root) {
+    const doc = browserRoot && browserRoot.document;
+    const appRoot = doc && typeof doc.getElementById === 'function'
+      ? doc.getElementById('admin-app')
+      : null;
+
+    if (!appRoot || !browserRoot || !browserRoot.WebAdminApp) {
+      return null;
+    }
+
+    const showError = error => {
+      const identity = appRoot.querySelector('[data-view="identity"]');
+      if (identity) {
+        identity.textContent = getErrorMessage(error);
+      }
+    };
+
+    try {
+      const runtimeReady = browserRoot.webAdminRuntimeReady;
+      if (runtimeReady && typeof runtimeReady.then === 'function') {
+        await runtimeReady;
+      }
+
+      return await browserRoot.WebAdminApp
+        .createWebAdminApp({ appRoot, runtimeRoot: browserRoot })
+        .start();
+    } catch (error) {
+      showError(error);
+      return null;
+    }
+  }
+
   return {
-    createWebAdminApp
+    createWebAdminApp,
+    startBrowserApp
   };
 });
 
 if (typeof window !== 'undefined' && window.document) {
   window.addEventListener('DOMContentLoaded', () => {
-    const root = window.document.getElementById('admin-app');
-    if (!root || !window.WebAdminApp) {
+    if (!window.WebAdminApp || typeof window.WebAdminApp.startBrowserApp !== 'function') {
       return;
     }
 
-    const showError = error => {
-      const identity = root.querySelector('[data-view="identity"]');
-      if (identity) {
-        identity.textContent = error.message;
-      }
-    };
-
-    try {
-      window.WebAdminApp.createWebAdminApp({ appRoot: root, runtimeRoot: window })
-        .start()
-        .catch(showError);
-    } catch (error) {
-      showError(error);
-    }
+    window.WebAdminApp.startBrowserApp(window);
   });
 }

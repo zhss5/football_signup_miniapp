@@ -4,6 +4,50 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-12 - Test Web Admin CloudBase Runtime And Hosting
+
+Completed the test-environment runtime entry for the Version 2 web admin.
+
+Delivered behavior:
+
+- added `web-admin/config.test.js` for the test CloudBase environment `cloudbase-miniapp-test-dfc753877`.
+- added `web-admin/src/cloudbase-runtime.js` to initialize the CloudBase Web SDK and expose the existing `cloudbaseApp.callFunction` adapter boundary.
+- kept production environment IDs out of the test runtime entry.
+- updated `web-admin/index.html` to load the CloudBase Web SDK, test config, runtime adapter, and web-admin modules in startup order.
+- added version query strings to local static assets so CloudBase static hosting/CDN does not keep stale web-admin scripts after redeploys.
+- updated web-admin startup to wait for `webAdminRuntimeReady` before calling `ensureUserProfile`.
+- improved startup error rendering for structured CloudBase SDK errors.
+- did not change any mini-program business flow.
+
+Hosting:
+
+- deployed `web-admin/` to CloudBase static website hosting under `/admin` in `cloudbase-miniapp-test-dfc753877`.
+- hosted entry: `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`.
+- CloudBase static hosting reported `11` uploaded files under `/admin`.
+- HTTP check for `/admin/` returned `200` and confirmed the CloudBase SDK, test config, runtime, and app script tags.
+- browser smoke reached the `Football Signup Admin` page after the CloudBase test-domain risk prompt.
+
+Current blocker:
+
+- CloudBase Web SDK loads, but web-admin cloud-function calls cannot complete yet because the test environment has no valid Web login credential.
+- Browser console reported that `signInAnonymously()` requires the anonymous login method to be enabled in CloudBase identity settings.
+- The visible identity panel then showed a structured SDK error: `{"error":"unauthenticated","error_description":"credentials not found",...}`.
+- Next step: choose and enable the intended Web Admin login source in the test environment, then verify whether the existing `ensureUserProfile` mini-program `OPENID` identity contract needs a dedicated web-admin identity bridge.
+
+SQL/self-hosted readiness:
+
+- no runtime MySQL migration, CloudBase/MySQL dual-write, or self-hosted HTTP API switch was introduced.
+- the browser runtime still talks through an API-shaped `callFunction` adapter so it can later be replaced by a self-hosted HTTP client without coupling web-admin views to CloudBase collections.
+
+Verification:
+
+- red tests first failed because `web-admin/src/cloudbase-runtime.js`, `web-admin/config.test.js`, runtime script ordering, runtime-ready startup waiting, and structured startup error rendering were missing.
+- `npm test -- tests/web-admin` passed: `7` test suites, `29` tests.
+- CloudBase static hosting commands passed:
+  - `npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting detail`
+  - `npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin`
+  - `npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting list /admin`
+
 ## 2026-06-10 - Explicit V2 Collection Bootstrap
 
 Added an explicit Version 2 CloudBase collection bootstrap path for existing Version 1 environments.

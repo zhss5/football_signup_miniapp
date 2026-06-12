@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-06-10
+- Date: 2026-06-12
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -8,7 +8,7 @@
 
 ## 1. Current State
 
-Version 2 implementation is complete on `codex/version-2-web-admin`. The branch is ahead of `origin/codex/version-2-web-admin` and is ready to push after this handoff update.
+Version 2 implementation is complete on `codex/version-2-web-admin`.
 
 Version 2 adds:
 
@@ -24,6 +24,7 @@ Version 2 adds:
 - Home/My pagination and overdue unresolved activity prompts.
 - explicit SQL migration readiness documentation for a future MySQL 8.x and self-hosted server migration.
 - explicit V2 CloudBase collection bootstrap through `bootstrapV2Collections` and `scripts/deploy-v2-bootstrap.ps1`.
+- test-environment web-admin runtime initialization and CloudBase static hosting under `/admin`.
 
 Version 2 still does not:
 
@@ -161,6 +162,31 @@ The web admin is a static subproject under:
 
 It calls CloudBase cloud functions through API-shaped adapters. Ordinary `user` accounts are denied before the workspace renders.
 
+Test environment hosting:
+
+- CloudBase env: `cloudbase-miniapp-test-dfc753877`.
+- Static hosting path: `/admin/`.
+- Hosted URL: `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`.
+- Test runtime config: `web-admin/config.test.js`.
+- Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
+- The test entry does not hardcode the production CloudBase environment ID.
+- Local static assets use `?v=20260612-runtime` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+
+Current hosted smoke status:
+
+- CloudBase static hosting is online and `/admin/` returns HTTP `200`.
+- `tcb hosting deploy web-admin /admin` uploaded `11` files successfully.
+- Browser smoke reaches the `Football Signup Admin` page after the CloudBase test-domain risk prompt.
+- Cloud-function calls are currently blocked before a usable admin session because the test CloudBase Web login credential is not configured.
+- The browser console reports that `signInAnonymously()` requires anonymous login to be enabled.
+- The visible identity panel reports `unauthenticated` / `credentials not found`.
+
+Next Web Admin runtime step:
+
+- choose the intended Web Admin login source for the test environment.
+- enable that CloudBase Web identity source, or replace anonymous login with the chosen account/custom login flow.
+- after Web credentials exist, verify whether `ensureUserProfile` can resolve an admin identity from Web SDK calls; if it still requires mini-program `OPENID`, add a dedicated web-admin identity bridge instead of weakening mini-program auth.
+
 Current web-admin capabilities:
 
 - identity loading through `ensureUserProfile`.
@@ -228,7 +254,7 @@ Recommended V2 rollout order:
 8. Run `npm run copy:cloud-shared`.
 9. Deploy the V2 cloud function set.
 10. Upload the mini-program build.
-11. Host or serve the `web-admin/` static files with the CloudBase adapter configured.
+11. Host or serve the `web-admin/` static files with the CloudBase adapter configured. For the test environment, deploy `web-admin/` to `/admin`.
 12. Run smoke tests with a regular user, organizer, admin, and super admin.
 
 ## 10. Key Files To Read First
