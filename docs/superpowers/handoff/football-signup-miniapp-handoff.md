@@ -177,6 +177,8 @@ Web Admin login now uses the real mini-program WeChat identity:
 4. Web Admin polls `pollWebAdminLogin`, stores `webAdminSessionToken`, and attaches it to protected cloud-function calls.
 5. Shared cloud auth resolves that token back to the confirmed `OPENID` before checking `users.roles`.
 
+The browser never proves identity by submitting an `openid`. It receives a session only after mini-program confirmation, and the effective cloud-side binding is `sessionToken -> confirmedOpenId`.
+
 Do not grant roles to browser-generated `web_xxx` users. Roles remain attached to real `users/{OPENID}` documents.
 
 Test environment hosting:

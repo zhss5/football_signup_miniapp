@@ -24,6 +24,16 @@ Security decision:
 - do not seed or grant roles to browser-generated `web_xxx` identities.
 - keep the source of truth in `users/{OPENID}.roles`.
 - ordinary `user` accounts cannot confirm Web Admin login and cannot enter the Web Admin workspace.
+- do not let the browser submit an arbitrary `openid` as proof of identity; only the mini program cloud-function context can prove the scanner's real WeChat `OPENID`.
+
+Token model:
+
+- `confirmToken` is embedded in the QR payload and is used only by the mini program to confirm a pending login challenge.
+- `pollToken` is returned only to the browser that created the challenge and is used only to ask whether that challenge has been confirmed.
+- Web Admin polls because the browser cannot know when the separate mini-program scan-and-confirm action has completed; polling keeps the implementation simple without adding WebSocket or long-connection infrastructure.
+- `sessionToken` is generated only after `confirmWebAdminLogin` validates the scanner's real `OPENID` and roles. The browser stores this as `webAdminSessionToken`.
+- Protected Web Admin cloud-function calls send `webAdminSessionToken`; shared auth resolves it back to the confirmed `OPENID`, then applies the normal `users/{OPENID}.roles` permission checks.
+- The effective binding is therefore `sessionToken -> confirmedOpenId`, created by the cloud function after real WeChat confirmation, not by trusting browser-provided identity data.
 
 Deployment notes:
 
