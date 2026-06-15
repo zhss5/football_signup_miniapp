@@ -32,6 +32,71 @@ select {
   color: #46546b;
 }
 
+.login-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  padding: 28px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.login-copy h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 36px;
+}
+
+.login-copy p {
+  margin: 0 0 14px;
+  color: #66758d;
+  line-height: 24px;
+}
+
+.login-status {
+  font-weight: 700;
+}
+
+.login-copy button {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #2e6bd9;
+  border-radius: 6px;
+  background: #2e6bd9;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-qr-card canvas {
+  width: 220px;
+  height: 220px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.login-qr-card textarea {
+  width: 100%;
+  min-height: 72px;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  color: #46546b;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  resize: vertical;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -205,6 +270,10 @@ select {
   .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .login-panel {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .toolbar label {

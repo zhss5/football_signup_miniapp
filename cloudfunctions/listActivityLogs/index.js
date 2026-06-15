@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk');
-const { resolveOpenId } = require('./auth');
+const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { canEditActivity, hasRole, isAdmin } = require('./roles');
@@ -73,7 +73,12 @@ function toSafeLog(log, activityById) {
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const payload = event || {};
   const db = deps.db || cloud.database();
-  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  const openid = await resolveOpenIdFromEvent(
+    event,
+    context,
+    db,
+    { ...deps, getWXContext: deps.getWXContext || (() => cloud.getWXContext()) }
+  );
   const activityId = normalizeText(payload.activityId);
   const action = normalizeText(payload.action);
   const targetOpenId = normalizeText(payload.targetOpenId);

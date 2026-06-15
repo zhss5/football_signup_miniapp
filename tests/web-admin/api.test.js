@@ -16,6 +16,61 @@ test('api client loads current identity through ensureUserProfile', async () => 
   expect(callFunction).toHaveBeenCalledWith('ensureUserProfile', {});
 });
 
+test('api client creates and polls web admin login challenges without a session token', async () => {
+  const callFunction = jest
+    .fn()
+    .mockResolvedValueOnce({
+      loginId: 'login_1',
+      pollToken: 'poll_1',
+      qrPayload: 'football-signup-web-admin-login:login_1:confirm_1'
+    })
+    .mockResolvedValueOnce({
+      status: 'pending'
+    });
+  const api = createApiClient(callFunction);
+
+  await api.createWebAdminLogin();
+  await api.pollWebAdminLogin('login_1', 'poll_1');
+
+  expect(callFunction).toHaveBeenCalledWith('createWebAdminLogin', {});
+  expect(callFunction).toHaveBeenCalledWith('pollWebAdminLogin', {
+    loginId: 'login_1',
+    pollToken: 'poll_1'
+  });
+});
+
+test('api client attaches the web admin session token to protected calls', async () => {
+  const callFunction = jest.fn().mockResolvedValue({
+    user: {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    }
+  });
+  const api = createApiClient(callFunction, {
+    webAdminSessionToken: 'session_1'
+  });
+
+  await api.getCurrentUser();
+  await api.listUsers();
+  await api.updateUserRoles('openid_player', ['user']);
+
+  expect(callFunction).toHaveBeenCalledWith('ensureUserProfile', {
+    webAdminSessionToken: 'session_1'
+  });
+  expect(callFunction).toHaveBeenCalledWith('listUsers', {
+    keyword: '',
+    role: '',
+    limit: 20,
+    skip: 0,
+    webAdminSessionToken: 'session_1'
+  });
+  expect(callFunction).toHaveBeenCalledWith('updateUserRoles', {
+    targetOpenId: 'openid_player',
+    roles: ['user'],
+    webAdminSessionToken: 'session_1'
+  });
+});
+
 test('api client delegates user search to listUsers', async () => {
   const callFunction = jest.fn().mockResolvedValue({
     items: [],

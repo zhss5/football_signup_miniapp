@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk');
-const { resolveOpenId } = require('./auth');
+const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
@@ -39,13 +39,18 @@ async function getRegistrationNotificationSubscriptionState(db, activityId, open
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
-  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  const db = deps.db || cloud.database();
+  const openid = await resolveOpenIdFromEvent(
+    event,
+    context,
+    db,
+    { ...deps, getWXContext: deps.getWXContext || (() => cloud.getWXContext()) }
+  );
 
   if (deps.loadActivityDetail) {
     return deps.loadActivityDetail(event.activityId, openid);
   }
 
-  const db = deps.db || cloud.database();
   const command = deps.command || db.command;
   const activity = await db.collection(COLLECTIONS.ACTIVITIES).doc(event.activityId).get();
 

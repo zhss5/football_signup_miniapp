@@ -84,6 +84,7 @@ This command deploys and invokes `bootstrapV2Collections` once. The cloud functi
 - `user_role_logs`
 - `notification_logs`
 - `notification_subscriptions`
+- `web_admin_sessions`
 
 It does not delete, clear, or recreate existing Version 1 collections. Use `-DeployOnly` if the function should be uploaded first and invoked manually from the CloudBase console.
 
@@ -110,11 +111,14 @@ Recommended function set:
 19. `listUsers`
 20. `updateUserRoles`
 21. `listNotificationLogs`
-22. `recordNotificationSubscription`
-23. `notifyActivityParticipants`
-24. `cancelActivity`
-25. `deleteActivity`
-26. `getActivityStats`
+22. `createWebAdminLogin`
+23. `confirmWebAdminLogin`
+24. `pollWebAdminLogin`
+25. `recordNotificationSubscription`
+26. `notifyActivityParticipants`
+27. `cancelActivity`
+28. `deleteActivity`
+29. `getActivityStats`
 
 Legacy note:
 
@@ -130,7 +134,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs createWebAdminLogin confirmWebAdminLogin pollWebAdminLogin recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -142,6 +146,21 @@ Current deployment notes:
 - `createActivity`, `updateActivity`, and `updateTeamColor` must be deployed together after running `npm run copy:cloud-shared`; they share the ten-color team palette: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
 - The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
 - Notification configuration uses two template IDs: `activityNotice` for participant proceeding/cancellation notices, and `managerRegistrationNotice` for organizer/admin signup-change notices.
+- Web Admin QR login requires `web_admin_sessions`, the three Web Admin login cloud functions, the hosted `web-admin/` static files, and a mini-program build that includes the `My` page scan-and-confirm action.
+
+## Web Admin QR Login Smoke Test
+
+After the Web Admin static site, cloud functions, and mini-program build are deployed:
+
+1. Open the hosted Web Admin URL.
+2. Confirm the page displays a QR login challenge instead of a workspace.
+3. On a WeChat account with `organizer`, `admin`, or `super_admin`, open the mini program `My` page.
+4. Tap the Web Admin login scan action and scan the QR code.
+5. Confirm the mini-program prompt.
+6. Confirm the browser loads the Web Admin workspace.
+7. Confirm a regular `user` cannot confirm the Web Admin login.
+
+Do not seed roles into browser-generated anonymous IDs. Web Admin authorization must resolve back to real `users/{OPENID}.roles`.
 
 ## Subscription Template Verification
 

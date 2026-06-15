@@ -26,6 +26,8 @@ describe('my activities page', () => {
     expect(wxml).toContain('overdue-unresolved-panel');
     expect(wxml).toContain('catchtap="onConfirmActivityProceeding"');
     expect(wxml).toContain('bindtap="loadMoreMyActivities"');
+    expect(wxml).toContain('web-admin-login-card');
+    expect(wxml).toContain('bindtap="onConfirmWebAdminLogin"');
     expect(wxml.indexOf('activity-action-footer')).toBeGreaterThan(
       wxml.indexOf('created-activity-card')
     );
@@ -38,6 +40,7 @@ describe('my activities page', () => {
     expect(wxss).toContain('.created-activity-card');
     expect(wxss).toContain('.activity-action-footer');
     expect(wxss).toContain('.overdue-unresolved-panel');
+    expect(wxss).toContain('.web-admin-login-card');
     expect(wxss).toContain('.pagination-row');
     expect(wxml).not.toContain('<text class="section-title">Joined Activities</text>');
   });

@@ -73,15 +73,21 @@ test('bootstrapV2Collections lets super admins create only V2 readiness collecti
     { db }
   );
 
-  expect(db.createCollection).toHaveBeenCalledTimes(4);
+  expect(db.createCollection).toHaveBeenCalledTimes(5);
   expect(db.createCollection).toHaveBeenNthCalledWith(1, 'activity_logs');
   expect(db.createCollection).toHaveBeenNthCalledWith(2, 'user_role_logs');
   expect(db.createCollection).toHaveBeenNthCalledWith(3, 'notification_logs');
   expect(db.createCollection).toHaveBeenNthCalledWith(4, 'notification_subscriptions');
+  expect(db.createCollection).toHaveBeenNthCalledWith(5, 'web_admin_sessions');
   expect(result).toEqual({
     ok: true,
     collections: {
-      created: ['activity_logs', 'notification_logs', 'notification_subscriptions'],
+      created: [
+        'activity_logs',
+        'notification_logs',
+        'notification_subscriptions',
+        'web_admin_sessions'
+      ],
       existing: ['user_role_logs'],
       skipped: []
     }
@@ -101,6 +107,7 @@ test('bootstrapV2Collections allows maintenance invocation without OPENID', asyn
     'activity_logs',
     'user_role_logs',
     'notification_logs',
-    'notification_subscriptions'
+    'notification_subscriptions',
+    'web_admin_sessions'
   ]);
 });

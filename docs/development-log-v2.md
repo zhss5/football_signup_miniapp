@@ -4,6 +4,41 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-15 - Web Admin WeChat QR Login
+
+Implemented the Web Admin login bridge through the mini program's real WeChat identity.
+
+Delivered behavior:
+
+- added `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin` cloud functions.
+- added the `web_admin_sessions` collection to the V2 bootstrap list.
+- Web Admin now creates a short-lived QR login challenge instead of treating anonymous Web SDK users as admin identities.
+- organizers, admins, and super admins confirm Web Admin login from the mini program `My` page by scanning the Web Admin QR payload.
+- confirmed Web Admin sessions resolve back to the real mini-program `OPENID` before any role or activity operation is authorized.
+- Web Admin API calls attach `webAdminSessionToken` to protected cloud-function calls.
+- shared auth now supports `resolveOpenIdFromEvent` for Web Admin session tokens while keeping mini-program mutation flows on real `OPENID`.
+- local mock supports the mini-program confirm action for development smoke tests.
+
+Security decision:
+
+- do not seed or grant roles to browser-generated `web_xxx` identities.
+- keep the source of truth in `users/{OPENID}.roles`.
+- ordinary `user` accounts cannot confirm Web Admin login and cannot enter the Web Admin workspace.
+
+Deployment notes:
+
+- deploy new cloud functions: `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin`.
+- redeploy Web Admin-facing cloud functions after `npm run copy:cloud-shared` so they can resolve `webAdminSessionToken`.
+- run `bootstrapV2Collections` or manually create `web_admin_sessions` before Web Admin QR login smoke tests.
+- redeploy `web-admin/` static hosting because the login page now displays the QR challenge.
+- upload a new mini-program build because the `My` page now contains the scan-and-confirm action.
+
+Verification:
+
+- red tests first failed because Web Admin had no QR login view, the API client had no login/session methods, and the mini program had no confirm service or scan entry.
+- target tests passed: `npm test -- tests/web-admin/api.test.js tests/web-admin/static.test.js tests/web-admin/app-login.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js`.
+- full regression passed with `npm test`: `79` suites and `607` tests.
+
 ## 2026-06-12 - Test Web Admin CloudBase Runtime And Hosting
 
 Completed the test-environment runtime entry for the Version 2 web admin.

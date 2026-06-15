@@ -64,7 +64,12 @@ Completed:
 - mini-program Activity Detail exposes the copy action only to source activity managers.
 - mini-program Activity Create supports copy mode and requires the manager to choose the new activity time before publishing.
 - `web-admin/` static foundation has been added without introducing a new build/runtime dependency.
-- web-admin identity loading calls `ensureUserProfile`; ordinary users are denied before the workspace renders.
+- web-admin login uses a mini-program QR confirmation bridge so browser sessions resolve back to a real WeChat `OPENID`.
+- `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin` provide short-lived Web Admin login challenges and session tokens.
+- Web Admin protected calls attach `webAdminSessionToken`; shared cloud auth resolves it to `users/{OPENID}` before checking roles.
+- ordinary users cannot confirm Web Admin login or enter the workspace.
+- roles are not granted to browser-generated anonymous identities.
+- web-admin identity loading calls `ensureUserProfile` after a confirmed Web Admin session exists.
 - web-admin user search calls `listUsers` with API-shaped keyword, role, limit, and skip parameters.
 - web-admin role updates call `updateUserRoles`; super admins can manage `admin` and `organizer`, while admins can manage only `organizer`.
 - web-admin activity list calls `listActivities` with `scope: web-admin` and API-shaped date, status, organizer, keyword, limit, and skip filters.
@@ -81,7 +86,7 @@ Completed:
 - My Created and Joined tabs now maintain independent pagination state and load additional pages with stable `limit` and `skip` parameters.
 - My Created tab now marks overdue unresolved activities when `endAt` has passed while the activity is still `published` and not `confirmed`.
 - overdue unresolved prompts reuse existing confirm/cancel actions; confirmation calls `notifyActivityParticipants(activityId, 'proceeding')` and no automatic confirmation is introduced.
-- final full regression passed with `npm test`: `74` suites and `571` tests.
+- full regression passed after Web Admin QR login work with `npm test`: `79` suites and `607` tests.
 - final SQL migration readiness audit confirms V2 fields, stable enum strings, API contracts, log actions, CloudBase-to-SQL mappings, compatibility rules, and validation checks are documented.
 - Version 2 still does not introduce runtime MySQL migration, CloudBase/MySQL dual-write, or a self-hosted HTTP API switch.
 - `bootstrapV2Collections` cloud function now provides an explicit, idempotent CloudBase readiness step for missing V2 collections.

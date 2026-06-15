@@ -35,16 +35,57 @@
     return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
+  const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
+
   function createWebAdminApp(options = {}) {
     const runtimeRoot = options.root || (typeof document !== 'undefined' ? document : null);
     const appRoot = options.appRoot ||
       (runtimeRoot && runtimeRoot.getElementById
         ? runtimeRoot.getElementById('admin-app')
         : null);
+    const runtimeBrowserRoot = options.runtimeRoot ||
+      (typeof globalThis !== 'undefined' ? globalThis : {});
+    const storage = options.storage ||
+      (runtimeBrowserRoot && runtimeBrowserRoot.sessionStorage
+        ? runtimeBrowserRoot.sessionStorage
+        : null);
+    const timerApi = options.timerApi || runtimeBrowserRoot || {};
+    const sessionStorageKey = options.sessionStorageKey || WEB_ADMIN_SESSION_STORAGE_KEY;
+    const pollIntervalMs = Number(options.pollIntervalMs || 2000);
+    let loginPollTimer = null;
+
+    function readStoredWebAdminSessionToken() {
+      if (!storage || typeof storage.getItem !== 'function') {
+        return '';
+      }
+
+      try {
+        return String(storage.getItem(sessionStorageKey) || '');
+      } catch (error) {
+        return '';
+      }
+    }
+
+    function writeStoredWebAdminSessionToken(token) {
+      if (!storage || typeof storage.setItem !== 'function') {
+        return;
+      }
+
+      try {
+        storage.setItem(sessionStorageKey, token);
+      } catch (error) {
+        // Ignore storage failures. The token still lives in the in-memory API client.
+      }
+    }
+
     const api = options.api ||
-      apiModule.createApiClient(apiModule.createDefaultCallFunction(options.runtimeRoot));
+      apiModule.createApiClient(apiModule.createDefaultCallFunction(options.runtimeRoot), {
+        webAdminSessionToken: readStoredWebAdminSessionToken()
+      });
     const state = {
       currentUser: null,
+      loginChallenge: null,
+      webAdminSessionToken: readStoredWebAdminSessionToken(),
       rows: [],
       hasMore: false,
       search: users.buildSearchParams({}),
@@ -69,9 +110,77 @@
       }
     }
 
+    function renderLoginStatus(message) {
+      const status = query('[data-login-status]');
+      if (status) {
+        status.textContent = message;
+      }
+    }
+
+    function renderLoginQrPayload(payload) {
+      const output = query('[data-login-payload]');
+      if (output) {
+        output.value = payload || '';
+        output.textContent = payload || '';
+      }
+
+      const canvas = query('[data-login-qr]');
+      const qr = runtimeBrowserRoot && runtimeBrowserRoot.QRCode;
+      if (!canvas || !qr || typeof qr.toCanvas !== 'function' || !payload) {
+        return;
+      }
+
+      try {
+        qr.toCanvas(canvas, payload, {
+          width: 220,
+          margin: 1,
+          errorCorrectionLevel: 'M'
+        });
+      } catch (error) {
+        renderLoginStatus('Unable to render QR code. Copy the payload and retry.');
+      }
+    }
+
+    function clearLoginPollTimer() {
+      if (
+        loginPollTimer &&
+        timerApi &&
+        typeof timerApi.clearInterval === 'function'
+      ) {
+        timerApi.clearInterval(loginPollTimer);
+      }
+
+      loginPollTimer = null;
+    }
+
+    function startLoginPolling() {
+      if (
+        options.autoPoll === false ||
+        !timerApi ||
+        typeof timerApi.setInterval !== 'function'
+      ) {
+        return;
+      }
+
+      clearLoginPollTimer();
+      loginPollTimer = timerApi.setInterval(() => {
+        pollWebAdminLogin().catch(error => renderLoginStatus(getErrorMessage(error)));
+      }, pollIntervalMs);
+    }
+
+    function renderLoginChallenge(challenge) {
+      setHidden(query('[data-view="identity"]'), true);
+      setHidden(query('[data-view="login"]'), false);
+      setHidden(query('[data-view="forbidden"]'), true);
+      setHidden(query('[data-view="workspace"]'), true);
+      renderLoginStatus('Open the mini program and scan this code from My > Web Admin Login.');
+      renderLoginQrPayload(challenge && challenge.qrPayload ? challenge.qrPayload : '');
+    }
+
     function renderAccess(user) {
       const access = roles.buildAccessState(user);
       setHidden(query('[data-view="identity"]'), true);
+      setHidden(query('[data-view="login"]'), true);
       setHidden(query('[data-view="forbidden"]'), access.allowed);
       setHidden(query('[data-view="workspace"]'), !access.allowed);
 
@@ -371,6 +480,66 @@
       renderNotificationLogRows();
     }
 
+    async function beginWebAdminLogin() {
+      clearLoginPollTimer();
+      renderIdentity('Preparing web admin login...');
+      const challenge = await api.createWebAdminLogin();
+      state.loginChallenge = challenge;
+      renderLoginChallenge(challenge);
+      startLoginPolling();
+      return challenge;
+    }
+
+    async function loadWorkspace() {
+      renderIdentity('Checking identity...');
+      state.currentUser = await api.getCurrentUser();
+
+      if (!renderAccess(state.currentUser)) {
+        return state;
+      }
+
+      await searchActivities();
+
+      if (roles.isAdmin(state.currentUser)) {
+        await searchUsers();
+      }
+
+      return state;
+    }
+
+    async function pollWebAdminLogin() {
+      const challenge = state.loginChallenge || {};
+      if (!challenge.loginId || !challenge.pollToken) {
+        return null;
+      }
+
+      const result = await api.pollWebAdminLogin(challenge.loginId, challenge.pollToken);
+
+      if (!result || result.status === 'pending') {
+        renderLoginStatus('Waiting for confirmation in the mini program...');
+        return result;
+      }
+
+      if (result.status === 'expired') {
+        clearLoginPollTimer();
+        renderLoginStatus('The login code expired. Click retry to create a new one.');
+        return result;
+      }
+
+      if (result.status === 'confirmed' && result.webAdminSessionToken) {
+        clearLoginPollTimer();
+        state.webAdminSessionToken = result.webAdminSessionToken;
+        state.loginChallenge = null;
+        if (api && typeof api.setWebAdminSessionToken === 'function') {
+          api.setWebAdminSessionToken(result.webAdminSessionToken);
+        }
+        writeStoredWebAdminSessionToken(result.webAdminSessionToken);
+        return loadWorkspace();
+      }
+
+      return result;
+    }
+
     async function saveRoles(openid) {
       const row = (state.rows || []).find(item => item.openid === openid);
       if (!row) {
@@ -458,6 +627,10 @@
           if (button.dataset.action === 'load-notification-logs') {
             loadNotificationLogs().catch(error => renderIdentity(error.message));
           }
+
+          if (button.dataset.action === 'restart-login') {
+            beginWebAdminLogin().catch(error => renderLoginStatus(getErrorMessage(error)));
+          }
         });
       }
     }
@@ -468,28 +641,25 @@
       }
 
       bindEvents();
-      renderIdentity('Checking identity...');
-      state.currentUser = await api.getCurrentUser();
-
-      if (!renderAccess(state.currentUser)) {
-        return state;
+      if (state.webAdminSessionToken) {
+        if (api && typeof api.setWebAdminSessionToken === 'function') {
+          api.setWebAdminSessionToken(state.webAdminSessionToken);
+        }
+        return loadWorkspace();
       }
 
-      await searchActivities();
-
-      if (roles.isAdmin(state.currentUser)) {
-        await searchUsers();
-      }
-
+      await beginWebAdminLogin();
       return state;
     }
 
     return {
+      beginWebAdminLogin,
       exportRoster,
       loadActivityDetail,
       loadActivityLogs,
       loadAttendanceStats,
       loadNotificationLogs,
+      pollWebAdminLogin,
       searchUsers,
       searchActivities,
       start,

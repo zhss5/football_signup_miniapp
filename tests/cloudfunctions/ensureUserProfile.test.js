@@ -109,3 +109,43 @@ test('ensureUserProfile falls back to wx cloud context for openid', async () => 
   expect(doc).toHaveBeenCalledWith('openid_from_cloud_context');
   expect(result.user._id).toBe('openid_from_cloud_context');
 });
+
+test('ensureUserProfile accepts a web admin session token for an existing WeChat user', async () => {
+  const doc = jest.fn(() => ({
+    get: jest.fn().mockResolvedValue({
+      data: {
+        _id: 'openid_root',
+        preferredName: 'Root',
+        roles: ['user', 'super_admin'],
+        lastActiveAt: '2026-04-19T09:00:00.000Z'
+      }
+    }),
+    update: jest.fn().mockResolvedValue({})
+  }));
+  const fakeDb = {
+    _resolveWebAdminSessionToken: jest.fn(async token => {
+      if (token === 'session_root') {
+        return 'openid_root';
+      }
+
+      return '';
+    }),
+    collection: jest.fn(() => ({
+      doc
+    }))
+  };
+
+  const result = await ensureUserProfile.main(
+    { webAdminSessionToken: 'session_root' },
+    {},
+    {
+      db: fakeDb,
+      now: '2026-04-19T10:00:00.000Z',
+      getWXContext: () => ({})
+    }
+  );
+
+  expect(fakeDb._resolveWebAdminSessionToken).toHaveBeenCalledWith('session_root');
+  expect(doc).toHaveBeenCalledWith('openid_root');
+  expect(result.user._id).toBe('openid_root');
+});

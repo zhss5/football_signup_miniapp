@@ -31,6 +31,45 @@
   border-color: #bfdbfe;
 }
 
+.web-admin-login-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 24rpx;
+  border: 2rpx solid #dbeafe;
+  border-radius: 20rpx;
+  background: #eff6ff;
+}
+
+.web-admin-login-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.web-admin-login-title {
+  color: #1e3a8a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.web-admin-login-hint {
+  color: #475569;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+.web-admin-login-button {
+  min-width: 188rpx;
+  background: #2563eb;
+  color: #ffffff;
+  border: 2rpx solid #2563eb;
+}
+
 .identity-card {
   padding: 24rpx;
   margin-bottom: 24rpx;

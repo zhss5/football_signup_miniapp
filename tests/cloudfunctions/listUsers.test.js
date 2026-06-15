@@ -111,3 +111,38 @@ test('listUsers supports openid search and pagination', async () => {
   expect(result.items.map(item => item._id)).toEqual(['openid_admin', 'openid_organizer']);
   expect(result.hasMore).toBe(true);
 });
+
+test('listUsers accepts a web admin session token for a WeChat super admin', async () => {
+  const db = createFakeDb({
+    users: {
+      openid_root: {
+        _id: 'openid_root',
+        preferredName: 'Root',
+        roles: ['user', 'super_admin'],
+        createdAt: '2026-05-01T00:00:00.000Z',
+        lastActiveAt: '2026-05-14T00:00:00.000Z'
+      }
+    }
+  });
+  db._resolveWebAdminSessionToken = jest.fn(async token => {
+    if (token === 'session_root') {
+      return 'openid_root';
+    }
+
+    return '';
+  });
+
+  await expect(
+    listUsers.main(
+      { keyword: 'openid_player', limit: 20, skip: 0, webAdminSessionToken: 'session_root' },
+      {},
+      { db, getWXContext: () => ({}) }
+    )
+  ).resolves.toMatchObject({
+    items: [
+      expect.objectContaining({
+        _id: 'openid_player'
+      })
+    ]
+  });
+});

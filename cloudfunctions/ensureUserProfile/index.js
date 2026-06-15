@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk');
-const { resolveOpenId } = require('./auth');
+const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { ensureCloudCollections } = require('./database');
 const { nowIso } = require('./time');
@@ -61,7 +61,12 @@ async function readCurrentUser(userRef) {
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
-  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  const openid = await resolveOpenIdFromEvent(
+    event,
+    context,
+    db,
+    { ...deps, getWXContext: deps.getWXContext || (() => cloud.getWXContext()) }
+  );
   const stamp = nowIso(deps.now);
   let userRef = db.collection(COLLECTIONS.USERS).doc(openid);
   let current = await readCurrentUser(userRef);

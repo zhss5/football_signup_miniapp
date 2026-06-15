@@ -6,6 +6,10 @@ test('web admin static shell includes identity, guard, search, and role controls
 
   expect(html).toContain('id="admin-app"');
   expect(html).toContain('data-view="identity"');
+  expect(html).toContain('data-view="login"');
+  expect(html).toContain('data-login-qr');
+  expect(html).toContain('data-login-payload');
+  expect(html).toContain('data-action="restart-login"');
   expect(html).toContain('data-view="forbidden"');
   expect(html).toContain('data-action="search-users"');
   expect(html).toContain('data-role-filter');
@@ -29,12 +33,14 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   const runtimeIndex = html.indexOf('src="./src/cloudbase-runtime.js?v=');
   const apiIndex = html.indexOf('src="./src/api.js?v=');
   const appIndex = html.indexOf('src="./src/app.js?v=');
+  const qrIndex = html.indexOf('https://cdn.jsdelivr.net/npm/qrcode@');
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
   expect(runtimeIndex).toBeGreaterThan(configIndex);
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
-  expect(appIndex).toBeGreaterThan(apiIndex);
+  expect(qrIndex).toBeGreaterThan(apiIndex);
+  expect(appIndex).toBeGreaterThan(qrIndex);
 });
 
 test('web admin test config targets only the test CloudBase environment', () => {

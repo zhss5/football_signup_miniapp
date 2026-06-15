@@ -198,6 +198,11 @@ module.exports = {
     copyUserId: 'Copy ID',
     copyUserIdSuccess: 'User ID copied',
     roleLabel: 'Roles:',
+    webAdminLoginTitle: 'Web Admin',
+    webAdminLoginHint: 'Scan a web admin login code with your WeChat identity.',
+    webAdminLoginAction: 'Scan login code',
+    webAdminLoginConfirmTitle: 'Confirm web admin login',
+    webAdminLoginConfirmContent: 'Allow this browser to sign in as your admin account?',
     loadMore: 'Load more',
     loadingMore: 'Loading...',
     overdueUnresolvedTitle: 'Activity needs a result',
@@ -261,7 +266,10 @@ module.exports = {
     managerAliasUpdated: 'Alias updated',
     notificationFailed: 'Notification failed',
     registrationNotificationSubscribed: 'Signup notifications enabled',
-    registrationNotificationNotEnabled: 'Signup notifications not enabled'
+    registrationNotificationNotEnabled: 'Signup notifications not enabled',
+    webAdminLoginConfirmed: 'Web admin login confirmed',
+    webAdminLoginScanUnavailable: 'Scan is unavailable',
+    webAdminLoginInvalidQr: 'Invalid login code'
   },
   errors: {
     activityTitleRequired: 'Activity title is required',

@@ -13,6 +13,10 @@ jest.mock('../../../miniprogram/services/notification-service', () => ({
   notifyActivityParticipants: jest.fn()
 }));
 
+jest.mock('../../../miniprogram/services/web-admin-service', () => ({
+  confirmWebAdminLogin: jest.fn()
+}));
+
 jest.mock('../../../miniprogram/utils/formatters', () => ({
   buildActivityCardVm: jest.fn(item => ({
     ...item,
@@ -41,10 +45,18 @@ jest.mock('../../../miniprogram/utils/i18n', () => ({
         cancelled: 'Cancelled',
         deleted: 'Deleted'
       },
-      copyUserIdSuccess: 'User ID copied'
+      copyUserIdSuccess: 'User ID copied',
+      webAdminLoginTitle: 'Web Admin',
+      webAdminLoginHint: 'Scan a web admin login code.',
+      webAdminLoginAction: 'Scan login code',
+      webAdminLoginConfirmTitle: 'Confirm web admin login',
+      webAdminLoginConfirmContent: 'Allow this browser to sign in as you?'
     },
     toast: {
-      activityConfirmed: 'Activity confirmed'
+      activityConfirmed: 'Activity confirmed',
+      webAdminLoginConfirmed: 'Web admin login confirmed',
+      webAdminLoginScanUnavailable: 'Scan is unavailable',
+      webAdminLoginInvalidQr: 'Invalid login code'
     },
     modal: {
       confirmProceeding: {
@@ -64,6 +76,7 @@ describe('my page profile marker', () => {
   let listActivities;
   let notifyActivityParticipants;
   let resolveActivityCoverImages;
+  let confirmWebAdminLogin;
 
   beforeEach(() => {
     pageConfig = null;
@@ -80,6 +93,7 @@ describe('my page profile marker', () => {
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({ listActivities, resolveActivityCoverImages } = require('../../../miniprogram/services/activity-service'));
     ({ notifyActivityParticipants } = require('../../../miniprogram/services/notification-service'));
+    ({ confirmWebAdminLogin } = require('../../../miniprogram/services/web-admin-service'));
   });
 
   afterEach(() => {
@@ -114,6 +128,86 @@ describe('my page profile marker', () => {
 
     expect(ctx.data.userOpenId).toBe('openid_owner');
     expect(ctx.data.userRoleText).toBe('user, organizer');
+    expect(ctx.data.canConfirmWebAdminLogin).toBe(true);
+  });
+
+  test('regular users cannot confirm web admin login from the my page', async () => {
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_player',
+        roles: ['user']
+      }
+    });
+    listActivities.mockResolvedValue({
+      items: []
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+
+    expect(ctx.data.canConfirmWebAdminLogin).toBe(false);
+  });
+
+  test('confirms web admin login from a scanned QR payload', async () => {
+    confirmWebAdminLogin.mockResolvedValue({
+      ok: true
+    });
+    global.wx.scanCode = jest.fn(({ success }) =>
+      success({
+        result: 'football-signup-web-admin-login:login_1:confirm_1'
+      })
+    );
+    global.wx.showModal = jest.fn(({ success }) => success({ confirm: true }));
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        locale: 'en-US',
+        i18n: {
+          my: {
+            webAdminLoginConfirmTitle: 'Confirm web admin login',
+            webAdminLoginConfirmContent: 'Allow this browser to sign in as you?'
+          },
+          toast: {
+            webAdminLoginConfirmed: 'Web admin login confirmed',
+            webAdminLoginScanUnavailable: 'Scan is unavailable',
+            webAdminLoginInvalidQr: 'Invalid login code'
+          }
+        }
+      }
+    };
+
+    await pageConfig.onConfirmWebAdminLogin.call(ctx);
+
+    expect(global.wx.scanCode).toHaveBeenCalledWith({
+      onlyFromCamera: false,
+      success: expect.any(Function),
+      fail: expect.any(Function)
+    });
+    expect(global.wx.showModal).toHaveBeenCalledWith({
+      title: 'my.webAdminLoginConfirmTitle',
+      content: 'my.webAdminLoginConfirmContent',
+      success: expect.any(Function)
+    });
+    expect(confirmWebAdminLogin).toHaveBeenCalledWith(
+      'football-signup-web-admin-login:login_1:confirm_1'
+    );
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'toast.webAdminLoginConfirmed',
+      icon: 'success'
+    });
   });
 
   test('onCopyUserId copies the current user id', () => {

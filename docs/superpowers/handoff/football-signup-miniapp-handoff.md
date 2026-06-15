@@ -4,12 +4,12 @@
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
-- Latest V2 implementation commit before this handoff refresh: `66b12ff Add test web admin CloudBase runtime`
+- Baseline commit before the Web Admin QR-login implementation: `66b12ff Add test web admin CloudBase runtime`
 - Remote sync status before this handoff refresh: `origin/codex/version-2-web-admin...HEAD` = `0 0`
 
 ## 1. Current State
 
-Version 2 implementation is complete on `codex/version-2-web-admin`, and the implementation branch has been pushed to `origin/codex/version-2-web-admin`.
+Version 2 implementation continues on `codex/version-2-web-admin`. Check the local branch status before rollout or pushing.
 
 Version 2 adds:
 
@@ -22,6 +22,7 @@ Version 2 adds:
 - participant operation history in `activity_logs`.
 - activity duplication through a reusable setup draft API.
 - `web-admin/` static admin UI for roles, activities, attendance, exports, and logs.
+- Web Admin WeChat QR login that maps browser sessions back to real mini-program `OPENID` roles.
 - Home/My pagination and overdue unresolved activity prompts.
 - explicit SQL migration readiness documentation for a future MySQL 8.x and self-hosted server migration.
 - explicit V2 CloudBase collection bootstrap through `bootstrapV2Collections` and `scripts/deploy-v2-bootstrap.ps1`.
@@ -61,6 +62,7 @@ Required collections for V2:
 - `user_role_logs`
 - `notification_logs`
 - `notification_subscriptions`
+- `web_admin_sessions`
 
 For existing V1 environments, do not delete or recreate existing data collections. Run the explicit bootstrap once to create missing V2 collections:
 
@@ -82,6 +84,7 @@ npm run deploy:v2-bootstrap -- -EnvId 'your-cloud-env-id' -DeployOnly
 - `user_role_logs`
 - `notification_logs`
 - `notification_subscriptions`
+- `web_admin_sessions`
 
 It returns API-shaped `created`, `existing`, and `skipped` arrays and does not delete, clear, rename, or recreate V1 data.
 
@@ -117,6 +120,9 @@ getActivityCopyDraft
 listUsers
 updateUserRoles
 listNotificationLogs
+createWebAdminLogin
+confirmWebAdminLogin
+pollWebAdminLogin
 recordNotificationSubscription
 notifyActivityParticipants
 cancelActivity
@@ -132,7 +138,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs createWebAdminLogin confirmWebAdminLogin pollWebAdminLogin recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 
@@ -163,6 +169,16 @@ The web admin is a static subproject under:
 
 It calls CloudBase cloud functions through API-shaped adapters. Ordinary `user` accounts are denied before the workspace renders.
 
+Web Admin login now uses the real mini-program WeChat identity:
+
+1. Web Admin creates a short-lived QR login challenge with `createWebAdminLogin`.
+2. An organizer, admin, or super admin opens the mini program `My` page and scans the QR code with the Web Admin login action.
+3. `confirmWebAdminLogin` confirms the challenge with the scanner's real `OPENID`.
+4. Web Admin polls `pollWebAdminLogin`, stores `webAdminSessionToken`, and attaches it to protected cloud-function calls.
+5. Shared cloud auth resolves that token back to the confirmed `OPENID` before checking `users.roles`.
+
+Do not grant roles to browser-generated `web_xxx` users. Roles remain attached to real `users/{OPENID}` documents.
+
 Test environment hosting:
 
 - CloudBase env: `cloudbase-miniapp-test-dfc753877`.
@@ -180,15 +196,15 @@ Current hosted smoke status:
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
 - the hosted entry loads test runtime assets with `?v=20260612-runtime` cache-busting query strings.
 - Browser smoke reaches the `Football Signup Admin` page after the CloudBase test-domain risk prompt.
-- Cloud-function calls are currently blocked before a usable admin session because the test CloudBase Web login credential is not configured.
-- The browser console reports that `signInAnonymously()` requires anonymous login to be enabled.
-- The visible identity panel reports `unauthenticated` / `credentials not found`.
+- Previous anonymous Web SDK login was rejected as the long-term identity model because it created browser-scoped identities.
+- The current target is the mini-program QR bridge described above.
 
 Next Web Admin runtime step:
 
-- choose the intended Web Admin login source for the test environment.
-- enable that CloudBase Web identity source, or replace anonymous login with the chosen account/custom login flow.
-- after Web credentials exist, verify whether `ensureUserProfile` can resolve an admin identity from Web SDK calls; if it still requires mini-program `OPENID`, add a dedicated web-admin identity bridge instead of weakening mini-program auth.
+- deploy the QR login cloud functions and `web_admin_sessions` collection.
+- redeploy `web-admin/` static hosting.
+- upload a mini-program experience build with the `My` page Web Admin login action.
+- smoke test: Web Admin displays QR, mini program organizer scans and confirms, Web Admin loads the activity workspace.
 
 Current web-admin capabilities:
 

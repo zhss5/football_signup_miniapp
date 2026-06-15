@@ -1210,6 +1210,29 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function confirmWebAdminLogin(payload) {
+    if (!payload.qrPayload) {
+      throw new Error('qrPayload is required');
+    }
+
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const user = ensureUserInState(state, openid, stamp);
+
+    if (!canCreateActivity(user)) {
+      throw new Error('Only organizers or admins can confirm web admin login');
+    }
+
+    user.lastActiveAt = stamp;
+    writeState(state);
+
+    return {
+      ok: true,
+      status: 'confirmed'
+    };
+  }
+
   function hasNotificationLog(state, activityId, notificationType, userOpenId) {
     return state.notificationLogs.some(
       item =>
@@ -1428,6 +1451,7 @@ function createLocalCloudClient(options = {}) {
     removeRegistration,
     moveRegistration,
     recordNotificationSubscription,
+    confirmWebAdminLogin,
     notifyActivityParticipants,
     cancelActivity,
     deleteActivity,

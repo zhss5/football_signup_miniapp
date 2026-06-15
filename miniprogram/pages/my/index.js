@@ -6,6 +6,7 @@ const {
 } = require('../../services/activity-service');
 const { notifyActivityParticipants } = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
+const { confirmWebAdminLogin } = require('../../services/web-admin-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
 const {
   buildLanguageOptions,
@@ -15,7 +16,7 @@ const {
   setPageNavigationTitle,
   translateErrorMessage
 } = require('../../utils/i18n');
-const { formatRoles } = require('../../utils/roles');
+const { canCreateActivity, formatRoles } = require('../../utils/roles');
 
 const MY_PAGE_SIZE = 20;
 
@@ -120,7 +121,8 @@ Page({
     createdNextSkip: 0,
     joinedNextSkip: 0,
     userOpenId: '',
-    userRoleText: ''
+    userRoleText: '',
+    canConfirmWebAdminLogin: false
   },
 
   applyI18n() {
@@ -264,12 +266,14 @@ Page({
       const { user } = await ensureUserProfile();
       this.setData({
         userOpenId: user && user._id ? user._id : '',
-        userRoleText: formatRoles(user)
+        userRoleText: formatRoles(user),
+        canConfirmWebAdminLogin: canCreateActivity(user)
       });
     } catch (error) {
       this.setData({
         userOpenId: '',
-        userRoleText: ''
+        userRoleText: '',
+        canConfirmWebAdminLogin: false
       });
     }
   },
@@ -288,6 +292,68 @@ Page({
         });
       }
     });
+  },
+
+  scanWebAdminLoginPayload(translate) {
+    const wxRuntime = typeof wx !== 'undefined' ? wx : null;
+    if (!wxRuntime || typeof wxRuntime.scanCode !== 'function') {
+      if (wxRuntime && typeof wxRuntime.showToast === 'function') {
+        wxRuntime.showToast({
+          title: translate('toast.webAdminLoginScanUnavailable'),
+          icon: 'none'
+        });
+      }
+      return Promise.resolve('');
+    }
+
+    return new Promise(resolve => {
+      wxRuntime.scanCode({
+        onlyFromCamera: false,
+        success: result => resolve(String((result && result.result) || '').trim()),
+        fail: () => resolve('')
+      });
+    });
+  },
+
+  confirmWebAdminLoginPrompt(translate) {
+    return new Promise(resolve => {
+      wx.showModal({
+        title: translate('my.webAdminLoginConfirmTitle'),
+        content: translate('my.webAdminLoginConfirmContent'),
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+  },
+
+  async onConfirmWebAdminLogin() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const qrPayload = await this.scanWebAdminLoginPayload(translate);
+
+    if (!qrPayload) {
+      wx.showToast({
+        title: translate('toast.webAdminLoginInvalidQr'),
+        icon: 'none'
+      });
+      return;
+    }
+
+    const confirmed = await this.confirmWebAdminLoginPrompt(translate);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await confirmWebAdminLogin(qrPayload);
+      wx.showToast({
+        title: translate('toast.webAdminLoginConfirmed'),
+        icon: 'success'
+      });
+    } catch (error) {
+      wx.showToast({
+        title: translateErrorMessage(error, translate),
+        icon: 'none'
+      });
+    }
   },
 
   applyCreatedFilter(filterKey, items = this.data.createdItemsAll) {

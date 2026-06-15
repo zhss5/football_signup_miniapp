@@ -10,6 +10,21 @@
     <main id="admin-app" class="admin-shell">
       <section data-view="identity" class="status-panel">Checking identity...</section>
 
+      <section data-view="login" class="login-panel" hidden>
+        <div class="login-copy">
+          <h1>Web Admin Login</h1>
+          <p>
+            Open the mini program, go to My, tap Web Admin Login, and scan this QR code.
+          </p>
+          <p data-login-status class="login-status"></p>
+          <button type="button" data-action="restart-login">Retry</button>
+        </div>
+        <div class="login-qr-card">
+          <canvas data-login-qr width="220" height="220" aria-label="Web admin login QR"></canvas>
+          <textarea data-login-payload readonly></textarea>
+        </div>
+      </section>
+
       <section data-view="forbidden" class="status-panel" hidden>
         Organizer or admin access is required.
       </section>
@@ -212,6 +227,7 @@
     <script src="./src/cloudbase-runtime.js?v=20260612-runtime"></script>
     <script src="./src/roles.js?v=20260612-runtime"></script>
     <script src="./src/api.js?v=20260612-runtime"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="./src/user-management.js?v=20260612-runtime"></script>
     <script src="./src/activity-management.js?v=20260612-runtime"></script>
     <script src="./src/app.js?v=20260612-runtime"></script>
