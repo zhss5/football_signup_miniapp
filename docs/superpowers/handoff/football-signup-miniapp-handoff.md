@@ -1,14 +1,15 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-06-12
+- Date: 2026-06-15
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
-- Latest local commit before this handoff refresh: `bef50f8 Add V2 collection bootstrap deployment`
+- Latest V2 implementation commit before this handoff refresh: `66b12ff Add test web admin CloudBase runtime`
+- Remote sync status before this handoff refresh: `origin/codex/version-2-web-admin...HEAD` = `0 0`
 
 ## 1. Current State
 
-Version 2 implementation is complete on `codex/version-2-web-admin`.
+Version 2 implementation is complete on `codex/version-2-web-admin`, and the implementation branch has been pushed to `origin/codex/version-2-web-admin`.
 
 Version 2 adds:
 
@@ -176,6 +177,8 @@ Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - `tcb hosting deploy web-admin /admin` uploaded `11` files successfully.
+- the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
+- the hosted entry loads test runtime assets with `?v=20260612-runtime` cache-busting query strings.
 - Browser smoke reaches the `Football Signup Admin` page after the CloudBase test-domain risk prompt.
 - Cloud-function calls are currently blocked before a usable admin session because the test CloudBase Web login credential is not configured.
 - The browser console reports that `signInAnonymously()` requires anonymous login to be enabled.
@@ -227,8 +230,29 @@ npm test
 
 Result:
 
-- `75` test suites passed.
-- `578` tests passed.
+- `77` test suites passed.
+- `587` tests passed.
+
+Additional checks run for the test web-admin runtime and hosting work:
+
+```bash
+npm test -- tests/web-admin
+git diff --check
+git diff --cached --check
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting detail
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting list /admin
+```
+
+Results:
+
+- `npm test -- tests/web-admin` passed with `7` test suites and `29` tests.
+- `git diff --check` passed.
+- `git diff --cached --check` passed.
+- CloudBase static hosting was online.
+- `/admin/` returned HTTP `200`.
+- `web-admin/` deployed to `/admin` with `11` uploaded files.
+- browser smoke reached the web-admin page but stopped at the expected Web SDK credential blocker.
 
 Additional checks run for the explicit bootstrap work:
 
@@ -278,9 +302,10 @@ Recommended V2 rollout order:
 
 ## 11. Next Steps
 
-1. Push `codex/version-2-web-admin` to `origin`.
-2. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
-3. Run V2 collection bootstrap or manually create the missing V2 collections.
-4. Deploy the V2 cloud function set.
-5. Seed the first `super_admin`.
-6. Run real-device and web-admin smoke tests.
+1. Choose the intended Web Admin login source for the test CloudBase environment.
+2. Enable that CloudBase Web identity source, or replace the current anonymous-login test runtime with the chosen account/custom login flow.
+3. Verify whether Web SDK calls to `ensureUserProfile` can resolve an admin identity. If they still require mini-program `OPENID`, implement a dedicated web-admin identity bridge instead of weakening mini-program auth.
+4. Confirm or seed the first `super_admin` in the test environment.
+5. Run web-admin smoke tests for `super_admin`, `admin`, `organizer`, and ordinary `user` boundaries.
+6. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
+7. Run real-device mini-program smoke tests after any shared-environment deployment.
