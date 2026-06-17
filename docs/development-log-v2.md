@@ -4,6 +4,35 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-17 - Web Admin Common Layout Refactor
+
+Refactored the hosted Web Admin from a single scrolling workspace into a common admin layout with role-aware sidebar navigation and independent content views.
+
+Delivered behavior:
+
+- Web Admin now renders a left sidebar and right content area after QR login succeeds.
+- QR login, identity checking, and forbidden access views remain outside the workspace; the login view is hidden after a confirmed `webAdminSessionToken` loads the workspace.
+- sidebar navigation is derived from the confirmed user's roles.
+- admins and super admins can see user management, activity management, attendance stats, roster export, and logs.
+- organizers can see activity management, attendance stats, roster export, and logs, but not user management.
+- ordinary users remain blocked by the existing forbidden view.
+- user management, activity management, attendance stats, roster export, and logs are now independent `data-admin-view` regions.
+- existing API calls and CloudBase cloud-function contracts were preserved; no cloud-function business logic was changed.
+- static assets now use `20260617-admin-layout` cache-busting query strings.
+
+Deployment:
+
+- redeployed `web-admin/` to CloudBase static hosting under `/admin` in `cloudbase-miniapp-test-dfc753877`.
+- CloudBase CLI uploaded `12` files successfully.
+- hosted check for `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/?verify=20260617-admin-layout` returned HTTP `200` and confirmed the hosted entry includes `20260617-admin-layout`, `data-admin-sidebar`, and `data-nav-target="activities"`.
+
+Verification:
+
+- red layout tests first failed because the sidebar, independent admin views, active navigation state, and new asset version did not exist.
+- target layout tests passed: `npm test -- tests/web-admin/static.test.js tests/web-admin/app-layout.test.js tests/web-admin/app-login.test.js --runInBand`.
+- Web Admin regression passed: `npm test -- tests/web-admin --runInBand`.
+- whitespace check passed: `git diff --check`.
+
 ## 2026-06-17 - Test Web Admin QR Login Deployment Smoke
 
 Deployed and smoke-tested the Web Admin QR login backend in the test CloudBase environment `cloudbase-miniapp-test-dfc753877`.

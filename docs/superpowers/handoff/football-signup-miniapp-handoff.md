@@ -189,33 +189,33 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260617-qr-login` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260617-admin-layout` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
-- `tcb hosting deploy web-admin /admin` uploaded `11` files successfully in the test environment.
+- `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry loads test runtime assets with `?v=20260617-qr-login` cache-busting query strings.
+- the hosted entry loads test runtime assets with `?v=20260617-admin-layout` cache-busting query strings.
+- the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
-- hosted `app.js` contains QR payload handling.
+- hosted `app.js` contains QR payload handling and admin view navigation state.
 - `bootstrapV2Collections` has been deployed and invoked in `cloudbase-miniapp-test-dfc753877`; `web_admin_sessions` exists, and a repeat invocation returned all V2 collections under `existing`.
 - QR login cloud functions have been deployed: `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin`.
 - Web Admin-facing functions affected by `webAdminSessionToken` auth have been redeployed in the test environment: `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, `listNotificationLogs`, and `getActivityCopyDraft`.
 - direct CloudBase invocation of `createWebAdminLogin` returned a pending challenge with `loginId`, `pollToken`, `qrPayload`, and `expiresAt`.
 - direct CloudBase invocation of `pollWebAdminLogin` with that `loginId` and `pollToken` returned `{"status":"pending"}`.
 
-Current Web Admin runtime blockers:
+Current Web Admin smoke notes:
 
-- Browser smoke reaches the `Football Signup Admin` page and loads the updated scripts, but Web SDK `callFunction` is blocked because the test CloudBase environment has not enabled the anonymous login method used by `web-admin/config.test.js`.
-- The browser console reports that `signInAnonymously()` requires anonymous login to be enabled, and the page receives `unauthenticated` / `credentials not found`.
 - Anonymous Web SDK identity is only a browser bootstrap credential for creating and polling the QR challenge; it must not be granted admin roles. The real Web Admin identity still comes from the mini-program QR confirmation and the server-issued `webAdminSessionToken`.
-- The workstation did not have the WeChat DevTools CLI on `PATH` or in the checked common install locations, so a mini-program experience build was not uploaded from this environment.
-- Real-device QR confirmation, role-specific workspace entry, ordinary-user denial, and live `listUsers` / `listActivities` calls still require enabling the Web SDK bootstrap identity source, uploading the mini-program experience build, and running a manual smoke pass with real users.
+- CloudBase function safety rules must allow the Web SDK bootstrap credential to invoke Web Admin entry and protected functions; backend role checks still use `webAdminSessionToken`.
+- After each Web Admin static redeploy, rerun a real-device smoke pass for QR confirmation, role-specific workspace entry, ordinary-user denial, and live `listUsers` / `listActivities` calls.
 
 Current web-admin capabilities:
 
 - identity loading through `ensureUserProfile`.
+- role-aware sidebar navigation after QR login.
 - user search through `listUsers`.
 - role mutation through `updateUserRoles`.
 - activity list filtering through `listActivities`.
@@ -308,6 +308,24 @@ Results:
 - direct QR backend smoke returned a pending challenge and then `{"status":"pending"}` from `pollWebAdminLogin`.
 - hosted `/admin/` returned HTTP `200` and loaded the `20260617-qr-login` asset version.
 - browser smoke loaded the Web Admin page but stopped at the CloudBase Web SDK anonymous-login configuration blocker before live QR confirmation.
+
+Additional checks run for the Web Admin common layout refactor:
+
+```bash
+npm test -- tests/web-admin/static.test.js tests/web-admin/app-layout.test.js tests/web-admin/app-login.test.js --runInBand
+npm test -- tests/web-admin --runInBand
+git diff --check
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting list /admin
+```
+
+Results:
+
+- Web Admin layout target tests passed with `3` test suites and `13` tests.
+- Web Admin regression passed with `9` test suites and `41` tests.
+- `git diff --check` passed.
+- CloudBase static hosting uploaded `12` files under `/admin`.
+- hosted `/admin/?verify=20260617-admin-layout` returned HTTP `200` and loaded the `20260617-admin-layout` asset version with the new sidebar layout.
 
 ## 9. Deployment Order
 

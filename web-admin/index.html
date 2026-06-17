@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Football Signup Admin</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-hidden-fix" />
+    <link rel="stylesheet" href="./styles.css?v=20260617-admin-layout" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -29,185 +29,216 @@
         Organizer or admin access is required.
       </section>
 
-      <section data-view="workspace" hidden>
-        <header class="topbar">
-          <div>
-            <h1>Football Signup Admin</h1>
-            <p data-current-user></p>
-          </div>
-        </header>
-
-        <section data-view="users" class="panel">
-          <h2>User Roles</h2>
-
-          <form data-action="search-users" class="toolbar">
-            <label>
-              <span>Keyword</span>
-              <input name="keyword" type="search" placeholder="openid, name, nickname" />
-            </label>
-
-            <label>
-              <span>Role</span>
-              <select data-role-filter>
-                <option value="">All roles</option>
-                <option value="user">User</option>
-                <option value="organizer">Organizer</option>
-                <option value="admin">Admin</option>
-                <option value="super_admin">Super admin</option>
-              </select>
-            </label>
-
-            <button type="submit">Search</button>
-          </form>
-
-          <table class="data-table users-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>OpenID</th>
-                <th>Current Roles</th>
-                <th>Manage Roles</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody data-users-table></tbody>
-          </table>
-        </section>
-
-        <section data-view="activities" class="panel">
-          <h2>Activity Operations</h2>
-
-          <form data-action="search-activities" class="toolbar">
-            <label>
-              <span>Keyword</span>
-              <input name="activityKeyword" type="search" placeholder="title, venue, openid" />
-            </label>
-
-            <label>
-              <span>Status</span>
-              <select name="activityStatus">
-                <option value="">Visible statuses</option>
-                <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
-                <option value="published">Published</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Organizer OpenID</span>
-              <input name="activityOrganizerOpenId" type="search" placeholder="admin filter" />
-            </label>
-
-            <label>
-              <span>From</span>
-              <input name="activityStartAtFrom" type="date" />
-            </label>
-
-            <label>
-              <span>To</span>
-              <input name="activityStartAtTo" type="date" />
-            </label>
-
-            <button type="submit">Search</button>
-          </form>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Activity</th>
-                <th>Start</th>
-                <th>Status</th>
-                <th>Organizer</th>
-                <th>Joined</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody data-activities-table></tbody>
-          </table>
-
-          <div data-activity-detail class="detail-panel" hidden>
-            <div class="detail-header">
-              <h3 data-activity-title></h3>
-              <button type="button" data-action="export-roster">Export Roster CSV</button>
+      <section data-view="workspace" class="admin-workspace" hidden>
+        <div data-admin-layout class="admin-layout">
+          <aside data-admin-sidebar class="admin-sidebar">
+            <div class="brand-block">
+              <h1>Football Signup Admin</h1>
+              <p data-current-user></p>
             </div>
 
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Team</th>
-                  <th>Signup Name</th>
-                  <th>Manager Alias</th>
-                  <th>Position Preferences</th>
-                  <th>Proxy</th>
-                  <th>Attendance</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody data-roster-table></tbody>
-            </table>
+            <nav class="admin-nav" aria-label="Admin navigation">
+              <button type="button" data-nav-target="users">User Management</button>
+              <button type="button" data-nav-target="activities">Activity Management</button>
+              <button type="button" data-nav-target="attendance-stats">Attendance Stats</button>
+              <button type="button" data-nav-target="exports">Roster Export</button>
+              <button type="button" data-nav-target="logs">Logs</button>
+            </nav>
+          </aside>
 
-            <textarea data-export-output class="export-output" readonly></textarea>
-          </div>
+          <main data-admin-content class="admin-content">
+            <header class="topbar">
+              <h2 data-current-view-title>Activity Management</h2>
+            </header>
 
-          <form data-action="load-attendance-stats" class="toolbar">
-            <label>
-              <span>Stats From</span>
-              <input name="statsStartAt" type="date" />
-            </label>
+            <section data-view="users" data-admin-view="users" class="panel" hidden>
+              <h3>User Roles</h3>
 
-            <label>
-              <span>Stats To</span>
-              <input name="statsEndAt" type="date" />
-            </label>
+              <form data-action="search-users" class="toolbar">
+                <label>
+                  <span>Keyword</span>
+                  <input name="keyword" type="search" placeholder="openid, name, nickname" />
+                </label>
 
-            <button type="submit">Load Stats</button>
-          </form>
+                <label>
+                  <span>Role</span>
+                  <select data-role-filter>
+                    <option value="">All roles</option>
+                    <option value="user">User</option>
+                    <option value="organizer">Organizer</option>
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super admin</option>
+                  </select>
+                </label>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Participant</th>
-                <th>Signups</th>
-                <th>Present</th>
-                <th>Absent</th>
-                <th>Attendance Rate</th>
-              </tr>
-            </thead>
-            <tbody data-attendance-stats-table></tbody>
-          </table>
+                <button type="submit">Search</button>
+              </form>
 
-          <div class="log-actions">
-            <button type="button" data-action="load-activity-logs">Load Activity Logs</button>
-            <button type="button" data-action="load-notification-logs">Load Notification Logs</button>
-          </div>
+              <table class="data-table users-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>OpenID</th>
+                    <th>Current Roles</th>
+                    <th>Manage Roles</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody data-users-table></tbody>
+              </table>
+            </section>
 
-          <div class="log-grid">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Action</th>
-                  <th>Operator</th>
-                  <th>Target</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody data-activity-logs-table></tbody>
-            </table>
+            <section data-view="activities" data-admin-view="activities" class="panel">
+              <h3>Activity Operations</h3>
 
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Target</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody data-notification-logs-table></tbody>
-            </table>
-          </div>
-        </section>
+              <form data-action="search-activities" class="toolbar">
+                <label>
+                  <span>Keyword</span>
+                  <input name="activityKeyword" type="search" placeholder="title, venue, openid" />
+                </label>
+
+                <label>
+                  <span>Status</span>
+                  <select name="activityStatus">
+                    <option value="">Visible statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="pending">Pending</option>
+                    <option value="published">Published</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Organizer OpenID</span>
+                  <input name="activityOrganizerOpenId" type="search" placeholder="admin filter" />
+                </label>
+
+                <label>
+                  <span>From</span>
+                  <input name="activityStartAtFrom" type="date" />
+                </label>
+
+                <label>
+                  <span>To</span>
+                  <input name="activityStartAtTo" type="date" />
+                </label>
+
+                <button type="submit">Search</button>
+              </form>
+
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Activity</th>
+                    <th>Start</th>
+                    <th>Status</th>
+                    <th>Organizer</th>
+                    <th>Joined</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody data-activities-table></tbody>
+              </table>
+
+              <div data-activity-detail class="detail-panel" hidden>
+                <div class="detail-header">
+                  <h4 data-activity-title></h4>
+                </div>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>Signup Name</th>
+                      <th>Manager Alias</th>
+                      <th>Position Preferences</th>
+                      <th>Proxy</th>
+                      <th>Attendance</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody data-roster-table></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section data-admin-view="attendance-stats" class="panel" hidden>
+              <h3>Attendance Stats</h3>
+
+              <form data-action="load-attendance-stats" class="toolbar">
+                <label>
+                  <span>Stats From</span>
+                  <input name="statsStartAt" type="date" />
+                </label>
+
+                <label>
+                  <span>Stats To</span>
+                  <input name="statsEndAt" type="date" />
+                </label>
+
+                <button type="submit">Load Stats</button>
+              </form>
+
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Participant</th>
+                    <th>Signups</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Attendance Rate</th>
+                  </tr>
+                </thead>
+                <tbody data-attendance-stats-table></tbody>
+              </table>
+            </section>
+
+            <section data-admin-view="exports" class="panel" hidden>
+              <h3>Roster Export</h3>
+
+              <div class="toolbar">
+                <button type="button" data-action="export-roster">Export Roster CSV</button>
+              </div>
+
+              <textarea data-export-output class="export-output" readonly></textarea>
+            </section>
+
+            <section data-admin-view="logs" class="panel" hidden>
+              <h3>Logs</h3>
+
+              <div class="log-actions">
+                <button type="button" data-action="load-activity-logs">Load Activity Logs</button>
+                <button type="button" data-action="load-notification-logs">Load Notification Logs</button>
+              </div>
+
+              <div class="log-grid">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Action</th>
+                      <th>Operator</th>
+                      <th>Target</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody data-activity-logs-table></tbody>
+                </table>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Target</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody data-notification-logs-table></tbody>
+                </table>
+              </div>
+            </section>
+          </main>
+        </div>
 
         <template id="role-control-template">
           <label class="role-toggle">
@@ -223,13 +254,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260617-hidden-fix"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260617-hidden-fix"></script>
-    <script src="./src/roles.js?v=20260617-hidden-fix"></script>
-    <script src="./src/api.js?v=20260617-hidden-fix"></script>
-    <script src="./vendor/qrcode.min.js?v=20260617-hidden-fix"></script>
-    <script src="./src/user-management.js?v=20260617-hidden-fix"></script>
-    <script src="./src/activity-management.js?v=20260617-hidden-fix"></script>
-    <script src="./src/app.js?v=20260617-hidden-fix"></script>
+    <script src="./config.test.js?v=20260617-admin-layout"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260617-admin-layout"></script>
+    <script src="./src/roles.js?v=20260617-admin-layout"></script>
+    <script src="./src/api.js?v=20260617-admin-layout"></script>
+    <script src="./vendor/qrcode.min.js?v=20260617-admin-layout"></script>
+    <script src="./src/user-management.js?v=20260617-admin-layout"></script>
+    <script src="./src/activity-management.js?v=20260617-admin-layout"></script>
+    <script src="./src/app.js?v=20260617-admin-layout"></script>
   </body>
 </html>

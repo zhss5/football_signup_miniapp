@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-hidden-fix';
+const WEB_ADMIN_ASSET_VERSION = '20260617-admin-layout';
 
-test('web admin static shell includes identity, guard, search, and role controls', () => {
+test('web admin static shell includes identity, QR login, and guarded workspace', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
 
   expect(html).toContain('id="admin-app"');
@@ -13,17 +13,40 @@ test('web admin static shell includes identity, guard, search, and role controls
   expect(html).toContain('data-login-payload');
   expect(html).toContain('data-action="restart-login"');
   expect(html).toContain('data-view="forbidden"');
+  expect(html).toContain('data-view="workspace"');
+  expect(html).toContain(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+});
+
+test('web admin workspace uses a sidebar plus independent content views', () => {
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+
+  expect(html).toContain('data-admin-layout');
+  expect(html).toContain('data-admin-sidebar');
+  expect(html).toContain('data-admin-content');
+  expect(html).toContain('data-nav-target="users"');
+  expect(html).toContain('data-nav-target="activities"');
+  expect(html).toContain('data-nav-target="attendance-stats"');
+  expect(html).toContain('data-nav-target="exports"');
+  expect(html).toContain('data-nav-target="logs"');
+  expect(html).toContain('data-admin-view="users"');
+  expect(html).toContain('data-admin-view="activities"');
+  expect(html).toContain('data-admin-view="attendance-stats"');
+  expect(html).toContain('data-admin-view="exports"');
+  expect(html).toContain('data-admin-view="logs"');
+});
+
+test('web admin static shell keeps existing forms and action hooks for API reuse', () => {
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+
   expect(html).toContain('data-action="search-users"');
   expect(html).toContain('data-role-filter');
   expect(html).toContain('data-role="organizer"');
   expect(html).toContain('data-role="admin"');
-  expect(html).toContain('data-view="activities"');
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
   expect(html).toContain('data-action="export-roster"');
   expect(html).toContain('data-action="load-activity-logs"');
   expect(html).toContain('data-action="load-notification-logs"');
-  expect(html).toContain(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
 });
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {

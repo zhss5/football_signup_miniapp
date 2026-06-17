@@ -23,9 +23,9 @@ select {
 }
 
 .admin-shell {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 24px;
 }
 
 .status-panel {
@@ -101,32 +101,100 @@ select {
   resize: vertical;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+.admin-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.topbar h1 {
-  margin: 0 0 6px;
-  font-size: 28px;
-  line-height: 36px;
+.admin-sidebar {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
-.topbar p {
+.brand-block {
+  margin-bottom: 22px;
+}
+
+.brand-block h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.brand-block p {
   margin: 0;
+  overflow-wrap: anywhere;
   color: #66758d;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.admin-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-nav button {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #46546b;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-nav button:hover,
+.admin-nav button.is-active {
+  border-color: #b9c9e6;
+  background: #eef4ff;
+  color: #172033;
+}
+
+.admin-nav button[aria-current="page"] {
+  border-color: #2e6bd9;
+  background: #eaf1ff;
+  color: #1d4fae;
+}
+
+.admin-content {
+  min-width: 0;
+}
+
+.topbar {
+  margin-bottom: 18px;
+}
+
+.topbar h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 34px;
 }
 
 .panel {
   margin-bottom: 28px;
 }
 
-.panel h2 {
+.panel h3 {
   margin: 0 0 14px;
   font-size: 20px;
   line-height: 28px;
+}
+
+.panel h4 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 24px;
 }
 
 .toolbar {
@@ -269,6 +337,22 @@ select {
 @media (max-width: 760px) {
   .admin-shell {
     padding: 20px 12px;
+  }
+
+  .admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-sidebar {
+    position: static;
+  }
+
+  .admin-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-nav button {
+    text-align: center;
   }
 
   .toolbar {

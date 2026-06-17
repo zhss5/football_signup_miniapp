@@ -36,6 +36,22 @@
   }
 
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
+  const DEFAULT_ADMIN_VIEW = 'activities';
+  const ADMIN_VIEW_TITLES = {
+    users: 'User Management',
+    activities: 'Activity Management',
+    'attendance-stats': 'Attendance Stats',
+    exports: 'Roster Export',
+    logs: 'Logs'
+  };
+
+  function getAllowedAdminViews(user) {
+    const operationalViews = ['activities', 'attendance-stats', 'exports', 'logs'];
+
+    return roles.isAdmin(user)
+      ? ['users', ...operationalViews]
+      : operationalViews;
+  }
 
   function createWebAdminApp(options = {}) {
     const runtimeRoot = options.root || (typeof document !== 'undefined' ? document : null);
@@ -96,11 +112,20 @@
       statsRows: [],
       activityLogRows: [],
       notificationLogRows: [],
-      exportCsv: ''
+      exportCsv: '',
+      activeView: DEFAULT_ADMIN_VIEW
     };
 
     function query(selector) {
       return appRoot ? appRoot.querySelector(selector) : null;
+    }
+
+    function queryAll(selector) {
+      if (!appRoot || typeof appRoot.querySelectorAll !== 'function') {
+        return [];
+      }
+
+      return Array.prototype.slice.call(appRoot.querySelectorAll(selector) || []);
     }
 
     function renderIdentity(message) {
@@ -177,6 +202,56 @@
       renderLoginQrPayload(challenge && challenge.qrPayload ? challenge.qrPayload : '');
     }
 
+    function setCurrentViewTitle(viewId) {
+      const title = query('[data-current-view-title]');
+      if (title) {
+        title.textContent = ADMIN_VIEW_TITLES[viewId] || '';
+      }
+    }
+
+    function renderAdminNavigation(user) {
+      const allowedViews = getAllowedAdminViews(user);
+      if (!allowedViews.includes(state.activeView)) {
+        state.activeView = DEFAULT_ADMIN_VIEW;
+      }
+
+      queryAll('[data-nav-target]').forEach(button => {
+        const viewId = button && button.dataset ? button.dataset.navTarget : '';
+        const allowed = allowedViews.includes(viewId);
+        const active = allowed && viewId === state.activeView;
+
+        setHidden(button, !allowed);
+        button.disabled = !allowed;
+
+        if (button.classList && typeof button.classList.toggle === 'function') {
+          button.classList.toggle('is-active', active);
+        }
+
+        if (active && typeof button.setAttribute === 'function') {
+          button.setAttribute('aria-current', 'page');
+        } else if (typeof button.removeAttribute === 'function') {
+          button.removeAttribute('aria-current');
+        }
+      });
+
+      queryAll('[data-admin-view]').forEach(view => {
+        const viewId = view && view.dataset ? view.dataset.adminView : '';
+        setHidden(view, !(allowedViews.includes(viewId) && viewId === state.activeView));
+      });
+
+      setCurrentViewTitle(state.activeView);
+    }
+
+    function setActiveAdminView(viewId) {
+      const allowedViews = getAllowedAdminViews(state.currentUser);
+      if (!allowedViews.includes(viewId)) {
+        return;
+      }
+
+      state.activeView = viewId;
+      renderAdminNavigation(state.currentUser);
+    }
+
     function renderAccess(user) {
       const access = roles.buildAccessState(user);
       setHidden(query('[data-view="identity"]'), true);
@@ -193,8 +268,7 @@
         label.textContent = `${user._id || ''} (${access.roles.join(', ')})`;
       }
 
-      setHidden(query('[data-view="users"]'), !roles.isAdmin(user));
-      setHidden(query('[data-view="activities"]'), false);
+      renderAdminNavigation(user);
 
       return true;
     }
@@ -593,6 +667,12 @@
 
       if (appRoot) {
         appRoot.addEventListener('click', event => {
+          const navButton = event.target.closest('[data-nav-target]');
+          if (navButton) {
+            setActiveAdminView(navButton.dataset.navTarget);
+            return;
+          }
+
           const button = event.target.closest('[data-action]');
           if (!button) {
             return;
@@ -662,6 +742,7 @@
       pollWebAdminLogin,
       searchUsers,
       searchActivities,
+      setActiveAdminView,
       start,
       state
     };

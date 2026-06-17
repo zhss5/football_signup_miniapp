@@ -1,0 +1,203 @@
+const { createWebAdminApp } = require('../../web-admin/src/app');
+
+function createElement(dataset = {}) {
+  return {
+    hidden: false,
+    innerHTML: '',
+    textContent: '',
+    value: '',
+    dataset,
+    disabled: false,
+    attributes: {},
+    addEventListener: jest.fn(),
+    setAttribute: jest.fn(function setAttribute(name, value) {
+      this.attributes[name] = value;
+    }),
+    removeAttribute: jest.fn(function removeAttribute(name) {
+      delete this.attributes[name];
+    }),
+    classList: {
+      toggle: jest.fn()
+    }
+  };
+}
+
+function createTarget(element) {
+  return {
+    closest: jest.fn(selector => {
+      if (selector === '[data-nav-target]' && element.dataset.navTarget) {
+        return element;
+      }
+
+      if (selector === '[data-action]' && element.dataset.action) {
+        return element;
+      }
+
+      return null;
+    })
+  };
+}
+
+function createAppRoot(elements, groups) {
+  let clickHandler = null;
+
+  return {
+    querySelector: jest.fn(selector => elements[selector] || null),
+    querySelectorAll: jest.fn(selector => groups[selector] || []),
+    addEventListener: jest.fn((eventName, handler) => {
+      if (eventName === 'click') {
+        clickHandler = handler;
+      }
+    }),
+    click(element) {
+      if (!clickHandler) {
+        throw new Error('click handler was not registered');
+      }
+
+      clickHandler({
+        target: createTarget(element)
+      });
+    }
+  };
+}
+
+function buildHarness(user) {
+  const nav = {
+    users: createElement({ navTarget: 'users' }),
+    activities: createElement({ navTarget: 'activities' }),
+    attendanceStats: createElement({ navTarget: 'attendance-stats' }),
+    exports: createElement({ navTarget: 'exports' }),
+    logs: createElement({ navTarget: 'logs' })
+  };
+  const views = {
+    users: createElement({ adminView: 'users' }),
+    activities: createElement({ adminView: 'activities' }),
+    attendanceStats: createElement({ adminView: 'attendance-stats' }),
+    exports: createElement({ adminView: 'exports' }),
+    logs: createElement({ adminView: 'logs' })
+  };
+  const elements = {
+    '[data-view="identity"]': createElement(),
+    '[data-view="login"]': createElement(),
+    '[data-view="forbidden"]': createElement(),
+    '[data-view="workspace"]': createElement(),
+    '[data-current-user]': createElement(),
+    '[data-current-view-title]': createElement(),
+    '[data-activities-table]': createElement(),
+    '[data-users-table]': createElement()
+  };
+  const appRoot = createAppRoot(elements, {
+    '[data-nav-target]': [
+      nav.users,
+      nav.activities,
+      nav.attendanceStats,
+      nav.exports,
+      nav.logs
+    ],
+    '[data-admin-view]': [
+      views.users,
+      views.activities,
+      views.attendanceStats,
+      views.exports,
+      views.logs
+    ]
+  });
+  const api = {
+    setWebAdminSessionToken: jest.fn(),
+    getCurrentUser: jest.fn().mockResolvedValue(user),
+    listActivities: jest.fn().mockResolvedValue({
+      items: []
+    }),
+    listUsers: jest.fn().mockResolvedValue({
+      items: []
+    })
+  };
+  const storage = {
+    getItem: jest.fn().mockReturnValue('session_1'),
+    setItem: jest.fn()
+  };
+  const app = createWebAdminApp({
+    appRoot,
+    api,
+    autoPoll: false,
+    storage
+  });
+
+  return {
+    api,
+    app,
+    appRoot,
+    elements,
+    nav,
+    views
+  };
+}
+
+test('admin users see all sidebar items and land on activity management', async () => {
+  const { api, app, elements, nav, views } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+
+  await app.start();
+
+  expect(elements['[data-view="login"]'].hidden).toBe(true);
+  expect(elements['[data-view="workspace"]'].hidden).toBe(false);
+  expect(nav.users.hidden).toBe(false);
+  expect(nav.activities.hidden).toBe(false);
+  expect(nav.attendanceStats.hidden).toBe(false);
+  expect(nav.exports.hidden).toBe(false);
+  expect(nav.logs.hidden).toBe(false);
+  expect(views.activities.hidden).toBe(false);
+  expect(views.users.hidden).toBe(true);
+  expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
+  expect(api.listActivities).toHaveBeenCalled();
+  expect(api.listUsers).toHaveBeenCalled();
+});
+
+test('organizers can use operations views but do not see user management', async () => {
+  const { api, app, nav, views } = buildHarness({
+    _id: 'openid_organizer',
+    roles: ['user', 'organizer']
+  });
+
+  await app.start();
+
+  expect(nav.users.hidden).toBe(true);
+  expect(nav.activities.hidden).toBe(false);
+  expect(nav.attendanceStats.hidden).toBe(false);
+  expect(nav.exports.hidden).toBe(false);
+  expect(nav.logs.hidden).toBe(false);
+  expect(views.activities.hidden).toBe(false);
+  expect(views.users.hidden).toBe(true);
+  expect(api.listActivities).toHaveBeenCalled();
+  expect(api.listUsers).not.toHaveBeenCalled();
+});
+
+test('regular users stay on the forbidden view', async () => {
+  const { app, elements } = buildHarness({
+    _id: 'openid_user',
+    roles: ['user']
+  });
+
+  await app.start();
+
+  expect(elements['[data-view="forbidden"]'].hidden).toBe(false);
+  expect(elements['[data-view="workspace"]'].hidden).toBe(true);
+});
+
+test('sidebar navigation activates only the selected content view', async () => {
+  const { app, appRoot, nav, views } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+
+  await app.start();
+  appRoot.click(nav.attendanceStats);
+
+  expect(views.attendanceStats.hidden).toBe(false);
+  expect(views.activities.hidden).toBe(true);
+  expect(views.exports.hidden).toBe(true);
+  expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
+  expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
+});
