@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-06-15
+- Date: 2026-06-17
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -189,24 +189,29 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260612-runtime` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260617-qr-login` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
-- `tcb hosting deploy web-admin /admin` uploaded `11` files successfully.
+- `tcb hosting deploy web-admin /admin` uploaded `11` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry loads test runtime assets with `?v=20260612-runtime` cache-busting query strings.
-- Browser smoke reaches the `Football Signup Admin` page after the CloudBase test-domain risk prompt.
-- Previous anonymous Web SDK login was rejected as the long-term identity model because it created browser-scoped identities.
-- The current target is the mini-program QR bridge described above.
+- the hosted entry loads test runtime assets with `?v=20260617-qr-login` cache-busting query strings.
+- hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
+- hosted `app.js` contains QR payload handling.
+- `bootstrapV2Collections` has been deployed and invoked in `cloudbase-miniapp-test-dfc753877`; `web_admin_sessions` exists, and a repeat invocation returned all V2 collections under `existing`.
+- QR login cloud functions have been deployed: `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin`.
+- Web Admin-facing functions affected by `webAdminSessionToken` auth have been redeployed in the test environment: `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, `listNotificationLogs`, and `getActivityCopyDraft`.
+- direct CloudBase invocation of `createWebAdminLogin` returned a pending challenge with `loginId`, `pollToken`, `qrPayload`, and `expiresAt`.
+- direct CloudBase invocation of `pollWebAdminLogin` with that `loginId` and `pollToken` returned `{"status":"pending"}`.
 
-Next Web Admin runtime step:
+Current Web Admin runtime blockers:
 
-- deploy the QR login cloud functions and `web_admin_sessions` collection.
-- redeploy `web-admin/` static hosting.
-- upload a mini-program experience build with the `My` page Web Admin login action.
-- smoke test: Web Admin displays QR, mini program organizer scans and confirms, Web Admin loads the activity workspace.
+- Browser smoke reaches the `Football Signup Admin` page and loads the updated scripts, but Web SDK `callFunction` is blocked because the test CloudBase environment has not enabled the anonymous login method used by `web-admin/config.test.js`.
+- The browser console reports that `signInAnonymously()` requires anonymous login to be enabled, and the page receives `unauthenticated` / `credentials not found`.
+- Anonymous Web SDK identity is only a browser bootstrap credential for creating and polling the QR challenge; it must not be granted admin roles. The real Web Admin identity still comes from the mini-program QR confirmation and the server-issued `webAdminSessionToken`.
+- The workstation did not have the WeChat DevTools CLI on `PATH` or in the checked common install locations, so a mini-program experience build was not uploaded from this environment.
+- Real-device QR confirmation, role-specific workspace entry, ordinary-user denial, and live `listUsers` / `listActivities` calls still require enabling the Web SDK bootstrap identity source, uploading the mini-program experience build, and running a manual smoke pass with real users.
 
 Current web-admin capabilities:
 
@@ -282,6 +287,28 @@ git diff --cached --check
 
 The PowerShell bootstrap script was also exercised with a fake `tcb` executable to verify the local copy/deploy/invoke command path. Actual CloudBase deployment was not run locally because `tcb` is not installed on this workstation.
 
+Additional checks run for the test Web Admin QR-login deployment smoke:
+
+```bash
+npm test -- tests/cloudfunctions/webAdminLogin.test.js tests/cloudfunctions/ensureUserProfile.test.js tests/cloudfunctions/listUsers.test.js tests/web-admin/api.test.js tests/web-admin/static.test.js tests/web-admin/app-login.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js
+npm test -- tests/web-admin/static.test.js tests/web-admin/api.test.js tests/web-admin/app-login.test.js
+npm test
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn invoke bootstrapV2Collections -d "@<payload-file>"
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn invoke createWebAdminLogin --json
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn invoke pollWebAdminLogin -d "@<payload-file>"
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin
+```
+
+Results:
+
+- QR/Web Admin target regression passed with `8` test suites and `36` tests.
+- static cache-bust regression passed with `3` test suites and `11` tests.
+- full regression passed with `79` test suites and `607` tests.
+- `bootstrapV2Collections` returned `created: []` and `existing: ["activity_logs","user_role_logs","notification_logs","notification_subscriptions","web_admin_sessions"]` on the repeat check.
+- direct QR backend smoke returned a pending challenge and then `{"status":"pending"}` from `pollWebAdminLogin`.
+- hosted `/admin/` returned HTTP `200` and loaded the `20260617-qr-login` asset version.
+- browser smoke loaded the Web Admin page but stopped at the CloudBase Web SDK anonymous-login configuration blocker before live QR confirmation.
+
 ## 9. Deployment Order
 
 Recommended V2 rollout order:
@@ -320,10 +347,11 @@ Recommended V2 rollout order:
 
 ## 11. Next Steps
 
-1. Choose the intended Web Admin login source for the test CloudBase environment.
-2. Enable that CloudBase Web identity source, or replace the current anonymous-login test runtime with the chosen account/custom login flow.
-3. Verify whether Web SDK calls to `ensureUserProfile` can resolve an admin identity. If they still require mini-program `OPENID`, implement a dedicated web-admin identity bridge instead of weakening mini-program auth.
+1. Enable the intended low-privilege Web SDK bootstrap identity source in the test CloudBase environment, or replace `web-admin/config.test.js` with the chosen browser credential flow.
+2. Keep browser bootstrap identities role-less; do not grant roles to anonymous or browser-generated users.
+3. Upload a mini-program experience build that includes the `My` page Web Admin login scan-and-confirm action.
 4. Confirm or seed the first `super_admin` in the test environment.
-5. Run web-admin smoke tests for `super_admin`, `admin`, `organizer`, and ordinary `user` boundaries.
-6. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
-7. Run real-device mini-program smoke tests after any shared-environment deployment.
+5. Run real-device Web Admin QR smoke tests for `super_admin`, `admin`, `organizer`, and ordinary `user` boundaries.
+6. Verify live Web Admin `listUsers` and `listActivities` calls after QR confirmation issues `webAdminSessionToken`.
+7. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
+8. Run real-device mini-program smoke tests after any shared-environment deployment.

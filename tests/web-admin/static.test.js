@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const WEB_ADMIN_ASSET_VERSION = '20260617-qr-login';
+
 test('web admin static shell includes identity, guard, search, and role controls', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
 
@@ -21,7 +23,7 @@ test('web admin static shell includes identity, guard, search, and role controls
   expect(html).toContain('data-action="export-roster"');
   expect(html).toContain('data-action="load-activity-logs"');
   expect(html).toContain('data-action="load-notification-logs"');
-  expect(html).toContain('src="./src/app.js?v=');
+  expect(html).toContain(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
 });
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {
@@ -29,10 +31,12 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   const cloudbaseSdkIndex = html.indexOf(
     'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js'
   );
-  const configIndex = html.indexOf('src="./config.test.js?v=');
-  const runtimeIndex = html.indexOf('src="./src/cloudbase-runtime.js?v=');
-  const apiIndex = html.indexOf('src="./src/api.js?v=');
-  const appIndex = html.indexOf('src="./src/app.js?v=');
+  const configIndex = html.indexOf(`src="./config.test.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+  const runtimeIndex = html.indexOf(
+    `src="./src/cloudbase-runtime.js?v=${WEB_ADMIN_ASSET_VERSION}"`
+  );
+  const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+  const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const qrIndex = html.indexOf('https://cdn.jsdelivr.net/npm/qrcode@');
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);

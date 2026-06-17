@@ -4,6 +4,45 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-17 - Test Web Admin QR Login Deployment Smoke
+
+Deployed and smoke-tested the Web Admin QR login backend in the test CloudBase environment `cloudbase-miniapp-test-dfc753877`.
+
+Deployment completed:
+
+- deployed `bootstrapV2Collections` and confirmed it is active.
+- invoked `bootstrapV2Collections` successfully; `web_admin_sessions` now exists and a repeat invocation returned it under `existing`.
+- deployed QR login cloud functions: `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin`.
+- redeployed Web Admin-facing cloud functions affected by `webAdminSessionToken` auth: `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, `listNotificationLogs`, and `getActivityCopyDraft`.
+- redeployed `web-admin/` to CloudBase static hosting under `/admin`.
+- updated the Web Admin static asset query string to `20260617-qr-login` because the previous `20260612-runtime` URLs were still served from CloudBase static hosting/CDN cache after redeploy.
+
+Smoke results:
+
+- hosted entry: `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`.
+- HTTP check for `/admin/` returned `200` and confirmed the hosted entry references the `20260617-qr-login` assets.
+- hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
+- hosted `app.js` contains QR payload handling.
+- direct CloudBase invocation of `createWebAdminLogin` returned a pending challenge with `loginId`, `pollToken`, `qrPayload`, and `expiresAt`.
+- direct CloudBase invocation of `pollWebAdminLogin` with that `loginId` and `pollToken` returned `{"status":"pending"}`.
+
+Current blockers:
+
+- browser-side Web Admin smoke is blocked before real QR confirmation because the test CloudBase environment has not enabled the Web SDK anonymous login method used by `web-admin/config.test.js`; browser console reports that `signInAnonymously()` requires anonymous login to be enabled, and cloud-function calls return `unauthenticated` / `credentials not found`.
+- the workstation does not have the WeChat DevTools CLI on `PATH` or in the checked common install locations, so the mini-program experience build could not be uploaded from this environment.
+- because the Web Admin browser callFunction path and mini-program experience upload are blocked, real-device QR confirmation, role-specific workspace entry, ordinary-user denial, and live `listUsers` / `listActivities` calls still require the next manual smoke pass after enabling the CloudBase Web identity source and uploading the mini-program build.
+
+SQL/self-hosted readiness:
+
+- no runtime MySQL migration, CloudBase/MySQL dual-write, or self-hosted HTTP API switch was introduced.
+- the deployed QR login path keeps browser identity separated from real mini-program `OPENID`; Web Admin operations still resolve a server-issued `webAdminSessionToken` before applying the existing role checks.
+
+Verification:
+
+- target QR/Web Admin tests passed: `npm test -- tests/cloudfunctions/webAdminLogin.test.js tests/cloudfunctions/ensureUserProfile.test.js tests/cloudfunctions/listUsers.test.js tests/web-admin/api.test.js tests/web-admin/static.test.js tests/web-admin/app-login.test.js tests/miniprogram/pages/my-profile.test.js tests/miniprogram/pages/my-actions.test.js`.
+- cache-bust regression passed after the static asset version update: `npm test -- tests/web-admin/static.test.js tests/web-admin/api.test.js tests/web-admin/app-login.test.js`.
+- full regression passed with `npm test`: `79` test suites and `607` tests.
+
 ## 2026-06-15 - Web Admin WeChat QR Login
 
 Implemented the Web Admin login bridge through the mini program's real WeChat identity.
