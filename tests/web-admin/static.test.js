@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-qr-local';
+const WEB_ADMIN_ASSET_VERSION = '20260617-hidden-fix';
 
 test('web admin static shell includes identity, guard, search, and role controls', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -54,6 +54,12 @@ test('web admin static shell vendors the QR renderer for hosted login smoke', ()
   expect(html).not.toContain('cdn.jsdelivr.net/npm/qrcode');
   expect(fs.existsSync(vendorPath)).toBe(true);
   expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
+});
+
+test('web admin hidden views cannot be overridden by panel display styles', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toMatch(/\[hidden\]\s*\{[^}]*display:\s*none\s*!important\s*;/);
 });
 
 test('web admin test config targets only the test CloudBase environment', () => {
