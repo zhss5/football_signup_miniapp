@@ -38,11 +38,32 @@
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ADMIN_VIEW_TITLES = {
-    users: 'User Management',
-    activities: 'Activity Management',
-    'attendance-stats': 'Attendance Stats',
-    exports: 'Roster Export',
-    logs: 'Logs'
+    users: '用户管理',
+    activities: '活动管理',
+    'attendance-stats': '出勤统计',
+    exports: '名单导出',
+    logs: '日志'
+  };
+  const ROLE_LABELS = {
+    user: '普通用户',
+    organizer: '组织者',
+    admin: '管理员',
+    super_admin: '超级管理员'
+  };
+  const STATUS_LABELS = {
+    absent: '缺勤',
+    cancelled: '已取消',
+    confirmed: '已确认',
+    draft: '草稿',
+    pending: '待处理',
+    present: '出勤',
+    published: '已发布'
+  };
+  const POSITION_LABELS = {
+    defender: '后卫',
+    forward: '前锋',
+    goalkeeper: '门将',
+    midfielder: '中场'
   };
 
   function getAllowedAdminViews(user) {
@@ -51,6 +72,45 @@
     return roles.isAdmin(user)
       ? ['users', ...operationalViews]
       : operationalViews;
+  }
+
+  function formatRoleLabel(role) {
+    return ROLE_LABELS[role] || role;
+  }
+
+  function formatRoleList(rolesText) {
+    return String(rolesText || '')
+      .split(',')
+      .map(role => formatRoleLabel(role.trim()))
+      .filter(Boolean)
+      .join('、');
+  }
+
+  function formatDelimitedLabels(value, labels) {
+    return String(value || '')
+      .split('/')
+      .map(item => {
+        const key = item.trim();
+        return labels[key] || key;
+      })
+      .filter(Boolean)
+      .join(' / ');
+  }
+
+  function formatStatusText(value) {
+    return formatDelimitedLabels(value, STATUS_LABELS);
+  }
+
+  function formatAttendanceAction(status) {
+    if (status === 'absent') {
+      return '标记缺勤';
+    }
+
+    if (status === 'present') {
+      return '标记出勤';
+    }
+
+    return status || '';
   }
 
   function createWebAdminApp(options = {}) {
@@ -162,7 +222,7 @@
           errorCorrectionLevel: 'M'
         });
       } catch (error) {
-        renderLoginStatus('Unable to render QR code. Copy the payload and retry.');
+        renderLoginStatus('无法生成二维码。请复制下方登录内容后重试。');
       }
     }
 
@@ -198,7 +258,7 @@
       setHidden(query('[data-view="login"]'), false);
       setHidden(query('[data-view="forbidden"]'), true);
       setHidden(query('[data-view="workspace"]'), true);
-      renderLoginStatus('Open the mini program and scan this code from My > Web Admin Login.');
+      renderLoginStatus('打开小程序，从“我的”页面扫描此二维码。');
       renderLoginQrPayload(challenge && challenge.qrPayload ? challenge.qrPayload : '');
     }
 
@@ -265,7 +325,7 @@
 
       const label = query('[data-current-user]');
       if (label) {
-        label.textContent = `${user._id || ''} (${access.roles.join(', ')})`;
+        label.textContent = `${user._id || ''} (${access.roles.map(formatRoleLabel).join('、')})`;
       }
 
       renderAdminNavigation(user);
@@ -300,7 +360,7 @@
               `data-openid="${escapeHtml(row.openid)}" ` +
               `${control.checked ? 'checked ' : ''}` +
               `${control.disabled ? 'disabled ' : ''}/>` +
-              `<span>${escapeHtml(control.role)}</span>` +
+              `<span>${escapeHtml(formatRoleLabel(control.role))}</span>` +
               `</label>`
             ))
             .join('');
@@ -309,10 +369,10 @@
             `<tr data-openid="${escapeHtml(row.openid)}">` +
             `<td>${escapeHtml(row.displayName)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
-            `<td>${escapeHtml(row.rolesText)}</td>` +
+            `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
             `<td>${controls}</td>` +
             `<td><button type="button" data-action="save-roles" ` +
-            `data-openid="${escapeHtml(row.openid)}">Save</button></td>` +
+            `data-openid="${escapeHtml(row.openid)}">保存</button></td>` +
             `</tr>`
           );
         })
@@ -356,11 +416,11 @@
           `<tr data-activity-id="${escapeHtml(row.activityId)}">` +
           `<td>${escapeHtml(row.title)}</td>` +
           `<td>${escapeHtml(row.startAt)}</td>` +
-          `<td>${escapeHtml(row.statusText)}</td>` +
+          `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
           `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
           `<td>${escapeHtml(row.joinedCount)}</td>` +
           `<td><button type="button" data-action="load-activity-detail" ` +
-          `data-activity-id="${escapeHtml(row.activityId)}">Open</button></td>` +
+          `data-activity-id="${escapeHtml(row.activityId)}">打开</button></td>` +
           `</tr>`
         ))
         .join('');
@@ -381,18 +441,18 @@
           `<input type="text" data-manager-alias="${escapeHtml(row.userOpenId)}" ` +
           `value="${escapeHtml(row.managerAlias)}" ${row.proxyRegistration ? 'disabled ' : ''}/>` +
           `</td>` +
-          `<td>${escapeHtml(row.preferredPositions)}</td>` +
-          `<td>${row.proxyRegistration ? 'Yes' : 'No'}</td>` +
-          `<td>${escapeHtml(row.attendanceStatus)}</td>` +
+          `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
+          `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
+          `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +
           `<td>` +
           `<button type="button" data-action="toggle-attendance" ` +
           `data-registration-id="${escapeHtml(row.registrationId)}" ` +
           `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
-          `${escapeHtml(row.nextAttendanceStatus)}` +
+          `${escapeHtml(formatAttendanceAction(row.nextAttendanceStatus))}` +
           `</button>` +
           `<button type="button" data-action="save-manager-alias" ` +
           `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
-          `${row.proxyRegistration ? 'disabled ' : ''}>Save Alias</button>` +
+          `${row.proxyRegistration ? 'disabled ' : ''}>保存识别名</button>` +
           `</td>` +
           `</tr>`
         ))
@@ -556,7 +616,7 @@
 
     async function beginWebAdminLogin() {
       clearLoginPollTimer();
-      renderIdentity('Preparing web admin login...');
+      renderIdentity('正在准备后台登录...');
       const challenge = await api.createWebAdminLogin();
       state.loginChallenge = challenge;
       renderLoginChallenge(challenge);
@@ -565,7 +625,7 @@
     }
 
     async function loadWorkspace() {
-      renderIdentity('Checking identity...');
+      renderIdentity('正在检查身份...');
       state.currentUser = await api.getCurrentUser();
 
       if (!renderAccess(state.currentUser)) {
@@ -590,13 +650,13 @@
       const result = await api.pollWebAdminLogin(challenge.loginId, challenge.pollToken);
 
       if (!result || result.status === 'pending') {
-        renderLoginStatus('Waiting for confirmation in the mini program...');
+        renderLoginStatus('等待小程序确认登录...');
         return result;
       }
 
       if (result.status === 'expired') {
         clearLoginPollTimer();
-        renderLoginStatus('The login code expired. Click retry to create a new one.');
+        renderLoginStatus('登录二维码已过期，请点击重试重新生成。');
         return result;
       }
 

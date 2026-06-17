@@ -1,87 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Football Signup Admin</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-admin-layout" />
+    <title>足球报名后台</title>
+    <link rel="stylesheet" href="./styles.css?v=20260617-zh-cn" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
-      <section data-view="identity" class="status-panel">Checking identity...</section>
+      <section data-view="identity" class="status-panel">正在检查身份...</section>
 
       <section data-view="login" class="login-panel" hidden>
         <div class="login-copy">
-          <h1>Web Admin Login</h1>
+          <h1>后台管理登录</h1>
           <p>
-            Open the mini program, go to My, tap Web Admin Login, and scan this QR code.
+            打开小程序，进入“我的”，点击“后台登录”，扫描此二维码。
           </p>
           <p data-login-status class="login-status"></p>
-          <button type="button" data-action="restart-login">Retry</button>
+          <button type="button" data-action="restart-login">重试</button>
         </div>
         <div class="login-qr-card">
-          <canvas data-login-qr width="220" height="220" aria-label="Web admin login QR"></canvas>
+          <canvas data-login-qr width="220" height="220" aria-label="后台登录二维码"></canvas>
           <textarea data-login-payload readonly></textarea>
         </div>
       </section>
 
       <section data-view="forbidden" class="status-panel" hidden>
-        Organizer or admin access is required.
+        需要组织者或管理员权限。
       </section>
 
       <section data-view="workspace" class="admin-workspace" hidden>
         <div data-admin-layout class="admin-layout">
           <aside data-admin-sidebar class="admin-sidebar">
             <div class="brand-block">
-              <h1>Football Signup Admin</h1>
+              <h1>足球报名后台</h1>
               <p data-current-user></p>
             </div>
 
-            <nav class="admin-nav" aria-label="Admin navigation">
-              <button type="button" data-nav-target="users">User Management</button>
-              <button type="button" data-nav-target="activities">Activity Management</button>
-              <button type="button" data-nav-target="attendance-stats">Attendance Stats</button>
-              <button type="button" data-nav-target="exports">Roster Export</button>
-              <button type="button" data-nav-target="logs">Logs</button>
+            <nav class="admin-nav" aria-label="后台导航">
+              <button type="button" data-nav-target="users">用户管理</button>
+              <button type="button" data-nav-target="activities">活动管理</button>
+              <button type="button" data-nav-target="attendance-stats">出勤统计</button>
+              <button type="button" data-nav-target="exports">名单导出</button>
+              <button type="button" data-nav-target="logs">日志</button>
             </nav>
           </aside>
 
           <main data-admin-content class="admin-content">
             <header class="topbar">
-              <h2 data-current-view-title>Activity Management</h2>
+              <h2 data-current-view-title>活动管理</h2>
             </header>
 
             <section data-view="users" data-admin-view="users" class="panel" hidden>
-              <h3>User Roles</h3>
+              <h3>用户角色</h3>
 
               <form data-action="search-users" class="toolbar">
                 <label>
-                  <span>Keyword</span>
-                  <input name="keyword" type="search" placeholder="openid, name, nickname" />
+                  <span>关键词</span>
+                  <input name="keyword" type="search" placeholder="openid、姓名、昵称" />
                 </label>
 
                 <label>
-                  <span>Role</span>
+                  <span>角色</span>
                   <select data-role-filter>
-                    <option value="">All roles</option>
-                    <option value="user">User</option>
-                    <option value="organizer">Organizer</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super admin</option>
+                    <option value="">全部角色</option>
+                    <option value="user">普通用户</option>
+                    <option value="organizer">组织者</option>
+                    <option value="admin">管理员</option>
+                    <option value="super_admin">超级管理员</option>
                   </select>
                 </label>
 
-                <button type="submit">Search</button>
+                <button type="submit">搜索</button>
               </form>
 
               <table class="data-table users-table">
                 <thead>
                   <tr>
-                    <th>User</th>
+                    <th>用户</th>
                     <th>OpenID</th>
-                    <th>Current Roles</th>
-                    <th>Manage Roles</th>
-                    <th>Action</th>
+                    <th>当前角色</th>
+                    <th>角色管理</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody data-users-table></tbody>
@@ -89,52 +89,52 @@
             </section>
 
             <section data-view="activities" data-admin-view="activities" class="panel">
-              <h3>Activity Operations</h3>
+              <h3>活动运营</h3>
 
               <form data-action="search-activities" class="toolbar">
                 <label>
-                  <span>Keyword</span>
-                  <input name="activityKeyword" type="search" placeholder="title, venue, openid" />
+                  <span>关键词</span>
+                  <input name="activityKeyword" type="search" placeholder="标题、场地、openid" />
                 </label>
 
                 <label>
-                  <span>Status</span>
+                  <span>状态</span>
                   <select name="activityStatus">
-                    <option value="">Visible statuses</option>
-                    <option value="draft">Draft</option>
-                    <option value="pending">Pending</option>
-                    <option value="published">Published</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="">可见状态</option>
+                    <option value="draft">草稿</option>
+                    <option value="pending">待处理</option>
+                    <option value="published">已发布</option>
+                    <option value="cancelled">已取消</option>
                   </select>
                 </label>
 
                 <label>
-                  <span>Organizer OpenID</span>
-                  <input name="activityOrganizerOpenId" type="search" placeholder="admin filter" />
+                  <span>组织者 OpenID</span>
+                  <input name="activityOrganizerOpenId" type="search" placeholder="管理员筛选" />
                 </label>
 
                 <label>
-                  <span>From</span>
+                  <span>开始日期</span>
                   <input name="activityStartAtFrom" type="date" />
                 </label>
 
                 <label>
-                  <span>To</span>
+                  <span>结束日期</span>
                   <input name="activityStartAtTo" type="date" />
                 </label>
 
-                <button type="submit">Search</button>
+                <button type="submit">搜索</button>
               </form>
 
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Activity</th>
-                    <th>Start</th>
-                    <th>Status</th>
-                    <th>Organizer</th>
-                    <th>Joined</th>
-                    <th>Action</th>
+                    <th>活动</th>
+                    <th>开始时间</th>
+                    <th>状态</th>
+                    <th>组织者</th>
+                    <th>报名数</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody data-activities-table></tbody>
@@ -148,13 +148,13 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Team</th>
-                      <th>Signup Name</th>
-                      <th>Manager Alias</th>
-                      <th>Position Preferences</th>
-                      <th>Proxy</th>
-                      <th>Attendance</th>
-                      <th>Action</th>
+                      <th>队伍</th>
+                      <th>报名名</th>
+                      <th>管理识别名</th>
+                      <th>位置偏好</th>
+                      <th>代报名</th>
+                      <th>出勤状态</th>
+                      <th>操作</th>
                     </tr>
                   </thead>
                   <tbody data-roster-table></tbody>
@@ -163,30 +163,30 @@
             </section>
 
             <section data-admin-view="attendance-stats" class="panel" hidden>
-              <h3>Attendance Stats</h3>
+              <h3>出勤统计</h3>
 
               <form data-action="load-attendance-stats" class="toolbar">
                 <label>
-                  <span>Stats From</span>
+                  <span>统计开始</span>
                   <input name="statsStartAt" type="date" />
                 </label>
 
                 <label>
-                  <span>Stats To</span>
+                  <span>统计结束</span>
                   <input name="statsEndAt" type="date" />
                 </label>
 
-                <button type="submit">Load Stats</button>
+                <button type="submit">加载统计</button>
               </form>
 
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Participant</th>
-                    <th>Signups</th>
-                    <th>Present</th>
-                    <th>Absent</th>
-                    <th>Attendance Rate</th>
+                    <th>参与者</th>
+                    <th>报名次数</th>
+                    <th>出勤</th>
+                    <th>缺勤</th>
+                    <th>出勤率</th>
                   </tr>
                 </thead>
                 <tbody data-attendance-stats-table></tbody>
@@ -194,31 +194,31 @@
             </section>
 
             <section data-admin-view="exports" class="panel" hidden>
-              <h3>Roster Export</h3>
+              <h3>名单导出</h3>
 
               <div class="toolbar">
-                <button type="button" data-action="export-roster">Export Roster CSV</button>
+                <button type="button" data-action="export-roster">导出名单 CSV</button>
               </div>
 
               <textarea data-export-output class="export-output" readonly></textarea>
             </section>
 
             <section data-admin-view="logs" class="panel" hidden>
-              <h3>Logs</h3>
+              <h3>日志</h3>
 
               <div class="log-actions">
-                <button type="button" data-action="load-activity-logs">Load Activity Logs</button>
-                <button type="button" data-action="load-notification-logs">Load Notification Logs</button>
+                <button type="button" data-action="load-activity-logs">加载操作日志</button>
+                <button type="button" data-action="load-notification-logs">加载通知日志</button>
               </div>
 
               <div class="log-grid">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Action</th>
-                      <th>Operator</th>
-                      <th>Target</th>
-                      <th>Created</th>
+                      <th>操作</th>
+                      <th>操作者</th>
+                      <th>对象</th>
+                      <th>创建时间</th>
                     </tr>
                   </thead>
                   <tbody data-activity-logs-table></tbody>
@@ -227,10 +227,10 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Type</th>
-                      <th>Target</th>
-                      <th>Status</th>
-                      <th>Created</th>
+                      <th>类型</th>
+                      <th>对象</th>
+                      <th>状态</th>
+                      <th>创建时间</th>
                     </tr>
                   </thead>
                   <tbody data-notification-logs-table></tbody>
@@ -243,24 +243,24 @@
         <template id="role-control-template">
           <label class="role-toggle">
             <input type="checkbox" data-role="organizer" />
-            <span>organizer</span>
+                <span>组织者</span>
           </label>
           <label class="role-toggle">
             <input type="checkbox" data-role="admin" />
-            <span>admin</span>
+            <span>管理员</span>
           </label>
         </template>
       </section>
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260617-admin-layout"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260617-admin-layout"></script>
-    <script src="./src/roles.js?v=20260617-admin-layout"></script>
-    <script src="./src/api.js?v=20260617-admin-layout"></script>
-    <script src="./vendor/qrcode.min.js?v=20260617-admin-layout"></script>
-    <script src="./src/user-management.js?v=20260617-admin-layout"></script>
-    <script src="./src/activity-management.js?v=20260617-admin-layout"></script>
-    <script src="./src/app.js?v=20260617-admin-layout"></script>
+    <script src="./config.test.js?v=20260617-zh-cn"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260617-zh-cn"></script>
+    <script src="./src/roles.js?v=20260617-zh-cn"></script>
+    <script src="./src/api.js?v=20260617-zh-cn"></script>
+    <script src="./vendor/qrcode.min.js?v=20260617-zh-cn"></script>
+    <script src="./src/user-management.js?v=20260617-zh-cn"></script>
+    <script src="./src/activity-management.js?v=20260617-zh-cn"></script>
+    <script src="./src/app.js?v=20260617-zh-cn"></script>
   </body>
 </html>

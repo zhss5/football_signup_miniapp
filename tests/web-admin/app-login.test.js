@@ -53,6 +53,9 @@ test('web admin starts with a QR login challenge when no session token is stored
   expect(elements['[data-view="identity"]'].hidden).toBe(true);
   expect(elements['[data-view="login"]'].hidden).toBe(false);
   expect(elements['[data-view="workspace"]'].hidden).toBe(true);
+  expect(elements['[data-login-status]'].textContent).toBe(
+    '打开小程序，从“我的”页面扫描此二维码。'
+  );
   expect(elements['[data-login-payload]'].value).toBe(
     'football-signup-web-admin-login:login_1:confirm_1'
   );
@@ -67,6 +70,7 @@ test('web admin stores a confirmed QR session and then loads the workspace', asy
     '[data-view="users"]': createElement(),
     '[data-view="activities"]': createElement(),
     '[data-current-user]': createElement(),
+    '[data-current-view-title]': createElement(),
     '[data-login-status]': createElement(),
     '[data-login-payload]': createElement(),
     '[data-login-qr]': createElement(),

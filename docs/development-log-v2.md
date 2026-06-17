@@ -4,6 +4,30 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-17 - Web Admin Default Chinese UI
+
+Changed the Web Admin default visible interface to Chinese while preserving the existing API contracts and CloudBase function behavior.
+
+Delivered behavior:
+
+- default document language is now `zh-CN`.
+- hosted page title, login instructions, forbidden message, sidebar navigation, forms, table headers, action buttons, and runtime login statuses now render in Chinese.
+- role labels, activity status labels, attendance status labels, proxy markers, and roster operation buttons render in Chinese.
+- machine-facing values remain stable: role enums, activity status enums, attendance status enums, cloud-function names, `data-*` hooks, and API payloads were not renamed.
+- static assets now use `20260617-zh-cn` cache-busting query strings.
+
+Deployment:
+
+- redeployed `web-admin/` to CloudBase static hosting under `/admin` in `cloudbase-miniapp-test-dfc753877`.
+- CloudBase CLI uploaded `12` files successfully.
+- hosted check for `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/?verify=20260617-zh-cn-utf8` returned the `20260617-zh-cn` asset version and Chinese page title through UTF-8 content verification.
+
+Verification:
+
+- red tests first failed because the Web Admin still rendered English copy and the old asset version.
+- target Chinese UI tests passed: `npm test -- tests/web-admin/static.test.js tests/web-admin/app-login.test.js tests/web-admin/app-layout.test.js --runInBand`.
+- Web Admin regression passed: `npm test -- tests/web-admin --runInBand`.
+
 ## 2026-06-17 - Web Admin Common Layout Refactor
 
 Refactored the hosted Web Admin from a single scrolling workspace into a common admin layout with role-aware sidebar navigation and independent content views.

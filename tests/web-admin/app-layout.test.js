@@ -61,7 +61,7 @@ function createAppRoot(elements, groups) {
   };
 }
 
-function buildHarness(user) {
+function buildHarness(user, apiOverrides = {}) {
   const nav = {
     users: createElement({ navTarget: 'users' }),
     activities: createElement({ navTarget: 'activities' }),
@@ -84,7 +84,11 @@ function buildHarness(user) {
     '[data-current-user]': createElement(),
     '[data-current-view-title]': createElement(),
     '[data-activities-table]': createElement(),
-    '[data-users-table]': createElement()
+    '[data-users-table]': createElement(),
+    '[data-activity-detail]': createElement(),
+    '[data-activity-title]': createElement(),
+    '[data-roster-table]': createElement(),
+    '[data-export-output]': createElement()
   };
   const appRoot = createAppRoot(elements, {
     '[data-nav-target]': [
@@ -110,7 +114,12 @@ function buildHarness(user) {
     }),
     listUsers: jest.fn().mockResolvedValue({
       items: []
-    })
+    }),
+    getActivityDetail: jest.fn().mockResolvedValue({
+      activity: {},
+      teams: []
+    }),
+    ...apiOverrides
   };
   const storage = {
     getItem: jest.fn().mockReturnValue('session_1'),
@@ -150,6 +159,7 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.logs.hidden).toBe(false);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
+  expect(elements['[data-current-view-title]'].textContent).toBe('活动管理');
   expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).toHaveBeenCalled();
@@ -198,6 +208,90 @@ test('sidebar navigation activates only the selected content view', async () => 
   expect(views.attendanceStats.hidden).toBe(false);
   expect(views.activities.hidden).toBe(true);
   expect(views.exports.hidden).toBe(true);
+  expect(views.logs.hidden).toBe(true);
+  expect(app.state.activeView).toBe('attendance-stats');
   expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
+});
+
+test('user rows render Chinese role labels without changing role values', async () => {
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'openid_player',
+            preferredName: '张三',
+            roles: ['user', 'organizer']
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+
+  const html = elements['[data-users-table]'].innerHTML;
+  expect(html).toContain('普通用户、组织者');
+  expect(html).toContain('data-role="organizer"');
+  expect(html).toContain('组织者');
+  expect(html).toContain('保存');
+  expect(html).not.toContain('Save');
+});
+
+test('activity detail renders Chinese roster operation labels while keeping enum payloads', async () => {
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: {
+          title: '周五足球'
+        },
+        teams: [
+          {
+            teamName: '红队',
+            members: [
+              {
+                registrationId: 'reg_1',
+                userOpenId: 'openid_player',
+                signupName: '张三',
+                managerAlias: '老张',
+                preferredPositions: ['forward'],
+                proxyRegistration: false,
+                attendanceStatus: 'present'
+              },
+              {
+                registrationId: 'reg_2',
+                userOpenId: 'proxy_1',
+                signupName: '代报名',
+                proxyRegistration: true,
+                attendanceStatus: 'absent'
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  const html = elements['[data-roster-table]'].innerHTML;
+  expect(elements['[data-activity-title]'].textContent).toBe('周五足球');
+  expect(html).toContain('出勤');
+  expect(html).toContain('缺勤');
+  expect(html).toContain('是');
+  expect(html).toContain('否');
+  expect(html).toContain('data-next-status="absent"');
+  expect(html).toContain('标记缺勤');
+  expect(html).toContain('保存识别名');
+  expect(html).not.toContain('Save Alias');
 });

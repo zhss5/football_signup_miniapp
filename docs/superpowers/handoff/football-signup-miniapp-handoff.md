@@ -189,15 +189,16 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260617-admin-layout` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260617-zh-cn` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry loads test runtime assets with `?v=20260617-admin-layout` cache-busting query strings.
+- the hosted entry loads test runtime assets with `?v=20260617-zh-cn` cache-busting query strings.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
+- the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
 - hosted `app.js` contains QR payload handling and admin view navigation state.
 - `bootstrapV2Collections` has been deployed and invoked in `cloudbase-miniapp-test-dfc753877`; `web_admin_sessions` exists, and a repeat invocation returned all V2 collections under `existing`.
@@ -326,6 +327,20 @@ Results:
 - `git diff --check` passed.
 - CloudBase static hosting uploaded `12` files under `/admin`.
 - hosted `/admin/?verify=20260617-admin-layout` returned HTTP `200` and loaded the `20260617-admin-layout` asset version with the new sidebar layout.
+
+Additional checks run for the Web Admin default Chinese UI:
+
+```bash
+npm test -- tests/web-admin/static.test.js tests/web-admin/app-login.test.js tests/web-admin/app-layout.test.js --runInBand
+npm test -- tests/web-admin --runInBand
+```
+
+Results:
+
+- Chinese UI target tests passed with `3` test suites and `15` tests.
+- Web Admin regression passed with `9` test suites and `43` tests.
+- CloudBase static hosting uploaded `12` files under `/admin`.
+- hosted `/admin/?verify=20260617-zh-cn-utf8` returned HTTP `200` and UTF-8 verification confirmed `20260617-zh-cn`, `足球报名后台`, `用户管理`, and `后台管理登录`.
 
 ## 9. Deployment Order
 
