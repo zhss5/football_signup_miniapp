@@ -43,6 +43,14 @@ Verification:
 - cache-bust regression passed after the static asset version update: `npm test -- tests/web-admin/static.test.js tests/web-admin/api.test.js tests/web-admin/app-login.test.js`.
 - full regression passed with `npm test`: `79` test suites and `607` tests.
 
+Follow-up QR render fix:
+
+- the hosted Web Admin page could create a login challenge and display the `qrPayload`, but the QR canvas stayed blank.
+- root cause: the external QR script URL `https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js` returned `404`, so `window.QRCode.toCanvas` was unavailable.
+- vendored the QR renderer at `web-admin/vendor/qrcode.min.js`.
+- updated Web Admin static assets to `20260617-qr-local` and redeployed `/admin/` with `12` files including `/admin/vendor/qrcode.min.js`.
+- HTTP verification confirmed `/admin/` now references the local QR renderer, no longer references jsdelivr for QR rendering, and the local vendor file contains `toCanvas`.
+
 ## 2026-06-15 - Web Admin WeChat QR Login
 
 Implemented the Web Admin login bridge through the mini program's real WeChat identity.

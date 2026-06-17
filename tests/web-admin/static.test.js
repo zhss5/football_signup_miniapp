@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-qr-login';
+const WEB_ADMIN_ASSET_VERSION = '20260617-qr-local';
 
 test('web admin static shell includes identity, guard, search, and role controls', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -37,7 +37,7 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   );
   const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
-  const qrIndex = html.indexOf('https://cdn.jsdelivr.net/npm/qrcode@');
+  const qrIndex = html.indexOf(`src="./vendor/qrcode.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
@@ -45,6 +45,15 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
   expect(qrIndex).toBeGreaterThan(apiIndex);
   expect(appIndex).toBeGreaterThan(qrIndex);
+});
+
+test('web admin static shell vendors the QR renderer for hosted login smoke', () => {
+  const vendorPath = path.join(process.cwd(), 'web-admin/vendor/qrcode.min.js');
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+
+  expect(html).not.toContain('cdn.jsdelivr.net/npm/qrcode');
+  expect(fs.existsSync(vendorPath)).toBe(true);
+  expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
 });
 
 test('web admin test config targets only the test CloudBase environment', () => {
