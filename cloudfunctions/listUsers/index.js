@@ -42,7 +42,8 @@ function userMatchesKeyword(user, keyword) {
     user.preferredName,
     user.displayName,
     user.nickName,
-    user.nickname
+    user.nickname,
+    user.managerAlias
   ]
     .filter(Boolean)
     .some(value => String(value).toLowerCase().includes(keyword));
@@ -55,6 +56,7 @@ function toSafeUser(user) {
     displayName: user.displayName || '',
     nickName: user.nickName || user.nickname || '',
     avatarUrl: user.avatarUrl || '',
+    managerAlias: user.managerAlias || '',
     roles: getRoles(user),
     createdAt: user.createdAt || '',
     lastActiveAt: user.lastActiveAt || ''

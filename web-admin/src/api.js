@@ -136,6 +136,13 @@
         }));
       },
 
+      updateUserManagerAlias(targetOpenId, managerAlias) {
+        return invoke('updateUserManagerAlias', withWebAdminSession({
+          targetOpenId,
+          managerAlias
+        }));
+      },
+
       getAttendanceStats(params = {}) {
         return invoke('getAttendanceStats', withWebAdminSession({
           ...params

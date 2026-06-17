@@ -51,6 +51,7 @@ Completed:
 - roster export rows include team, signup name, manager alias, preferred positions, proxy flag, and attendance status.
 - roster export rejects regular users and keeps file generation out of the backend.
 - `updateParticipantManagerAlias` cloud function lets authorized activity managers update shared manager aliases for real WeChat signup users.
+- `updateUserManagerAlias` lets admins update the same user-level manager alias from Web Admin user management.
 - manager alias updates write `users.managerAlias`, `managerAliasUpdatedAt`, `managerAliasUpdatedBy`, and `activity_logs` audit rows with before/after values.
 - manager alias edits reject ordinary users, out-of-scope organizers, proxy signups, and values longer than the future SQL `VARCHAR(128)` target.
 - participant operation audit writes now cover self signup, re-signup, self cancellation, proxy signup, manager removal, team movement, attendance updates, and manager alias changes.

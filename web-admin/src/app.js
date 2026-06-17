@@ -369,10 +369,14 @@
             `<tr data-openid="${escapeHtml(row.openid)}">` +
             `<td>${escapeHtml(row.displayName)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
+            `<td><input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
+            `value="${escapeHtml(row.managerAlias)}" maxlength="128" /></td>` +
             `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
             `<td>${controls}</td>` +
             `<td><button type="button" data-action="save-roles" ` +
-            `data-openid="${escapeHtml(row.openid)}">保存</button></td>` +
+            `data-openid="${escapeHtml(row.openid)}">保存</button>` +
+            `<button type="button" data-action="save-user-manager-alias" ` +
+            `data-target-openid="${escapeHtml(row.openid)}">保存备注</button></td>` +
             `</tr>`
           );
         })
@@ -568,6 +572,16 @@
       await loadActivityDetail(activityId);
     }
 
+    async function saveUserManagerAlias(targetOpenId) {
+      const input = query(`[data-user-manager-alias="${escapeSelectorValue(targetOpenId)}"]`);
+      if (!targetOpenId || !input) {
+        return;
+      }
+
+      await api.updateUserManagerAlias(targetOpenId, input.value || '');
+      await searchUsers();
+    }
+
     async function loadAttendanceStats() {
       const startAt = query('[name="statsStartAt"]');
       const endAt = query('[name="statsEndAt"]');
@@ -740,6 +754,11 @@
 
           if (button.dataset.action === 'save-roles') {
             saveRoles(button.dataset.openid).catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'save-user-manager-alias') {
+            saveUserManagerAlias(button.dataset.targetOpenid)
+              .catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'load-activity-detail') {

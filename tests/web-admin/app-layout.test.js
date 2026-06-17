@@ -226,6 +226,7 @@ test('user rows render Chinese role labels without changing role values', async 
           {
             _id: 'openid_player',
             preferredName: '张三',
+            managerAlias: 'Left foot',
             roles: ['user', 'organizer']
           }
         ]
@@ -238,9 +239,53 @@ test('user rows render Chinese role labels without changing role values', async 
   const html = elements['[data-users-table]'].innerHTML;
   expect(html).toContain('普通用户、组织者');
   expect(html).toContain('data-role="organizer"');
+  expect(html).toContain('data-user-manager-alias="openid_player"');
+  expect(html).toContain('value="Left foot"');
+  expect(html).toContain('data-action="save-user-manager-alias"');
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
+});
+
+test('user manager alias can be saved from user management', async () => {
+  const updateUserManagerAlias = jest.fn().mockResolvedValue({
+    user: {
+      _id: 'openid_player',
+      managerAlias: 'New alias'
+    }
+  });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'openid_player',
+            preferredName: '张三',
+            managerAlias: 'Old alias',
+            roles: ['user']
+          }
+        ]
+      }),
+      updateUserManagerAlias
+    }
+  );
+  elements['[data-user-manager-alias="openid_player"]'] = {
+    value: 'New alias'
+  };
+
+  await app.start();
+  appRoot.click(createElement({
+    action: 'save-user-manager-alias',
+    targetOpenid: 'openid_player'
+  }));
+
+  await Promise.resolve();
+
+  expect(updateUserManagerAlias).toHaveBeenCalledWith('openid_player', 'New alias');
 });
 
 test('activity detail renders Chinese roster operation labels while keeping enum payloads', async () => {

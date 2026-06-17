@@ -128,7 +128,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias updateUserManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

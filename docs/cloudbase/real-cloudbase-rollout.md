@@ -106,19 +106,20 @@ Recommended function set:
 14. `getAttendanceStats`
 15. `exportActivityRoster`
 16. `updateParticipantManagerAlias`
-17. `listActivityLogs`
-18. `getActivityCopyDraft`
-19. `listUsers`
-20. `updateUserRoles`
-21. `listNotificationLogs`
-22. `createWebAdminLogin`
-23. `confirmWebAdminLogin`
-24. `pollWebAdminLogin`
-25. `recordNotificationSubscription`
-26. `notifyActivityParticipants`
-27. `cancelActivity`
-28. `deleteActivity`
-29. `getActivityStats`
+17. `updateUserManagerAlias`
+18. `listActivityLogs`
+19. `getActivityCopyDraft`
+20. `listUsers`
+21. `updateUserRoles`
+22. `listNotificationLogs`
+23. `createWebAdminLogin`
+24. `confirmWebAdminLogin`
+25. `pollWebAdminLogin`
+26. `recordNotificationSubscription`
+27. `notifyActivityParticipants`
+28. `cancelActivity`
+29. `deleteActivity`
+30. `getActivityStats`
 
 Legacy note:
 
@@ -134,7 +135,7 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
   --env 'your-cloud-env-id' `
   --project 'D:\workspaces\football_signup_miniapp' `
   --remote-npm-install `
-  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs createWebAdminLogin confirmWebAdminLogin pollWebAdminLogin recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
+  --names ensureUserProfile bootstrapV2Collections listActivities getActivityDetail createActivity updateActivity updateTeamColor joinActivity addProxyRegistration cancelRegistration removeRegistration moveRegistration setRegistrationAttendance getAttendanceStats exportActivityRoster updateParticipantManagerAlias updateUserManagerAlias listActivityLogs getActivityCopyDraft listUsers updateUserRoles listNotificationLogs createWebAdminLogin confirmWebAdminLogin pollWebAdminLogin recordNotificationSubscription notifyActivityParticipants cancelActivity deleteActivity getActivityStats `
   --lang zh
 ```
 

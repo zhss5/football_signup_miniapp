@@ -29,6 +29,7 @@ function createFakeDb(options = {}) {
         _id: 'openid_player',
         preferredName: 'Player Li',
         nickName: 'Li Si',
+        managerAlias: 'Left-footed keeper',
         roles: ['user'],
         avatarUrl: 'https://example.com/avatar.png',
         createdAt: '2026-05-03T00:00:00.000Z',
@@ -90,6 +91,7 @@ test('listUsers lets admin search users by keyword and role', async () => {
         displayName: 'Zhang San',
         nickName: '',
         avatarUrl: '',
+        managerAlias: '',
         roles: ['user', 'organizer'],
         createdAt: '2026-05-02T00:00:00.000Z',
         lastActiveAt: '2026-05-12T00:00:00.000Z'
@@ -110,6 +112,27 @@ test('listUsers supports openid search and pagination', async () => {
 
   expect(result.items.map(item => item._id)).toEqual(['openid_admin', 'openid_organizer']);
   expect(result.hasMore).toBe(true);
+});
+
+test('listUsers returns and searches manager aliases', async () => {
+  const db = createFakeDb();
+
+  const result = await listUsers.main(
+    { keyword: 'keeper', limit: 20, skip: 0 },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+
+  expect(result).toEqual({
+    items: [
+      expect.objectContaining({
+        _id: 'openid_player',
+        preferredName: 'Player Li',
+        managerAlias: 'Left-footed keeper'
+      })
+    ],
+    hasMore: false
+  });
 });
 
 test('listUsers accepts a web admin session token for a WeChat super admin', async () => {

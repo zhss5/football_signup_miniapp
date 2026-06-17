@@ -26,6 +26,7 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
       {
         _id: 'openid_player',
         preferredName: 'Player Li',
+        managerAlias: 'Left foot',
         roles: ['user']
       }
     ],
@@ -39,6 +40,7 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
     {
       openid: 'openid_player',
       displayName: 'Player Li',
+      managerAlias: 'Left foot',
       rolesText: 'user',
       roleControls: [
         { role: 'organizer', checked: false, disabled: false },

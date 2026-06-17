@@ -797,3 +797,29 @@ Longer-term note:
 - self-hosted backend services would make standard `dev` / `test` / `prod` isolation, database separation, rollout, and rollback easier.
 - do not migrate away from CloudBase only to avoid the second-environment fee; migration would require replacing cloud-function calls, database access, openid-based auth wiring, storage handling, subscription-message sending, request-domain configuration, and operational hosting.
 - reconsider a self-hosted backend when the web admin, statistics, permission workflows, or release-management needs become complex enough to justify the migration cost.
+
+## 2026-06-17 - Web Admin User Manager Alias Editing
+
+Implemented user-level manager alias editing in Web Admin user management.
+
+Delivered behavior:
+
+- `listUsers` now returns `managerAlias`.
+- admin user search can match `managerAlias`, so admins can find users by operational notes.
+- Web Admin user management renders a manager-alias input for each user row.
+- Web Admin can save the user-level alias through the new `updateUserManagerAlias` cloud function.
+- `updateUserManagerAlias` updates `users.managerAlias`, `managerAliasUpdatedAt`, and `managerAliasUpdatedBy`.
+- regular users and organizers cannot update global user aliases.
+- activity roster alias editing still uses `updateParticipantManagerAlias`; both APIs write the same `users.managerAlias` field.
+
+Deployment note:
+
+- run `npm run copy:cloud-shared`.
+- deploy the new `updateUserManagerAlias` cloud function.
+- redeploy `listUsers`.
+- redeploy Web Admin static hosting.
+
+Verification:
+
+- red/green tests covered alias search and return shape, the new alias mutation function, Web Admin API delegation, user-row view models, table rendering, and the save action.
+- target regression passed: `5` test suites, `25` tests.

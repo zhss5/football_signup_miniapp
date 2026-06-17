@@ -19,6 +19,7 @@ Current API calls include:
 - `getActivityDetail`
 - `setRegistrationAttendance`
 - `updateParticipantManagerAlias`
+- `updateUserManagerAlias`
 - `getAttendanceStats`
 - `exportActivityRoster`
 - `listActivityLogs`

@@ -118,6 +118,7 @@ test('api client delegates activity operations to existing cloud functions', asy
   await api.getActivityDetail('activity_1');
   await api.setRegistrationAttendance('activity_1', 'reg_1', 'absent');
   await api.updateParticipantManagerAlias('activity_1', 'openid_player', 'Zhang San');
+  await api.updateUserManagerAlias('openid_player', 'Left foot');
   await api.getAttendanceStats({ startAt: '2026-06-01', endAt: '2026-06-30' });
   await api.exportActivityRoster('activity_1');
   await api.listActivityLogs({ activityId: 'activity_1' });
@@ -139,6 +140,10 @@ test('api client delegates activity operations to existing cloud functions', asy
     activityId: 'activity_1',
     targetOpenId: 'openid_player',
     managerAlias: 'Zhang San'
+  });
+  expect(callFunction).toHaveBeenCalledWith('updateUserManagerAlias', {
+    targetOpenId: 'openid_player',
+    managerAlias: 'Left foot'
   });
   expect(callFunction).toHaveBeenCalledWith('getAttendanceStats', {
     startAt: '2026-06-01',
