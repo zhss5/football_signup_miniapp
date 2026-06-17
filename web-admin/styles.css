@@ -172,6 +172,10 @@ select {
 }
 
 .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
 }
 
@@ -179,6 +183,55 @@ select {
   margin: 0;
   font-size: 26px;
   line-height: 34px;
+}
+
+.topbar-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-copy {
+  min-width: 0;
+  color: #46546b;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: right;
+}
+
+.account-copy strong,
+.account-copy code {
+  display: block;
+  overflow: hidden;
+  max-width: 360px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-copy strong {
+  color: #172033;
+}
+
+.account-copy code {
+  color: #66758d;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.topbar-account button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #46546b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.topbar-account button:hover {
+  border-color: #2e6bd9;
+  color: #1d4fae;
 }
 
 .panel {

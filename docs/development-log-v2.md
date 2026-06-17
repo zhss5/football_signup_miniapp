@@ -823,3 +823,24 @@ Verification:
 
 - red/green tests covered alias search and return shape, the new alias mutation function, Web Admin API delegation, user-row view models, table rendering, and the save action.
 - target regression passed: `5` test suites, `25` tests.
+
+## 2026-06-17 - Web Admin Account Display And Logout
+
+Implemented a clearer signed-in account display and logout control for Web Admin.
+
+Delivered behavior:
+
+- Web Admin topbar now shows the current account display name, role labels, and OpenID.
+- The existing sidebar identity copy uses the same readable account summary.
+- Web Admin now has a `logout` action that clears the local `webAdminSessionToken`, resets in-memory workspace state, and returns to the QR login flow.
+- static asset query strings were bumped to `20260617-account` to avoid stale hosted scripts after redeploy.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+- no cloud function redeploy is required for this UI-only change.
+
+Verification:
+
+- red/green tests covered topbar account rendering and logout session clearing.
+- Web Admin regression passed: `9` test suites, `46` tests.

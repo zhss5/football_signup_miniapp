@@ -191,14 +191,14 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260617-zh-cn` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260617-account` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry loads test runtime assets with `?v=20260617-zh-cn` cache-busting query strings.
+- the hosted entry loads test runtime assets with `?v=20260617-account` cache-busting query strings after the account-display/logout update.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
@@ -219,6 +219,8 @@ Current web-admin capabilities:
 
 - identity loading through `ensureUserProfile`.
 - role-aware sidebar navigation after QR login.
+- current account display with display name, roles, and OpenID.
+- logout that clears the local Web Admin session and returns to QR login.
 - user search through `listUsers`.
 - role mutation through `updateUserRoles`.
 - activity list filtering through `listActivities`.

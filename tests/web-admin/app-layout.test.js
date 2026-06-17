@@ -82,6 +82,8 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-view="forbidden"]': createElement(),
     '[data-view="workspace"]': createElement(),
     '[data-current-user]': createElement(),
+    '[data-current-user-summary]': createElement(),
+    '[data-current-user-openid]': createElement(),
     '[data-current-view-title]': createElement(),
     '[data-activities-table]': createElement(),
     '[data-users-table]': createElement(),
@@ -123,7 +125,8 @@ function buildHarness(user, apiOverrides = {}) {
   };
   const storage = {
     getItem: jest.fn().mockReturnValue('session_1'),
-    setItem: jest.fn()
+    setItem: jest.fn(),
+    removeItem: jest.fn()
   };
   const app = createWebAdminApp({
     appRoot,
@@ -163,6 +166,47 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).toHaveBeenCalled();
+});
+
+test('logged-in users see account details in the topbar', async () => {
+  const { app, elements } = buildHarness({
+    _id: 'openid_admin',
+    preferredName: '张虹生',
+    roles: ['user', 'admin']
+  });
+
+  await app.start();
+
+  expect(elements['[data-current-user-summary]'].textContent).toBe('当前登录：张虹生（普通用户、管理员）');
+  expect(elements['[data-current-user-openid]'].textContent).toBe('openid_admin');
+});
+
+test('logout clears the stored web admin session and returns to QR login', async () => {
+  const createWebAdminLogin = jest.fn().mockResolvedValue({
+    loginId: 'login_2',
+    pollToken: 'poll_2',
+    qrPayload: 'football-signup-web-admin-login:login_2:confirm_2'
+  });
+  const { api, app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      preferredName: '张虹生',
+      roles: ['user', 'admin']
+    },
+    {
+      createWebAdminLogin
+    }
+  );
+
+  await app.start();
+  appRoot.click(createElement({ action: 'logout' }));
+  await Promise.resolve();
+
+  expect(api.setWebAdminSessionToken).toHaveBeenCalledWith('');
+  expect(elements['[data-view="workspace"]'].hidden).toBe(true);
+  expect(elements['[data-view="login"]'].hidden).toBe(false);
+  expect(app.state.currentUser).toBe(null);
+  expect(createWebAdminLogin).toHaveBeenCalled();
 });
 
 test('organizers can use operations views but do not see user management', async () => {

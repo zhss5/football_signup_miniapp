@@ -154,6 +154,18 @@
       }
     }
 
+    function removeStoredWebAdminSessionToken() {
+      if (!storage || typeof storage.removeItem !== 'function') {
+        return;
+      }
+
+      try {
+        storage.removeItem(sessionStorageKey);
+      } catch (error) {
+        // Ignore storage failures. The next login still replaces the in-memory token.
+      }
+    }
+
     const api = options.api ||
       apiModule.createApiClient(apiModule.createDefaultCallFunction(options.runtimeRoot), {
         webAdminSessionToken: readStoredWebAdminSessionToken()
@@ -312,6 +324,33 @@
       renderAdminNavigation(state.currentUser);
     }
 
+    function getCurrentUserDisplayName(user) {
+      return (
+        String(user.preferredName || '').trim() ||
+        String(user.displayName || '').trim() ||
+        String(user.nickName || user.nickname || '').trim() ||
+        String(user._id || '').trim()
+      );
+    }
+
+    function formatCurrentUserSummary(user, userRoles) {
+      const name = getCurrentUserDisplayName(user);
+      const roleText = userRoles.map(formatRoleLabel).join('、');
+      return `当前登录：${name}${roleText ? `（${roleText}）` : ''}`;
+    }
+
+    function renderCurrentUserAccount(user, userRoles) {
+      const summary = query('[data-current-user-summary]');
+      if (summary) {
+        summary.textContent = formatCurrentUserSummary(user, userRoles);
+      }
+
+      const openid = query('[data-current-user-openid]');
+      if (openid) {
+        openid.textContent = user._id || '';
+      }
+    }
+
     function renderAccess(user) {
       const access = roles.buildAccessState(user);
       setHidden(query('[data-view="identity"]'), true);
@@ -325,9 +364,10 @@
 
       const label = query('[data-current-user]');
       if (label) {
-        label.textContent = `${user._id || ''} (${access.roles.map(formatRoleLabel).join('、')})`;
+        label.textContent = formatCurrentUserSummary(user, access.roles);
       }
 
+      renderCurrentUserAccount(user, access.roles);
       renderAdminNavigation(user);
 
       return true;
@@ -638,6 +678,27 @@
       return challenge;
     }
 
+    async function logoutWebAdmin() {
+      clearLoginPollTimer();
+      removeStoredWebAdminSessionToken();
+      state.currentUser = null;
+      state.webAdminSessionToken = '';
+      state.loginChallenge = null;
+      state.rows = [];
+      state.activities = [];
+      state.rosterRows = [];
+      state.statsRows = [];
+      state.activityLogRows = [];
+      state.notificationLogRows = [];
+      state.exportCsv = '';
+
+      if (api && typeof api.setWebAdminSessionToken === 'function') {
+        api.setWebAdminSessionToken('');
+      }
+
+      return beginWebAdminLogin();
+    }
+
     async function loadWorkspace() {
       renderIdentity('正在检查身份...');
       state.currentUser = await api.getCurrentUser();
@@ -790,6 +851,10 @@
           if (button.dataset.action === 'restart-login') {
             beginWebAdminLogin().catch(error => renderLoginStatus(getErrorMessage(error)));
           }
+
+          if (button.dataset.action === 'logout') {
+            logoutWebAdmin().catch(error => renderIdentity(error.message));
+          }
         });
       }
     }
@@ -819,6 +884,7 @@
       loadAttendanceStats,
       loadNotificationLogs,
       pollWebAdminLogin,
+      logoutWebAdmin,
       searchUsers,
       searchActivities,
       setActiveAdminView,

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-zh-cn" />
+    <link rel="stylesheet" href="./styles.css?v=20260617-account" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -49,6 +49,13 @@
           <main data-admin-content class="admin-content">
             <header class="topbar">
               <h2 data-current-view-title>活动管理</h2>
+              <div class="topbar-account">
+                <div class="account-copy">
+                  <strong data-current-user-summary></strong>
+                  <code data-current-user-openid></code>
+                </div>
+                <button type="button" data-action="logout">退出登录</button>
+              </div>
             </header>
 
             <section data-view="users" data-admin-view="users" class="panel" hidden>
@@ -255,13 +262,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260617-zh-cn"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260617-zh-cn"></script>
-    <script src="./src/roles.js?v=20260617-zh-cn"></script>
-    <script src="./src/api.js?v=20260617-zh-cn"></script>
-    <script src="./vendor/qrcode.min.js?v=20260617-zh-cn"></script>
-    <script src="./src/user-management.js?v=20260617-zh-cn"></script>
-    <script src="./src/activity-management.js?v=20260617-zh-cn"></script>
-    <script src="./src/app.js?v=20260617-zh-cn"></script>
+    <script src="./config.test.js?v=20260617-account"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260617-account"></script>
+    <script src="./src/roles.js?v=20260617-account"></script>
+    <script src="./src/api.js?v=20260617-account"></script>
+    <script src="./vendor/qrcode.min.js?v=20260617-account"></script>
+    <script src="./src/user-management.js?v=20260617-account"></script>
+    <script src="./src/activity-management.js?v=20260617-account"></script>
+    <script src="./src/app.js?v=20260617-account"></script>
   </body>
 </html>

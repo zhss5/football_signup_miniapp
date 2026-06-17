@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-zh-cn';
+const WEB_ADMIN_ASSET_VERSION = '20260617-account';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -30,6 +30,9 @@ test('web admin workspace uses a Chinese sidebar plus independent content views'
   expect(html).toContain('data-admin-layout');
   expect(html).toContain('data-admin-sidebar');
   expect(html).toContain('data-admin-content');
+  expect(html).toContain('data-current-user-summary');
+  expect(html).toContain('data-current-user-openid');
+  expect(html).toContain('data-action="logout"');
   expect(html).toContain('data-nav-target="users"');
   expect(html).toContain('data-nav-target="activities"');
   expect(html).toContain('data-nav-target="attendance-stats"');
