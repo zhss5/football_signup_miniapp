@@ -200,6 +200,54 @@
       return Array.prototype.slice.call(appRoot.querySelectorAll(selector) || []);
     }
 
+    function setLoadingButton(button, loading, loadingText) {
+      if (!button) {
+        return;
+      }
+
+      if (loading) {
+        if (!button.dataset.originalText) {
+          button.dataset.originalText = button.textContent || '';
+        }
+
+        button.disabled = true;
+        button.textContent = loadingText || '加载中...';
+
+        if (button.classList && typeof button.classList.toggle === 'function') {
+          button.classList.toggle('is-loading', true);
+        }
+
+        if (typeof button.setAttribute === 'function') {
+          button.setAttribute('aria-busy', 'true');
+        }
+
+        return;
+      }
+
+      button.disabled = false;
+      button.textContent = button.dataset.originalText || button.textContent || '';
+      delete button.dataset.originalText;
+
+      if (button.classList && typeof button.classList.toggle === 'function') {
+        button.classList.toggle('is-loading', false);
+      }
+
+      if (typeof button.removeAttribute === 'function') {
+        button.removeAttribute('aria-busy');
+      }
+    }
+
+    async function runWithLoadingButton(selector, loadingText, task) {
+      const button = query(selector);
+      setLoadingButton(button, true, loadingText);
+
+      try {
+        return await task();
+      } finally {
+        setLoadingButton(button, false);
+      }
+    }
+
     function renderIdentity(message) {
       const identity = query('[data-view="identity"]');
       if (identity) {
@@ -780,7 +828,8 @@
       if (form) {
         form.addEventListener('submit', event => {
           event.preventDefault();
-          searchUsers().catch(error => renderIdentity(error.message));
+          return runWithLoadingButton('[data-users-search-button]', '搜索中...', searchUsers)
+            .catch(error => renderIdentity(error.message));
         });
       }
 
@@ -788,7 +837,11 @@
       if (activitiesForm) {
         activitiesForm.addEventListener('submit', event => {
           event.preventDefault();
-          searchActivities().catch(error => renderIdentity(error.message));
+          return runWithLoadingButton(
+            '[data-activities-search-button]',
+            '搜索中...',
+            searchActivities
+          ).catch(error => renderIdentity(error.message));
         });
       }
 
@@ -796,7 +849,11 @@
       if (statsForm) {
         statsForm.addEventListener('submit', event => {
           event.preventDefault();
-          loadAttendanceStats().catch(error => renderIdentity(error.message));
+          return runWithLoadingButton(
+            '[data-stats-load-button]',
+            '加载中...',
+            loadAttendanceStats
+          ).catch(error => renderIdentity(error.message));
         });
       }
 

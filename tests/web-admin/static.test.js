@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-account';
+const WEB_ADMIN_ASSET_VERSION = '20260617-loading';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -54,6 +54,9 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
 
   expect(html).toContain('data-action="search-users"');
+  expect(html).toContain('data-users-search-button');
+  expect(html).toContain('data-activities-search-button');
+  expect(html).toContain('data-stats-load-button');
   expect(html).toContain('data-role-filter');
   expect(html).toContain('data-role="organizer"');
   expect(html).toContain('data-role="admin"');
@@ -68,6 +71,13 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('出勤状态');
   expect(html).toContain('导出名单 CSV');
   expect(html).toContain('加载操作日志');
+});
+
+test('web admin search buttons have loading spinner styling', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('.toolbar button.is-loading::before');
+  expect(css).toContain('@keyframes admin-spin');
 });
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-account" />
+    <link rel="stylesheet" href="./styles.css?v=20260617-loading" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -78,7 +78,7 @@
                   </select>
                 </label>
 
-                <button type="submit">搜索</button>
+                <button type="submit" data-users-search-button>搜索</button>
               </form>
 
               <table class="data-table users-table">
@@ -131,7 +131,7 @@
                   <input name="activityStartAtTo" type="date" />
                 </label>
 
-                <button type="submit">搜索</button>
+                <button type="submit" data-activities-search-button>搜索</button>
               </form>
 
               <table class="data-table">
@@ -184,7 +184,7 @@
                   <input name="statsEndAt" type="date" />
                 </label>
 
-                <button type="submit">加载统计</button>
+                <button type="submit" data-stats-load-button>加载统计</button>
               </form>
 
               <table class="data-table">
@@ -262,13 +262,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260617-account"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260617-account"></script>
-    <script src="./src/roles.js?v=20260617-account"></script>
-    <script src="./src/api.js?v=20260617-account"></script>
-    <script src="./vendor/qrcode.min.js?v=20260617-account"></script>
-    <script src="./src/user-management.js?v=20260617-account"></script>
-    <script src="./src/activity-management.js?v=20260617-account"></script>
-    <script src="./src/app.js?v=20260617-account"></script>
+    <script src="./config.test.js?v=20260617-loading"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260617-loading"></script>
+    <script src="./src/roles.js?v=20260617-loading"></script>
+    <script src="./src/api.js?v=20260617-loading"></script>
+    <script src="./vendor/qrcode.min.js?v=20260617-loading"></script>
+    <script src="./src/user-management.js?v=20260617-loading"></script>
+    <script src="./src/activity-management.js?v=20260617-loading"></script>
+    <script src="./src/app.js?v=20260617-loading"></script>
   </body>
 </html>

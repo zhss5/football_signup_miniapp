@@ -8,8 +8,11 @@ function createElement(dataset = {}) {
     value: '',
     dataset,
     disabled: false,
+    eventHandlers: {},
     attributes: {},
-    addEventListener: jest.fn(),
+    addEventListener: jest.fn(function addEventListener(eventName, handler) {
+      this.eventHandlers[eventName] = handler;
+    }),
     setAttribute: jest.fn(function setAttribute(name, value) {
       this.attributes[name] = value;
     }),
@@ -57,7 +60,38 @@ function createAppRoot(elements, groups) {
       clickHandler({
         target: createTarget(element)
       });
+    },
+    submit(element) {
+      const handler = element.eventHandlers && element.eventHandlers.submit;
+      if (!handler) {
+        throw new Error('submit handler was not registered');
+      }
+
+      const event = {
+        preventDefault: jest.fn(),
+        target: element
+      };
+      const result = handler(event);
+      return {
+        event,
+        result
+      };
     }
+  };
+}
+
+function createDeferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return {
+    promise,
+    reject,
+    resolve
   };
 }
 
@@ -85,6 +119,14 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-current-user-summary]': createElement(),
     '[data-current-user-openid]': createElement(),
     '[data-current-view-title]': createElement(),
+    '[data-action="search-users"]': createElement({ action: 'search-users' }),
+    '[data-action="search-activities"]': createElement({ action: 'search-activities' }),
+    '[data-action="load-attendance-stats"]': createElement({
+      action: 'load-attendance-stats'
+    }),
+    '[data-users-search-button]': createElement(),
+    '[data-activities-search-button]': createElement(),
+    '[data-stats-load-button]': createElement(),
     '[data-activities-table]': createElement(),
     '[data-users-table]': createElement(),
     '[data-activity-detail]': createElement(),
@@ -289,6 +331,49 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
+});
+
+test('user search button shows spinner feedback while the request is pending', async () => {
+  const deferred = createDeferred();
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: []
+    })
+    .mockReturnValueOnce(deferred.promise);
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers
+    }
+  );
+  const form = elements['[data-action="search-users"]'];
+  const button = elements['[data-users-search-button]'];
+  button.textContent = '搜索';
+
+  await app.start();
+  listUsers.mockClear();
+  const submission = appRoot.submit(form);
+
+  expect(submission.event.preventDefault).toHaveBeenCalled();
+  expect(listUsers).toHaveBeenCalledTimes(1);
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toBe('搜索中...');
+  expect(button.attributes['aria-busy']).toBe('true');
+  expect(button.classList.toggle).toHaveBeenCalledWith('is-loading', true);
+
+  deferred.resolve({
+    items: [],
+    hasMore: false
+  });
+  await submission.result;
+
+  expect(button.disabled).toBe(false);
+  expect(button.textContent).toBe('搜索');
+  expect(button.attributes['aria-busy']).toBeUndefined();
+  expect(button.classList.toggle).toHaveBeenCalledWith('is-loading', false);
 });
 
 test('user manager alias can be saved from user management', async () => {

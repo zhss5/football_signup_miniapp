@@ -844,3 +844,27 @@ Verification:
 
 - red/green tests covered topbar account rendering and logout session clearing.
 - Web Admin regression passed: `9` test suites, `46` tests.
+
+## 2026-06-17 - Web Admin Search Loading Feedback
+
+Added visible loading feedback for Web Admin search-style toolbar actions.
+
+Delivered behavior:
+
+- User Management search disables the submit button while `listUsers` is pending.
+- Activity Management search disables the submit button while `listActivities` is pending.
+- Attendance Statistics loading disables the submit button while `getAttendanceStats` is pending.
+- toolbar loading buttons show a small spinner, `aria-busy="true"`, and temporary Chinese loading text.
+- static asset query strings were bumped to `20260617-loading` to avoid stale hosted scripts and CSS after redeploy.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+- no cloud function redeploy is required for this UI-only change.
+
+Verification:
+
+- red/green tests covered pending search button loading state, static button hooks, spinner CSS, and asset-version cache busting.
+- target Web Admin tests passed: `2` test suites, `18` tests.
+- Web Admin regression passed: `9` test suites, `48` tests.
+- full regression passed: `81` test suites, `628` tests.
