@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-06-17
+- Date: 2026-06-18
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -40,9 +40,10 @@ Version 2 still does not:
 
 Current uncommitted local changes are intentionally left outside this handoff update:
 
-- `miniprogram/config/env.local.js.example` deleted.
-- `miniprogram/config/env.local.js.sample` untracked.
 - `project.config.json` modified.
+- `miniprogram/config/env.local.js.mock` untracked.
+- `miniprogram/config/env.local.js.old` untracked.
+- `video/` untracked.
 
 Do not stage those files unless there is a separate explicit decision to change local configuration examples or project config.
 
@@ -198,21 +199,22 @@ Current hosted smoke status:
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the last verified hosted entry loaded test runtime assets with `?v=20260617-loading` cache-busting query strings after the search-loading update; redeploy static hosting to publish the `20260618-user-actions` user-row action feedback update.
+- the hosted entry and static assets load `?v=20260618-user-actions`; hosted `app.js` and `styles.css` include the user-row action feedback hooks.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
 - hosted `app.js` contains QR payload handling and admin view navigation state.
 - `bootstrapV2Collections` has been deployed and invoked in `cloudbase-miniapp-test-dfc753877`; `web_admin_sessions` exists, and a repeat invocation returned all V2 collections under `existing`.
 - QR login cloud functions have been deployed: `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin`.
-- Web Admin-facing functions affected by `webAdminSessionToken` auth have been redeployed in the test environment: `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, `listNotificationLogs`, and `getActivityCopyDraft`.
+- Web Admin-facing functions affected by `webAdminSessionToken` auth have been redeployed in the test environment: `ensureUserProfile`, `listUsers`, `updateUserRoles`, `updateUserManagerAlias`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, `listNotificationLogs`, and `getActivityCopyDraft`.
+- the test environment's custom CloudBase function permission rule explicitly allows the Web SDK bootstrap credential (`auth != null`) to invoke Web Admin-facing functions, including `updateUserRoles` and `updateUserManagerAlias`; the default `*` rule still rejects anonymous Web SDK identities for functions outside that allowlist.
 - direct CloudBase invocation of `createWebAdminLogin` returned a pending challenge with `loginId`, `pollToken`, `qrPayload`, and `expiresAt`.
 - direct CloudBase invocation of `pollWebAdminLogin` with that `loginId` and `pollToken` returned `{"status":"pending"}`.
 
 Current Web Admin smoke notes:
 
 - Anonymous Web SDK identity is only a browser bootstrap credential for creating and polling the QR challenge; it must not be granted admin roles. The real Web Admin identity still comes from the mini-program QR confirmation and the server-issued `webAdminSessionToken`.
-- CloudBase function safety rules must allow the Web SDK bootstrap credential to invoke Web Admin entry and protected functions; backend role checks still use `webAdminSessionToken`.
+- CloudBase function safety rules must allow the Web SDK bootstrap credential to invoke Web Admin entry and protected functions; backend role checks still use `webAdminSessionToken`. Keep the permission allowlist in sync whenever a new Web Admin-facing function is added.
 - After each Web Admin static redeploy, rerun a real-device smoke pass for QR confirmation, role-specific workspace entry, ordinary-user denial, and live `listUsers` / `listActivities` calls.
 
 Current web-admin capabilities:
@@ -348,6 +350,25 @@ Results:
 - CloudBase static hosting uploaded `12` files under `/admin`.
 - hosted `/admin/?verify=20260617-zh-cn-utf8` returned HTTP `200` and UTF-8 verification confirmed `20260617-zh-cn`, `足球报名后台`, `用户管理`, and `后台管理登录`.
 
+Additional checks run for the Web Admin user-action feedback and function permission repair:
+
+```bash
+node node_modules/jest/bin/jest.js tests/web-admin --runInBand
+npm test -- --runInBand
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin --json
+npx -y -p @cloudbase/cli@3.5.6 tcb permission get function -e cloudbase-miniapp-test-dfc753877 --json
+npx -y -p @cloudbase/cli@3.5.6 tcb fn log updateUserRoles -e cloudbase-miniapp-test-dfc753877 --limit 20 --json
+npx -y -p @cloudbase/cli@3.5.6 tcb fn log updateUserManagerAlias -e cloudbase-miniapp-test-dfc753877 --limit 20 --json
+```
+
+Results:
+
+- Web Admin regression passed with `9` test suites and `51` tests.
+- full regression passed with `81` test suites and `631` tests.
+- CloudBase static hosting uploaded `12` files under `/admin` and the hosted entry loaded `20260618-user-actions`.
+- the CloudBase function permission rule now includes `updateUserRoles` and `updateUserManagerAlias` with `invoke: auth != null`.
+- recent `updateUserRoles` and `updateUserManagerAlias` function logs were empty before the permission repair, confirming the live `EXCEED_AUTHORITY` save failure was blocked at the CloudBase gateway before function execution.
+
 ## 9. Deployment Order
 
 Recommended V2 rollout order:
@@ -386,11 +407,11 @@ Recommended V2 rollout order:
 
 ## 11. Next Steps
 
-1. Enable the intended low-privilege Web SDK bootstrap identity source in the test CloudBase environment, or replace `web-admin/config.test.js` with the chosen browser credential flow.
+1. Rerun the real-device Web Admin user-management smoke pass and confirm `保存` and `保存备注` no longer return `EXCEED_AUTHORITY`.
 2. Keep browser bootstrap identities role-less; do not grant roles to anonymous or browser-generated users.
-3. Upload a mini-program experience build that includes the `My` page Web Admin login scan-and-confirm action.
+3. Upload a mini-program experience build that includes the `My` page Web Admin login scan-and-confirm action if the tester is not already on a V2-capable build.
 4. Confirm or seed the first `super_admin` in the test environment.
 5. Run real-device Web Admin QR smoke tests for `super_admin`, `admin`, `organizer`, and ordinary `user` boundaries.
-6. Verify live Web Admin `listUsers` and `listActivities` calls after QR confirmation issues `webAdminSessionToken`.
+6. Verify live Web Admin `listUsers`, `listActivities`, `updateUserRoles`, and `updateUserManagerAlias` calls after QR confirmation issues `webAdminSessionToken`.
 7. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
 8. Run real-device mini-program smoke tests after any shared-environment deployment.

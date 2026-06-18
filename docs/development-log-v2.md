@@ -891,3 +891,26 @@ Verification:
 - target Web Admin tests passed: `2` test suites, `21` tests.
 - Web Admin regression passed: `9` test suites, `51` tests.
 - full regression passed: `81` test suites, `631` tests.
+
+## 2026-06-18 - Web Admin Function Permission Repair
+
+Repaired the test CloudBase function permission rule after live Web Admin saves returned `EXCEED_AUTHORITY`.
+
+Root cause:
+
+- `listUsers` was explicitly allowed for the Web SDK bootstrap identity, so the user-management table could load.
+- `updateUserRoles` and `updateUserManagerAlias` were missing from the explicit function allowlist and fell through to the default rule that rejects anonymous Web SDK identities.
+- the failed save requests were blocked by the CloudBase gateway before cloud-function code ran; recent logs for `updateUserRoles` and `updateUserManagerAlias` were empty.
+- backend role safety was not relaxed: protected functions still resolve `webAdminSessionToken` to the confirmed mini-program `OPENID` before applying admin checks.
+
+Operational fix:
+
+- updated the `cloudbase-miniapp-test-dfc753877` custom function permission rule to allow the Web SDK bootstrap credential (`auth != null`) to invoke all Web Admin-facing functions, including `updateUserRoles` and `updateUserManagerAlias`.
+- kept the default `*` rule at `auth != null && auth.loginType != 'ANONYMOUS'` for functions that are not explicitly part of the Web Admin surface.
+- used the CloudBase `ModifyResourcePermission` API after `tcb permission set function --level custom` reported success but did not change the stored rule.
+
+Verification:
+
+- `tcb permission get function -e cloudbase-miniapp-test-dfc753877 --json` now shows `updateUserRoles` and `updateUserManagerAlias` with `invoke: auth != null`.
+- `tcb fn log updateUserRoles` and `tcb fn log updateUserManagerAlias` returned empty recent logs before the permission repair, matching a gateway-level block rather than an in-function authorization failure.
+- no Web Admin static redeploy or cloud-function code redeploy was required for this permission-only repair.
