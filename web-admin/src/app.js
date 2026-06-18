@@ -571,7 +571,7 @@
           `</button>` +
           `<button type="button" data-action="save-manager-alias" ` +
           `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
-          `${row.proxyRegistration ? 'disabled ' : ''}>保存识别名</button>` +
+          `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
           `</td>` +
           `</tr>`
         ))

@@ -71,6 +71,8 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('出勤状态');
   expect(html).toContain('导出名单 CSV');
   expect(html).toContain('加载操作日志');
+  expect((html.match(/<th>备注<\/th>/g) || []).length).toBeGreaterThanOrEqual(2);
+  expect(html).not.toContain('管理识别名');
 });
 
 test('web admin search buttons have loading spinner styling', () => {

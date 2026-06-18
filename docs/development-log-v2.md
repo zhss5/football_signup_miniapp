@@ -938,3 +938,24 @@ Verification:
 - red tests first failed because the team list still emitted `manageraliasedit`, still rendered the standalone alias button, and Activity Detail had no participant dialog state.
 - target regression passed: `6` miniprogram suites, `118` tests.
 - full regression passed: `81` suites, `633` tests.
+
+## 2026-06-18 - Web Admin Remark Copy Unification
+
+Unified the Web Admin activity roster wording around participant remarks.
+
+Delivered behavior:
+
+- the activity detail roster header now shows `备注` instead of `管理识别名`.
+- the activity detail roster save button now shows `保存备注` instead of `保存识别名`.
+- existing internal action names, APIs, and the `users.managerAlias` field remain unchanged; no data migration or cloud function redeploy is required.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+
+Verification:
+
+- red tests first failed while the static header still had only one `备注` column and the rendered activity roster still showed `保存识别名`.
+- target Web Admin tests passed: `2` test suites, `21` tests.
+- Web Admin regression passed: `9` test suites, `51` tests.
+- full regression passed: `81` test suites, `633` tests.
