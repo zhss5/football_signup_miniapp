@@ -959,3 +959,23 @@ Verification:
 - target Web Admin tests passed: `2` test suites, `21` tests.
 - Web Admin regression passed: `9` test suites, `51` tests.
 - full regression passed: `81` test suites, `633` tests.
+
+## 2026-06-18 - Web Admin Activity Action Spacing
+
+Separated the activity detail roster operation buttons after live UI feedback showed adjacent buttons touching.
+
+Delivered behavior:
+
+- activity detail roster action buttons now render inside the shared `.table-actions` button group.
+- the existing `标记出勤` / `标记缺勤` and `保存备注` actions keep the same data attributes and behavior.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+
+Verification:
+
+- red test first failed because roster rows rendered adjacent bare buttons without a `.table-actions` wrapper.
+- target Web Admin layout test passed: `1` test suite, `12` tests.
+- Web Admin regression passed: `9` test suites, `51` tests.
+- full regression passed: `81` test suites, `633` tests.

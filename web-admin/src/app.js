@@ -563,7 +563,7 @@
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
           `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +
-          `<td>` +
+          `<td><div class="table-actions">` +
           `<button type="button" data-action="toggle-attendance" ` +
           `data-registration-id="${escapeHtml(row.registrationId)}" ` +
           `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
@@ -572,7 +572,7 @@
           `<button type="button" data-action="save-manager-alias" ` +
           `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
           `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
-          `</td>` +
+          `</div></td>` +
           `</tr>`
         ))
         .join('');

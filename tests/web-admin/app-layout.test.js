@@ -594,6 +594,7 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('否');
   expect(html).toContain('data-next-status="absent"');
   expect(html).toContain('标记缺勤');
+  expect(html).toContain('class="table-actions"');
   expect(html).toContain('保存备注');
   expect(html).not.toContain('Save Alias');
 });
