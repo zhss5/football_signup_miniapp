@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260617-loading';
+const WEB_ADMIN_ASSET_VERSION = '20260618-user-actions';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -78,6 +78,14 @@ test('web admin search buttons have loading spinner styling', () => {
 
   expect(css).toContain('.toolbar button.is-loading::before');
   expect(css).toContain('@keyframes admin-spin');
+});
+
+test('web admin user management row actions have stable spacing', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('.table-actions');
+  expect(css).toContain('gap: 8px');
+  expect(css).toContain('.inline-status');
 });
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {

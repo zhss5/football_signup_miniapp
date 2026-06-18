@@ -57,7 +57,7 @@ function createAppRoot(elements, groups) {
         throw new Error('click handler was not registered');
       }
 
-      clickHandler({
+      return clickHandler({
         target: createTarget(element)
       });
     },
@@ -119,6 +119,7 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-current-user-summary]': createElement(),
     '[data-current-user-openid]': createElement(),
     '[data-current-view-title]': createElement(),
+    '[data-users-status]': createElement(),
     '[data-action="search-users"]': createElement({ action: 'search-users' }),
     '[data-action="search-activities"]': createElement({ action: 'search-activities' }),
     '[data-action="load-attendance-stats"]': createElement({
@@ -328,6 +329,9 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('data-user-manager-alias="openid_player"');
   expect(html).toContain('value="Left foot"');
   expect(html).toContain('data-action="save-user-manager-alias"');
+  expect(html).toContain('class="table-actions"');
+  expect(html).toContain('aria-label="保存用户角色"');
+  expect(html).toContain('aria-label="保存用户备注"');
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
@@ -415,6 +419,130 @@ test('user manager alias can be saved from user management', async () => {
   await Promise.resolve();
 
   expect(updateUserManagerAlias).toHaveBeenCalledWith('openid_player', 'New alias');
+});
+
+test('user role save button shows progress and completion feedback', async () => {
+  const deferred = createDeferred();
+  const updateUserRoles = jest.fn().mockReturnValue(deferred.promise);
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'openid_player',
+          preferredName: 'Player Zhang',
+          managerAlias: '',
+          roles: ['user']
+        }
+      ]
+    })
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'openid_player',
+          preferredName: 'Player Zhang',
+          managerAlias: '',
+          roles: ['user', 'organizer']
+        }
+      ]
+    });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers,
+      updateUserRoles
+    }
+  );
+  const button = createElement({
+    action: 'save-roles',
+    openid: 'openid_player'
+  });
+  button.textContent = '保存';
+  elements['input[data-openid="openid_player"][data-role="organizer"]'] = {
+    checked: true
+  };
+
+  await app.start();
+  const clickResult = appRoot.click(button);
+
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toBe('保存中...');
+  expect(updateUserRoles).toHaveBeenCalledWith('openid_player', ['user', 'organizer']);
+
+  deferred.resolve({
+    user: {
+      _id: 'openid_player',
+      roles: ['user', 'organizer']
+    }
+  });
+  await clickResult;
+
+  expect(button.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('角色已保存');
+});
+
+test('user manager alias save button shows progress and completion feedback', async () => {
+  const deferred = createDeferred();
+  const updateUserManagerAlias = jest.fn().mockReturnValue(deferred.promise);
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'openid_player',
+          preferredName: 'Player Zhang',
+          managerAlias: 'Old alias',
+          roles: ['user']
+        }
+      ]
+    })
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'openid_player',
+          preferredName: 'Player Zhang',
+          managerAlias: 'New alias',
+          roles: ['user']
+        }
+      ]
+    });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers,
+      updateUserManagerAlias
+    }
+  );
+  const button = createElement({
+    action: 'save-user-manager-alias',
+    targetOpenid: 'openid_player'
+  });
+  button.textContent = '保存备注';
+  elements['[data-user-manager-alias="openid_player"]'] = {
+    value: 'New alias'
+  };
+
+  await app.start();
+  const clickResult = appRoot.click(button);
+
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toBe('保存中...');
+  expect(updateUserManagerAlias).toHaveBeenCalledWith('openid_player', 'New alias');
+
+  deferred.resolve({
+    user: {
+      _id: 'openid_player',
+      managerAlias: 'New alias'
+    }
+  });
+  await clickResult;
+
+  expect(button.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('备注已保存');
 });
 
 test('activity detail renders Chinese roster operation labels while keeping enum payloads', async () => {

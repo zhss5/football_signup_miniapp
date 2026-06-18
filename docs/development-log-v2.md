@@ -868,3 +868,26 @@ Verification:
 - target Web Admin tests passed: `2` test suites, `18` tests.
 - Web Admin regression passed: `9` test suites, `48` tests.
 - full regression passed: `81` test suites, `628` tests.
+
+## 2026-06-18 - Web Admin User Action Feedback
+
+Tightened the Web Admin user-management row actions after live smoke feedback.
+
+Delivered behavior:
+
+- user-management row actions now render inside a spaced `table-actions` group, so `Save` and `Save remark` no longer touch visually.
+- role checkboxes now have clearer accessible labels and disabled-state titles; admin users can toggle organizer, while only super admins can toggle admin.
+- saving roles and saving remarks now disable the clicked button, show a temporary loading label, and write a visible completion or error status.
+- static asset query strings were bumped to `20260618-user-actions` to avoid stale hosted scripts and CSS after redeploy.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+- no cloud function redeploy is required for this UI-only change.
+
+Verification:
+
+- red/green tests covered separated user-row action controls, role/remark save loading feedback, completion status, and static CSS hooks.
+- target Web Admin tests passed: `2` test suites, `21` tests.
+- Web Admin regression passed: `9` test suites, `51` tests.
+- full regression passed: `81` test suites, `631` tests.

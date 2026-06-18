@@ -248,6 +248,16 @@
       }
     }
 
+    async function runWithButtonElement(button, loadingText, task) {
+      setLoadingButton(button, true, loadingText);
+
+      try {
+        return await task();
+      } finally {
+        setLoadingButton(button, false);
+      }
+    }
+
     function renderIdentity(message) {
       const identity = query('[data-view="identity"]');
       if (identity) {
@@ -259,6 +269,13 @@
       const status = query('[data-login-status]');
       if (status) {
         status.textContent = message;
+      }
+    }
+
+    function renderUsersStatus(message) {
+      const status = query('[data-users-status]');
+      if (status) {
+        status.textContent = message || '';
       }
     }
 
@@ -442,15 +459,23 @@
       table.innerHTML = state.rows
         .map(row => {
           const controls = row.roleControls
-            .map(control => (
-              `<label class="role-toggle">` +
-              `<input type="checkbox" data-role="${control.role}" ` +
-              `data-openid="${escapeHtml(row.openid)}" ` +
-              `${control.checked ? 'checked ' : ''}` +
-              `${control.disabled ? 'disabled ' : ''}/>` +
-              `<span>${escapeHtml(formatRoleLabel(control.role))}</span>` +
-              `</label>`
-            ))
+            .map(control => {
+              const label = formatRoleLabel(control.role);
+              const title = control.disabled
+                ? `当前账号不能修改${label}角色`
+                : `切换${label}角色`;
+
+              return (
+                `<label class="role-toggle" title="${escapeHtml(title)}">` +
+                `<input type="checkbox" data-role="${control.role}" ` +
+                `data-openid="${escapeHtml(row.openid)}" ` +
+                `aria-label="${escapeHtml(title)}" ` +
+                `${control.checked ? 'checked ' : ''}` +
+                `${control.disabled ? 'disabled ' : ''}/>` +
+                `<span>${escapeHtml(label)}</span>` +
+                `</label>`
+              );
+            })
             .join('');
 
           return (
@@ -460,11 +485,13 @@
             `<td><input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
             `value="${escapeHtml(row.managerAlias)}" maxlength="128" /></td>` +
             `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
-            `<td>${controls}</td>` +
-            `<td><button type="button" data-action="save-roles" ` +
-            `data-openid="${escapeHtml(row.openid)}">保存</button>` +
+            `<td><div class="role-toggle-list">${controls}</div></td>` +
+            `<td><div class="table-actions">` +
+            `<button type="button" data-action="save-roles" ` +
+            `data-openid="${escapeHtml(row.openid)}" aria-label="保存用户角色">保存</button>` +
             `<button type="button" data-action="save-user-manager-alias" ` +
-            `data-target-openid="${escapeHtml(row.openid)}">保存备注</button></td>` +
+            `data-target-openid="${escapeHtml(row.openid)}" aria-label="保存用户备注">保存备注</button>` +
+            `</div></td>` +
             `</tr>`
           );
         })
@@ -871,46 +898,59 @@
           }
 
           if (button.dataset.action === 'save-roles') {
-            saveRoles(button.dataset.openid).catch(error => renderIdentity(error.message));
+            return runWithButtonElement(button, '保存中...', async () => {
+              await saveRoles(button.dataset.openid);
+              renderUsersStatus('角色已保存');
+            }).catch(error => {
+              const message = getErrorMessage(error);
+              renderUsersStatus(message);
+              renderIdentity(message);
+            });
           }
 
           if (button.dataset.action === 'save-user-manager-alias') {
-            saveUserManagerAlias(button.dataset.targetOpenid)
-              .catch(error => renderIdentity(error.message));
+            return runWithButtonElement(button, '保存中...', async () => {
+              await saveUserManagerAlias(button.dataset.targetOpenid);
+              renderUsersStatus('备注已保存');
+            }).catch(error => {
+              const message = getErrorMessage(error);
+              renderUsersStatus(message);
+              renderIdentity(message);
+            });
           }
 
           if (button.dataset.action === 'load-activity-detail') {
-            loadActivityDetail(button.dataset.activityId).catch(error => renderIdentity(error.message));
+            return loadActivityDetail(button.dataset.activityId).catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'toggle-attendance') {
-            toggleAttendance(button.dataset.registrationId, button.dataset.nextStatus)
+            return toggleAttendance(button.dataset.registrationId, button.dataset.nextStatus)
               .catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'save-manager-alias') {
-            saveManagerAlias(button.dataset.targetOpenid)
+            return saveManagerAlias(button.dataset.targetOpenid)
               .catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'export-roster') {
-            exportRoster().catch(error => renderIdentity(error.message));
+            return exportRoster().catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'load-activity-logs') {
-            loadActivityLogs().catch(error => renderIdentity(error.message));
+            return loadActivityLogs().catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'load-notification-logs') {
-            loadNotificationLogs().catch(error => renderIdentity(error.message));
+            return loadNotificationLogs().catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'restart-login') {
-            beginWebAdminLogin().catch(error => renderLoginStatus(getErrorMessage(error)));
+            return beginWebAdminLogin().catch(error => renderLoginStatus(getErrorMessage(error)));
           }
 
           if (button.dataset.action === 'logout') {
-            logoutWebAdmin().catch(error => renderIdentity(error.message));
+            return logoutWebAdmin().catch(error => renderIdentity(error.message));
           }
         });
       }

@@ -191,14 +191,14 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260617-loading` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260618-user-actions` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the last verified hosted entry loaded test runtime assets with `?v=20260617-account` cache-busting query strings after the account-display/logout update; redeploy static hosting to publish the `20260617-loading` search-loading feedback update.
+- the last verified hosted entry loaded test runtime assets with `?v=20260617-loading` cache-busting query strings after the search-loading update; redeploy static hosting to publish the `20260618-user-actions` user-row action feedback update.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
