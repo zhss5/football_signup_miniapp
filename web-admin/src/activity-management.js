@@ -33,7 +33,11 @@
       activityId: activity._id || '',
       title: activity.title || '',
       startAt: activity.startAt || '',
+      status: activity.status || '',
+      confirmStatus: activity.confirmStatus || 'pending',
       statusText: `${activity.status || ''} / ${activity.confirmStatus || 'pending'}`,
+      canConfirmProceeding:
+        activity.status === 'published' && activity.confirmStatus !== 'confirmed',
       organizerOpenId: activity.organizerOpenId || '',
       joinedCount: Number(activity.joinedCount) || 0
     }));

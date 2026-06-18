@@ -53,6 +53,7 @@ test('api client attaches the web admin session token to protected calls', async
   await api.getCurrentUser();
   await api.listUsers();
   await api.updateUserRoles('openid_player', ['user']);
+  await api.confirmActivity('activity_1');
 
   expect(callFunction).toHaveBeenCalledWith('ensureUserProfile', {
     webAdminSessionToken: 'session_1'
@@ -67,6 +68,11 @@ test('api client attaches the web admin session token to protected calls', async
   expect(callFunction).toHaveBeenCalledWith('updateUserRoles', {
     targetOpenId: 'openid_player',
     roles: ['user'],
+    webAdminSessionToken: 'session_1'
+  });
+  expect(callFunction).toHaveBeenCalledWith('notifyActivityParticipants', {
+    activityId: 'activity_1',
+    notificationType: 'proceeding',
     webAdminSessionToken: 'session_1'
   });
 });
@@ -116,6 +122,7 @@ test('api client delegates activity operations to existing cloud functions', asy
 
   await api.listActivities({ scope: 'web-admin', keyword: 'football' });
   await api.getActivityDetail('activity_1');
+  await api.confirmActivity('activity_1');
   await api.setRegistrationAttendance('activity_1', 'reg_1', 'absent');
   await api.updateParticipantManagerAlias('activity_1', 'openid_player', 'Zhang San');
   await api.updateUserManagerAlias('openid_player', 'Left foot');
@@ -130,6 +137,10 @@ test('api client delegates activity operations to existing cloud functions', asy
   });
   expect(callFunction).toHaveBeenCalledWith('getActivityDetail', {
     activityId: 'activity_1'
+  });
+  expect(callFunction).toHaveBeenCalledWith('notifyActivityParticipants', {
+    activityId: 'activity_1',
+    notificationType: 'proceeding'
   });
   expect(callFunction).toHaveBeenCalledWith('setRegistrationAttendance', {
     activityId: 'activity_1',

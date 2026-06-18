@@ -168,6 +168,9 @@ function buildHarness(user, apiOverrides = {}) {
       activity: {},
       teams: []
     }),
+    confirmActivity: jest.fn().mockResolvedValue({
+      confirmed: true
+    }),
     getAttendanceStats: jest.fn().mockResolvedValue({
       items: []
     }),
@@ -306,6 +309,110 @@ test('sidebar navigation activates only the selected content view', async () => 
   expect(app.state.activeView).toBe('attendance-stats');
   expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
+});
+
+test('activity rows render a confirm action only for pending published activities', async () => {
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_pending',
+            title: '待确认活动',
+            startAt: '2026-06-19T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'pending',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 1
+          },
+          {
+            _id: 'activity_confirmed',
+            title: '已确认活动',
+            startAt: '2026-06-20T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'confirmed',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 2
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+
+  const html = elements['[data-activities-table]'].innerHTML;
+  expect(html).toContain('data-action="confirm-activity"');
+  expect((html.match(/data-action="confirm-activity"/g) || []).length).toBe(1);
+  expect(html).toContain('data-activity-id="activity_pending"');
+  expect(html).toContain('确认举行');
+  expect(html).toContain('class="table-actions"');
+});
+
+test('activity confirm button calls notify wrapper and refreshes activities', async () => {
+  const deferred = createDeferred();
+  const confirmActivity = jest.fn().mockReturnValue(deferred.promise);
+  const listActivities = jest.fn()
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'activity_pending',
+          title: '待确认活动',
+          startAt: '2026-06-19T12:00:00.000Z',
+          status: 'published',
+          confirmStatus: 'pending',
+          organizerOpenId: 'openid_owner',
+          joinedCount: 1
+        }
+      ]
+    })
+    .mockResolvedValueOnce({
+      items: [
+        {
+          _id: 'activity_pending',
+          title: '待确认活动',
+          startAt: '2026-06-19T12:00:00.000Z',
+          status: 'published',
+          confirmStatus: 'confirmed',
+          organizerOpenId: 'openid_owner',
+          joinedCount: 1
+        }
+      ]
+    });
+  const { app, appRoot } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      confirmActivity,
+      listActivities
+    }
+  );
+  const button = createElement({
+    action: 'confirm-activity',
+    activityId: 'activity_pending'
+  });
+  button.textContent = '确认举行';
+
+  await app.start();
+  const clickResult = appRoot.click(button);
+
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toBe('确认中...');
+  expect(confirmActivity).toHaveBeenCalledWith('activity_pending');
+
+  deferred.resolve({
+    confirmed: true
+  });
+  await clickResult;
+
+  expect(button.disabled).toBe(false);
+  expect(listActivities).toHaveBeenCalledTimes(2);
 });
 
 test('attendance stats submit shows confirmed-activity empty state for blank results', async () => {

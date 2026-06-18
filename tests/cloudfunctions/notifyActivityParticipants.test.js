@@ -19,6 +19,9 @@ function createCollection(dataByCollection, writes) {
     },
     where(query) {
       return {
+        limit() {
+          return this;
+        },
         async get() {
           const data = Object.values(dataByCollection).filter(item =>
             Object.keys(query).every(key => item[key] === query[key])
@@ -45,7 +48,8 @@ function createFakeDb(seed) {
     users: seed.users || {},
     registrations: seed.registrations || {},
     notification_subscriptions: seed.notificationSubscriptions || {},
-    notification_logs: seed.notificationLogs || {}
+    notification_logs: seed.notificationLogs || {},
+    web_admin_sessions: seed.webAdminSessions || {}
   };
 
   return {
@@ -246,6 +250,132 @@ test('notifyActivityParticipants confirms the activity and sends proceeding noti
     recipientOpenId: 'openid_player',
     notificationType: 'proceeding',
     status: 'sent'
+  });
+});
+
+test('notifyActivityParticipants accepts a web admin session token for confirmation', async () => {
+  const fakeDb = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'pending'
+      }
+    },
+    users: {
+      openid_admin: {
+        _id: 'openid_admin',
+        roles: ['admin']
+      }
+    },
+    registrations: {},
+    notificationSubscriptions: {},
+    webAdminSessions: {
+      session_1: {
+        sessionToken: 'session_token_1',
+        status: 'confirmed',
+        confirmedOpenId: 'openid_admin',
+        sessionExpiresAt: '2026-04-20T10:00:00.000Z'
+      }
+    }
+  });
+
+  const result = await notifyActivityParticipants.main(
+    {
+      activityId: 'activity_1',
+      notificationType: 'proceeding',
+      webAdminSessionToken: 'session_token_1'
+    },
+    {},
+    {
+      db: fakeDb,
+      now: '2026-04-19T10:00:00.000Z'
+    }
+  );
+
+  expect(result).toMatchObject({
+    activityId: 'activity_1',
+    confirmed: true
+  });
+  expect(fakeDb.writes.updates).toContainEqual({
+    id: 'activity_1',
+    data: {
+      confirmStatus: 'confirmed',
+      confirmedAt: '2026-04-19T10:00:00.000Z',
+      confirmedByOpenId: 'openid_admin',
+      updatedAt: '2026-04-19T10:00:00.000Z'
+    }
+  });
+});
+
+test('notifyActivityParticipants confirms after activity start without sending proceeding notices', async () => {
+  const fakeDb = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Saturday 8-10',
+        startAt: '2026-04-19T09:00:00.000Z',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'pending'
+      }
+    },
+    users: {
+      openid_owner: {
+        _id: 'openid_owner',
+        roles: ['organizer']
+      }
+    },
+    registrations: {
+      reg_1: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        status: 'joined'
+      }
+    },
+    notificationSubscriptions: {
+      sub_1: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        templateKey: 'activity_notice',
+        templateId: 'tmpl_123',
+        status: 'accepted'
+      }
+    }
+  });
+  const sendSubscribeMessage = jest.fn().mockResolvedValue({ errCode: 0 });
+
+  const result = await notifyActivityParticipants.main(
+    {
+      activityId: 'activity_1',
+      notificationType: 'proceeding'
+    },
+    { OPENID: 'openid_owner' },
+    {
+      db: fakeDb,
+      now: '2026-04-19T10:00:00.000Z',
+      sendSubscribeMessage
+    }
+  );
+
+  expect(sendSubscribeMessage).not.toHaveBeenCalled();
+  expect(result).toMatchObject({
+    confirmed: true,
+    totalRecipients: 1,
+    sent: 0,
+    failed: 0,
+    skipped: 1
+  });
+  expect(fakeDb.writes.adds).toContainEqual({
+    activityId: 'activity_1',
+    recipientOpenId: 'openid_player',
+    notificationType: 'proceeding',
+    status: 'skipped',
+    reason: 'activity-already-started',
+    createdAt: '2026-04-19T10:00:00.000Z'
   });
 });
 

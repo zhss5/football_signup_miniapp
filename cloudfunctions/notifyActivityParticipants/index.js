@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk');
-const { resolveOpenId } = require('./auth');
+const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { ensureCloudCollections } = require('./database');
 const { businessError } = require('./errors');
@@ -188,6 +188,41 @@ async function addNotificationLog(db, data) {
   });
 }
 
+function parseTimestamp(value) {
+  const timestamp = Date.parse(value || '');
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function shouldSendNotifications(activity, notificationType, stamp) {
+  if (notificationType !== 'proceeding') {
+    return true;
+  }
+
+  const startAt = parseTimestamp(activity.startAt);
+  const nowAt = parseTimestamp(stamp);
+
+  return startAt === null || nowAt === null || nowAt < startAt;
+}
+
+async function skipNotifications(db, activity, subscriptions, notificationType, stamp, reason) {
+  for (const subscription of subscriptions) {
+    await addNotificationLog(db, {
+      activityId: activity._id,
+      recipientOpenId: subscription.userOpenId,
+      notificationType,
+      status: 'skipped',
+      reason,
+      createdAt: stamp
+    });
+  }
+
+  return {
+    sent: 0,
+    failed: 0,
+    skipped: subscriptions.length
+  };
+}
+
 async function sendNotifications(db, activity, subscriptions, notificationType, stamp, deps) {
   const sendSubscribeMessage = getSendSubscribeMessage(deps);
   const page = `pages/activity-detail/index?activityId=${activity._id}`;
@@ -260,20 +295,27 @@ async function sendNotifications(db, activity, subscriptions, notificationType, 
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
-  if (!event.activityId) {
+  const payload = event || {};
+
+  if (!payload.activityId) {
     throw businessError('activityId is required');
   }
 
-  if (!NOTIFICATION_TYPES.has(event.notificationType)) {
+  if (!NOTIFICATION_TYPES.has(payload.notificationType)) {
     throw businessError('Unsupported notification type');
   }
 
   const db = deps.db || cloud.database();
-  const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
+  const openid = await resolveOpenIdFromEvent(
+    payload,
+    context,
+    db,
+    { ...deps, getWXContext: deps.getWXContext || (() => cloud.getWXContext()) }
+  );
 
   await ensureNotificationCollections(db, deps);
 
-  const activityRes = await db.collection(COLLECTIONS.ACTIVITIES).doc(event.activityId).get();
+  const activityRes = await db.collection(COLLECTIONS.ACTIVITIES).doc(payload.activityId).get();
   const activity = activityRes.data;
 
   if (!activity) {
@@ -282,39 +324,48 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   await assertCanNotify(db, activity, openid);
 
-  if (event.notificationType === 'proceeding' && activity.status !== 'published') {
+  if (payload.notificationType === 'proceeding' && activity.status !== 'published') {
     throw businessError('Only published activities can be confirmed');
   }
 
   const stamp = nowIso(deps.now);
   const updateData = await updateActivityState(
     db,
-    event.activityId,
-    event.notificationType,
+    payload.activityId,
+    payload.notificationType,
     openid,
     stamp
   );
   const activityForMessage = {
     ...activity,
     ...updateData,
-    _id: event.activityId
+    _id: payload.activityId
   };
-  const joinedOpenIds = await getJoinedOpenIds(db, event.activityId);
-  const subscriptions = await getAcceptedSubscriptions(db, event.activityId, joinedOpenIds);
-  const sendSummary = await sendNotifications(
-    db,
-    activityForMessage,
-    subscriptions,
-    event.notificationType,
-    stamp,
-    deps
-  );
+  const joinedOpenIds = await getJoinedOpenIds(db, payload.activityId);
+  const subscriptions = await getAcceptedSubscriptions(db, payload.activityId, joinedOpenIds);
+  const sendSummary = shouldSendNotifications(activity, payload.notificationType, stamp)
+    ? await sendNotifications(
+        db,
+        activityForMessage,
+        subscriptions,
+        payload.notificationType,
+        stamp,
+        deps
+      )
+    : await skipNotifications(
+        db,
+        activityForMessage,
+        subscriptions,
+        payload.notificationType,
+        stamp,
+        'activity-already-started'
+      );
 
   return {
-    activityId: event.activityId,
-    notificationType: event.notificationType,
-    confirmed: event.notificationType === 'proceeding',
-    cancelled: event.notificationType === 'cancelled',
+    activityId: payload.activityId,
+    notificationType: payload.notificationType,
+    confirmed: payload.notificationType === 'proceeding',
+    cancelled: payload.notificationType === 'cancelled',
     totalRecipients: subscriptions.length,
     ...sendSummary
   };

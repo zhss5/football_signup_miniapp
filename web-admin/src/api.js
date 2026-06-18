@@ -120,6 +120,13 @@
         return invoke('getActivityDetail', withWebAdminSession({ activityId }));
       },
 
+      confirmActivity(activityId) {
+        return invoke('notifyActivityParticipants', withWebAdminSession({
+          activityId,
+          notificationType: 'proceeding'
+        }));
+      },
+
       setRegistrationAttendance(activityId, registrationId, attendanceStatus) {
         return invoke('setRegistrationAttendance', withWebAdminSession({
           activityId,

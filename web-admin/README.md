@@ -17,6 +17,7 @@ Current API calls include:
 - `updateUserRoles`
 - `listActivities`
 - `getActivityDetail`
+- `notifyActivityParticipants`
 - `setRegistrationAttendance`
 - `updateParticipantManagerAlias`
 - `updateUserManagerAlias`

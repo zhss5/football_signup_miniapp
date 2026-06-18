@@ -1006,3 +1006,29 @@ Verification:
 - target Web Admin tests passed: `2` test suites, `23` tests.
 - Web Admin regression passed: `9` test suites, `53` tests.
 - full regression passed: `81` test suites, `635` tests.
+
+## 2026-06-18 - Shared Activity Confirmation Entry
+
+Extended the existing activity proceeding notification function so Web Admin can reuse the same confirmation path as the mini-program.
+
+Delivered behavior:
+
+- `notifyActivityParticipants` keeps its public cloud function name for backward compatibility.
+- `notifyActivityParticipants` now accepts `webAdminSessionToken` and resolves it to the confirmed Web Admin user before applying the existing organizer/admin permission checks.
+- `notificationType: proceeding` still writes `confirmStatus: confirmed`, `confirmedAt`, `confirmedByOpenId`, and `updatedAt`.
+- proceeding notifications are sent only before the activity start time; after the activity starts, confirmation still succeeds and accepted recipients get skipped logs with `reason: activity-already-started`.
+- Web Admin now wraps the shared function as `confirmActivity(activityId)` and renders a `确认举行` action only for `published / pending` activities.
+- static asset query strings were bumped to `20260618-confirm-activity` so hosted browsers fetch the updated Web Admin scripts.
+
+Deployment note:
+
+- redeploy `notifyActivityParticipants` after running `npm test` or `node scripts/copy-cloud-shared.mjs`.
+- redeploy Web Admin static hosting.
+- update the test CloudBase function permission rule so the Web SDK bootstrap credential can invoke `notifyActivityParticipants`; the cloud function still enforces the Web Admin session and organizer/admin authorization internally.
+
+Verification:
+
+- red tests first failed because `notifyActivityParticipants` required mini-program `OPENID`, still sent proceeding notices after activity start, and Web Admin had no confirm wrapper or activity-row button.
+- target confirmation tests passed: `5` test suites, `45` tests.
+- Web Admin regression passed: `9` test suites, `55` tests.
+- full regression passed: `81` test suites, `639` tests.

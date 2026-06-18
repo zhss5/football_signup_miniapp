@@ -50,7 +50,10 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       activityId: 'activity_1',
       title: 'Friday Football',
       startAt: '2026-06-05T20:00:00.000Z',
+      status: 'published',
+      confirmStatus: 'pending',
       statusText: 'published / pending',
+      canConfirmProceeding: true,
       organizerOpenId: 'openid_owner',
       joinedCount: 12
     }

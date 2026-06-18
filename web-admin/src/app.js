@@ -531,17 +531,28 @@
       }
 
       table.innerHTML = state.activities
-        .map(row => (
-          `<tr data-activity-id="${escapeHtml(row.activityId)}">` +
-          `<td>${escapeHtml(row.title)}</td>` +
-          `<td>${escapeHtml(row.startAt)}</td>` +
-          `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
-          `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
-          `<td>${escapeHtml(row.joinedCount)}</td>` +
-          `<td><button type="button" data-action="load-activity-detail" ` +
-          `data-activity-id="${escapeHtml(row.activityId)}">打开</button></td>` +
-          `</tr>`
-        ))
+        .map(row => {
+          const confirmButton = row.canConfirmProceeding
+            ? `<button type="button" data-action="confirm-activity" ` +
+              `data-activity-id="${escapeHtml(row.activityId)}" ` +
+              `data-confirm-action="true">确认举行</button>`
+            : '';
+
+          return (
+            `<tr data-activity-id="${escapeHtml(row.activityId)}">` +
+            `<td>${escapeHtml(row.title)}</td>` +
+            `<td>${escapeHtml(row.startAt)}</td>` +
+            `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
+            `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
+            `<td>${escapeHtml(row.joinedCount)}</td>` +
+            `<td><div class="table-actions">` +
+            `<button type="button" data-action="load-activity-detail" ` +
+            `data-activity-id="${escapeHtml(row.activityId)}">打开</button>` +
+            confirmButton +
+            `</div></td>` +
+            `</tr>`
+          );
+        })
         .join('');
     }
 
@@ -672,6 +683,19 @@
       }
 
       renderRosterRows();
+    }
+
+    async function confirmActivity(activityId) {
+      if (!activityId) {
+        return;
+      }
+
+      await api.confirmActivity(activityId);
+      await searchActivities();
+
+      if (getSelectedActivityId() === activityId) {
+        await loadActivityDetail(activityId);
+      }
     }
 
     async function toggleAttendance(registrationId, nextStatus) {
@@ -929,6 +953,12 @@
 
           if (button.dataset.action === 'load-activity-detail') {
             return loadActivityDetail(button.dataset.activityId).catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'confirm-activity') {
+            return runWithButtonElement(button, '确认中...', () =>
+              confirmActivity(button.dataset.activityId)
+            ).catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'toggle-attendance') {
