@@ -130,10 +130,14 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-stats-load-button]': createElement(),
     '[data-activities-table]': createElement(),
     '[data-users-table]': createElement(),
+    '[data-attendance-stats-table]': createElement(),
+    '[data-attendance-stats-empty]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-roster-table]': createElement(),
-    '[data-export-output]': createElement()
+    '[data-export-output]': createElement(),
+    '[name="statsStartAt"]': createElement(),
+    '[name="statsEndAt"]': createElement()
   };
   const appRoot = createAppRoot(elements, {
     '[data-nav-target]': [
@@ -163,6 +167,9 @@ function buildHarness(user, apiOverrides = {}) {
     getActivityDetail: jest.fn().mockResolvedValue({
       activity: {},
       teams: []
+    }),
+    getAttendanceStats: jest.fn().mockResolvedValue({
+      items: []
     }),
     ...apiOverrides
   };
@@ -299,6 +306,66 @@ test('sidebar navigation activates only the selected content view', async () => 
   expect(app.state.activeView).toBe('attendance-stats');
   expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
+});
+
+test('attendance stats submit shows confirmed-activity empty state for blank results', async () => {
+  const { app, appRoot, api, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: []
+      })
+    }
+  );
+  elements['[name="statsStartAt"]'].value = '2026-06-01';
+  elements['[name="statsEndAt"]'].value = '2026-06-30';
+  elements['[data-attendance-stats-empty]'].hidden = true;
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+
+  expect(api.getAttendanceStats).toHaveBeenCalledWith({
+    startAt: '2026-06-01',
+    endAt: '2026-06-30'
+  });
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toBe('');
+  expect(elements['[data-attendance-stats-empty]'].hidden).toBe(false);
+  expect(elements['[data-attendance-stats-empty]'].textContent).toContain('仅统计已确认举行活动');
+});
+
+test('attendance stats submit renders rows and hides the empty state', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            signupCount: 2,
+            presentCount: 1,
+            absentCount: 1,
+            attendanceRate: 0.5
+          }
+        ]
+      })
+    }
+  );
+  elements['[data-attendance-stats-empty]'].hidden = false;
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
+  expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {

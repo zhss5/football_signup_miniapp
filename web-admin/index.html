@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260618-user-actions" />
+    <link rel="stylesheet" href="./styles.css?v=20260618-stats-empty" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -189,6 +189,10 @@
                 <button type="submit" data-stats-load-button>加载统计</button>
               </form>
 
+              <p data-attendance-stats-empty class="inline-status" aria-live="polite" hidden>
+                仅统计已确认举行活动；当前范围内没有出勤记录。
+              </p>
+
               <table class="data-table">
                 <thead>
                   <tr>
@@ -264,13 +268,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260618-user-actions"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260618-user-actions"></script>
-    <script src="./src/roles.js?v=20260618-user-actions"></script>
-    <script src="./src/api.js?v=20260618-user-actions"></script>
-    <script src="./vendor/qrcode.min.js?v=20260618-user-actions"></script>
-    <script src="./src/user-management.js?v=20260618-user-actions"></script>
-    <script src="./src/activity-management.js?v=20260618-user-actions"></script>
-    <script src="./src/app.js?v=20260618-user-actions"></script>
+    <script src="./config.test.js?v=20260618-stats-empty"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260618-stats-empty"></script>
+    <script src="./src/roles.js?v=20260618-stats-empty"></script>
+    <script src="./src/api.js?v=20260618-stats-empty"></script>
+    <script src="./vendor/qrcode.min.js?v=20260618-stats-empty"></script>
+    <script src="./src/user-management.js?v=20260618-stats-empty"></script>
+    <script src="./src/activity-management.js?v=20260618-stats-empty"></script>
+    <script src="./src/app.js?v=20260618-stats-empty"></script>
   </body>
 </html>

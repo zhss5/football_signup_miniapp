@@ -580,6 +580,14 @@
 
     function renderStatsRows() {
       const table = query('[data-attendance-stats-table]');
+      const empty = query('[data-attendance-stats-empty]');
+      const hasRows = state.statsRows.length > 0;
+
+      if (empty) {
+        empty.textContent = hasRows ? '' : '仅统计已确认举行活动；当前范围内没有出勤记录。';
+        setHidden(empty, hasRows);
+      }
+
       if (!table) {
         return;
       }

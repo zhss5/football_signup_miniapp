@@ -979,3 +979,30 @@ Verification:
 - target Web Admin layout test passed: `1` test suite, `12` tests.
 - Web Admin regression passed: `9` test suites, `51` tests.
 - full regression passed: `81` test suites, `633` tests.
+
+## 2026-06-18 - Web Admin Attendance Stats Empty State
+
+Clarified why the attendance statistics table can be empty.
+
+Root cause:
+
+- `getAttendanceStats` intentionally counts only activities whose `confirmStatus` is `confirmed`.
+- activities still shown as `已发布 / 待处理` are excluded from statistics, even when they have joined registrations in the selected date range.
+
+Delivered behavior:
+
+- when the selected range returns no statistics rows, Web Admin now shows `仅统计已确认举行活动；当前范围内没有出勤记录。`.
+- when statistics rows are returned, the empty-state message is hidden and the table renders normally.
+- static asset query strings were bumped to `20260618-stats-empty` so hosted browsers fetch the updated Web Admin script.
+- no cloud function, data model, or statistics eligibility change was made.
+
+Deployment note:
+
+- redeploy Web Admin static hosting.
+
+Verification:
+
+- red tests first failed because empty attendance results left only a blank table and never surfaced the confirmed-activity rule.
+- target Web Admin tests passed: `2` test suites, `23` tests.
+- Web Admin regression passed: `9` test suites, `53` tests.
+- full regression passed: `81` test suites, `635` tests.
