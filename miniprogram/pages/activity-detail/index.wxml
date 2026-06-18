@@ -78,7 +78,7 @@
     bind:removemember="onRemoveRegistration"
     bind:cancelsignup="onCancelSignup"
     bind:attendancechange="onAttendanceChange"
-    bind:manageraliasedit="onManagerAliasEdit"
+    bind:membertap="onMemberTap"
   />
 
   <view wx:if="{{activityDescriptionText}}" class="description-card">
@@ -162,6 +162,48 @@
           bindtap="onProxySignupSubmit"
         >
           {{i18n.activityJoin.confirm}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{participantDialogVisible}}" class="participant-dialog-backdrop" catchtap="onParticipantDialogCancel">
+    <view class="participant-dialog-panel" catchtap="noop">
+      <text class="participant-dialog-title">{{i18n.modal.participant.title}}</text>
+      <view class="participant-dialog-profile">
+        <image
+          wx:if="{{participantDialogMember.avatarUrl}}"
+          class="participant-dialog-avatar-image"
+          src="{{participantDialogMember.avatarUrl}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="participant-dialog-avatar-fallback">
+          {{participantDialogMember.avatarText}}
+        </view>
+        <text class="participant-dialog-name">{{participantDialogMember.signupName}}</text>
+      </view>
+
+      <view wx:if="{{participantDialogAliasEditable}}" class="participant-dialog-field">
+        <text class="participant-dialog-label">{{i18n.modal.participant.aliasLabel}}</text>
+        <input
+          class="participant-dialog-input"
+          value="{{participantDialogAlias}}"
+          placeholder="{{i18n.modal.managerAlias.placeholder}}"
+          bindinput="onParticipantAliasInput"
+        />
+      </view>
+
+      <view class="participant-dialog-actions">
+        <button class="participant-dialog-cancel" bindtap="onParticipantDialogCancel">
+          {{participantDialogAliasEditable ? i18n.modal.participant.cancel : i18n.modal.participant.close}}
+        </button>
+        <button
+          wx:if="{{participantDialogAliasEditable}}"
+          class="participant-dialog-save"
+          loading="{{participantDialogSaving}}"
+          bindtap="onParticipantAliasSave"
+        >
+          {{i18n.modal.participant.save}}
         </button>
       </view>
     </view>

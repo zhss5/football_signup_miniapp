@@ -914,3 +914,27 @@ Verification:
 - `tcb permission get function -e cloudbase-miniapp-test-dfc753877 --json` now shows `updateUserRoles` and `updateUserManagerAlias` with `invoke: auth != null`.
 - `tcb fn log updateUserRoles` and `tcb fn log updateUserManagerAlias` returned empty recent logs before the permission repair, matching a gateway-level block rather than an in-function authorization failure.
 - no Web Admin static redeploy or cloud-function code redeploy was required for this permission-only repair.
+
+## 2026-06-18 - Mini-Program Participant Detail Dialog
+
+Moved activity-detail participant remark editing into the participant row itself.
+
+Delivered behavior:
+
+- tapping the participant profile area in the team list now opens a participant dialog.
+- the dialog always shows the participant avatar or fallback avatar and signup name.
+- organizers and admins can edit the existing manager remark from the dialog.
+- regular users see only the avatar and signup name; the remark value and input are not exposed.
+- the separate row-level `备注` / alias button was removed, so the participant row does not gain an extra remark action.
+- the save path still uses the existing `updateParticipantManagerAlias` API and `users.managerAlias` field; no new remark field or cloud function was added.
+
+Deployment note:
+
+- upload a new mini-program build for the updated Activity Detail UI.
+- no cloud function redeploy is required for this UI-only wiring change.
+
+Verification:
+
+- red tests first failed because the team list still emitted `manageraliasedit`, still rendered the standalone alias button, and Activity Detail had no participant dialog state.
+- target regression passed: `6` miniprogram suites, `118` tests.
+- full regression passed: `81` suites, `633` tests.

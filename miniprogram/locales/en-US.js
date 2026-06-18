@@ -241,6 +241,13 @@ module.exports = {
       placeholder: 'Alias visible to managers',
       defaultName: 'this member'
     },
+    participant: {
+      title: 'Participant',
+      aliasLabel: 'Remark',
+      close: 'Close',
+      cancel: 'Cancel',
+      save: 'Save'
+    },
     proxySignup: {
       title: 'Add participant',
       placeholder: 'Participant name',

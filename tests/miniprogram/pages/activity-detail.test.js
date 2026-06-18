@@ -575,13 +575,26 @@ describe('activity detail page', () => {
     expect(wxml).toContain('bind:attendancechange="onAttendanceChange"');
   });
 
-  test('activity detail template wires manager alias edits from team list', () => {
+  test('activity detail template opens a participant dialog from team list member taps', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
       'utf8'
     );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
 
-    expect(wxml).toContain('bind:manageraliasedit="onManagerAliasEdit"');
+    expect(wxml).toContain('bind:membertap="onMemberTap"');
+    expect(wxml).not.toContain('bind:manageraliasedit="onManagerAliasEdit"');
+    expect(wxml).toContain('wx:if="{{participantDialogVisible}}"');
+    expect(wxml).toContain('participantDialogMember.avatarUrl');
+    expect(wxml).toContain('participantDialogMember.signupName');
+    expect(wxml).toContain('wx:if="{{participantDialogAliasEditable}}"');
+    expect(wxml).toContain('value="{{participantDialogAlias}}"');
+    expect(wxml).toContain('bindinput="onParticipantAliasInput"');
+    expect(wxml).toContain('bindtap="onParticipantAliasSave"');
+    expect(wxss).toContain('.participant-dialog-panel');
   });
 
   test('onAttendanceChange updates member attendance and reloads detail', async () => {
@@ -618,40 +631,108 @@ describe('activity detail page', () => {
     expect(ctx.reload).toHaveBeenCalled();
   });
 
-  test('onManagerAliasEdit prompts for an alias, updates it, and reloads detail', async () => {
+  test('onMemberTap opens an info-only participant dialog for regular users', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onMemberTap.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        avatarUrl: 'https://example.com/avatar.jpg',
+        avatarText: 'A',
+        managerAlias: 'Hidden Alias',
+        managerAliasEditable: false
+      }
+    });
+
+    expect(ctx.data.participantDialogVisible).toBe(true);
+    expect(ctx.data.participantDialogMember).toMatchObject({
+      userOpenId: 'openid_player',
+      signupName: 'Alex',
+      avatarUrl: 'https://example.com/avatar.jpg',
+      avatarText: 'A'
+    });
+    expect(ctx.data.participantDialogAliasEditable).toBe(false);
+    expect(ctx.data.participantDialogAlias).toBe('');
+  });
+
+  test('onMemberTap opens an editable participant alias dialog for managers', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onMemberTap.call(ctx, {
+      detail: {
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        avatarUrl: '',
+        avatarText: 'A',
+        managerAlias: 'Old Alias',
+        managerAliasEditable: true
+      }
+    });
+
+    expect(ctx.data.participantDialogVisible).toBe(true);
+    expect(ctx.data.participantDialogMember).toMatchObject({
+      userOpenId: 'openid_player',
+      signupName: 'Alex',
+      avatarText: 'A'
+    });
+    expect(ctx.data.participantDialogAliasEditable).toBe(true);
+    expect(ctx.data.participantDialogAlias).toBe('Old Alias');
+  });
+
+  test('onParticipantAliasSave updates the current participant alias and reloads detail', async () => {
     updateParticipantManagerAlias.mockResolvedValue({
       user: {
         _id: 'openid_player',
         managerAlias: 'Zhang San'
       }
     });
-    global.wx.showModal.mockImplementation(({ success }) => {
-      success({ confirm: true, content: '  Zhang San  ' });
-    });
 
     const ctx = {
       data: {
         activityId: 'activity_123',
-        locale: 'en-US'
+        locale: 'en-US',
+        participantDialogAliasEditable: true,
+        participantDialogAlias: '  Zhang San  ',
+        participantDialogMember: {
+          userOpenId: 'openid_player',
+          signupName: 'Alex'
+        }
       },
-      reload: jest.fn().mockResolvedValue()
+      reload: jest.fn().mockResolvedValue(),
+      closeParticipantDialog: pageConfig.closeParticipantDialog,
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
     };
 
-    await pageConfig.onManagerAliasEdit.call(ctx, {
-      detail: {
-        userOpenId: 'openid_player',
-        signupName: 'Alex',
-        managerAlias: 'Old Alias'
-      }
-    });
+    await pageConfig.onParticipantAliasSave.call(ctx);
 
-    expect(global.wx.showModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Manager alias',
-        editable: true,
-        placeholderText: 'Alias visible to managers'
-      })
-    );
     expect(updateParticipantManagerAlias).toHaveBeenCalledWith(
       'activity_123',
       'openid_player',
@@ -661,29 +742,26 @@ describe('activity detail page', () => {
       title: 'Alias updated',
       icon: 'success'
     });
+    expect(ctx.data.participantDialogVisible).toBe(false);
     expect(ctx.reload).toHaveBeenCalled();
   });
 
-  test('onManagerAliasEdit does not update when the prompt is cancelled', async () => {
-    global.wx.showModal.mockImplementation(({ success }) => {
-      success({ confirm: false, content: 'Ignored' });
-    });
-
+  test('onParticipantAliasSave ignores info-only participant dialogs', async () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
-        locale: 'en-US'
+        locale: 'en-US',
+        participantDialogAliasEditable: false,
+        participantDialogAlias: 'Ignored',
+        participantDialogMember: {
+          userOpenId: 'openid_player',
+          signupName: 'Alex'
+        }
       },
       reload: jest.fn().mockResolvedValue()
     };
 
-    await pageConfig.onManagerAliasEdit.call(ctx, {
-      detail: {
-        userOpenId: 'openid_player',
-        signupName: 'Alex',
-        managerAlias: ''
-      }
-    });
+    await pageConfig.onParticipantAliasSave.call(ctx);
 
     expect(updateParticipantManagerAlias).not.toHaveBeenCalled();
     expect(ctx.reload).not.toHaveBeenCalled();

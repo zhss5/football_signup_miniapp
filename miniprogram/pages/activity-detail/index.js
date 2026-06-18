@@ -262,7 +262,12 @@ Page({
     proxySignupName: '',
     proxySignupPreferredPositions: [],
     proxySignupPositionOptions: buildPositionOptions([]),
-    proxySignupSubmitting: false
+    proxySignupSubmitting: false,
+    participantDialogVisible: false,
+    participantDialogMember: null,
+    participantDialogAlias: '',
+    participantDialogAliasEditable: false,
+    participantDialogSaving: false
   },
 
   async onLoad(query) {
@@ -509,41 +514,74 @@ Page({
     }
   },
 
-  async onManagerAliasEdit(event) {
-    const translate = makeTranslator(this.data.locale || getAppLocale());
+  onMemberTap(event) {
     const detail = event.detail || {};
+    const member = {
+      userOpenId: String(detail.userOpenId || ''),
+      signupName: String(detail.signupName || ''),
+      avatarUrl: String(detail.avatarUrl || ''),
+      avatarText: String(detail.avatarText || '').trim() || '#'
+    };
+    const aliasEditable = Boolean(detail.managerAliasEditable && member.userOpenId);
 
-    if (!detail.userOpenId) {
-      return;
-    }
-
-    const promptResult = await new Promise(resolve => {
-      wx.showModal({
-        title: translate('modal.managerAlias.title'),
-        content: translate('modal.managerAlias.content', {
-          name: detail.signupName || translate('modal.managerAlias.defaultName')
-        }),
-        editable: true,
-        placeholderText: translate('modal.managerAlias.placeholder'),
-        success: result => resolve(result),
-        fail: () => resolve({ confirm: false })
-      });
+    this.setData({
+      participantDialogVisible: true,
+      participantDialogMember: member,
+      participantDialogAliasEditable: aliasEditable,
+      participantDialogAlias: aliasEditable ? String(detail.managerAlias || '').trim() : '',
+      participantDialogSaving: false
     });
+  },
 
-    if (!promptResult.confirm) {
+  onParticipantAliasInput(event) {
+    this.setData({
+      participantDialogAlias: event.detail.value
+    });
+  },
+
+  closeParticipantDialog() {
+    this.setData({
+      participantDialogVisible: false,
+      participantDialogMember: null,
+      participantDialogAlias: '',
+      participantDialogAliasEditable: false,
+      participantDialogSaving: false
+    });
+  },
+
+  onParticipantDialogCancel() {
+    if (this.data.participantDialogSaving) {
       return;
     }
 
-    const managerAlias = String(promptResult.content || '').trim();
+    this.closeParticipantDialog();
+  },
+
+  async onParticipantAliasSave() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const member = this.data.participantDialogMember || {};
+
+    if (
+      !this.data.participantDialogAliasEditable ||
+      !member.userOpenId ||
+      this.data.participantDialogSaving
+    ) {
+      return;
+    }
+
+    const managerAlias = String(this.data.participantDialogAlias || '').trim();
 
     try {
-      await updateParticipantManagerAlias(this.data.activityId, detail.userOpenId, managerAlias);
+      this.setData({ participantDialogSaving: true });
+      await updateParticipantManagerAlias(this.data.activityId, member.userOpenId, managerAlias);
       wx.showToast({
         title: translate('toast.managerAliasUpdated'),
         icon: 'success'
       });
+      this.closeParticipantDialog();
       await this.reload();
     } catch (error) {
+      this.setData({ participantDialogSaving: false });
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },

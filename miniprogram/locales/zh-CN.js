@@ -308,6 +308,13 @@ module.exports.modal.managerAlias = {
   placeholder: '\u4ec5\u7ba1\u7406\u5458\u53ef\u89c1\u7684\u5907\u6ce8',
   defaultName: '\u8be5\u6210\u5458'
 };
+module.exports.modal.participant = {
+  title: '\u62a5\u540d\u4fe1\u606f',
+  aliasLabel: '\u5907\u6ce8',
+  close: '\u5173\u95ed',
+  cancel: '\u53d6\u6d88',
+  save: '\u4fdd\u5b58'
+};
 module.exports.toast.managerAliasUpdated = '\u5907\u6ce8\u5df2\u66f4\u65b0';
 module.exports.nav.copyActivity = '\u590d\u5236\u6d3b\u52a8';
 module.exports.activity.actions.copyActivity = '\u590d\u5236\u6d3b\u52a8';

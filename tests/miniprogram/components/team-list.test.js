@@ -37,7 +37,7 @@ describe('team list component', () => {
     expect(wxml).toContain('data-attendance-status="{{member.attendanceActionStatus}}"');
   });
 
-  test('renders manager alias text and edit action for prepared member view models', () => {
+  test('renders manager alias text inside a clickable member profile without a separate alias button', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
       'utf8'
@@ -45,9 +45,11 @@ describe('team list component', () => {
 
     expect(wxml).toContain('wx:if="{{member.managerAliasVisible}}"');
     expect(wxml).toContain('{{member.managerAliasText}}');
-    expect(wxml).toContain('wx:if="{{member.managerAliasActionVisible}}"');
-    expect(wxml).toContain('data-action="managerAlias"');
-    expect(wxml).toContain('data-manager-alias="{{member.managerAliasText}}"');
+    expect(wxml).toContain('class="member-profile"');
+    expect(wxml).toContain('bindtap="onMemberTap"');
+    expect(wxml).toContain('data-manager-alias-editable="{{member.managerAliasActionVisible}}"');
+    expect(wxml).not.toContain('class="member-action-button member-action-alias"');
+    expect(wxml).not.toContain('data-action="managerAlias"');
   });
 
   test('does not emit team color taps for non-editable teams', () => {
@@ -130,26 +132,31 @@ describe('team list component', () => {
     });
   });
 
-  test('emits manager alias edits with current alias', () => {
+  test('emits member taps with display details and manager alias edit permission', () => {
     const triggerEvent = jest.fn();
     const ctx = {
       triggerEvent
     };
 
-    componentConfig.methods.onMemberActionTap.call(ctx, {
+    componentConfig.methods.onMemberTap.call(ctx, {
       currentTarget: {
         dataset: {
-          action: 'managerAlias',
           userOpenId: 'openid_player',
           signupName: 'Alex',
-          managerAlias: 'Zhang San'
+          avatarUrl: 'https://example.com/avatar.jpg',
+          avatarText: 'A',
+          managerAlias: 'Zhang San',
+          managerAliasEditable: true
         }
       }
     });
 
-    expect(triggerEvent).toHaveBeenCalledWith('manageraliasedit', {
+    expect(triggerEvent).toHaveBeenCalledWith('membertap', {
       userOpenId: 'openid_player',
       signupName: 'Alex',
+      avatarUrl: 'https://example.com/avatar.jpg',
+      avatarText: 'A',
+      managerAliasEditable: true,
       managerAlias: 'Zhang San'
     });
   });

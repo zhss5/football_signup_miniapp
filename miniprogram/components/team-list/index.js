@@ -51,7 +51,6 @@ Component({
       const eventNameByAction = {
         cancelSignup: 'cancelsignup',
         attendance: 'attendancechange',
-        managerAlias: 'manageraliasedit',
         move: 'movemember',
         remove: 'removemember'
       };
@@ -75,11 +74,25 @@ Component({
         detail.attendanceStatus = dataset.attendanceStatus;
       }
 
-      if (dataset.action === 'managerAlias') {
-        detail.managerAlias = dataset.managerAlias || '';
-      }
-
       this.triggerEvent(eventName, detail);
+    },
+
+    onMemberTap(event) {
+      const dataset = event.currentTarget.dataset;
+      const managerAliasEditable =
+        dataset.managerAliasEditable === true ||
+        dataset.managerAliasEditable === 'true' ||
+        dataset.managerAliasEditable === 1 ||
+        dataset.managerAliasEditable === '1';
+
+      this.triggerEvent('membertap', {
+        userOpenId: dataset.userOpenId || '',
+        signupName: dataset.signupName || '',
+        avatarUrl: dataset.avatarUrl || '',
+        avatarText: dataset.avatarText || '',
+        managerAlias: dataset.managerAlias || '',
+        managerAliasEditable
+      });
     }
   }
 });

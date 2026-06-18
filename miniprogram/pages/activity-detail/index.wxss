@@ -491,3 +491,119 @@
   color: #ffffff;
   background: #16a34a;
 }
+
+.participant-dialog-backdrop {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.36);
+}
+
+.participant-dialog-panel {
+  width: 100%;
+  max-width: 640rpx;
+  padding: 28rpx;
+  box-sizing: border-box;
+  border-radius: 24rpx;
+  background: #ffffff;
+}
+
+.participant-dialog-title {
+  display: block;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.participant-dialog-profile {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin-top: 22rpx;
+}
+
+.participant-dialog-avatar-image,
+.participant-dialog-avatar-fallback {
+  flex: 0 0 auto;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+}
+
+.participant-dialog-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.participant-dialog-name {
+  min-width: 0;
+  color: #111827;
+  font-size: 32rpx;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.participant-dialog-field {
+  margin-top: 26rpx;
+}
+
+.participant-dialog-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #374151;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.participant-dialog-input {
+  width: 100%;
+  height: 84rpx;
+  line-height: 84rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  border-radius: 20rpx;
+  background: #f9fafb;
+}
+
+.participant-dialog-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.participant-dialog-cancel,
+.participant-dialog-save {
+  flex: 1;
+  margin: 0;
+  border-radius: 20rpx;
+}
+
+.participant-dialog-cancel {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.participant-dialog-save {
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.participant-dialog-cancel::after,
+.participant-dialog-save::after {
+  border: none;
+}
