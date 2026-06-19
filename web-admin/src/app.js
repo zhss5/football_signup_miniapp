@@ -607,6 +607,7 @@
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.participantName)}</td>` +
+          `<td>${escapeHtml(row.managerAlias)}</td>` +
           `<td>${escapeHtml(row.signupCount)}</td>` +
           `<td>${escapeHtml(row.presentCount)}</td>` +
           `<td>${escapeHtml(row.absentCount)}</td>` +

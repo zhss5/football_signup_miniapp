@@ -56,6 +56,15 @@ function getParticipantName(registration) {
   ).trim();
 }
 
+function getManagerAlias(registration, userById) {
+  if (!registration || registration.proxyRegistration) {
+    return '';
+  }
+
+  const user = userById[registration.userOpenId] || {};
+  return String(registration.managerAlias || user.managerAlias || '').trim();
+}
+
 function normalizeAttendanceStatus(value) {
   return value === 'absent' ? 'absent' : 'present';
 }
@@ -86,10 +95,18 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const rangeStart = parseTimestamp(payload.startAt);
   const rangeEnd = parseTimestamp(payload.endAt);
-  const [activities, registrations] = await Promise.all([
+  const [activities, registrations, users] = await Promise.all([
     loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS)
+    loadCollection(db, COLLECTIONS.REGISTRATIONS),
+    loadCollection(db, COLLECTIONS.USERS)
   ]);
+  const userById = users.reduce((acc, user) => {
+    if (user && user._id) {
+      acc[user._id] = user;
+    }
+
+    return acc;
+  }, {});
   const activityById = activities.reduce((acc, activity) => {
     if (
       isConfirmedActivityInRange(activity, rangeStart, rangeEnd) &&
@@ -113,6 +130,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     if (!acc[participantName]) {
       acc[participantName] = {
         participantName,
+        managerAlias: '',
         signupCount: 0,
         presentCount: 0,
         absentCount: 0
@@ -120,7 +138,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }
 
     const row = acc[participantName];
+    const managerAlias = getManagerAlias(registration, userById);
     row.signupCount += 1;
+    if (!row.managerAlias && managerAlias) {
+      row.managerAlias = managerAlias;
+    }
 
     if (normalizeAttendanceStatus(registration.attendanceStatus) === 'absent') {
       row.absentCount += 1;

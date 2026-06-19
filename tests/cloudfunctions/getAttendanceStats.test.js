@@ -7,6 +7,8 @@ function createFakeDb(options = {}) {
       openid_other_owner: { _id: 'openid_other_owner', roles: ['user', 'organizer'] },
       openid_admin: { _id: 'openid_admin', roles: ['user', 'admin'] },
       openid_regular: { _id: 'openid_regular', roles: ['user'] },
+      openid_alex: { _id: 'openid_alex', roles: ['user'], managerAlias: 'Left foot' },
+      openid_ben: { _id: 'openid_ben', roles: ['user'], managerAlias: '' },
       ...(options.users || {})
     },
     activities: {
@@ -104,6 +106,7 @@ test('admin can get date-range attendance stats for confirmed activities', async
   expect(result.items).toEqual([
     {
       participantName: 'Alex',
+      managerAlias: 'Left foot',
       signupCount: 3,
       presentCount: 2,
       absentCount: 1,
@@ -111,6 +114,7 @@ test('admin can get date-range attendance stats for confirmed activities', async
     },
     {
       participantName: 'Ben',
+      managerAlias: '',
       signupCount: 1,
       presentCount: 1,
       absentCount: 0,
@@ -127,6 +131,7 @@ test('organizer stats include only their own activities', async () => {
   expect(result.items).toEqual([
     {
       participantName: 'Alex',
+      managerAlias: 'Left foot',
       signupCount: 2,
       presentCount: 1,
       absentCount: 1,
@@ -134,6 +139,7 @@ test('organizer stats include only their own activities', async () => {
     },
     {
       participantName: 'Ben',
+      managerAlias: '',
       signupCount: 1,
       presentCount: 1,
       absentCount: 0,
@@ -152,6 +158,20 @@ test('blank attendanceStatus counts as present', async () => {
     presentCount: 1,
     absentCount: 0,
     attendanceRate: 1
+  });
+});
+
+test('attendance stats include participant manager alias notes', async () => {
+  const db = createFakeDb({
+    users: {
+      openid_alex: { _id: 'openid_alex', roles: ['user'], managerAlias: 'Bench note' }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
+
+  expect(result.items.find(item => item.participantName === 'Alex')).toMatchObject({
+    managerAlias: 'Bench note'
   });
 });
 

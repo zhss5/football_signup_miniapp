@@ -455,6 +455,7 @@ test('attendance stats submit renders rows and hides the empty state', async () 
         items: [
           {
             participantName: '张虹生',
+            managerAlias: '酱油仔',
             signupCount: 2,
             presentCount: 1,
             absentCount: 1,
@@ -471,6 +472,7 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   await result;
 
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('酱油仔');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
 });

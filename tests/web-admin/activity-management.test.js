@@ -132,6 +132,7 @@ test('stats and log row builders keep stable display fields', () => {
     buildStatsRows([
       {
         participantName: 'Alex',
+        managerAlias: 'Left foot',
         signupCount: 2,
         presentCount: 1,
         absentCount: 1,
@@ -141,6 +142,7 @@ test('stats and log row builders keep stable display fields', () => {
   ).toEqual([
     {
       participantName: 'Alex',
+      managerAlias: 'Left foot',
       signupCount: 2,
       presentCount: 1,
       absentCount: 1,

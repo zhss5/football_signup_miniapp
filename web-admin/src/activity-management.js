@@ -80,6 +80,7 @@
   function buildStatsRows(items = []) {
     return items.map(row => ({
       participantName: row.participantName || '',
+      managerAlias: row.managerAlias || '',
       signupCount: Number(row.signupCount) || 0,
       presentCount: Number(row.presentCount) || 0,
       absentCount: Number(row.absentCount) || 0,
