@@ -223,6 +223,67 @@ describe('home page', () => {
     expect(ctx.data.emptyVisible).toBe(true);
   });
 
+  test('renders home activities before cover url resolution finishes', async () => {
+    let resolveCovers;
+    const coverResolution = new Promise(resolve => {
+      resolveCovers = resolve;
+    });
+
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        roles: ['user']
+      }
+    });
+    listActivities.mockResolvedValue({
+      items: [
+        {
+          _id: 'activity_123',
+          title: 'Visible Match',
+          statusTone: 'joinable',
+          createdAt: '2026-05-02T12:00:00.000Z',
+          coverThumbImage: 'cloud://cover-thumb'
+        }
+      ]
+    });
+    resolveActivityCoverImages.mockImplementation(items =>
+      coverResolution.then(() =>
+        items.map(item => ({
+          ...item,
+          coverDisplayImage: `https://tmp.example.com/${item.id || item._id}.jpg`
+        }))
+      )
+    );
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    const showPromise = pageConfig.onShow.call(ctx);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ctx.data.items.map(item => item.id)).toEqual(['activity_123']);
+    expect(ctx.data.items[0].coverDisplayImage).toBeUndefined();
+    expect(ctx.data.loading).toBe(false);
+
+    resolveCovers();
+    await showPromise;
+    await Promise.resolve();
+
+    expect(ctx.data.items[0].coverDisplayImage).toBe(
+      'https://tmp.example.com/activity_123.jpg'
+    );
+  });
+
   test('home template renders an empty activity message only when the empty state is visible', () => {
     const fs = require('fs');
     const path = require('path');

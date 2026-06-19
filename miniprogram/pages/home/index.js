@@ -117,12 +117,9 @@ Page({
       }
 
       const visibleItems = prepareVisibleHomeActivities(items, translate);
-      const itemsWithDisplayCovers = await resolveActivityCoverImages(visibleItems, {
-        includeShareImage: false
-      });
       const nextItems = append
-        ? mergeHomeActivities(this.data.items, itemsWithDisplayCovers)
-        : itemsWithDisplayCovers;
+        ? mergeHomeActivities(this.data.items, visibleItems)
+        : visibleItems;
 
       if (this.homeLoadToken !== loadToken) {
         return;
@@ -136,6 +133,26 @@ Page({
         nextSkip: skip + HOME_PAGE_SIZE,
         emptyVisible: nextItems.length === 0
       });
+
+      resolveActivityCoverImages(visibleItems, {
+        includeShareImage: false
+      })
+        .then(itemsWithDisplayCovers => {
+          if (this.homeLoadToken !== loadToken) {
+            return;
+          }
+
+          const itemsWithCovers = append
+            ? mergeHomeActivities(this.data.items, itemsWithDisplayCovers)
+            : itemsWithDisplayCovers;
+
+          this.setData({
+            items: itemsWithCovers
+          });
+        })
+        .catch(() => {
+          // The list is already visible; failed cover resolution should not blank the page.
+        });
     } catch (error) {
       this.setData({
         loading: false,
