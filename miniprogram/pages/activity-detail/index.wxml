@@ -77,7 +77,6 @@
     bind:movemember="onMoveRegistration"
     bind:removemember="onRemoveRegistration"
     bind:cancelsignup="onCancelSignup"
-    bind:attendancechange="onAttendanceChange"
     bind:membertap="onMemberTap"
   />
 
@@ -191,6 +190,17 @@
           placeholder="{{i18n.modal.managerAlias.placeholder}}"
           bindinput="onParticipantAliasInput"
         />
+      </view>
+
+      <view wx:if="{{participantDialogAttendanceVisible}}" class="participant-dialog-attendance">
+        <text class="participant-dialog-attendance-status">{{participantDialogAttendanceStatusText}}</text>
+        <button
+          class="participant-dialog-attendance-button {{participantDialogAttendanceActionStatus === 'present' ? 'participant-dialog-attendance-present' : 'participant-dialog-attendance-absent'}}"
+          loading="{{participantDialogAttendanceSaving}}"
+          bindtap="onParticipantAttendanceChange"
+        >
+          {{participantDialogAttendanceActionText}}
+        </button>
       </view>
 
       <view class="participant-dialog-actions">

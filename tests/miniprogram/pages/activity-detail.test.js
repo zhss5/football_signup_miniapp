@@ -566,13 +566,22 @@ describe('activity detail page', () => {
     expect(ctx.data.viewer.canManageRegistrations).toBe(true);
   });
 
-  test('activity detail template wires attendance changes from team list', () => {
+  test('activity detail template routes attendance changes through participant dialog', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxml'),
       'utf8'
     );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/activity-detail/index.wxss'),
+      'utf8'
+    );
 
-    expect(wxml).toContain('bind:attendancechange="onAttendanceChange"');
+    expect(wxml).not.toContain('bind:attendancechange="onAttendanceChange"');
+    expect(wxml).toContain('wx:if="{{participantDialogAttendanceVisible}}"');
+    expect(wxml).toContain('participantDialogAttendanceStatusText');
+    expect(wxml).toContain('loading="{{participantDialogAttendanceSaving}}"');
+    expect(wxml).toContain('bindtap="onParticipantAttendanceChange"');
+    expect(wxss).toContain('.participant-dialog-attendance');
   });
 
   test('activity detail template opens a participant dialog from team list member taps', () => {
@@ -597,7 +606,7 @@ describe('activity detail page', () => {
     expect(wxss).toContain('.participant-dialog-panel');
   });
 
-  test('onAttendanceChange updates member attendance and reloads detail', async () => {
+  test('onParticipantAttendanceChange updates member attendance and reloads detail', async () => {
     setRegistrationAttendance.mockResolvedValue({
       registration: {
         _id: 'registration_1',
@@ -607,17 +616,23 @@ describe('activity detail page', () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
-        locale: 'en-US'
+        locale: 'en-US',
+        participantDialogRegistrationId: 'registration_1',
+        participantDialogAttendanceVisible: true,
+        participantDialogAttendanceActionStatus: 'absent',
+        participantDialogAttendanceSaving: false
       },
-      reload: jest.fn().mockResolvedValue()
+      reload: jest.fn().mockResolvedValue(),
+      closeParticipantDialog: pageConfig.closeParticipantDialog,
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
     };
 
-    await pageConfig.onAttendanceChange.call(ctx, {
-      detail: {
-        registrationId: 'registration_1',
-        attendanceStatus: 'absent'
-      }
-    });
+    await pageConfig.onParticipantAttendanceChange.call(ctx);
 
     expect(setRegistrationAttendance).toHaveBeenCalledWith(
       'activity_123',
@@ -628,6 +643,7 @@ describe('activity detail page', () => {
       title: 'Attendance updated',
       icon: 'success'
     });
+    expect(ctx.data.participantDialogVisible).toBe(false);
     expect(ctx.reload).toHaveBeenCalled();
   });
 
@@ -652,7 +668,13 @@ describe('activity detail page', () => {
         avatarUrl: 'https://example.com/avatar.jpg',
         avatarText: 'A',
         managerAlias: 'Hidden Alias',
-        managerAliasEditable: false
+        managerAliasEditable: false,
+        registrationId: 'registration_1',
+        attendanceStatus: 'present',
+        attendanceStatusText: 'Present',
+        attendanceActionVisible: true,
+        attendanceActionStatus: 'absent',
+        attendanceActionText: 'Mark absent'
       }
     });
 
@@ -665,6 +687,9 @@ describe('activity detail page', () => {
     });
     expect(ctx.data.participantDialogAliasEditable).toBe(false);
     expect(ctx.data.participantDialogAlias).toBe('');
+    expect(ctx.data.participantDialogAttendanceVisible).toBe(false);
+    expect(ctx.data.participantDialogRegistrationId).toBe('');
+    expect(ctx.data.participantDialogAttendanceActionStatus).toBe('');
   });
 
   test('onMemberTap opens an editable participant alias dialog for managers', () => {
@@ -688,7 +713,13 @@ describe('activity detail page', () => {
         avatarUrl: '',
         avatarText: 'A',
         managerAlias: 'Old Alias',
-        managerAliasEditable: true
+        managerAliasEditable: true,
+        registrationId: 'registration_1',
+        attendanceStatus: 'present',
+        attendanceStatusText: 'Present',
+        attendanceActionVisible: true,
+        attendanceActionStatus: 'absent',
+        attendanceActionText: 'Mark absent'
       }
     });
 
@@ -700,6 +731,12 @@ describe('activity detail page', () => {
     });
     expect(ctx.data.participantDialogAliasEditable).toBe(true);
     expect(ctx.data.participantDialogAlias).toBe('Old Alias');
+    expect(ctx.data.participantDialogAttendanceVisible).toBe(true);
+    expect(ctx.data.participantDialogRegistrationId).toBe('registration_1');
+    expect(ctx.data.participantDialogAttendanceStatus).toBe('present');
+    expect(ctx.data.participantDialogAttendanceStatusText).toBe('Present');
+    expect(ctx.data.participantDialogAttendanceActionStatus).toBe('absent');
+    expect(ctx.data.participantDialogAttendanceActionText).toBe('Mark absent');
   });
 
   test('onParticipantAliasSave updates the current participant alias and reloads detail', async () => {

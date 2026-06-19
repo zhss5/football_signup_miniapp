@@ -1,3 +1,7 @@
+function parseDatasetBoolean(value) {
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 Component({
   properties: {
     teams: {
@@ -50,7 +54,6 @@ Component({
       const dataset = event.currentTarget.dataset;
       const eventNameByAction = {
         cancelSignup: 'cancelsignup',
-        attendance: 'attendancechange',
         move: 'movemember',
         remove: 'removemember'
       };
@@ -69,21 +72,13 @@ Component({
         detail.currentTeamId = dataset.currentTeamId;
       }
 
-      if (dataset.action === 'attendance') {
-        detail.registrationId = dataset.registrationId;
-        detail.attendanceStatus = dataset.attendanceStatus;
-      }
-
       this.triggerEvent(eventName, detail);
     },
 
     onMemberTap(event) {
       const dataset = event.currentTarget.dataset;
-      const managerAliasEditable =
-        dataset.managerAliasEditable === true ||
-        dataset.managerAliasEditable === 'true' ||
-        dataset.managerAliasEditable === 1 ||
-        dataset.managerAliasEditable === '1';
+      const managerAliasEditable = parseDatasetBoolean(dataset.managerAliasEditable);
+      const attendanceActionVisible = parseDatasetBoolean(dataset.attendanceActionVisible);
 
       this.triggerEvent('membertap', {
         userOpenId: dataset.userOpenId || '',
@@ -91,7 +86,13 @@ Component({
         avatarUrl: dataset.avatarUrl || '',
         avatarText: dataset.avatarText || '',
         managerAlias: dataset.managerAlias || '',
-        managerAliasEditable
+        managerAliasEditable,
+        registrationId: dataset.registrationId || '',
+        attendanceStatus: dataset.attendanceStatus || '',
+        attendanceStatusText: dataset.attendanceStatusText || '',
+        attendanceActionVisible,
+        attendanceActionStatus: dataset.attendanceActionStatus || '',
+        attendanceActionText: dataset.attendanceActionText || ''
       });
     }
   }

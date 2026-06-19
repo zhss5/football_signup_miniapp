@@ -267,7 +267,14 @@ Page({
     participantDialogMember: null,
     participantDialogAlias: '',
     participantDialogAliasEditable: false,
-    participantDialogSaving: false
+    participantDialogSaving: false,
+    participantDialogRegistrationId: '',
+    participantDialogAttendanceVisible: false,
+    participantDialogAttendanceStatus: '',
+    participantDialogAttendanceStatusText: '',
+    participantDialogAttendanceActionStatus: '',
+    participantDialogAttendanceActionText: '',
+    participantDialogAttendanceSaving: false
   },
 
   async onLoad(query) {
@@ -490,30 +497,6 @@ Page({
     }
   },
 
-  async onAttendanceChange(event) {
-    const translate = makeTranslator(this.data.locale || getAppLocale());
-    const detail = event.detail || {};
-
-    if (!detail.registrationId || !detail.attendanceStatus) {
-      return;
-    }
-
-    try {
-      await setRegistrationAttendance(
-        this.data.activityId,
-        detail.registrationId,
-        detail.attendanceStatus
-      );
-      wx.showToast({
-        title: translate('toast.attendanceUpdated'),
-        icon: 'success'
-      });
-      await this.reload();
-    } catch (error) {
-      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
-    }
-  },
-
   onMemberTap(event) {
     const detail = event.detail || {};
     const member = {
@@ -523,13 +506,32 @@ Page({
       avatarText: String(detail.avatarText || '').trim() || '#'
     };
     const aliasEditable = Boolean(detail.managerAliasEditable && member.userOpenId);
+    const attendanceVisible = Boolean(
+      aliasEditable &&
+      detail.attendanceActionVisible &&
+      detail.registrationId &&
+      detail.attendanceActionStatus
+    );
 
     this.setData({
       participantDialogVisible: true,
       participantDialogMember: member,
       participantDialogAliasEditable: aliasEditable,
       participantDialogAlias: aliasEditable ? String(detail.managerAlias || '').trim() : '',
-      participantDialogSaving: false
+      participantDialogSaving: false,
+      participantDialogRegistrationId: attendanceVisible ? String(detail.registrationId || '') : '',
+      participantDialogAttendanceVisible: attendanceVisible,
+      participantDialogAttendanceStatus: attendanceVisible ? String(detail.attendanceStatus || '') : '',
+      participantDialogAttendanceStatusText: attendanceVisible
+        ? String(detail.attendanceStatusText || '')
+        : '',
+      participantDialogAttendanceActionStatus: attendanceVisible
+        ? String(detail.attendanceActionStatus || '')
+        : '',
+      participantDialogAttendanceActionText: attendanceVisible
+        ? String(detail.attendanceActionText || '')
+        : '',
+      participantDialogAttendanceSaving: false
     });
   },
 
@@ -545,12 +547,19 @@ Page({
       participantDialogMember: null,
       participantDialogAlias: '',
       participantDialogAliasEditable: false,
-      participantDialogSaving: false
+      participantDialogSaving: false,
+      participantDialogRegistrationId: '',
+      participantDialogAttendanceVisible: false,
+      participantDialogAttendanceStatus: '',
+      participantDialogAttendanceStatusText: '',
+      participantDialogAttendanceActionStatus: '',
+      participantDialogAttendanceActionText: '',
+      participantDialogAttendanceSaving: false
     });
   },
 
   onParticipantDialogCancel() {
-    if (this.data.participantDialogSaving) {
+    if (this.data.participantDialogSaving || this.data.participantDialogAttendanceSaving) {
       return;
     }
 
@@ -564,7 +573,8 @@ Page({
     if (
       !this.data.participantDialogAliasEditable ||
       !member.userOpenId ||
-      this.data.participantDialogSaving
+      this.data.participantDialogSaving ||
+      this.data.participantDialogAttendanceSaving
     ) {
       return;
     }
@@ -582,6 +592,36 @@ Page({
       await this.reload();
     } catch (error) {
       this.setData({ participantDialogSaving: false });
+      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
+    }
+  },
+
+  async onParticipantAttendanceChange() {
+    const translate = makeTranslator(this.data.locale || getAppLocale());
+    const registrationId = String(this.data.participantDialogRegistrationId || '').trim();
+    const attendanceStatus = String(this.data.participantDialogAttendanceActionStatus || '').trim();
+
+    if (
+      !this.data.participantDialogAttendanceVisible ||
+      !registrationId ||
+      !attendanceStatus ||
+      this.data.participantDialogSaving ||
+      this.data.participantDialogAttendanceSaving
+    ) {
+      return;
+    }
+
+    try {
+      this.setData({ participantDialogAttendanceSaving: true });
+      await setRegistrationAttendance(this.data.activityId, registrationId, attendanceStatus);
+      wx.showToast({
+        title: translate('toast.attendanceUpdated'),
+        icon: 'success'
+      });
+      this.closeParticipantDialog();
+      await this.reload();
+    } catch (error) {
+      this.setData({ participantDialogAttendanceSaving: false });
       wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
     }
   },

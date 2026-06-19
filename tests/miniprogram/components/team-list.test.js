@@ -24,17 +24,20 @@ describe('team list component', () => {
     expect(wxml).toContain('wx:else');
   });
 
-  test('renders attendance controls for member attendance actions', () => {
+  test('passes attendance controls through member profile taps', () => {
     const wxml = fs.readFileSync(
       path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
       'utf8'
     );
 
     expect(wxml).toContain('wx:if="{{member.attendanceStatusVisible}}"');
-    expect(wxml).toContain('wx:if="{{member.attendanceActionVisible}}"');
-    expect(wxml).toContain('data-action="attendance"');
     expect(wxml).toContain('data-registration-id="{{member.registrationId}}"');
-    expect(wxml).toContain('data-attendance-status="{{member.attendanceActionStatus}}"');
+    expect(wxml).toContain('data-attendance-status="{{member.attendanceStatus}}"');
+    expect(wxml).toContain('data-attendance-status-text="{{member.attendanceStatusText}}"');
+    expect(wxml).toContain('data-attendance-action-visible="{{member.attendanceActionVisible}}"');
+    expect(wxml).toContain('data-attendance-action-status="{{member.attendanceActionStatus}}"');
+    expect(wxml).toContain('data-attendance-action-text="{{member.attendanceActionText}}"');
+    expect(wxml).not.toContain('data-action="attendance"');
   });
 
   test('renders manager alias text inside a clickable member profile without a separate alias button', () => {
@@ -112,7 +115,7 @@ describe('team list component', () => {
     });
   });
 
-  test('emits attendance changes with registration id and target status', () => {
+  test('does not emit attendance changes from row actions', () => {
     const triggerEvent = jest.fn();
     const ctx = {
       triggerEvent
@@ -130,12 +133,7 @@ describe('team list component', () => {
       }
     });
 
-    expect(triggerEvent).toHaveBeenCalledWith('attendancechange', {
-      registrationId: 'registration_1',
-      attendanceStatus: 'absent',
-      userOpenId: 'openid_player',
-      signupName: 'Alex'
-    });
+    expect(triggerEvent).not.toHaveBeenCalled();
   });
 
   test('emits member taps with display details and manager alias edit permission', () => {
@@ -152,7 +150,13 @@ describe('team list component', () => {
           avatarUrl: 'https://example.com/avatar.jpg',
           avatarText: 'A',
           managerAlias: 'Zhang San',
-          managerAliasEditable: true
+          managerAliasEditable: true,
+          registrationId: 'registration_1',
+          attendanceStatus: 'present',
+          attendanceStatusText: 'Present',
+          attendanceActionVisible: true,
+          attendanceActionStatus: 'absent',
+          attendanceActionText: 'Mark absent'
         }
       }
     });
@@ -163,7 +167,13 @@ describe('team list component', () => {
       avatarUrl: 'https://example.com/avatar.jpg',
       avatarText: 'A',
       managerAliasEditable: true,
-      managerAlias: 'Zhang San'
+      managerAlias: 'Zhang San',
+      registrationId: 'registration_1',
+      attendanceStatus: 'present',
+      attendanceStatusText: 'Present',
+      attendanceActionVisible: true,
+      attendanceActionStatus: 'absent',
+      attendanceActionText: 'Mark absent'
     });
   });
 });

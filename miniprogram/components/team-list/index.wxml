@@ -57,6 +57,12 @@
               data-avatar-text="{{member.avatarText}}"
               data-manager-alias="{{member.managerAliasText}}"
               data-manager-alias-editable="{{member.managerAliasActionVisible}}"
+              data-registration-id="{{member.registrationId}}"
+              data-attendance-status="{{member.attendanceStatus}}"
+              data-attendance-status-text="{{member.attendanceStatusText}}"
+              data-attendance-action-visible="{{member.attendanceActionVisible}}"
+              data-attendance-action-status="{{member.attendanceActionStatus}}"
+              data-attendance-action-text="{{member.attendanceActionText}}"
               bindtap="onMemberTap"
             >
               <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
@@ -77,17 +83,6 @@
                 <text wx:if="{{member.preferredPositionsVisible}}" class="member-position-text">{{member.preferredPositionsText}}</text>
               </view>
             </view>
-            <button
-              wx:if="{{member.attendanceActionVisible}}"
-              class="member-action-button member-action-attendance {{member.attendanceActionStatus === 'present' ? 'member-action-present' : 'member-action-absent'}}"
-              size="mini"
-              data-action="attendance"
-              data-registration-id="{{member.registrationId}}"
-              data-attendance-status="{{member.attendanceActionStatus}}"
-              data-user-open-id="{{member.userOpenId}}"
-              data-signup-name="{{member.signupName}}"
-              catchtap="onMemberActionTap"
-            >{{member.attendanceActionText}}</button>
             <button
               wx:if="{{member.moveActionVisible}}"
               class="member-action-button member-action-move"

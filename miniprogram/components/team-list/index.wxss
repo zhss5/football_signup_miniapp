@@ -239,22 +239,6 @@
   border-color: #bbf7d0;
 }
 
-.member-action-attendance {
-  min-width: 148rpx;
-}
-
-.member-action-absent {
-  color: #991b1b;
-  background: #fff1f2;
-  border-color: #fecdd3;
-}
-
-.member-action-present {
-  color: #166534;
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-}
-
 .member-action-cancel {
   color: #ffffff;
   background: #ea580c;
