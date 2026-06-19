@@ -498,7 +498,7 @@ test('buildTeamListVm exposes attendance actions for managers after an activity 
   });
 });
 
-test('buildTeamListVm hides attendance controls before a confirmed activity starts', () => {
+test('buildTeamListVm shows attendance controls before a confirmed activity starts', () => {
   const teams = [
     {
       _id: 'team_green',
@@ -532,10 +532,11 @@ test('buildTeamListVm hides attendance controls before a confirmed activity star
   );
 
   expect(vm[0].members[0]).toMatchObject({
-    attendanceStatusVisible: false,
-    attendanceStatusText: '',
-    attendanceActionVisible: false,
-    attendanceActionText: ''
+    attendanceStatusVisible: true,
+    attendanceStatusText: 'Present',
+    attendanceActionVisible: true,
+    attendanceActionStatus: 'absent',
+    attendanceActionText: 'Mark absent'
   });
 });
 

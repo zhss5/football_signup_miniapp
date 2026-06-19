@@ -18,23 +18,6 @@ function normalizeAttendanceStatus(value) {
   return String(value || '').trim();
 }
 
-function resolveNowMillis(now = new Date()) {
-  const resolved = typeof now === 'function' ? now() : now;
-  if (typeof resolved === 'number') {
-    return resolved;
-  }
-  if (resolved instanceof Date) {
-    return resolved.getTime();
-  }
-  return Date.parse(String(resolved || ''));
-}
-
-function isActivityStarted(activity, now) {
-  const startAt = Date.parse(activity.startAt || '');
-  const current = resolveNowMillis(now);
-  return Number.isFinite(startAt) && Number.isFinite(current) && current >= startAt;
-}
-
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const payload = event || {};
   const db = deps.db || cloud.database();
@@ -77,10 +60,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   if (activity.confirmStatus !== 'confirmed') {
     throw businessError('Attendance can only be updated after activity is confirmed');
-  }
-
-  if (!isActivityStarted(activity, deps.now)) {
-    throw businessError('Attendance can only be updated after activity starts');
   }
 
   if (!registration || registration.activityId !== activityId || registration.status !== 'joined') {

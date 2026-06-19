@@ -137,24 +137,28 @@ test('attendance cannot be changed before the activity is confirmed', async () =
   ).rejects.toThrow('Attendance can only be updated after activity is confirmed');
 });
 
-test('attendance cannot be changed before the activity starts', async () => {
+test('attendance can be changed before the activity starts', async () => {
   const db = createFakeDb({
     activity: {
       startAt: '2026-05-19T20:00:00.000Z'
     }
   });
 
-  await expect(
-    setRegistrationAttendance.main(
-      {
-        activityId: 'activity_1',
-        registrationId: 'registration_1',
-        attendanceStatus: 'absent'
-      },
-      { OPENID: 'openid_owner' },
-      { db, now: fixedNow }
-    )
-  ).rejects.toThrow('Attendance can only be updated after activity starts');
+  const result = await setRegistrationAttendance.main(
+    {
+      activityId: 'activity_1',
+      registrationId: 'registration_1',
+      attendanceStatus: 'absent'
+    },
+    { OPENID: 'openid_owner' },
+    { db, now: fixedNow }
+  );
+
+  expect(result.registration).toMatchObject({
+    _id: 'registration_1',
+    attendanceStatus: 'absent',
+    attendanceMarkedBy: 'openid_owner'
+  });
 });
 
 test('attendance status only accepts present or absent', async () => {

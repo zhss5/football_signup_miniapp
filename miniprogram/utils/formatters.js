@@ -226,8 +226,7 @@ function buildTeamListVm(
     canManageAttendance: Boolean(
       options.canManageRegistrations &&
         activity &&
-        activity.confirmStatus === 'confirmed' &&
-        isActivityStarted(activity, stableNowProvider)
+        activity.confirmStatus === 'confirmed'
     ),
     currentUserOpenId,
     translate
