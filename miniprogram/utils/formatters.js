@@ -32,6 +32,15 @@ function isActivityExpired(activity = {}, nowProvider) {
   );
 }
 
+function isActivityStarted(activity = {}, nowProvider) {
+  const startAt = Date.parse(activity.startAt || '');
+  return (
+    activity.status === 'published' &&
+    Number.isFinite(startAt) &&
+    resolveNow(nowProvider) >= startAt
+  );
+}
+
 function getActivitySignupState(activity = {}, nowProvider, translate = defaultTranslate) {
   const now = resolveNow(nowProvider);
   const deadline = Date.parse(activity.signupDeadlineAt || '');
@@ -207,13 +216,18 @@ function buildTeamListVm(
   options = {}
 ) {
   const hasJoined = Boolean(myRegistration && myRegistration.status === 'joined');
-  const signupState = getActivitySignupState(activity || {}, nowProvider, translate);
+  const now = resolveNow(nowProvider);
+  const stableNowProvider = () => now;
+  const signupState = getActivitySignupState(activity || {}, stableNowProvider, translate);
   const currentUserOpenId = myRegistration && myRegistration.userOpenId;
   const memberContext = {
     canCancelSignup: Boolean(options.canCancelSignup),
     canManageRegistrations: Boolean(options.canManageRegistrations),
     canManageAttendance: Boolean(
-      options.canManageRegistrations && activity && activity.confirmStatus === 'confirmed'
+      options.canManageRegistrations &&
+        activity &&
+        activity.confirmStatus === 'confirmed' &&
+        isActivityStarted(activity, stableNowProvider)
     ),
     currentUserOpenId,
     translate
@@ -266,5 +280,6 @@ module.exports = {
   buildTeamListVm,
   formatDateTime,
   getActivitySignupState,
-  isActivityExpired
+  isActivityExpired,
+  isActivityStarted
 };

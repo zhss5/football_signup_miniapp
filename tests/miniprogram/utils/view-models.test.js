@@ -472,9 +472,10 @@ test('buildTeamListVm exposes attendance actions for managers after an activity 
     null,
     {
       status: 'published',
-      confirmStatus: 'confirmed'
+      confirmStatus: 'confirmed',
+      startAt: '2026-05-19T09:00:00.000Z'
     },
-    undefined,
+    () => Date.parse('2026-05-19T10:00:00.000Z'),
     undefined,
     {
       canManageRegistrations: true
@@ -494,6 +495,47 @@ test('buildTeamListVm exposes attendance actions for managers after an activity 
     attendanceActionVisible: true,
     attendanceActionStatus: 'present',
     attendanceActionText: 'Mark present'
+  });
+});
+
+test('buildTeamListVm hides attendance controls before a confirmed activity starts', () => {
+  const teams = [
+    {
+      _id: 'team_green',
+      teamName: 'Green',
+      joinedCount: 1,
+      maxMembers: 6,
+      members: [
+        {
+          registrationId: 'registration_present',
+          userOpenId: 'openid_present',
+          signupName: 'Alex',
+          attendanceStatus: 'present'
+        }
+      ]
+    }
+  ];
+
+  const vm = buildTeamListVm(
+    teams,
+    null,
+    {
+      status: 'published',
+      confirmStatus: 'confirmed',
+      startAt: '2026-05-19T20:00:00.000Z'
+    },
+    () => Date.parse('2026-05-19T10:00:00.000Z'),
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(vm[0].members[0]).toMatchObject({
+    attendanceStatusVisible: false,
+    attendanceStatusText: '',
+    attendanceActionVisible: false,
+    attendanceActionText: ''
   });
 });
 
