@@ -160,7 +160,7 @@ function buildMemberVm(member, context = {}) {
     : [];
   const preferredPositionsVisible = preferredPositions.length > 0;
   const attendanceStatus = member.attendanceStatus === 'absent' ? 'absent' : 'present';
-  const attendanceStatusVisible = Boolean(context.canManageAttendance);
+  const attendanceStatusVisible = Boolean(context.canManageAttendance && attendanceStatus === 'absent');
   const attendanceActionVisible = Boolean(context.canManageAttendance && member.registrationId);
   const attendanceActionStatus = attendanceStatus === 'absent' ? 'present' : 'absent';
   const managerAliasText = String(member.managerAlias || '').trim();
