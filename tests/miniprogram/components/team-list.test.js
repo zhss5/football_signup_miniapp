@@ -42,9 +42,15 @@ describe('team list component', () => {
       path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
       'utf8'
     );
+    const nameRowStart = wxml.indexOf('<view class="member-name-row">');
+    const positionStart = wxml.indexOf('member-position-text', nameRowStart);
+    const nameRowBlock = nameRowStart >= 0 && positionStart > nameRowStart
+      ? wxml.slice(nameRowStart, positionStart)
+      : '';
 
     expect(wxml).toContain('wx:if="{{member.managerAliasVisible}}"');
-    expect(wxml).toContain('{{member.managerAliasText}}');
+    expect(nameRowBlock).toContain('（{{member.managerAliasText}}）');
+    expect(wxml).not.toContain('class="member-manager-alias"');
     expect(wxml).toContain('class="member-profile"');
     expect(wxml).toContain('bindtap="onMemberTap"');
     expect(wxml).toContain('data-manager-alias-editable="{{member.managerAliasActionVisible}}"');

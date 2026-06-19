@@ -161,6 +161,18 @@
   font-weight: 400;
 }
 
+.member-manager-alias-inline {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  color: #1d4ed8;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .member-proxy-badge {
   flex: 0 0 auto;
   margin-left: 10rpx;
@@ -199,17 +211,6 @@
   color: #6b7280;
   font-size: 22rpx;
   line-height: 30rpx;
-}
-
-.member-manager-alias {
-  display: block;
-  margin-top: 4rpx;
-  color: #1d4ed8;
-  font-size: 22rpx;
-  line-height: 30rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .member-action-button {
