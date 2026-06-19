@@ -443,7 +443,7 @@ test('buildTeamListVm marks proxy members for managers only', () => {
   });
 });
 
-test('buildTeamListVm exposes attendance actions and only shows absent status for managers', () => {
+test('buildTeamListVm exposes attendance actions without row status badges for managers', () => {
   const teams = [
     {
       _id: 'team_green',
@@ -484,13 +484,13 @@ test('buildTeamListVm exposes attendance actions and only shows absent status fo
 
   expect(vm[0].members[0]).toMatchObject({
     attendanceStatusVisible: false,
-    attendanceStatusText: '',
+    attendanceStatusText: 'Present',
     attendanceActionVisible: true,
     attendanceActionStatus: 'absent',
     attendanceActionText: 'Mark absent'
   });
   expect(vm[0].members[1]).toMatchObject({
-    attendanceStatusVisible: true,
+    attendanceStatusVisible: false,
     attendanceStatusText: 'Absent',
     attendanceActionVisible: true,
     attendanceActionStatus: 'present',
@@ -533,7 +533,7 @@ test('buildTeamListVm shows attendance actions before a confirmed activity start
 
   expect(vm[0].members[0]).toMatchObject({
     attendanceStatusVisible: false,
-    attendanceStatusText: '',
+    attendanceStatusText: 'Present',
     attendanceActionVisible: true,
     attendanceActionStatus: 'absent',
     attendanceActionText: 'Mark absent'

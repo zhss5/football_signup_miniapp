@@ -160,7 +160,7 @@ function buildMemberVm(member, context = {}) {
     : [];
   const preferredPositionsVisible = preferredPositions.length > 0;
   const attendanceStatus = member.attendanceStatus === 'absent' ? 'absent' : 'present';
-  const attendanceStatusVisible = Boolean(context.canManageAttendance && attendanceStatus === 'absent');
+  const attendanceStatusVisible = false;
   const attendanceActionVisible = Boolean(context.canManageAttendance && member.registrationId);
   const attendanceActionStatus = attendanceStatus === 'absent' ? 'present' : 'absent';
   const managerAliasText = String(member.managerAlias || '').trim();
@@ -186,7 +186,7 @@ function buildMemberVm(member, context = {}) {
     preferredPositionsVisible,
     preferredPositionsText: preferredPositionsVisible ? preferredPositions.join(' / ') : '',
     attendanceStatusVisible,
-    attendanceStatusText: attendanceStatusVisible
+    attendanceStatusText: context.canManageAttendance
       ? context.translate(`activity.attendance.${attendanceStatus}`)
       : '',
     attendanceActionVisible,

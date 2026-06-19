@@ -30,7 +30,6 @@ describe('team list component', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('wx:if="{{member.attendanceStatusVisible}}"');
     expect(wxml).toContain('data-registration-id="{{member.registrationId}}"');
     expect(wxml).toContain('data-attendance-status="{{member.attendanceStatus}}"');
     expect(wxml).toContain('data-attendance-status-text="{{member.attendanceStatusText}}"');
@@ -38,6 +37,31 @@ describe('team list component', () => {
     expect(wxml).toContain('data-attendance-action-status="{{member.attendanceActionStatus}}"');
     expect(wxml).toContain('data-attendance-action-text="{{member.attendanceActionText}}"');
     expect(wxml).not.toContain('data-action="attendance"');
+    expect(wxml).not.toContain('class="member-attendance-status');
+  });
+
+  test('renders absent members with muted strike-through name and muted position', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+    const wxss = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxml).toContain(
+      "class=\"member-name {{member.attendanceStatus === 'absent' ? 'member-name-absent' : ''}}\""
+    );
+    expect(wxml).toContain(
+      "class=\"member-position-text {{member.attendanceStatus === 'absent' ? 'member-position-absent' : ''}}\""
+    );
+    expect(wxss).toContain('.member-name-absent');
+    expect(wxss).toContain('text-decoration: line-through;');
+    expect(wxss).toContain('.member-position-absent');
+    expect(wxss).not.toContain('.member-attendance-absent');
+    expect(wxss).not.toContain('.member-attendance-present');
+    expect(wxss).not.toContain('.member-row-absent');
   });
 
   test('renders manager alias text inside a clickable member profile without a separate alias button', () => {

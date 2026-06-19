@@ -161,6 +161,12 @@
   font-weight: 400;
 }
 
+.member-name-absent {
+  color: #9ca3af;
+  text-decoration: line-through;
+  text-decoration-color: #cbd5e1;
+}
+
 .member-manager-alias-inline {
   flex: 0 1 auto;
   min-width: 0;
@@ -185,32 +191,16 @@
   font-weight: 600;
 }
 
-.member-attendance-status {
-  flex: 0 0 auto;
-  margin-left: 10rpx;
-  padding: 2rpx 10rpx;
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  line-height: 32rpx;
-  font-weight: 600;
-}
-
-.member-attendance-present {
-  color: #166534;
-  background: #dcfce7;
-}
-
-.member-attendance-absent {
-  color: #991b1b;
-  background: #fee2e2;
-}
-
 .member-position-text {
   display: block;
   margin-top: 4rpx;
   color: #6b7280;
   font-size: 22rpx;
   line-height: 30rpx;
+}
+
+.member-position-absent {
+  color: #9ca3af;
 }
 
 .member-action-button {
