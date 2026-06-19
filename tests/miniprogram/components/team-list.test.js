@@ -54,10 +54,15 @@ describe('team list component', () => {
       "class=\"member-name {{member.attendanceStatus === 'absent' ? 'member-name-absent' : ''}}\""
     );
     expect(wxml).toContain(
+      "class=\"member-manager-alias-inline {{member.attendanceStatus === 'absent' ? 'member-manager-alias-absent' : ''}}\""
+    );
+    expect(wxml).toContain(
       "class=\"member-position-text {{member.attendanceStatus === 'absent' ? 'member-position-absent' : ''}}\""
     );
     expect(wxss).toContain('.member-name-absent');
+    expect(wxss).toContain('.member-manager-alias-absent');
     expect(wxss).toContain('text-decoration: line-through;');
+    expect(wxss).toContain('text-decoration-thickness: 3rpx;');
     expect(wxss).toContain('.member-position-absent');
     expect(wxss).not.toContain('.member-attendance-absent');
     expect(wxss).not.toContain('.member-attendance-present');

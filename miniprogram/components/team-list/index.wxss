@@ -162,9 +162,10 @@
 }
 
 .member-name-absent {
-  color: #9ca3af;
+  color: #6b7280;
   text-decoration: line-through;
-  text-decoration-color: #cbd5e1;
+  text-decoration-color: #6b7280;
+  text-decoration-thickness: 3rpx;
 }
 
 .member-manager-alias-inline {
@@ -177,6 +178,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.member-manager-alias-absent {
+  color: #6b7280;
+  text-decoration: line-through;
+  text-decoration-color: #6b7280;
+  text-decoration-thickness: 3rpx;
 }
 
 .member-proxy-badge {
