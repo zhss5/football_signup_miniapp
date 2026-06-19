@@ -58,10 +58,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('Only the organizer or an admin can update attendance');
   }
 
-  if (activity.confirmStatus !== 'confirmed') {
-    throw businessError('Attendance can only be updated after activity is confirmed');
-  }
-
   if (!registration || registration.activityId !== activityId || registration.status !== 'joined') {
     throw businessError('Registration not found');
   }

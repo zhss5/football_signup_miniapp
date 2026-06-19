@@ -540,7 +540,7 @@ test('buildTeamListVm shows attendance actions before a confirmed activity start
   });
 });
 
-test('buildTeamListVm hides attendance actions before confirmation and from regular users', () => {
+test('buildTeamListVm shows attendance actions before confirmation for managers only', () => {
   const teams = [
     {
       _id: 'team_green',
@@ -578,8 +578,10 @@ test('buildTeamListVm hides attendance actions before confirmation and from regu
 
   expect(pendingManagerVm[0].members[0]).toMatchObject({
     attendanceStatusVisible: false,
-    attendanceActionVisible: false,
-    attendanceActionText: ''
+    attendanceStatusText: 'Present',
+    attendanceActionVisible: true,
+    attendanceActionStatus: 'absent',
+    attendanceActionText: 'Mark absent'
   });
   expect(regularVm[0].members[0]).toMatchObject({
     attendanceStatusVisible: false,

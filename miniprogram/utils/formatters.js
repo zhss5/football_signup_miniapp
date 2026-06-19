@@ -223,11 +223,7 @@ function buildTeamListVm(
   const memberContext = {
     canCancelSignup: Boolean(options.canCancelSignup),
     canManageRegistrations: Boolean(options.canManageRegistrations),
-    canManageAttendance: Boolean(
-      options.canManageRegistrations &&
-        activity &&
-        activity.confirmStatus === 'confirmed'
-    ),
+    canManageAttendance: Boolean(options.canManageRegistrations),
     currentUserOpenId,
     translate
   };
