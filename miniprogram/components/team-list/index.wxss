@@ -43,11 +43,13 @@
 .member-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 12rpx;
   margin-bottom: 12rpx;
 }
 
 .member-profile {
-  flex: 1;
+  flex: 1 1 260rpx;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -144,11 +146,15 @@
 .member-name-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 4rpx;
   min-width: 0;
 }
 
 .member-name {
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

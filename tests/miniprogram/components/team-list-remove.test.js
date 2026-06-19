@@ -24,6 +24,18 @@ describe('team-list member removal', () => {
     expect(wxml).toContain('catchtap="onMemberActionTap"');
   });
 
+  test('keeps participant identity visible when row action buttons wrap', () => {
+    const wxss = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/components/team-list/index.wxss'),
+      'utf8'
+    );
+
+    expect(wxss).toMatch(/\.member-row\s*{[^}]*flex-wrap:\s*wrap;/);
+    expect(wxss).toMatch(/\.member-profile\s*{[^}]*flex:\s*1\s+1\s+260rpx;/);
+    expect(wxss).toMatch(/\.member-name-row\s*{[^}]*flex-wrap:\s*wrap;/);
+    expect(wxss).toMatch(/\.member-name\s*{[^}]*flex:\s*0\s+1\s+auto;/);
+  });
+
   test('renders manager proxy signup controls for teams that allow it', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/team-list/index.wxml'),
