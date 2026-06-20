@@ -852,7 +852,15 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('data-user-manager-alias="openid_player"');
   expect(html).toContain('value="Left foot"');
   expect(html).toContain('data-action="save-user-manager-alias"');
-  expect(html).toContain('class="table-actions"');
+  expect(html).toContain('class="manager-alias-control"');
+  expect(html).toContain('class="role-management-control"');
+  expect(html).toMatch(
+    /<td><div class="manager-alias-control">[\s\S]*data-user-manager-alias="openid_player"[\s\S]*data-action="save-user-manager-alias"[\s\S]*<\/div><\/td>/
+  );
+  expect(html).toMatch(
+    /<td><div class="role-management-control"><div class="role-toggle-list">[\s\S]*data-role="organizer"[\s\S]*data-action="save-roles"[\s\S]*<\/div><\/td>/
+  );
+  expect(html).not.toContain('class="table-actions"');
   expect(html).toContain('aria-label="保存用户角色"');
   expect(html).toContain('aria-label="保存用户备注"');
   expect(html).toContain('组织者');

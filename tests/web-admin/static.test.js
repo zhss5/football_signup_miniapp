@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-global-log-activity';
+const WEB_ADMIN_ASSET_VERSION = '20260620-user-button-columns';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -55,6 +55,13 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
 
   expect(html).toContain('data-action="search-users"');
   expect(html).toContain('data-users-search-button');
+  const usersTableStart = html.indexOf('class="data-table users-table"');
+  const usersTableEnd = html.indexOf('<tbody data-users-table>', usersTableStart);
+  const usersHeaderBlock = usersTableStart >= 0 && usersTableEnd > usersTableStart
+    ? html.slice(usersTableStart, usersTableEnd)
+    : '';
+  expect((usersHeaderBlock.match(/<th>/g) || []).length).toBe(5);
+  expect(usersHeaderBlock).not.toContain('<th>操作</th>');
   expect(html).toContain('data-activities-search-button');
   expect(html).toContain('data-stats-load-button');
   expect(html).toContain('data-role-filter');
@@ -127,8 +134,11 @@ test('web admin login QR panel is centered instead of pinned to the right column
 test('web admin user management row actions have stable spacing', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
-  expect(css).toContain('.table-actions');
-  expect(css).toContain('gap: 8px');
+  expect(css).toContain('.manager-alias-control');
+  expect(css).toContain('.role-management-control');
+  expect(css).toContain('gap: 10px');
+  expect(css).toContain('gap: 14px');
+  expect(css).not.toContain('.table-actions');
   expect(css).toContain('.inline-status');
 });
 

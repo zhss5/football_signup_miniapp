@@ -509,15 +509,17 @@
             `<tr data-openid="${escapeHtml(row.openid)}">` +
             `<td>${escapeHtml(row.displayName)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
-            `<td><input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
-            `value="${escapeHtml(row.managerAlias)}" maxlength="128" /></td>` +
-            `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
-            `<td><div class="role-toggle-list">${controls}</div></td>` +
-            `<td><div class="table-actions">` +
-            `<button type="button" data-action="save-roles" ` +
-            `data-openid="${escapeHtml(row.openid)}" aria-label="保存用户角色">保存</button>` +
+            `<td><div class="manager-alias-control">` +
+            `<input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
+            `value="${escapeHtml(row.managerAlias)}" maxlength="128" />` +
             `<button type="button" data-action="save-user-manager-alias" ` +
             `data-target-openid="${escapeHtml(row.openid)}" aria-label="保存用户备注">保存备注</button>` +
+            `</div></td>` +
+            `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
+            `<td><div class="role-management-control">` +
+            `<div class="role-toggle-list">${controls}</div>` +
+            `<button type="button" data-action="save-roles" ` +
+            `data-openid="${escapeHtml(row.openid)}" aria-label="保存用户角色">保存</button>` +
             `</div></td>` +
             `</tr>`
           );
