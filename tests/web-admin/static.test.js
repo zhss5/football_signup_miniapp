@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-admin-polish-logs';
+const WEB_ADMIN_ASSET_VERSION = '20260620-log-targetless';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -114,6 +114,16 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
     ? html.slice(rosterHeaderStart, rosterHeaderEnd)
     : '';
   expect(rosterHeaderBlock).not.toContain('<th>操作</th>');
+  const detailLogsHeaderStart = html.indexOf('报名活动流水');
+  const detailLogsHeaderEnd = html.indexOf('<tbody data-activity-detail-logs-table>', detailLogsHeaderStart);
+  const detailLogsHeaderBlock =
+    detailLogsHeaderStart >= 0 && detailLogsHeaderEnd > detailLogsHeaderStart
+      ? html.slice(detailLogsHeaderStart, detailLogsHeaderEnd)
+      : '';
+  expect(detailLogsHeaderBlock).toContain('<th>操作</th>');
+  expect(detailLogsHeaderBlock).toContain('<th>操作人</th>');
+  expect(detailLogsHeaderBlock).toContain('<th>时间</th>');
+  expect(detailLogsHeaderBlock).not.toContain('<th>报名人</th>');
   expect(html).toContain('关键词');
   expect(html).toContain('角色');
   expect(html).toContain('搜索');

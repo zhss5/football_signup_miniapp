@@ -1533,7 +1533,8 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
   elements['[data-activity-detail-logs-keyword]'].eventHandlers.input();
   appRoot.click(createElement({ action: 'export-activity-logs-view' }));
 
-  expect(elements['[data-export-output]'].value).toContain('操作,操作人,报名人,时间');
+  expect(elements['[data-export-output]'].value).toContain('操作,操作人,时间');
+  expect(elements['[data-export-output]'].value).not.toContain('操作,操作人,报名人,时间');
   expect(elements['[data-export-output]'].value).not.toContain('Alex 报名');
   expect(elements['[data-export-output]'].value).toContain('Goalkeeper 取消报名');
   expect(elements['[data-export-output]'].value).toContain('Goalkeeper');

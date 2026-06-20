@@ -873,7 +873,6 @@
           `<tr>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
           `<td>${renderPersonCell(row.operatorDisplayName, row.operatorOpenId)}</td>` +
-          `<td>${renderPersonCell(row.targetDisplayName || row.targetName, row.targetOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
           `</tr>`
         ))
@@ -1230,7 +1229,6 @@
       const rows = getFilteredActivityDetailLogRows().map(row => ({
         操作: row.summary || row.type,
         操作人: row.operatorDisplayName,
-        报名人: row.targetDisplayName || row.targetName,
         时间: row.createdAt
       }));
       const csv = activityUi.rowsToCsv(rows);
