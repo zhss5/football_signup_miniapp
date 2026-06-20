@@ -38,6 +38,20 @@ async function getRegistrationNotificationSubscriptionState(db, activityId, open
   };
 }
 
+function pickAvatarUrl(registration = {}, user = {}) {
+  return (
+    registration.avatarUrl ||
+    registration.avatarURL ||
+    registration.avatar ||
+    user.avatarUrl ||
+    user.avatarURL ||
+    user.avatar ||
+    user.photoUrl ||
+    user.photoURL ||
+    ''
+  );
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
   const openid = await resolveOpenIdFromEvent(
@@ -120,7 +134,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       const member = {
         userOpenId: registration.userOpenId,
         signupName: registration.signupName,
-        avatarUrl: registration.avatarUrl || user.avatarUrl || '',
+        avatarUrl: pickAvatarUrl(registration, user),
         preferredPositions: Array.isArray(registration.preferredPositions)
           ? registration.preferredPositions.filter(Boolean)
           : []

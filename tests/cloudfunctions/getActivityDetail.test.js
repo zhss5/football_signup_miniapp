@@ -81,6 +81,7 @@ test('getActivityDetail groups joined members under each team', async () => {
     {
       _id: 'openid_c',
       avatarUrl: '',
+      avatarURL: 'cloud://prod-env-123/user-avatars/chris.jpg',
       managerAlias: 'Zhang San'
     }
   ];
@@ -161,6 +162,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   });
   expect(result.teams[1].members[0]).toMatchObject({
     signupName: 'Chris',
+    avatarUrl: 'cloud://prod-env-123/user-avatars/chris.jpg',
     managerAlias: 'Zhang San'
   });
 
