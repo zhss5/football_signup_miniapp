@@ -175,7 +175,7 @@ test('attendance stats include participant manager alias notes', async () => {
   });
 });
 
-test('cancelled deleted pending and out-of-range activities are excluded', async () => {
+test('cancelled deleted future pending and out-of-range activities are excluded', async () => {
   const db = createFakeDb({
     activities: {
       activity_pending: {
@@ -239,13 +239,92 @@ test('cancelled deleted pending and out-of-range activities are excluded', async
     }
   });
 
-  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, {
+    db,
+    now: '2026-05-08T00:00:00.000Z'
+  });
   const names = result.items.map(item => item.participantName);
 
   expect(names).not.toContain('Pending Player');
   expect(names).not.toContain('Cancelled Player');
   expect(names).not.toContain('Deleted Player');
   expect(names).not.toContain('Out Of Range Player');
+});
+
+test('pending activities are included after their start time when not cancelled or deleted', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_pending_past: {
+        _id: 'activity_pending_past',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'pending',
+        startAt: '2026-05-09T12:00:00.000Z'
+      },
+      activity_pending_future: {
+        _id: 'activity_pending_future',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'pending',
+        startAt: '2026-05-11T12:00:00.000Z'
+      },
+      activity_pending_cancelled: {
+        _id: 'activity_pending_cancelled',
+        organizerOpenId: 'openid_owner',
+        status: 'cancelled',
+        confirmStatus: 'pending',
+        startAt: '2026-05-09T12:00:00.000Z'
+      },
+      activity_pending_deleted: {
+        _id: 'activity_pending_deleted',
+        organizerOpenId: 'openid_owner',
+        status: 'deleted',
+        confirmStatus: 'pending',
+        startAt: '2026-05-09T12:00:00.000Z'
+      }
+    },
+    registrations: {
+      reg_pending_past: {
+        _id: 'reg_pending_past',
+        activityId: 'activity_pending_past',
+        signupName: 'Past Pending Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_pending_future: {
+        _id: 'reg_pending_future',
+        activityId: 'activity_pending_future',
+        signupName: 'Future Pending Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_pending_cancelled: {
+        _id: 'reg_pending_cancelled',
+        activityId: 'activity_pending_cancelled',
+        signupName: 'Cancelled Pending Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_pending_deleted: {
+        _id: 'reg_pending_deleted',
+        activityId: 'activity_pending_deleted',
+        signupName: 'Deleted Pending Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, {
+    db,
+    now: '2026-05-10T12:00:00.000Z'
+  });
+  const names = result.items.map(item => item.participantName);
+
+  expect(names).toContain('Past Pending Player');
+  expect(names).not.toContain('Future Pending Player');
+  expect(names).not.toContain('Cancelled Pending Player');
+  expect(names).not.toContain('Deleted Pending Player');
 });
 
 test('proxy signups are included by display name', async () => {

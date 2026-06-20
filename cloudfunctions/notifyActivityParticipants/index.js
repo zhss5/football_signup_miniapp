@@ -194,10 +194,6 @@ function parseTimestamp(value) {
 }
 
 function shouldSendNotifications(activity, notificationType, stamp) {
-  if (notificationType !== 'proceeding') {
-    return true;
-  }
-
   const startAt = parseTimestamp(activity.startAt);
   const nowAt = parseTimestamp(stamp);
 

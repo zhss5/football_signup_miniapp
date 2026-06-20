@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 jest.mock('../../../miniprogram/services/user-service', () => ({
   ensureUserProfile: jest.fn()
 }));
@@ -98,6 +101,19 @@ describe('my page profile marker', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  test('created activity list does not expose confirm or cancel activity actions', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/pages/my/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).not.toContain('catchtap="onConfirmActivityProceeding"');
+    expect(wxml).not.toContain('catchtap="onCancelActivity"');
+    expect(wxml).not.toContain('{{i18n.activity.actions.confirmProceeding}}');
+    expect(wxml).not.toContain('{{i18n.activity.actions.cancelActivity}}');
+    expect(wxml).toContain('bind:tapcard="goDetail"');
   });
 
   test('onShow exposes a copyable user id and readable role summary', async () => {
@@ -570,7 +586,7 @@ describe('my page profile marker', () => {
     expect(ctx.data.createdLoadingMore).toBe(false);
   });
 
-  test('marks overdue unresolved created activities and confirms them from the prompt', async () => {
+  test('marks overdue unresolved created activities without exposing list actions', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
     ensureUserProfile.mockResolvedValue({
       user: {
@@ -632,18 +648,6 @@ describe('my page profile marker', () => {
       overdueUnresolved: false
     });
 
-    await pageConfig.onConfirmActivityProceeding.call(ctx, {
-      currentTarget: {
-        dataset: {
-          activityId: 'expired_pending'
-        }
-      }
-    });
-
-    expect(notifyActivityParticipants).toHaveBeenCalledWith('expired_pending', 'proceeding');
-    expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'toast.activityConfirmed',
-      icon: 'success'
-    });
+    expect(notifyActivityParticipants).not.toHaveBeenCalled();
   });
 });

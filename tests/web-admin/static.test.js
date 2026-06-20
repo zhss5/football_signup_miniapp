@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-user-button-columns';
+const WEB_ADMIN_ASSET_VERSION = '20260620-avatar-lifecycle-stats';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -55,6 +55,9 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
 
   expect(html).toContain('data-action="search-users"');
   expect(html).toContain('data-users-search-button');
+  expect(html).toContain('data-user-avatar-preview');
+  expect(html).toContain('data-user-avatar-preview-image');
+  expect(html).toContain('data-action="close-user-avatar-preview"');
   const usersTableStart = html.indexOf('class="data-table users-table"');
   const usersTableEnd = html.indexOf('<tbody data-users-table>', usersTableStart);
   const usersHeaderBlock = usersTableStart >= 0 && usersTableEnd > usersTableStart
@@ -136,6 +139,9 @@ test('web admin user management row actions have stable spacing', () => {
 
   expect(css).toContain('.manager-alias-control');
   expect(css).toContain('.role-management-control');
+  expect(css).toContain('.user-display');
+  expect(css).toContain('.user-avatar-button');
+  expect(css).toContain('.avatar-preview-modal');
   expect(css).toContain('gap: 10px');
   expect(css).toContain('gap: 14px');
   expect(css).not.toContain('.table-actions');

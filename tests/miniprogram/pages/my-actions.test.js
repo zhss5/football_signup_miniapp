@@ -24,7 +24,8 @@ describe('my activities page', () => {
     expect(wxml).toContain('created-activity-card');
     expect(wxml).toContain('activity-action-footer');
     expect(wxml).toContain('overdue-unresolved-panel');
-    expect(wxml).toContain('catchtap="onConfirmActivityProceeding"');
+    expect(wxml).not.toContain('catchtap="onConfirmActivityProceeding"');
+    expect(wxml).not.toContain('catchtap="onCancelActivity"');
     expect(wxml).toContain('bindtap="loadMoreMyActivities"');
     expect(wxml).toContain('web-admin-login-card');
     expect(wxml).toContain('bindtap="onConfirmWebAdminLogin"');
@@ -35,6 +36,8 @@ describe('my activities page', () => {
     expect(js).toContain("languageOptions:");
     expect(js).toContain("locale:");
     expect(js).toContain('filterLabel');
+    expect(js).not.toContain('onConfirmActivityProceeding');
+    expect(js).not.toContain('onCancelActivity');
     expect(wxss).toContain('.primary-tab-shell');
     expect(wxss).toContain('.filter-group');
     expect(wxss).toContain('.created-activity-card');

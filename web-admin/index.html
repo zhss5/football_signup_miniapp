@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-user-button-columns" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-avatar-lifecycle-stats" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -330,10 +330,31 @@
                 </table>
               </div>
             </section>
-          </main>
-        </div>
+            </main>
+          </div>
 
-        <template id="role-control-template">
+          <div
+            data-user-avatar-preview
+            class="avatar-preview-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="用户头像预览"
+            hidden
+          >
+            <div class="avatar-preview-dialog">
+              <button
+                type="button"
+                class="modal-close-button"
+                data-action="close-user-avatar-preview"
+                aria-label="关闭头像预览"
+              >
+                关闭
+              </button>
+              <img data-user-avatar-preview-image alt="" />
+            </div>
+          </div>
+
+          <template id="role-control-template">
           <label class="role-toggle">
             <input type="checkbox" data-role="organizer" />
                 <span>组织者</span>
@@ -347,13 +368,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-user-button-columns"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-user-button-columns"></script>
-    <script src="./src/roles.js?v=20260620-user-button-columns"></script>
-    <script src="./src/api.js?v=20260620-user-button-columns"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-user-button-columns"></script>
-    <script src="./src/user-management.js?v=20260620-user-button-columns"></script>
-    <script src="./src/activity-management.js?v=20260620-user-button-columns"></script>
-    <script src="./src/app.js?v=20260620-user-button-columns"></script>
+    <script src="./config.test.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/roles.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/api.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/user-management.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/activity-management.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./src/app.js?v=20260620-avatar-lifecycle-stats"></script>
   </body>
 </html>

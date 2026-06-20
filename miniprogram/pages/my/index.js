@@ -1,10 +1,8 @@
 const {
-  cancelActivity,
   deleteActivity,
   listActivities,
   resolveActivityCoverImages
 } = require('../../services/activity-service');
-const { notifyActivityParticipants } = require('../../services/notification-service');
 const { ensureUserProfile } = require('../../services/user-service');
 const { confirmWebAdminLogin } = require('../../services/web-admin-service');
 const { buildActivityCardVm } = require('../../utils/formatters');
@@ -398,56 +396,6 @@ Page({
     const locale = event.currentTarget.dataset.locale;
     getApp().setLocale(locale);
     this.onShow();
-  },
-
-  async onCancelActivity(event) {
-    const activityId = event.currentTarget.dataset.activityId;
-    const translate = makeTranslator(this.data.locale);
-    const confirmed = await new Promise(resolve => {
-      wx.showModal({
-        title: translate('modal.cancelActivity.title'),
-        content: translate('modal.cancelActivity.content'),
-        success: result => resolve(Boolean(result.confirm))
-      });
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await cancelActivity(activityId);
-      await this.onShow();
-    } catch (error) {
-      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
-    }
-  },
-
-  async onConfirmActivityProceeding(event) {
-    const activityId = event.currentTarget.dataset.activityId;
-    const translate = makeTranslator(this.data.locale);
-    const confirmed = await new Promise(resolve => {
-      wx.showModal({
-        title: translate('modal.confirmProceeding.title'),
-        content: translate('modal.confirmProceeding.content'),
-        success: result => resolve(Boolean(result.confirm))
-      });
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await notifyActivityParticipants(activityId, 'proceeding');
-      wx.showToast({
-        title: translate('toast.activityConfirmed'),
-        icon: 'success'
-      });
-      await this.onShow();
-    } catch (error) {
-      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
-    }
   },
 
   async onDeleteActivity(event) {

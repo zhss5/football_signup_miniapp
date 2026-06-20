@@ -454,3 +454,70 @@ test('notifyActivityParticipants cancels the activity and skips recipients alrea
     skipped: 1
   });
 });
+
+test('notifyActivityParticipants cancels after activity start without sending cancellation notices', async () => {
+  const fakeDb = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Saturday 8-10',
+        startAt: '2026-04-19T09:00:00.000Z',
+        organizerOpenId: 'openid_owner',
+        status: 'published'
+      }
+    },
+    users: {
+      openid_owner: {
+        _id: 'openid_owner',
+        roles: ['organizer']
+      }
+    },
+    registrations: {
+      reg_1: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        status: 'joined'
+      }
+    },
+    notificationSubscriptions: {
+      sub_1: {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        templateKey: 'activity_notice',
+        templateId: 'tmpl_123',
+        status: 'accepted'
+      }
+    }
+  });
+  const sendSubscribeMessage = jest.fn().mockResolvedValue({ errCode: 0 });
+
+  const result = await notifyActivityParticipants.main(
+    {
+      activityId: 'activity_1',
+      notificationType: 'cancelled'
+    },
+    { OPENID: 'openid_owner' },
+    {
+      db: fakeDb,
+      now: '2026-04-19T10:00:00.000Z',
+      sendSubscribeMessage
+    }
+  );
+
+  expect(sendSubscribeMessage).not.toHaveBeenCalled();
+  expect(result).toMatchObject({
+    cancelled: true,
+    totalRecipients: 1,
+    sent: 0,
+    failed: 0,
+    skipped: 1
+  });
+  expect(fakeDb.writes.adds).toContainEqual({
+    activityId: 'activity_1',
+    recipientOpenId: 'openid_player',
+    notificationType: 'cancelled',
+    status: 'skipped',
+    reason: 'activity-already-started',
+    createdAt: '2026-04-19T10:00:00.000Z'
+  });
+});

@@ -1656,6 +1656,32 @@ describe('activity detail page', () => {
     expect(ctx.reload).toHaveBeenCalled();
   });
 
+  test('onCancelActivity does not send cancellation notices after activity start', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-13T13:00:00.000Z'));
+    cancelActivity.mockResolvedValue({
+      status: 'cancelled'
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true });
+    });
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        activity: {
+          startAt: '2026-05-13T12:00:00.000Z'
+        }
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onCancelActivity.call(ctx);
+
+    expect(cancelActivity).toHaveBeenCalledWith('activity_123');
+    expect(notifyActivityParticipants).not.toHaveBeenCalled();
+    expect(ctx.reload).toHaveBeenCalled();
+  });
+
   test('onShareAppMessage shares the current activity detail page with activity time', () => {
     const ctx = {
       data: {

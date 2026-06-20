@@ -1339,10 +1339,28 @@ function createLocalCloudClient(options = {}) {
         item.status === 'accepted' &&
         joinedOpenIds.has(item.userOpenId)
     );
+    const startAt = Date.parse(activity.startAt || '');
+    const stampAt = Date.parse(stamp);
+    const alreadyStarted = Number.isFinite(startAt) && Number.isFinite(stampAt) && stampAt >= startAt;
     let sent = 0;
     let skipped = 0;
 
     subscriptions.forEach(subscription => {
+      if (alreadyStarted) {
+        state.notificationLogs.push({
+          _id: nextId(state, 'notification_log'),
+          activityId: payload.activityId,
+          recipientOpenId: subscription.userOpenId,
+          notificationType: payload.notificationType,
+          templateId: subscription.templateId,
+          status: 'skipped',
+          reason: 'activity-already-started',
+          createdAt: stamp
+        });
+        skipped += 1;
+        return;
+      }
+
       if (
         hasNotificationLog(
           state,

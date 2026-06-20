@@ -70,6 +70,15 @@ function applyPageI18n(page) {
   return makeTranslator(locale);
 }
 
+function shouldNotifyBeforeActivityStart(activity = {}, now = Date.now()) {
+  const startAt = Date.parse(activity.startAt || '');
+  if (!Number.isFinite(startAt)) {
+    return true;
+  }
+
+  return now < startAt;
+}
+
 function buildLocationMapState(activity = {}) {
   const location = activity.location;
   const hasCoordinates =
@@ -927,13 +936,15 @@ Page({
 
     try {
       await cancelActivity(this.data.activityId);
-      try {
-        await notifyActivityParticipants(this.data.activityId, 'cancelled');
-      } catch (notifyError) {
-        wx.showToast({
-          title: translate('toast.notificationFailed'),
-          icon: 'none'
-        });
+      if (shouldNotifyBeforeActivityStart(this.data.activity)) {
+        try {
+          await notifyActivityParticipants(this.data.activityId, 'cancelled');
+        } catch (notifyError) {
+          wx.showToast({
+            title: translate('toast.notificationFailed'),
+            icon: 'none'
+          });
+        }
       }
       await this.reload();
     } catch (error) {

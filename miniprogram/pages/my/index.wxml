@@ -62,35 +62,8 @@
         <view wx:if="{{item.overdueUnresolved}}" class="overdue-unresolved-panel">
           <text class="overdue-title">{{i18n.my.overdueUnresolvedTitle}}</text>
           <text class="overdue-copy">{{i18n.my.overdueUnresolvedCopy}}</text>
-          <view class="overdue-action-row">
-            <button
-              size="mini"
-              class="activity-action-button"
-              data-activity-id="{{item._id}}"
-              catchtap="onConfirmActivityProceeding"
-            >
-              {{i18n.activity.actions.confirmProceeding}}
-            </button>
-            <button
-              size="mini"
-              class="activity-action-button"
-              data-activity-id="{{item._id}}"
-              catchtap="onCancelActivity"
-            >
-              {{i18n.activity.actions.cancelActivity}}
-            </button>
-          </view>
         </view>
-        <view wx:if="{{item.canCancelActivity || item.canDeleteActivity}}" class="activity-action-footer">
-          <button
-            wx:if="{{item.canCancelActivity}}"
-            size="mini"
-            class="activity-action-button"
-            data-activity-id="{{item._id}}"
-            catchtap="onCancelActivity"
-          >
-            {{i18n.activity.actions.cancelActivity}}
-          </button>
+        <view wx:if="{{item.canDeleteActivity}}" class="activity-action-footer">
           <button
             wx:if="{{item.canDeleteActivity}}"
             size="mini"

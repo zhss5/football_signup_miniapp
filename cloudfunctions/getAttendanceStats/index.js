@@ -21,8 +21,13 @@ function parseTimestamp(value) {
   return Number.isFinite(timestamp) ? timestamp : null;
 }
 
-function isConfirmedActivityInRange(activity, rangeStart, rangeEnd) {
-  if (!activity || activity.confirmStatus !== 'confirmed') {
+function getNowTimestamp(deps = {}) {
+  const injected = parseTimestamp(deps.now);
+  return injected === null ? Date.now() : injected;
+}
+
+function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt) {
+  if (!activity) {
     return false;
   }
 
@@ -43,7 +48,7 @@ function isConfirmedActivityInRange(activity, rangeStart, rangeEnd) {
     return false;
   }
 
-  return true;
+  return activity.confirmStatus === 'confirmed' || startAt <= nowAt;
 }
 
 function getParticipantName(registration) {
@@ -95,6 +100,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const rangeStart = parseTimestamp(payload.startAt);
   const rangeEnd = parseTimestamp(payload.endAt);
+  const nowAt = getNowTimestamp(deps);
   const [activities, registrations, users] = await Promise.all([
     loadCollection(db, COLLECTIONS.ACTIVITIES),
     loadCollection(db, COLLECTIONS.REGISTRATIONS),
@@ -109,7 +115,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   }, {});
   const activityById = activities.reduce((acc, activity) => {
     if (
-      isConfirmedActivityInRange(activity, rangeStart, rangeEnd) &&
+      isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt) &&
       (callerIsAdmin || activity.organizerOpenId === openid)
     ) {
       acc[activity._id] = activity;

@@ -507,7 +507,7 @@
 
           return (
             `<tr data-openid="${escapeHtml(row.openid)}">` +
-            `<td>${escapeHtml(row.displayName)}</td>` +
+            `<td>${renderUserCell(row)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
             `<td><div class="manager-alias-control">` +
             `<input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
@@ -525,6 +525,34 @@
           );
         })
         .join('');
+    }
+
+    function getAvatarText(row = {}) {
+      const source = String(row.displayName || row.openid || '').trim();
+      return source ? Array.from(source)[0].toUpperCase() : '?';
+    }
+
+    function renderUserCell(row = {}) {
+      const displayName = String(row.displayName || row.openid || '').trim();
+      const avatarUrl = String(row.avatarUrl || '').trim();
+      const avatar = avatarUrl
+        ? (
+          `<button type="button" class="user-avatar-button" ` +
+          `data-action="preview-user-avatar" ` +
+          `data-avatar-url="${escapeHtml(avatarUrl)}" ` +
+          `data-avatar-name="${escapeHtml(displayName)}" ` +
+          `aria-label="查看${escapeHtml(displayName)}头像">` +
+          `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" />` +
+          `</button>`
+        )
+        : `<span class="user-avatar-fallback">${escapeHtml(getAvatarText(row))}</span>`;
+
+      return (
+        `<div class="user-display">` +
+        avatar +
+        `<span class="user-display-name">${escapeHtml(displayName)}</span>` +
+        `</div>`
+      );
     }
 
     async function searchUsers() {
@@ -730,6 +758,33 @@
           `</tr>`
         ))
         .join('');
+    }
+
+    function showUserAvatarPreview(avatarUrl, displayName) {
+      const modal = query('[data-user-avatar-preview]');
+      const image = query('[data-user-avatar-preview-image]');
+      const url = String(avatarUrl || '').trim();
+      const name = String(displayName || '').trim() || '用户头像';
+
+      if (!modal || !image || !url) {
+        return;
+      }
+
+      image.setAttribute('src', url);
+      image.setAttribute('alt', name);
+      setHidden(modal, false);
+    }
+
+    function closeUserAvatarPreview() {
+      const modal = query('[data-user-avatar-preview]');
+      const image = query('[data-user-avatar-preview-image]');
+
+      if (image) {
+        image.setAttribute('src', '');
+        image.setAttribute('alt', '');
+      }
+
+      setHidden(modal, true);
     }
 
     function getFilteredActivityDetailLogRows() {
@@ -1327,6 +1382,16 @@
               renderUsersStatus(message);
               renderIdentity(message);
             });
+          }
+
+          if (button.dataset.action === 'preview-user-avatar') {
+            showUserAvatarPreview(button.dataset.avatarUrl, button.dataset.avatarName);
+            return;
+          }
+
+          if (button.dataset.action === 'close-user-avatar-preview') {
+            closeUserAvatarPreview();
+            return;
           }
 
           if (button.dataset.action === 'close-activity-detail') {

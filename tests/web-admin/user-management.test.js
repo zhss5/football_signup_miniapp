@@ -26,6 +26,7 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
       {
         _id: 'openid_player',
         preferredName: 'Player Li',
+        avatarUrl: 'https://example.com/player.jpg',
         managerAlias: 'Left foot',
         roles: ['user']
       }
@@ -40,6 +41,7 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
     {
       openid: 'openid_player',
       displayName: 'Player Li',
+      avatarUrl: 'https://example.com/player.jpg',
       managerAlias: 'Left foot',
       rolesText: 'user',
       roleControls: [

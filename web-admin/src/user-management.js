@@ -40,6 +40,7 @@
       return {
         openid: user._id || '',
         displayName: getDisplayName(user),
+        avatarUrl: String(user.avatarUrl || '').trim(),
         managerAlias: String(user.managerAlias || '').trim(),
         rolesText: normalizedRoles.join(', '),
         roleControls: roles.buildRoleControls(operator, {

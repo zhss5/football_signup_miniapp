@@ -161,6 +161,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-current-user-openid]': createElement(),
     '[data-current-view-title]': createElement(),
     '[data-users-status]': createElement(),
+    '[data-user-avatar-preview]': createElement(),
+    '[data-user-avatar-preview-image]': createElement(),
     '[data-action="search-users"]': createElement({ action: 'search-users' }),
     '[data-action="search-activities"]': createElement({ action: 'search-activities' }),
     '[data-action="load-attendance-stats"]': createElement({
@@ -836,6 +838,7 @@ test('user rows render Chinese role labels without changing role values', async 
           {
             _id: 'openid_player',
             preferredName: '张三',
+            avatarUrl: 'https://example.com/avatar.jpg',
             managerAlias: 'Left foot',
             roles: ['user', 'organizer']
           }
@@ -848,6 +851,11 @@ test('user rows render Chinese role labels without changing role values', async 
 
   const html = elements['[data-users-table]'].innerHTML;
   expect(html).toContain('普通用户、组织者');
+  expect(html).toContain('class="user-display"');
+  expect(html).toContain('class="user-avatar-button"');
+  expect(html).toContain('data-action="preview-user-avatar"');
+  expect(html).toContain('data-avatar-url="https://example.com/avatar.jpg"');
+  expect(html).toContain('src="https://example.com/avatar.jpg"');
   expect(html).toContain('data-role="organizer"');
   expect(html).toContain('data-user-manager-alias="openid_player"');
   expect(html).toContain('value="Left foot"');
@@ -866,6 +874,46 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
+});
+
+test('clicking a user avatar opens the large avatar preview', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'openid_player',
+            preferredName: 'Alex',
+            avatarUrl: 'https://example.com/avatar-large.jpg',
+            roles: ['user']
+          }
+        ]
+      })
+    }
+  );
+
+  elements['[data-user-avatar-preview]'].hidden = true;
+
+  await app.start();
+  appRoot.click(createElement({
+    action: 'preview-user-avatar',
+    avatarUrl: 'https://example.com/avatar-large.jpg',
+    avatarName: 'Alex'
+  }));
+
+  expect(elements['[data-user-avatar-preview]'].hidden).toBe(false);
+  expect(elements['[data-user-avatar-preview-image]'].attributes.src).toBe(
+    'https://example.com/avatar-large.jpg'
+  );
+  expect(elements['[data-user-avatar-preview-image]'].attributes.alt).toBe('Alex');
+
+  appRoot.click(createElement({ action: 'close-user-avatar-preview' }));
+
+  expect(elements['[data-user-avatar-preview]'].hidden).toBe(true);
 });
 
 test('user search button shows spinner feedback while the request is pending', async () => {
