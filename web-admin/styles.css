@@ -290,7 +290,6 @@ select {
 
 .toolbar button,
 .data-table button,
-.detail-header button,
 .log-actions button {
   height: 38px;
   padding: 0 14px;
@@ -309,7 +308,6 @@ select {
 
 .toolbar button:disabled,
 .data-table button:disabled,
-.detail-header button:disabled,
 .log-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.78;
@@ -410,32 +408,108 @@ select {
   cursor: wait;
 }
 
-.detail-panel {
-  margin: 20px 0 24px;
+.activity-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.36);
+}
+
+.activity-detail-dialog {
+  width: min(1180px, 100%);
+  max-height: min(780px, calc(100vh - 48px));
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(23, 32, 51, 0.2);
 }
 
 .detail-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
-.detail-header h3 {
+.detail-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #66758d;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.detail-header h4 {
   margin: 0;
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.modal-close-button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #46546b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  border-color: #2e6bd9;
+  color: #1d4fae;
 }
 
 .detail-subsection {
-  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5ebf4;
+}
+
+.detail-subsection + .detail-subsection {
+  margin-top: 18px;
+}
+
+.detail-subsection-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 
 .detail-subsection h4 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 16px;
   line-height: 24px;
+}
+
+.detail-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 240px;
+  color: #46546b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.detail-search input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
 }
 
 .export-output {
@@ -515,9 +589,24 @@ select {
   }
 
   .detail-header,
+  .detail-subsection-header,
   .log-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .activity-detail-modal {
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .activity-detail-dialog {
+    max-height: calc(100vh - 24px);
+    padding: 16px;
+  }
+
+  .detail-search {
+    min-width: 0;
   }
 
   .log-grid {

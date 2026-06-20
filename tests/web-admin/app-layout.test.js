@@ -134,6 +134,8 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-attendance-stats-empty]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
+    '[data-roster-keyword]': createElement(),
+    '[data-activity-detail-logs-keyword]': createElement(),
     '[data-roster-table]': createElement(),
     '[data-activity-detail-logs-table]': createElement(),
     '[data-export-output]': createElement(),
@@ -825,6 +827,120 @@ test('activity detail loads and renders current activity operation logs', async 
   expect(html).toContain('openid_admin');
   expect(html).toContain('2026-06-10 20:00');
   expect(html).not.toContain('2026-06-10T12:00:00.000Z');
+});
+
+test('activity detail close action hides the modal', async () => {
+  const { app, appRoot, elements } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+  const closeButton = createElement({ action: 'close-activity-detail' });
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  expect(elements['[data-activity-detail]'].hidden).toBe(false);
+
+  appRoot.click(closeButton);
+
+  expect(elements['[data-activity-detail]'].hidden).toBe(true);
+});
+
+test('activity detail filters roster rows by keyword inside the modal', async () => {
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: {
+          title: 'Friday Football'
+        },
+        teams: [
+          {
+            _id: 'team_red',
+            teamName: 'Red',
+            members: [
+              {
+                registrationId: 'reg_1',
+                userOpenId: 'openid_alex',
+                signupName: 'Alex',
+                managerAlias: 'Left foot',
+                preferredPositions: ['forward'],
+                proxyRegistration: false,
+                attendanceStatus: 'present'
+              },
+              {
+                registrationId: 'reg_2',
+                userOpenId: 'openid_ben',
+                signupName: 'Ben',
+                managerAlias: 'Goalkeeper',
+                preferredPositions: ['goalkeeper'],
+                proxyRegistration: false,
+                attendanceStatus: 'absent'
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  expect(elements['[data-roster-table]'].innerHTML).toContain('Alex');
+  expect(elements['[data-roster-table]'].innerHTML).toContain('Ben');
+
+  elements['[data-roster-keyword]'].value = 'Goalkeeper';
+  elements['[data-roster-keyword]'].eventHandlers.input();
+
+  const html = elements['[data-roster-table]'].innerHTML;
+  expect(html).not.toContain('Alex');
+  expect(html).toContain('Ben');
+});
+
+test('activity detail filters activity log rows by keyword inside the modal', async () => {
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivityLogs: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'log_1',
+            action: 'signup_joined',
+            operatorOpenId: 'openid_alex',
+            targetOpenId: 'openid_alex',
+            targetName: 'Alex',
+            teamName: 'Red',
+            createdAt: '2026-06-10T10:00:00.000Z'
+          },
+          {
+            _id: 'log_2',
+            action: 'signup_cancelled',
+            operatorOpenId: 'openid_ben',
+            targetOpenId: 'openid_ben',
+            targetName: 'Ben',
+            createdAt: '2026-06-10T11:00:00.000Z'
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  expect(elements['[data-activity-detail-logs-table]'].innerHTML).toContain('Alex');
+  expect(elements['[data-activity-detail-logs-table]'].innerHTML).toContain('Ben');
+
+  elements['[data-activity-detail-logs-keyword]'].value = 'openid_ben';
+  elements['[data-activity-detail-logs-keyword]'].eventHandlers.input();
+
+  const html = elements['[data-activity-detail-logs-table]'].innerHTML;
+  expect(html).not.toContain('Alex');
+  expect(html).toContain('Ben');
 });
 
 test('activity detail loads all activity operation log pages', async () => {

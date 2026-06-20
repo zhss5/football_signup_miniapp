@@ -114,6 +114,18 @@
     return status || '';
   }
 
+  function normalizeKeyword(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function fieldsMatchKeyword(fields, keyword) {
+    if (!keyword) {
+      return true;
+    }
+
+    return fields.some(field => String(field || '').toLowerCase().includes(keyword));
+  }
+
   function createWebAdminApp(options = {}) {
     const runtimeRoot = options.root || (typeof document !== 'undefined' ? document : null);
     const appRoot = options.appRoot ||
@@ -185,6 +197,8 @@
       statsRows: [],
       activityLogRows: [],
       activityDetailLogRows: [],
+      activityDetailRosterKeyword: '',
+      activityDetailLogKeyword: '',
       notificationLogRows: [],
       exportCsv: '',
       activeView: DEFAULT_ADMIN_VIEW
@@ -558,13 +572,37 @@
         .join('');
     }
 
+    function getFilteredRosterRows() {
+      const keyword = normalizeKeyword(state.activityDetailRosterKeyword);
+      const rows = activityUi.buildAttendanceRows(state.rosterRows);
+
+      if (!keyword) {
+        return rows;
+      }
+
+      return rows.filter(row =>
+        fieldsMatchKeyword([
+          row.teamName,
+          row.signupName,
+          row.managerAlias,
+          row.preferredPositions,
+          formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
+          row.userOpenId,
+          row.registrationId,
+          row.proxyRegistration ? '是' : '否',
+          row.attendanceStatus,
+          formatStatusText(row.attendanceStatus)
+        ], keyword)
+      );
+    }
+
     function renderRosterRows() {
       const table = query('[data-roster-table]');
       if (!table) {
         return;
       }
 
-      table.innerHTML = activityUi.buildAttendanceRows(state.rosterRows)
+      table.innerHTML = getFilteredRosterRows()
         .map(row => (
           `<tr data-registration-id="${escapeHtml(row.registrationId)}">` +
           `<td>${escapeHtml(row.teamName)}</td>` +
@@ -637,13 +675,34 @@
         .join('');
     }
 
+    function getFilteredActivityDetailLogRows() {
+      const keyword = normalizeKeyword(state.activityDetailLogKeyword);
+
+      if (!keyword) {
+        return state.activityDetailLogRows;
+      }
+
+      return state.activityDetailLogRows.filter(row =>
+        fieldsMatchKeyword([
+          row.id,
+          row.summary,
+          row.type,
+          row.operatorOpenId,
+          row.targetOpenId,
+          row.targetName,
+          row.status,
+          row.createdAt
+        ], keyword)
+      );
+    }
+
     function renderActivityDetailLogRows() {
       const table = query('[data-activity-detail-logs-table]');
       if (!table) {
         return;
       }
 
-      table.innerHTML = state.activityDetailLogRows
+      table.innerHTML = getFilteredActivityDetailLogRows()
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
@@ -700,6 +759,25 @@
       return activityUi.buildActivityLogRows(items);
     }
 
+    function resetActivityDetailFilters() {
+      state.activityDetailRosterKeyword = '';
+      state.activityDetailLogKeyword = '';
+
+      const rosterKeyword = query('[data-roster-keyword]');
+      if (rosterKeyword) {
+        rosterKeyword.value = '';
+      }
+
+      const detailLogsKeyword = query('[data-activity-detail-logs-keyword]');
+      if (detailLogsKeyword) {
+        detailLogsKeyword.value = '';
+      }
+    }
+
+    function closeActivityDetail() {
+      setHidden(query('[data-activity-detail]'), true);
+    }
+
     async function searchActivities() {
       state.activitySearch = getActivityFormValues();
       const result = await api.listActivities(state.activitySearch);
@@ -716,6 +794,7 @@
       state.rosterRows = activityUi.buildRosterRows(detail);
       state.activityDetailLogRows = activityDetailLogRows;
       state.exportCsv = '';
+      resetActivityDetailFilters();
 
       const detailPanel = query('[data-activity-detail]');
       setHidden(detailPanel, false);
@@ -846,6 +925,8 @@
       state.statsRows = [];
       state.activityLogRows = [];
       state.activityDetailLogRows = [];
+      state.activityDetailRosterKeyword = '';
+      state.activityDetailLogKeyword = '';
       state.notificationLogRows = [];
       state.exportCsv = '';
 
@@ -966,6 +1047,24 @@
         });
       }
 
+      const rosterKeyword = query('[data-roster-keyword]');
+      if (rosterKeyword) {
+        rosterKeyword.addEventListener('input', event => {
+          const target = event && event.target ? event.target : rosterKeyword;
+          state.activityDetailRosterKeyword = target.value || '';
+          renderRosterRows();
+        });
+      }
+
+      const detailLogsKeyword = query('[data-activity-detail-logs-keyword]');
+      if (detailLogsKeyword) {
+        detailLogsKeyword.addEventListener('input', event => {
+          const target = event && event.target ? event.target : detailLogsKeyword;
+          state.activityDetailLogKeyword = target.value || '';
+          renderActivityDetailLogRows();
+        });
+      }
+
       if (appRoot) {
         appRoot.addEventListener('click', event => {
           const navButton = event.target.closest('[data-nav-target]');
@@ -999,6 +1098,11 @@
               renderUsersStatus(message);
               renderIdentity(message);
             });
+          }
+
+          if (button.dataset.action === 'close-activity-detail') {
+            closeActivityDetail();
+            return;
           }
 
           if (button.dataset.action === 'load-activity-detail') {
