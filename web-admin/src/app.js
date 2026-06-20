@@ -37,6 +37,7 @@
 
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
   const DEFAULT_ADMIN_VIEW = 'activities';
+  const ACTIVITY_LOG_PAGE_LIMIT = 50;
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',
@@ -183,6 +184,7 @@
       rosterRows: [],
       statsRows: [],
       activityLogRows: [],
+      activityDetailLogRows: [],
       notificationLogRows: [],
       exportCsv: '',
       activeView: DEFAULT_ADMIN_VIEW
@@ -626,9 +628,27 @@
       table.innerHTML = state.activityLogRows
         .map(row => (
           `<tr>` +
-          `<td>${escapeHtml(row.type)}</td>` +
+          `<td>${escapeHtml(row.summary || row.type)}</td>` +
           `<td><code>${escapeHtml(row.operatorOpenId)}</code></td>` +
-          `<td><code>${escapeHtml(row.targetOpenId)}</code></td>` +
+          `<td>${escapeHtml(row.targetName || row.targetOpenId)}</td>` +
+          `<td>${escapeHtml(row.createdAt)}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function renderActivityDetailLogRows() {
+      const table = query('[data-activity-detail-logs-table]');
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = state.activityDetailLogRows
+        .map(row => (
+          `<tr>` +
+          `<td>${escapeHtml(row.summary || row.type)}</td>` +
+          `<td><code>${escapeHtml(row.operatorOpenId)}</code></td>` +
+          `<td>${escapeHtml(row.targetName || row.targetOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
           `</tr>`
         ))
@@ -657,6 +677,29 @@
       return state.selectedActivityId || '';
     }
 
+    async function loadAllActivityLogRows(activityId) {
+      const items = [];
+      let skip = 0;
+
+      for (;;) {
+        const result = await api.listActivityLogs({
+          activityId,
+          limit: ACTIVITY_LOG_PAGE_LIMIT,
+          skip
+        });
+        const pageItems = result.items || [];
+        items.push(...pageItems);
+
+        if (!result.hasMore || pageItems.length === 0) {
+          break;
+        }
+
+        skip += ACTIVITY_LOG_PAGE_LIMIT;
+      }
+
+      return activityUi.buildActivityLogRows(items);
+    }
+
     async function searchActivities() {
       state.activitySearch = getActivityFormValues();
       const result = await api.listActivities(state.activitySearch);
@@ -665,9 +708,13 @@
     }
 
     async function loadActivityDetail(activityId) {
-      const detail = await api.getActivityDetail(activityId);
+      const [detail, activityDetailLogRows] = await Promise.all([
+        api.getActivityDetail(activityId),
+        loadAllActivityLogRows(activityId)
+      ]);
       state.selectedActivityId = activityId;
       state.rosterRows = activityUi.buildRosterRows(detail);
+      state.activityDetailLogRows = activityDetailLogRows;
       state.exportCsv = '';
 
       const detailPanel = query('[data-activity-detail]');
@@ -684,6 +731,7 @@
       }
 
       renderRosterRows();
+      renderActivityDetailLogRows();
     }
 
     async function confirmActivity(activityId) {
@@ -759,7 +807,7 @@
     async function loadActivityLogs() {
       const result = await api.listActivityLogs({
         activityId: getSelectedActivityId(),
-        limit: 50,
+        limit: ACTIVITY_LOG_PAGE_LIMIT,
         skip: 0
       });
       state.activityLogRows = activityUi.buildActivityLogRows(result.items || []);
@@ -797,6 +845,7 @@
       state.rosterRows = [];
       state.statsRows = [];
       state.activityLogRows = [];
+      state.activityDetailLogRows = [];
       state.notificationLogRows = [];
       state.exportCsv = '';
 

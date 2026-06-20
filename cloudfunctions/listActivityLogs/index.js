@@ -50,8 +50,28 @@ function compareLogsByCreatedAtDesc(left, right) {
   return String(right._id || '').localeCompare(String(left._id || ''));
 }
 
-function toSafeLog(log, activityById) {
+function buildCollectionMap(items) {
+  return items.reduce((acc, item) => {
+    if (item && item._id) {
+      acc[item._id] = item;
+    }
+
+    return acc;
+  }, {});
+}
+
+function pickText(...values) {
+  const value = values.find(item => String(item || '').trim());
+  return value ? String(value).trim() : '';
+}
+
+function toSafeLog(log, activityById, registrationById, teamById) {
   const activity = activityById[log.activityId] || {};
+  const registration = registrationById[log.registrationId] || {};
+  const teamId = pickText(log.teamId, registration.teamId);
+  const fromTeamId = log.fromTeamId || '';
+  const toTeamId = log.toTeamId || '';
+  const targetOpenId = log.targetOpenId || log.userOpenId || registration.userOpenId || '';
 
   return {
     _id: log._id || '',
@@ -59,11 +79,19 @@ function toSafeLog(log, activityById) {
     activityTitle: activity.title || '',
     action: log.action || '',
     operatorOpenId: log.operatorOpenId || '',
-    targetOpenId: log.targetOpenId || log.userOpenId || '',
+    targetOpenId,
+    targetName: pickText(
+      log.after && log.after.signupName,
+      registration.signupName,
+      targetOpenId
+    ),
     registrationId: log.registrationId || '',
-    teamId: log.teamId || '',
-    fromTeamId: log.fromTeamId || '',
-    toTeamId: log.toTeamId || '',
+    teamId,
+    teamName: teamById[teamId] ? teamById[teamId].teamName || '' : '',
+    fromTeamId,
+    fromTeamName: teamById[fromTeamId] ? teamById[fromTeamId].teamName || '' : '',
+    toTeamId,
+    toTeamName: teamById[toTeamId] ? teamById[toTeamId].teamName || '' : '',
     before: log.before || {},
     after: log.after || {},
     createdAt: log.createdAt || ''
@@ -85,10 +113,12 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
 
-  const [caller, activities, logs] = await Promise.all([
+  const [caller, activities, logs, registrations, teams] = await Promise.all([
     loadDoc(db, COLLECTIONS.USERS, openid),
     loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS)
+    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS),
+    loadCollection(db, COLLECTIONS.REGISTRATIONS),
+    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS)
   ]);
 
   const callerIsAdmin = isAdmin(caller);
@@ -97,13 +127,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('Only the organizer or an admin can list activity logs');
   }
 
-  const activityById = activities.reduce((acc, activity) => {
-    if (activity && activity._id) {
-      acc[activity._id] = activity;
-    }
-
-    return acc;
-  }, {});
+  const activityById = buildCollectionMap(activities);
+  const registrationById = buildCollectionMap(registrations);
+  const teamById = buildCollectionMap(teams);
 
   let allowedActivityIds;
   if (activityId) {
@@ -134,7 +160,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .filter(log => !action || log.action === action)
     .filter(log => !targetOpenId || log.targetOpenId === targetOpenId || log.userOpenId === targetOpenId)
     .sort(compareLogsByCreatedAtDesc);
-  const page = filtered.slice(skip, skip + limit).map(log => toSafeLog(log, activityById));
+  const page = filtered
+    .slice(skip, skip + limit)
+    .map(log => toSafeLog(log, activityById, registrationById, teamById));
 
   return {
     items: page,

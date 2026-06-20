@@ -88,12 +88,87 @@
     }));
   }
 
+  const ATTENDANCE_LABELS = {
+    absent: '缺勤',
+    present: '出勤'
+  };
+
+  function formatBlankText(value) {
+    const text = String(value || '').trim();
+    return text || '空';
+  }
+
+  function getLogTargetName(log) {
+    return String(
+      log.targetName ||
+      (log.after && log.after.signupName) ||
+      log.targetOpenId ||
+      log.userOpenId ||
+      log.registrationId ||
+      '报名人'
+    ).trim();
+  }
+
+  function formatTeamSuffix(teamName) {
+    const text = String(teamName || '').trim();
+    return text ? ` ${text}` : '';
+  }
+
+  function buildActivityLogSummary(log = {}) {
+    const targetName = getLogTargetName(log);
+
+    if (log.action === 'signup_joined') {
+      return `${targetName} 报名${formatTeamSuffix(log.teamName)}`;
+    }
+
+    if (log.action === 'signup_rejoined') {
+      return `${targetName} 重新报名${formatTeamSuffix(log.teamName)}`;
+    }
+
+    if (log.action === 'signup_cancelled') {
+      return `${targetName} 取消报名`;
+    }
+
+    if (log.action === 'proxy_signup_created') {
+      return `${targetName} 代报名${formatTeamSuffix(log.teamName)}`;
+    }
+
+    if (log.action === 'registration_removed') {
+      return `${targetName} 被移除`;
+    }
+
+    if (log.action === 'registration_moved') {
+      const fromTeam = String(log.fromTeamName || log.fromTeamId || '').trim();
+      const toTeam = String(log.toTeamName || log.toTeamId || '').trim();
+      if (fromTeam && toTeam) {
+        return `${targetName} 从 ${fromTeam} 换到 ${toTeam}`;
+      }
+
+      return `${targetName} 换队`;
+    }
+
+    if (log.action === 'manager_alias_update') {
+      const beforeAlias = log.before && log.before.managerAlias;
+      const afterAlias = log.after && log.after.managerAlias;
+      return `${targetName} 备注从 ${formatBlankText(beforeAlias)} 改为 ${formatBlankText(afterAlias)}`;
+    }
+
+    if (log.action === 'attendance_update') {
+      const status = log.attendanceStatus || (log.after && log.after.attendanceStatus);
+      return `${targetName} 标记为${ATTENDANCE_LABELS[status] || status || '出勤状态'}`;
+    }
+
+    return log.action || '';
+  }
+
   function buildActivityLogRows(items = []) {
     return items.map(log => ({
       id: log._id || log.id || '',
       type: log.action || '',
       operatorOpenId: log.operatorOpenId || '',
       targetOpenId: log.targetOpenId || log.userOpenId || '',
+      targetName: getLogTargetName(log),
+      summary: buildActivityLogSummary(log),
       status: '',
       createdAt: log.createdAt || ''
     }));

@@ -63,6 +63,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
   expect(html).toContain('data-attendance-stats-empty');
+  expect(html).toContain('data-activity-detail-logs-table');
   expect(html).toContain('仅统计已确认举行活动');
   const statsStart = html.indexOf('data-admin-view="attendance-stats"');
   const exportsStart = html.indexOf('data-admin-view="exports"', statsStart);

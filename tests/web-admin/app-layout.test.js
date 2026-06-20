@@ -135,6 +135,7 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-roster-table]': createElement(),
+    '[data-activity-detail-logs-table]': createElement(),
     '[data-export-output]': createElement(),
     '[name="statsStartAt"]': createElement(),
     '[name="statsEndAt"]': createElement()
@@ -167,6 +168,9 @@ function buildHarness(user, apiOverrides = {}) {
     getActivityDetail: jest.fn().mockResolvedValue({
       activity: {},
       teams: []
+    }),
+    listActivityLogs: jest.fn().mockResolvedValue({
+      items: []
     }),
     confirmActivity: jest.fn().mockResolvedValue({
       confirmed: true
@@ -773,4 +777,104 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('class="table-actions"');
   expect(html).toContain('保存备注');
   expect(html).not.toContain('Save Alias');
+});
+
+test('activity detail loads and renders current activity operation logs', async () => {
+  const listActivityLogs = jest.fn().mockResolvedValue({
+    items: [
+      {
+        _id: 'log_1',
+        action: 'registration_moved',
+        operatorOpenId: 'openid_admin',
+        targetOpenId: 'openid_player',
+        targetName: 'Alex',
+        fromTeamName: 'Red',
+        toTeamName: 'Green',
+        createdAt: '2026-06-10T12:00:00.000Z'
+      }
+    ]
+  });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: {
+          title: 'Friday Football'
+        },
+        teams: []
+      }),
+      listActivityLogs
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  expect(listActivityLogs).toHaveBeenCalledWith({
+    activityId: 'activity_1',
+    limit: 50,
+    skip: 0
+  });
+  const html = elements['[data-activity-detail-logs-table]'].innerHTML;
+  expect(html).toContain('Alex 从 Red 换到 Green');
+  expect(html).toContain('openid_admin');
+  expect(html).toContain('2026-06-10T12:00:00.000Z');
+});
+
+test('activity detail loads all activity operation log pages', async () => {
+  const listActivityLogs = jest.fn()
+    .mockResolvedValueOnce({
+      hasMore: true,
+      items: [
+        {
+          _id: 'log_1',
+          action: 'signup_joined',
+          operatorOpenId: 'openid_player',
+          targetOpenId: 'openid_player',
+          targetName: 'Alex',
+          teamName: 'Red',
+          createdAt: '2026-06-10T10:00:00.000Z'
+        }
+      ]
+    })
+    .mockResolvedValueOnce({
+      hasMore: false,
+      items: [
+        {
+          _id: 'log_2',
+          action: 'signup_cancelled',
+          operatorOpenId: 'openid_player',
+          targetOpenId: 'openid_player',
+          targetName: 'Alex',
+          createdAt: '2026-06-10T11:00:00.000Z'
+        }
+      ]
+    });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listActivityLogs }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  expect(listActivityLogs).toHaveBeenNthCalledWith(1, {
+    activityId: 'activity_1',
+    limit: 50,
+    skip: 0
+  });
+  expect(listActivityLogs).toHaveBeenNthCalledWith(2, {
+    activityId: 'activity_1',
+    limit: 50,
+    skip: 50
+  });
+  const html = elements['[data-activity-detail-logs-table]'].innerHTML;
+  expect(html).toContain('Alex 报名 Red');
+  expect(html).toContain('Alex 取消报名');
 });

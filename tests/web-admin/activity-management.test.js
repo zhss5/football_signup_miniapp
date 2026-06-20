@@ -157,7 +157,29 @@ test('stats and log row builders keep stable display fields', () => {
         action: 'attendance_update',
         operatorOpenId: 'openid_admin',
         targetOpenId: 'openid_player',
+        targetName: 'Alex',
+        attendanceStatus: 'absent',
         createdAt: '2026-06-10T10:00:00.000Z'
+      },
+      {
+        _id: 'log_2',
+        action: 'registration_moved',
+        operatorOpenId: 'openid_admin',
+        targetOpenId: 'openid_player',
+        targetName: 'Alex',
+        fromTeamName: 'Red',
+        toTeamName: 'Green',
+        createdAt: '2026-06-10T11:00:00.000Z'
+      },
+      {
+        _id: 'log_3',
+        action: 'manager_alias_update',
+        operatorOpenId: 'openid_admin',
+        targetOpenId: 'openid_player',
+        targetName: 'Alex',
+        before: { managerAlias: 'Old' },
+        after: { managerAlias: 'New' },
+        createdAt: '2026-06-10T12:00:00.000Z'
       }
     ])
   ).toEqual([
@@ -166,8 +188,30 @@ test('stats and log row builders keep stable display fields', () => {
       type: 'attendance_update',
       operatorOpenId: 'openid_admin',
       targetOpenId: 'openid_player',
+      targetName: 'Alex',
+      summary: 'Alex 标记为缺勤',
       status: '',
       createdAt: '2026-06-10T10:00:00.000Z'
+    },
+    {
+      id: 'log_2',
+      type: 'registration_moved',
+      operatorOpenId: 'openid_admin',
+      targetOpenId: 'openid_player',
+      targetName: 'Alex',
+      summary: 'Alex 从 Red 换到 Green',
+      status: '',
+      createdAt: '2026-06-10T11:00:00.000Z'
+    },
+    {
+      id: 'log_3',
+      type: 'manager_alias_update',
+      operatorOpenId: 'openid_admin',
+      targetOpenId: 'openid_player',
+      targetName: 'Alex',
+      summary: 'Alex 备注从 Old 改为 New',
+      status: '',
+      createdAt: '2026-06-10T12:00:00.000Z'
     }
   ]);
 

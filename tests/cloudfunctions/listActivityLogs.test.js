@@ -25,6 +25,43 @@ function createFakeDb(options = {}) {
       },
       ...(options.activities || {})
     },
+    activity_teams: {
+      team_green: {
+        _id: 'team_green',
+        activityId: 'activity_1',
+        teamName: 'Green'
+      },
+      team_red: {
+        _id: 'team_red',
+        activityId: 'activity_1',
+        teamName: 'Red'
+      },
+      team_other: {
+        _id: 'team_other',
+        activityId: 'activity_other',
+        teamName: 'Other'
+      },
+      ...(options.activity_teams || {})
+    },
+    registrations: {
+      reg_1: {
+        _id: 'reg_1',
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        signupName: 'Alex',
+        teamId: 'team_green',
+        status: 'joined'
+      },
+      reg_other: {
+        _id: 'reg_other',
+        activityId: 'activity_other',
+        userOpenId: 'openid_other_player',
+        signupName: 'Ben',
+        teamId: 'team_other',
+        status: 'joined'
+      },
+      ...(options.registrations || {})
+    },
     activity_logs: [
       {
         _id: 'log_1',
@@ -95,6 +132,40 @@ test('admin can list activity logs across activities ordered newest first', asyn
 
   expect(result.items.map(item => item._id)).toEqual(['log_3', 'log_2', 'log_1']);
   expect(result.hasMore).toBe(false);
+});
+
+test('listActivityLogs enriches rows with participant and team display names', async () => {
+  const db = createFakeDb({
+    activity_logs: [
+      {
+        _id: 'log_move',
+        activityId: 'activity_1',
+        action: 'registration_moved',
+        operatorOpenId: 'openid_owner',
+        targetOpenId: 'openid_player',
+        registrationId: 'reg_1',
+        fromTeamId: 'team_green',
+        toTeamId: 'team_red',
+        createdAt: '2026-06-10T12:00:00.000Z'
+      }
+    ]
+  });
+
+  const result = await listActivityLogs.main(
+    { activityId: 'activity_1', action: 'registration_moved' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(result.items).toEqual([
+    expect.objectContaining({
+      _id: 'log_move',
+      targetName: 'Alex',
+      teamName: 'Green',
+      fromTeamName: 'Green',
+      toTeamName: 'Red'
+    })
+  ]);
 });
 
 test('super_admin can filter activity logs by action', async () => {
