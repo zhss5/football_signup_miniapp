@@ -124,6 +124,19 @@
     return text || '空';
   }
 
+  function shortenOpenId(value) {
+    const text = String(value || '').trim();
+    if (!text) {
+      return '';
+    }
+
+    if (text.length <= 12) {
+      return text;
+    }
+
+    return `${text.slice(0, 6)}...${text.slice(-4)}`;
+  }
+
   function getLogTargetName(log) {
     return String(
       log.targetName ||
@@ -135,13 +148,48 @@
     ).trim();
   }
 
+  function getLogTargetDisplayName(log) {
+    const targetOpenId = log.targetOpenId || log.userOpenId || '';
+    const targetName = getLogTargetName(log);
+
+    return targetName && targetName !== targetOpenId
+      ? targetName
+      : shortenOpenId(targetOpenId);
+  }
+
+  function getLogOperatorName(log) {
+    return String(
+      log.operatorName ||
+      log.operatorDisplayName ||
+      log.operatorPreferredName ||
+      log.operatorManagerAlias ||
+      ''
+    ).trim();
+  }
+
+  function getLogOperatorDisplayName(log, targetDisplayName) {
+    const operatorName = getLogOperatorName(log);
+    const operatorOpenId = String(log.operatorOpenId || '').trim();
+    const targetOpenId = String(log.targetOpenId || log.userOpenId || '').trim();
+
+    if (operatorName) {
+      return operatorName;
+    }
+
+    if (operatorOpenId && operatorOpenId === targetOpenId && targetDisplayName) {
+      return targetDisplayName;
+    }
+
+    return shortenOpenId(operatorOpenId);
+  }
+
   function formatTeamSuffix(teamName) {
     const text = String(teamName || '').trim();
     return text ? ` ${text}` : '';
   }
 
-  function buildActivityLogSummary(log = {}) {
-    const targetName = getLogTargetName(log);
+  function buildActivityLogSummary(log = {}, targetDisplayName) {
+    const targetName = targetDisplayName || getLogTargetDisplayName(log);
 
     if (log.action === 'signup_joined') {
       return `${targetName} 报名${formatTeamSuffix(log.teamName)}`;
@@ -188,16 +236,24 @@
   }
 
   function buildActivityLogRows(items = []) {
-    return items.map(log => ({
-      id: log._id || log.id || '',
-      type: log.action || '',
-      operatorOpenId: log.operatorOpenId || '',
-      targetOpenId: log.targetOpenId || log.userOpenId || '',
-      targetName: getLogTargetName(log),
-      summary: buildActivityLogSummary(log),
-      status: '',
-      createdAt: formatBeijingDateTime(log.createdAt)
-    }));
+    return items.map(log => {
+      const targetDisplayName = getLogTargetDisplayName(log);
+      const operatorName = getLogOperatorName(log);
+
+      return {
+        id: log._id || log.id || '',
+        type: log.action || '',
+        operatorOpenId: log.operatorOpenId || '',
+        operatorName,
+        operatorDisplayName: getLogOperatorDisplayName(log, targetDisplayName),
+        targetOpenId: log.targetOpenId || log.userOpenId || '',
+        targetName: getLogTargetName(log),
+        targetDisplayName,
+        summary: buildActivityLogSummary(log, targetDisplayName),
+        status: '',
+        createdAt: formatBeijingDateTime(log.createdAt)
+      };
+    });
   }
 
   function buildNotificationLogRows(items = []) {

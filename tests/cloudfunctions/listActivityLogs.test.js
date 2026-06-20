@@ -3,7 +3,12 @@ const listActivityLogs = require('../../cloudfunctions/listActivityLogs/index');
 function createFakeDb(options = {}) {
   const state = {
     users: {
-      openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] },
+      openid_owner: {
+        _id: 'openid_owner',
+        preferredName: 'Owner Zhang',
+        managerAlias: '队长张',
+        roles: ['user', 'organizer']
+      },
       openid_other_owner: { _id: 'openid_other_owner', roles: ['user', 'organizer'] },
       openid_admin: { _id: 'openid_admin', roles: ['user', 'admin'] },
       openid_super: { _id: 'openid_super', roles: ['user', 'super_admin'] },
@@ -160,6 +165,7 @@ test('listActivityLogs enriches rows with participant and team display names', a
   expect(result.items).toEqual([
     expect.objectContaining({
       _id: 'log_move',
+      operatorName: '队长张',
       targetName: 'Alex',
       teamName: 'Green',
       fromTeamName: 'Green',

@@ -462,10 +462,12 @@ select {
 }
 
 .activity-detail-dialog {
+  display: flex;
+  flex-direction: column;
   width: min(1180px, 100%);
   max-height: min(780px, calc(100vh - 48px));
   box-sizing: border-box;
-  overflow: auto;
+  overflow: hidden;
   padding: 20px;
   border: 1px solid #d9e1ee;
   border-radius: 8px;
@@ -474,11 +476,14 @@ select {
 }
 
 .detail-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5ebf4;
 }
 
 .detail-eyebrow {
@@ -512,13 +517,19 @@ select {
   color: #1d4fae;
 }
 
+.activity-detail-body {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
 .detail-subsection {
   padding-top: 16px;
-  border-top: 1px solid #e5ebf4;
 }
 
 .detail-subsection + .detail-subsection {
   margin-top: 18px;
+  border-top: 1px solid #e5ebf4;
 }
 
 .detail-subsection-header {
@@ -533,6 +544,27 @@ select {
   margin: 0;
   font-size: 16px;
   line-height: 24px;
+}
+
+.detail-subsection-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.detail-subsection-tools button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2e6bd9;
+  border-radius: 6px;
+  background: #2e6bd9;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-subsection-tools button:hover {
+  background: #1d4fae;
 }
 
 .detail-search {
@@ -552,6 +584,10 @@ select {
   border-radius: 6px;
   background: #ffffff;
   color: #172033;
+}
+
+.person-display {
+  cursor: help;
 }
 
 .export-output {
@@ -632,6 +668,7 @@ select {
 
   .detail-header,
   .detail-subsection-header,
+  .detail-subsection-tools,
   .log-actions {
     align-items: stretch;
     flex-direction: column;

@@ -179,9 +179,9 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-activity-title]': createElement(),
     '[data-roster-keyword]': createElement(),
     '[data-activity-detail-logs-keyword]': createElement(),
+    '[data-export-output]': createElement(),
     '[data-roster-table]': createElement(),
     '[data-activity-detail-logs-table]': createElement(),
-    '[data-export-output]': createElement(),
     '[name="statsStartAt"]': createElement(),
     '[name="statsEndAt"]': createElement()
   };
@@ -988,6 +988,7 @@ test('activity detail loads and renders current activity operation logs', async 
         _id: 'log_1',
         action: 'registration_moved',
         operatorOpenId: 'openid_admin',
+        operatorName: '管理员张',
         targetOpenId: 'openid_player',
         targetName: 'Alex',
         fromTeamName: 'Red',
@@ -1022,9 +1023,96 @@ test('activity detail loads and renders current activity operation logs', async 
   });
   const html = elements['[data-activity-detail-logs-table]'].innerHTML;
   expect(html).toContain('Alex 从 Red 换到 Green');
-  expect(html).toContain('openid_admin');
+  expect(html).toContain('管理员张');
+  expect(html).toContain('title="openid_admin"');
+  expect(html).not.toContain('<code>openid_admin</code>');
   expect(html).toContain('2026-06-10 20:00');
   expect(html).not.toContain('2026-06-10T12:00:00.000Z');
+});
+
+test('activity detail exports filtered roster and activity logs as CSV text', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: {
+          title: 'Friday Football'
+        },
+        teams: [
+          {
+            _id: 'team_red',
+            teamName: 'Red',
+            members: [
+              {
+                registrationId: 'reg_1',
+                userOpenId: 'openid_alex',
+                signupName: 'Alex',
+                managerAlias: 'Left foot',
+                preferredPositions: ['forward'],
+                proxyRegistration: false,
+                attendanceStatus: 'present'
+              },
+              {
+                registrationId: 'reg_2',
+                userOpenId: 'openid_ben',
+                signupName: 'Ben',
+                managerAlias: 'Goalkeeper',
+                preferredPositions: ['goalkeeper'],
+                proxyRegistration: false,
+                attendanceStatus: 'absent'
+              }
+            ]
+          }
+        ]
+      }),
+      listActivityLogs: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'log_1',
+            action: 'signup_joined',
+            operatorOpenId: 'openid_alex',
+            operatorName: 'Alex',
+            targetOpenId: 'openid_alex',
+            targetName: 'Alex',
+            teamName: 'Red',
+            createdAt: '2026-06-10T10:00:00.000Z'
+          },
+          {
+            _id: 'log_2',
+            action: 'signup_cancelled',
+            operatorOpenId: 'openid_ben',
+            operatorName: 'Ben',
+            targetOpenId: 'openid_ben',
+            targetName: 'Ben',
+            createdAt: '2026-06-10T11:00:00.000Z'
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  elements['[data-roster-keyword]'].value = 'Goalkeeper';
+  elements['[data-roster-keyword]'].eventHandlers.input();
+  appRoot.click(createElement({ action: 'export-activity-roster-view' }));
+
+  expect(elements['[data-export-output]'].value).toContain('队伍,报名名,备注,位置偏好,代报名,出勤状态');
+  expect(elements['[data-export-output]'].value).not.toContain('Alex');
+  expect(elements['[data-export-output]'].value).toContain('Ben');
+
+  elements['[data-activity-detail-logs-keyword]'].value = 'openid_ben';
+  elements['[data-activity-detail-logs-keyword]'].eventHandlers.input();
+  appRoot.click(createElement({ action: 'export-activity-logs-view' }));
+
+  expect(elements['[data-export-output]'].value).toContain('操作,操作人,报名人,时间');
+  expect(elements['[data-export-output]'].value).not.toContain('Alex 报名');
+  expect(elements['[data-export-output]'].value).toContain('Ben 取消报名');
+  expect(elements['[data-export-output]'].value).toContain('Ben');
 });
 
 test('activity detail close action hides the modal', async () => {

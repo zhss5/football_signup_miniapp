@@ -65,24 +65,39 @@ function pickText(...values) {
   return value ? String(value).trim() : '';
 }
 
-function toSafeLog(log, activityById, registrationById, teamById) {
+function getUserDisplayName(user) {
+  return pickText(
+    user && user.managerAlias,
+    user && user.preferredName,
+    user && user.displayName,
+    user && user.nickName,
+    user && user.nickname
+  );
+}
+
+function toSafeLog(log, activityById, registrationById, teamById, userById) {
   const activity = activityById[log.activityId] || {};
   const registration = registrationById[log.registrationId] || {};
   const teamId = pickText(log.teamId, registration.teamId);
   const fromTeamId = log.fromTeamId || '';
   const toTeamId = log.toTeamId || '';
   const targetOpenId = log.targetOpenId || log.userOpenId || registration.userOpenId || '';
+  const operatorOpenId = log.operatorOpenId || '';
+  const targetUser = userById[targetOpenId] || {};
+  const operatorUser = userById[operatorOpenId] || {};
 
   return {
     _id: log._id || '',
     activityId: log.activityId || '',
     activityTitle: activity.title || '',
     action: log.action || '',
-    operatorOpenId: log.operatorOpenId || '',
+    operatorOpenId,
+    operatorName: getUserDisplayName(operatorUser),
     targetOpenId,
     targetName: pickText(
       log.after && log.after.signupName,
       registration.signupName,
+      getUserDisplayName(targetUser),
       targetOpenId
     ),
     registrationId: log.registrationId || '',
@@ -113,12 +128,13 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
 
-  const [caller, activities, logs, registrations, teams] = await Promise.all([
+  const [caller, activities, logs, registrations, teams, users] = await Promise.all([
     loadDoc(db, COLLECTIONS.USERS, openid),
     loadCollection(db, COLLECTIONS.ACTIVITIES),
     loadCollection(db, COLLECTIONS.ACTIVITY_LOGS),
     loadCollection(db, COLLECTIONS.REGISTRATIONS),
-    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS)
+    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
+    loadCollection(db, COLLECTIONS.USERS)
   ]);
 
   const callerIsAdmin = isAdmin(caller);
@@ -130,6 +146,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const activityById = buildCollectionMap(activities);
   const registrationById = buildCollectionMap(registrations);
   const teamById = buildCollectionMap(teams);
+  const userById = buildCollectionMap(users);
 
   let allowedActivityIds;
   if (activityId) {
@@ -162,7 +179,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .sort(compareLogsByCreatedAtDesc);
   const page = filtered
     .slice(skip, skip + limit)
-    .map(log => toSafeLog(log, activityById, registrationById, teamById));
+    .map(log => toSafeLog(log, activityById, registrationById, teamById, userById));
 
   return {
     items: page,

@@ -126,6 +126,19 @@
     return fields.some(field => String(field || '').toLowerCase().includes(keyword));
   }
 
+  function shortenOpenId(value) {
+    const text = String(value || '').trim();
+    if (!text) {
+      return '';
+    }
+
+    if (text.length <= 12) {
+      return text;
+    }
+
+    return `${text.slice(0, 6)}...${text.slice(-4)}`;
+  }
+
   function createWebAdminApp(options = {}) {
     const runtimeRoot = options.root || (typeof document !== 'undefined' ? document : null);
     const appRoot = options.appRoot ||
@@ -710,8 +723,8 @@
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
-          `<td><code>${escapeHtml(row.operatorOpenId)}</code></td>` +
-          `<td>${escapeHtml(row.targetName || row.targetOpenId)}</td>` +
+          `<td>${renderPersonCell(row.operatorDisplayName, row.operatorOpenId)}</td>` +
+          `<td>${renderPersonCell(row.targetDisplayName || row.targetName, row.targetOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
           `</tr>`
         ))
@@ -731,8 +744,11 @@
           row.summary,
           row.type,
           row.operatorOpenId,
+          row.operatorName,
+          row.operatorDisplayName,
           row.targetOpenId,
           row.targetName,
+          row.targetDisplayName,
           row.status,
           row.createdAt
         ], keyword)
@@ -749,12 +765,23 @@
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
-          `<td><code>${escapeHtml(row.operatorOpenId)}</code></td>` +
-          `<td>${escapeHtml(row.targetName || row.targetOpenId)}</td>` +
+          `<td>${renderPersonCell(row.operatorDisplayName, row.operatorOpenId)}</td>` +
+          `<td>${renderPersonCell(row.targetDisplayName || row.targetName, row.targetOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
           `</tr>`
         ))
         .join('');
+    }
+
+    function renderPersonCell(displayName, openid) {
+      const text = String(displayName || '').trim() || shortenOpenId(openid);
+      const title = String(openid || '').trim();
+
+      if (!title || text === title) {
+        return escapeHtml(text);
+      }
+
+      return `<span class="person-display" title="${escapeHtml(title)}">${escapeHtml(text)}</span>`;
     }
 
     function renderNotificationLogRows() {
@@ -929,6 +956,78 @@
       if (output) {
         output.value = state.exportCsv;
       }
+    }
+
+    function writeExportOutput(csv) {
+      state.exportCsv = csv || '';
+
+      const output = query('[data-export-output]');
+      if (output) {
+        output.value = state.exportCsv;
+      }
+    }
+
+    function downloadCsv(filename, csv) {
+      const content = `\uFEFF${csv || ''}`;
+      const doc = runtimeBrowserRoot && runtimeBrowserRoot.document;
+      const blobCtor = runtimeBrowserRoot && runtimeBrowserRoot.Blob;
+      const urlApi = runtimeBrowserRoot && (runtimeBrowserRoot.URL || runtimeBrowserRoot.webkitURL);
+
+      if (
+        doc &&
+        typeof doc.createElement === 'function' &&
+        blobCtor &&
+        urlApi &&
+        typeof urlApi.createObjectURL === 'function'
+      ) {
+        const blob = new blobCtor([content], { type: 'text/csv;charset=utf-8' });
+        const url = urlApi.createObjectURL(blob);
+        const link = doc.createElement('a');
+        link.href = url;
+        link.download = filename;
+
+        if (doc.body && typeof doc.body.appendChild === 'function') {
+          doc.body.appendChild(link);
+        }
+
+        if (typeof link.click === 'function') {
+          link.click();
+        }
+
+        if (link.parentNode && typeof link.parentNode.removeChild === 'function') {
+          link.parentNode.removeChild(link);
+        }
+
+        if (typeof urlApi.revokeObjectURL === 'function') {
+          urlApi.revokeObjectURL(url);
+        }
+      }
+
+      writeExportOutput(csv);
+    }
+
+    function exportActivityRosterView() {
+      const rows = getFilteredRosterRows().map(row => ({
+        队伍: row.teamName,
+        报名名: row.signupName,
+        备注: row.managerAlias,
+        位置偏好: formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
+        代报名: row.proxyRegistration ? '是' : '否',
+        出勤状态: formatStatusText(row.attendanceStatus)
+      }));
+      const csv = activityUi.rowsToCsv(rows);
+      downloadCsv(`activity-roster-${getSelectedActivityId() || 'selected'}.csv`, csv);
+    }
+
+    function exportActivityLogsView() {
+      const rows = getFilteredActivityDetailLogRows().map(row => ({
+        操作: row.summary || row.type,
+        操作人: row.operatorDisplayName,
+        报名人: row.targetDisplayName || row.targetName,
+        时间: row.createdAt
+      }));
+      const csv = activityUi.rowsToCsv(rows);
+      downloadCsv(`activity-logs-${getSelectedActivityId() || 'selected'}.csv`, csv);
     }
 
     async function loadActivityLogs() {
@@ -1188,6 +1287,16 @@
 
           if (button.dataset.action === 'export-roster') {
             return exportRoster().catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'export-activity-roster-view') {
+            exportActivityRosterView();
+            return;
+          }
+
+          if (button.dataset.action === 'export-activity-logs-view') {
+            exportActivityLogsView();
+            return;
           }
 
           if (button.dataset.action === 'load-activity-logs') {

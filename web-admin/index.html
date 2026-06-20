@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-activity-dblclick" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-detail-export-names" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -180,58 +180,70 @@
                     </button>
                   </div>
 
-                  <section class="detail-subsection">
-                    <div class="detail-subsection-header">
-                      <h4>活动报名人列表</h4>
-                      <label class="detail-search">
-                        <span>关键词</span>
-                        <input
-                          type="search"
-                          data-roster-keyword
-                          placeholder="报名名、备注、队伍、位置"
-                        />
-                      </label>
-                    </div>
-                    <table class="data-table">
-                      <thead>
-                        <tr>
-                          <th>队伍</th>
-                          <th>报名名</th>
-                          <th>备注</th>
-                          <th>位置偏好</th>
-                          <th>代报名</th>
-                          <th>出勤状态</th>
-                          <th>操作</th>
-                        </tr>
-                      </thead>
-                      <tbody data-roster-table></tbody>
-                    </table>
-                  </section>
+                  <div class="activity-detail-body">
+                    <section class="detail-subsection">
+                      <div class="detail-subsection-header">
+                        <h4>活动报名人列表</h4>
+                        <div class="detail-subsection-tools">
+                          <button type="button" data-action="export-activity-roster-view">
+                            导出CSV
+                          </button>
+                          <label class="detail-search">
+                            <span>关键词</span>
+                            <input
+                              type="search"
+                              data-roster-keyword
+                              placeholder="报名名、备注、队伍、位置"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>队伍</th>
+                            <th>报名名</th>
+                            <th>备注</th>
+                            <th>位置偏好</th>
+                            <th>代报名</th>
+                            <th>出勤状态</th>
+                            <th>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody data-roster-table></tbody>
+                      </table>
+                    </section>
 
-                  <section class="detail-subsection">
-                    <div class="detail-subsection-header">
-                      <h4>报名活动流水</h4>
-                      <label class="detail-search">
-                        <span>关键词</span>
-                        <input
-                          type="search"
-                          data-activity-detail-logs-keyword
-                          placeholder="操作、报名人、openid、时间"
-                        />
-                      </label>
-                    </div>
-                    <table class="data-table">
-                      <thead>
-                        <tr>
-                          <th>操作</th>
-                          <th>操作人</th>
-                          <th>报名人</th>
-                          <th>时间</th>
-                        </tr>
-                      </thead>
-                      <tbody data-activity-detail-logs-table></tbody>
-                    </table>
-                  </section>
+                    <section class="detail-subsection">
+                      <div class="detail-subsection-header">
+                        <h4>报名活动流水</h4>
+                        <div class="detail-subsection-tools">
+                          <button type="button" data-action="export-activity-logs-view">
+                            导出CSV
+                          </button>
+                          <label class="detail-search">
+                            <span>关键词</span>
+                            <input
+                              type="search"
+                              data-activity-detail-logs-keyword
+                              placeholder="操作、报名人、openid、时间"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>操作</th>
+                            <th>操作人</th>
+                            <th>报名人</th>
+                            <th>时间</th>
+                          </tr>
+                        </thead>
+                        <tbody data-activity-detail-logs-table></tbody>
+                      </table>
+                    </section>
+                  </div>
                 </div>
               </div>
             </section>
@@ -333,13 +345,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/roles.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/api.js?v=20260620-activity-dblclick"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/user-management.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/activity-management.js?v=20260620-activity-dblclick"></script>
-    <script src="./src/app.js?v=20260620-activity-dblclick"></script>
+    <script src="./config.test.js?v=20260620-detail-export-names"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-detail-export-names"></script>
+    <script src="./src/roles.js?v=20260620-detail-export-names"></script>
+    <script src="./src/api.js?v=20260620-detail-export-names"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-detail-export-names"></script>
+    <script src="./src/user-management.js?v=20260620-detail-export-names"></script>
+    <script src="./src/activity-management.js?v=20260620-detail-export-names"></script>
+    <script src="./src/app.js?v=20260620-detail-export-names"></script>
   </body>
 </html>
