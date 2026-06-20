@@ -65,6 +65,12 @@
       canConfirmProceeding:
         activity.status === 'published' && activity.confirmStatus !== 'confirmed',
       organizerOpenId: activity.organizerOpenId || '',
+      organizerName: String(activity.organizerName || activity.organizerPreferredName || '').trim(),
+      organizerManagerAlias: String(activity.organizerManagerAlias || '').trim(),
+      organizerDisplayName: getPreferredDisplayName(
+        activity.organizerName || activity.organizerPreferredName || '',
+        activity.organizerManagerAlias
+      ) || activity.organizerOpenId || '',
       joinedCount: Number(activity.joinedCount) || 0
     }));
   }

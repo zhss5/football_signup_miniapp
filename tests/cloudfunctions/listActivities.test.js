@@ -265,7 +265,14 @@ test('web-admin scope lets admin filter activities by date status organizer and 
   cloud.database.mockReturnValue(
     createFakeDb({
       users: [
-        { _id: 'openid_admin', roles: ['user', 'admin'] }
+        { _id: 'openid_admin', roles: ['user', 'admin'] },
+        {
+          _id: 'openid_owner',
+          preferredName: 'Owner Zhang',
+          displayName: 'Zhang San',
+          managerAlias: 'Coach Zhang',
+          roles: ['user', 'organizer']
+        }
       ],
       activities: [
         {
@@ -306,6 +313,11 @@ test('web-admin scope lets admin filter activities by date status organizer and 
   );
 
   expect(result.items.map(item => item._id)).toEqual(['activity_b']);
+  expect(result.items[0]).toMatchObject({
+    organizerOpenId: 'openid_owner',
+    organizerName: 'Owner Zhang',
+    organizerManagerAlias: 'Coach Zhang'
+  });
   expect(result.hasMore).toBe(false);
 });
 

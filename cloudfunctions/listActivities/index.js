@@ -49,6 +49,40 @@ async function loadUser(db, openid) {
   return res && res.data ? res.data : null;
 }
 
+function getUserProfileName(user = {}) {
+  return (
+    String(user.preferredName || '').trim() ||
+    String(user.displayName || '').trim() ||
+    String(user.nickName || user.nickname || '').trim()
+  );
+}
+
+async function enrichActivitiesWithOrganizerProfiles(db, activities) {
+  const organizerOpenIds = Array.from(new Set(
+    activities.map(activity => String(activity.organizerOpenId || '').trim()).filter(Boolean)
+  ));
+  const organizerEntries = await Promise.all(
+    organizerOpenIds.map(async organizerOpenId => {
+      try {
+        return [organizerOpenId, await loadUser(db, organizerOpenId)];
+      } catch (error) {
+        return [organizerOpenId, null];
+      }
+    })
+  );
+  const organizersByOpenId = new Map(organizerEntries);
+
+  return activities.map(activity => {
+    const organizer = organizersByOpenId.get(activity.organizerOpenId) || {};
+
+    return {
+      ...activity,
+      organizerName: getUserProfileName(organizer),
+      organizerManagerAlias: String(organizer.managerAlias || '').trim()
+    };
+  });
+}
+
 function parseTimestamp(value) {
   const timestamp = Date.parse(value || '');
   return Number.isFinite(timestamp) ? timestamp : null;
@@ -113,9 +147,10 @@ async function listWebAdminActivities(db, payload, openid, limit, skip) {
     )
     .filter(activity => matchesKeyword(activity, keyword));
   const sorted = sortActivitiesByStartDesc(filtered);
+  const pageItems = sorted.slice(skip, skip + limit);
 
   return {
-    items: sorted.slice(skip, skip + limit),
+    items: await enrichActivitiesWithOrganizerProfiles(db, pageItems),
     hasMore: sorted.length > skip + limit
   };
 }

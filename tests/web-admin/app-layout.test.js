@@ -377,6 +377,8 @@ test('activity rows render selectable activity metadata without inline actions',
             status: 'published',
             confirmStatus: 'pending',
             organizerOpenId: 'openid_owner',
+            organizerName: 'Owner Zhang',
+            organizerManagerAlias: 'Coach Zhang',
             joinedCount: 1
           },
           {
@@ -385,7 +387,7 @@ test('activity rows render selectable activity metadata without inline actions',
             startAt: '2026-06-20T12:00:00.000Z',
             status: 'published',
             confirmStatus: 'confirmed',
-            organizerOpenId: 'openid_owner',
+            organizerOpenId: 'openid_fallback',
             joinedCount: 2
           }
         ]
@@ -403,6 +405,8 @@ test('activity rows render selectable activity metadata without inline actions',
   expect(html).toContain('data-can-confirm-proceeding="false"');
   expect(html).toContain('2026-06-19 20:00');
   expect(html).not.toContain('2026-06-19T12:00:00.000Z');
+  expect(html).toContain('title="openid_owner">Coach Zhang</span>');
+  expect(html).toContain('openid_fallback');
 });
 
 test('clicking an activity row selects it without opening the detail modal', async () => {

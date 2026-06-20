@@ -572,7 +572,7 @@
             `<td>${escapeHtml(row.title)}</td>` +
             `<td>${escapeHtml(row.startAt)}</td>` +
             `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
-            `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
+            `<td>${renderPersonCell(row.organizerDisplayName, row.organizerOpenId)}</td>` +
             `<td>${escapeHtml(row.joinedCount)}</td>` +
             `</tr>`
           );

@@ -43,6 +43,8 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
         status: 'published',
         confirmStatus: 'pending',
         organizerOpenId: 'openid_owner',
+        organizerName: 'Owner Zhang',
+        organizerManagerAlias: 'Coach Zhang',
         joinedCount: 12
       }
     ])
@@ -56,9 +58,34 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       statusText: 'published / pending',
       canConfirmProceeding: true,
       organizerOpenId: 'openid_owner',
+      organizerName: 'Owner Zhang',
+      organizerManagerAlias: 'Coach Zhang',
+      organizerDisplayName: 'Coach Zhang',
       joinedCount: 12
     }
   ]);
+});
+
+test('buildActivityRows displays organizers as alias then name then openid', () => {
+  expect(
+    buildActivityRows([
+      {
+        _id: 'activity_alias',
+        organizerOpenId: 'openid_alias',
+        organizerName: 'Owner Zhang',
+        organizerManagerAlias: 'Coach Zhang'
+      },
+      {
+        _id: 'activity_name',
+        organizerOpenId: 'openid_name',
+        organizerName: 'Owner Li'
+      },
+      {
+        _id: 'activity_openid',
+        organizerOpenId: 'openid_only'
+      }
+    ]).map(row => row.organizerDisplayName)
+  ).toEqual(['Coach Zhang', 'Owner Li', 'openid_only']);
 });
 
 test('formatBeijingDateTime renders timestamps in Beijing time', () => {
