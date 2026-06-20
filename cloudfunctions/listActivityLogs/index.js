@@ -67,12 +67,15 @@ function pickText(...values) {
 
 function getUserDisplayName(user) {
   return pickText(
-    user && user.managerAlias,
     user && user.preferredName,
     user && user.displayName,
     user && user.nickName,
     user && user.nickname
   );
+}
+
+function getUserManagerAlias(user) {
+  return normalizeText(user && user.managerAlias);
 }
 
 function toSafeLog(log, activityById, registrationById, teamById, userById) {
@@ -93,6 +96,7 @@ function toSafeLog(log, activityById, registrationById, teamById, userById) {
     action: log.action || '',
     operatorOpenId,
     operatorName: getUserDisplayName(operatorUser),
+    operatorManagerAlias: getUserManagerAlias(operatorUser),
     targetOpenId,
     targetName: pickText(
       log.after && log.after.signupName,
@@ -100,6 +104,7 @@ function toSafeLog(log, activityById, registrationById, teamById, userById) {
       getUserDisplayName(targetUser),
       targetOpenId
     ),
+    targetManagerAlias: getUserManagerAlias(targetUser),
     registrationId: log.registrationId || '',
     teamId,
     teamName: teamById[teamId] ? teamById[teamId].teamName || '' : '',

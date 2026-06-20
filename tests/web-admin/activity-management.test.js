@@ -6,8 +6,6 @@ const {
   formatBeijingDateTime,
   buildNotificationLogRows,
   buildRosterRows,
-  buildImportedStatsRowsFromTable,
-  buildImportedStatsRowsFromText,
   buildStatsRows,
   rowsToCsv
 } = require('../../web-admin/src/activity-management');
@@ -167,8 +165,10 @@ test('stats and log row builders keep stable display fields', () => {
         action: 'attendance_update',
         operatorOpenId: 'openid_admin',
         operatorName: '管理员张',
+        operatorManagerAlias: '队长',
         targetOpenId: 'openid_player',
         targetName: 'Alex',
+        targetManagerAlias: '左脚',
         attendanceStatus: 'absent',
         createdAt: '2026-06-10T10:00:00.000Z'
       },
@@ -199,11 +199,13 @@ test('stats and log row builders keep stable display fields', () => {
       type: 'attendance_update',
       operatorOpenId: 'openid_admin',
       operatorName: '管理员张',
-      operatorDisplayName: '管理员张',
+      operatorManagerAlias: '队长',
+      operatorDisplayName: '管理员张（队长）',
       targetOpenId: 'openid_player',
       targetName: 'Alex',
-      targetDisplayName: 'Alex',
-      summary: 'Alex 标记为缺勤',
+      targetManagerAlias: '左脚',
+      targetDisplayName: 'Alex（左脚）',
+      summary: 'Alex（左脚） 标记为缺勤',
       status: '',
       createdAt: '2026-06-10 18:00'
     },
@@ -212,9 +214,11 @@ test('stats and log row builders keep stable display fields', () => {
       type: 'registration_moved',
       operatorOpenId: 'openid_admin',
       operatorName: '',
+      operatorManagerAlias: '',
       operatorDisplayName: 'openid_admin',
       targetOpenId: 'openid_player',
       targetName: 'Alex',
+      targetManagerAlias: '',
       targetDisplayName: 'Alex',
       summary: 'Alex 从 Red 换到 Green',
       status: '',
@@ -225,9 +229,11 @@ test('stats and log row builders keep stable display fields', () => {
       type: 'manager_alias_update',
       operatorOpenId: 'openid_admin',
       operatorName: '',
+      operatorManagerAlias: '',
       operatorDisplayName: 'openid_admin',
       targetOpenId: 'openid_player',
       targetName: 'Alex',
+      targetManagerAlias: '',
       targetDisplayName: 'Alex',
       summary: 'Alex 备注从 Old 改为 New',
       status: '',
@@ -253,58 +259,6 @@ test('stats and log row builders keep stable display fields', () => {
       targetOpenId: 'openid_player',
       status: 'failed',
       createdAt: '2026-06-10 19:00'
-    }
-  ]);
-});
-
-test('buildImportedStatsRowsFromText maps Chinese CSV attendance columns', () => {
-  expect(
-    buildImportedStatsRowsFromText(
-      '参与者,备注,报名次数,出勤,缺勤,出勤率\n张虹生,酱油2,3,2,1,66.67%\n人员1,,1,1,0,100%'
-    )
-  ).toEqual([
-    {
-      participantName: '张虹生',
-      managerAlias: '酱油2',
-      signupCount: 3,
-      presentCount: 2,
-      absentCount: 1,
-      attendanceRateText: '66.67%'
-    },
-    {
-      participantName: '人员1',
-      managerAlias: '',
-      signupCount: 1,
-      presentCount: 1,
-      absentCount: 0,
-      attendanceRateText: '100%'
-    }
-  ]);
-});
-
-test('buildImportedStatsRowsFromTable maps Excel-style attendance rows', () => {
-  expect(
-    buildImportedStatsRowsFromTable([
-      ['报名人', '备注', '报名数', '出勤次数', '缺勤次数'],
-      ['张虹生', '酱油2', '2', '1', '1'],
-      ['人员1', '', 1, 1, 0]
-    ])
-  ).toEqual([
-    {
-      participantName: '张虹生',
-      managerAlias: '酱油2',
-      signupCount: 2,
-      presentCount: 1,
-      absentCount: 1,
-      attendanceRateText: '50.00%'
-    },
-    {
-      participantName: '人员1',
-      managerAlias: '',
-      signupCount: 1,
-      presentCount: 1,
-      absentCount: 0,
-      attendanceRateText: '100.00%'
     }
   ]);
 });

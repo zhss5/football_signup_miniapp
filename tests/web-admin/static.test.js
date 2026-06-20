@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-attendance-import';
+const WEB_ADMIN_ASSET_VERSION = '20260620-console-export';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -36,18 +36,18 @@ test('web admin workspace uses a Chinese sidebar plus independent content views'
   expect(html).toContain('data-nav-target="users"');
   expect(html).toContain('data-nav-target="activities"');
   expect(html).toContain('data-nav-target="attendance-stats"');
-  expect(html).toContain('data-nav-target="exports"');
   expect(html).toContain('data-nav-target="logs"');
   expect(html).toContain('data-admin-view="users"');
   expect(html).toContain('data-admin-view="activities"');
   expect(html).toContain('data-admin-view="attendance-stats"');
-  expect(html).toContain('data-admin-view="exports"');
   expect(html).toContain('data-admin-view="logs"');
   expect(html).toContain('用户管理');
   expect(html).toContain('活动管理');
   expect(html).toContain('出勤统计');
-  expect(html).toContain('名单导出');
-  expect(html).toContain('日志');
+  expect(html).toContain('全局日志');
+  expect(html).not.toContain('data-nav-target="exports"');
+  expect(html).not.toContain('data-admin-view="exports"');
+  expect(html).not.toContain('名单导出');
 });
 
 test('web admin static shell keeps existing forms and action hooks with Chinese labels', () => {
@@ -62,10 +62,11 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-role="admin"');
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
-  expect(html).toContain('data-attendance-import-file');
-  expect(html).toContain('data-attendance-import-status');
-  expect(html).toContain('accept=".csv,.tsv,.txt,.xlsx,.xls"');
-  expect(html).toContain('导入Excel/CSV');
+  expect(html).toContain('data-action="export-attendance-stats"');
+  expect(html).toContain('导出出勤统计 CSV');
+  expect(html).not.toContain('data-attendance-import-file');
+  expect(html).not.toContain('data-attendance-import-status');
+  expect(html).not.toContain('导入Excel/CSV');
   expect(html).toContain('data-attendance-stats-empty');
   expect(html).toContain('data-activity-context-menu');
   expect(html).toContain('role="menu"');
@@ -83,19 +84,18 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('报名活动流水');
   expect(html).toContain('仅统计已确认举行活动');
   const statsStart = html.indexOf('data-admin-view="attendance-stats"');
-  const exportsStart = html.indexOf('data-admin-view="exports"', statsStart);
-  const statsBlock = statsStart >= 0 && exportsStart > statsStart
-    ? html.slice(statsStart, exportsStart)
+  const logsStart = html.indexOf('data-admin-view="logs"', statsStart);
+  const statsBlock = statsStart >= 0 && logsStart > statsStart
+    ? html.slice(statsStart, logsStart)
     : '';
   expect(statsBlock).toContain('<th>备注</th>');
-  expect(html).toContain('data-action="export-roster"');
+  expect(html).not.toContain('data-action="export-roster"');
   expect(html).toContain('data-action="load-activity-logs"');
   expect(html).toContain('data-action="load-notification-logs"');
   expect(html).toContain('关键词');
   expect(html).toContain('角色');
   expect(html).toContain('搜索');
   expect(html).toContain('出勤状态');
-  expect(html).toContain('导出名单 CSV');
   expect(html).toContain('加载操作日志');
   expect((html.match(/<th>备注<\/th>/g) || []).length).toBeGreaterThanOrEqual(2);
   expect(html).not.toContain('管理识别名');
@@ -140,15 +140,14 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const qrIndex = html.indexOf(`src="./vendor/qrcode.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
-  const xlsxIndex = html.indexOf(`src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
   expect(runtimeIndex).toBeGreaterThan(configIndex);
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
   expect(qrIndex).toBeGreaterThan(apiIndex);
-  expect(xlsxIndex).toBeGreaterThan(qrIndex);
-  expect(appIndex).toBeGreaterThan(xlsxIndex);
+  expect(appIndex).toBeGreaterThan(qrIndex);
+  expect(html).not.toContain('vendor/xlsx.full.min.js');
 });
 
 test('web admin static shell vendors the QR renderer for hosted login smoke', () => {
@@ -160,19 +159,19 @@ test('web admin static shell vendors the QR renderer for hosted login smoke', ()
   expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
 });
 
-test('web admin static shell vendors the Excel renderer for attendance imports', () => {
-  const vendorPath = path.join(process.cwd(), 'web-admin/vendor/xlsx.full.min.js');
-  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
-
-  expect(html).toContain(`src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
-  expect(fs.existsSync(vendorPath)).toBe(true);
-  expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
-});
-
 test('web admin hidden views cannot be overridden by panel display styles', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
   expect(css).toMatch(/\[hidden\]\s*\{[^}]*display:\s*none\s*!important\s*;/);
+});
+
+test('web admin shell uses a CloudBase-like console layout', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('max-width: none');
+  expect(css).toContain('grid-template-columns: 188px minmax(0, 1fr)');
+  expect(css).toContain('border-right: 1px solid #e5e8ef');
+  expect(css).toContain('box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04)');
 });
 
 test('web admin test config targets only the test CloudBase environment', () => {

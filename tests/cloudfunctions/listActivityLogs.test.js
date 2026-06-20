@@ -9,6 +9,11 @@ function createFakeDb(options = {}) {
         managerAlias: '队长张',
         roles: ['user', 'organizer']
       },
+      openid_player: {
+        _id: 'openid_player',
+        preferredName: 'Alex User',
+        managerAlias: '左脚'
+      },
       openid_other_owner: { _id: 'openid_other_owner', roles: ['user', 'organizer'] },
       openid_admin: { _id: 'openid_admin', roles: ['user', 'admin'] },
       openid_super: { _id: 'openid_super', roles: ['user', 'super_admin'] },
@@ -165,8 +170,10 @@ test('listActivityLogs enriches rows with participant and team display names', a
   expect(result.items).toEqual([
     expect.objectContaining({
       _id: 'log_move',
-      operatorName: '队长张',
+      operatorName: 'Owner Zhang',
+      operatorManagerAlias: '队长张',
       targetName: 'Alex',
+      targetManagerAlias: '左脚',
       teamName: 'Green',
       fromTeamName: 'Green',
       toTeamName: 'Red'

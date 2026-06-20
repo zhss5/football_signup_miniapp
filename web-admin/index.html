@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-attendance-import" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-console-export" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -41,8 +41,7 @@
               <button type="button" data-nav-target="users">用户管理</button>
               <button type="button" data-nav-target="activities">活动管理</button>
               <button type="button" data-nav-target="attendance-stats">出勤统计</button>
-              <button type="button" data-nav-target="exports">名单导出</button>
-              <button type="button" data-nav-target="logs">日志</button>
+              <button type="button" data-nav-target="logs">全局日志</button>
             </nav>
           </aside>
 
@@ -264,18 +263,10 @@
 
                 <button type="submit" data-stats-load-button>加载统计</button>
 
-                <label>
-                  <span>导入Excel/CSV</span>
-                  <input
-                    data-attendance-import-file
-                    name="attendanceImportFile"
-                    type="file"
-                    accept=".csv,.tsv,.txt,.xlsx,.xls"
-                  />
-                </label>
+                <button type="button" data-action="export-attendance-stats" data-stats-export-button>
+                  导出出勤统计 CSV
+                </button>
               </form>
-
-              <p data-attendance-import-status class="inline-status" aria-live="polite"></p>
 
               <p data-attendance-stats-empty class="inline-status" aria-live="polite" hidden>
                 仅统计已确认举行活动；当前范围内没有出勤记录。
@@ -296,18 +287,8 @@
               </table>
             </section>
 
-            <section data-admin-view="exports" class="panel" hidden>
-              <h3>名单导出</h3>
-
-              <div class="toolbar">
-                <button type="button" data-action="export-roster">导出名单 CSV</button>
-              </div>
-
-              <textarea data-export-output class="export-output" readonly></textarea>
-            </section>
-
             <section data-admin-view="logs" class="panel" hidden>
-              <h3>日志</h3>
+              <h3>全局日志</h3>
 
               <div class="log-actions">
                 <button type="button" data-action="load-activity-logs">加载操作日志</button>
@@ -357,14 +338,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-attendance-import"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-attendance-import"></script>
-    <script src="./src/roles.js?v=20260620-attendance-import"></script>
-    <script src="./src/api.js?v=20260620-attendance-import"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-attendance-import"></script>
-    <script src="./vendor/xlsx.full.min.js?v=20260620-attendance-import"></script>
-    <script src="./src/user-management.js?v=20260620-attendance-import"></script>
-    <script src="./src/activity-management.js?v=20260620-attendance-import"></script>
-    <script src="./src/app.js?v=20260620-attendance-import"></script>
+    <script src="./config.test.js?v=20260620-console-export"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-console-export"></script>
+    <script src="./src/roles.js?v=20260620-console-export"></script>
+    <script src="./src/api.js?v=20260620-console-export"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-console-export"></script>
+    <script src="./src/user-management.js?v=20260620-console-export"></script>
+    <script src="./src/activity-management.js?v=20260620-console-export"></script>
+    <script src="./src/app.js?v=20260620-console-export"></script>
   </body>
 </html>

@@ -42,8 +42,7 @@
     users: '用户管理',
     activities: '活动管理',
     'attendance-stats': '出勤统计',
-    exports: '名单导出',
-    logs: '日志'
+    logs: '全局日志'
   };
   const ROLE_LABELS = {
     user: '普通用户',
@@ -68,11 +67,9 @@
   };
 
   function getAllowedAdminViews(user) {
-    const operationalViews = ['activities', 'attendance-stats', 'exports', 'logs'];
-
     return roles.isAdmin(user)
-      ? ['users', ...operationalViews]
-      : operationalViews;
+      ? ['users', 'activities', 'attendance-stats', 'logs']
+      : ['activities', 'attendance-stats'];
   }
 
   function formatRoleLabel(role) {
@@ -303,13 +300,6 @@
 
     function renderUsersStatus(message) {
       const status = query('[data-users-status]');
-      if (status) {
-        status.textContent = message || '';
-      }
-    }
-
-    function renderAttendanceImportStatus(message) {
-      const status = query('[data-attendance-import-status]');
       if (status) {
         status.textContent = message || '';
       }
@@ -752,9 +742,11 @@
           row.type,
           row.operatorOpenId,
           row.operatorName,
+          row.operatorManagerAlias,
           row.operatorDisplayName,
           row.targetOpenId,
           row.targetName,
+          row.targetManagerAlias,
           row.targetDisplayName,
           row.status,
           row.createdAt
@@ -948,81 +940,6 @@
       });
       state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
       renderStatsRows();
-      renderAttendanceImportStatus('');
-    }
-
-    function isExcelFile(file) {
-      return /\.(xlsx|xls)$/i.test(file && file.name ? file.name : '');
-    }
-
-    async function readExcelTableRows(file) {
-      const spreadsheet = runtimeBrowserRoot && runtimeBrowserRoot.XLSX;
-      if (
-        !spreadsheet ||
-        typeof spreadsheet.read !== 'function' ||
-        !spreadsheet.utils ||
-        typeof spreadsheet.utils.sheet_to_json !== 'function'
-      ) {
-        throw new Error('Excel 解析库未加载，请刷新页面后重试。');
-      }
-
-      if (!file || typeof file.arrayBuffer !== 'function') {
-        throw new Error('当前浏览器不支持读取 Excel 文件，请另存为 CSV 后导入。');
-      }
-
-      const workbook = spreadsheet.read(await file.arrayBuffer(), {
-        type: 'array'
-      });
-      const firstSheetName = workbook && Array.isArray(workbook.SheetNames)
-        ? workbook.SheetNames[0]
-        : '';
-      const sheet = firstSheetName && workbook.Sheets
-        ? workbook.Sheets[firstSheetName]
-        : null;
-
-      if (!sheet) {
-        return [];
-      }
-
-      return spreadsheet.utils.sheet_to_json(sheet, {
-        defval: '',
-        header: 1,
-        raw: false
-      });
-    }
-
-    async function importAttendanceStatsFile(file) {
-      if (!file) {
-        return;
-      }
-
-      renderAttendanceImportStatus('导入中...');
-      const importedRows = isExcelFile(file)
-        ? activityUi.buildImportedStatsRowsFromTable(await readExcelTableRows(file))
-        : activityUi.buildImportedStatsRowsFromText(await file.text());
-
-      state.statsRows = importedRows;
-      renderStatsRows();
-      renderAttendanceImportStatus(
-        importedRows.length
-          ? `已导入 ${importedRows.length} 行，仅更新当前页面表格。`
-          : '没有可导入的数据，请检查表头。'
-      );
-    }
-
-    async function exportRoster() {
-      const activityId = getSelectedActivityId();
-      if (!activityId) {
-        return;
-      }
-
-      const result = await api.exportActivityRoster(activityId);
-      state.exportCsv = activityUi.rowsToCsv(result.rows || []);
-
-      const output = query('[data-export-output]');
-      if (output) {
-        output.value = state.exportCsv;
-      }
     }
 
     function writeExportOutput(csv) {
@@ -1071,6 +988,29 @@
       }
 
       writeExportOutput(csv);
+    }
+
+    function exportAttendanceStats() {
+      if (!state.statsRows.length) {
+        const empty = query('[data-attendance-stats-empty]');
+        if (empty) {
+          empty.textContent = '请先加载出勤统计后再导出。';
+          setHidden(empty, false);
+        }
+        writeExportOutput('');
+        return;
+      }
+
+      const rows = state.statsRows.map(row => ({
+        参与者: row.participantName,
+        备注: row.managerAlias,
+        报名次数: row.signupCount,
+        出勤: row.presentCount,
+        缺勤: row.absentCount,
+        出勤率: row.attendanceRateText
+      }));
+      const csv = activityUi.rowsToCsv(rows);
+      downloadCsv('attendance-stats.csv', csv);
     }
 
     function exportActivityRosterView() {
@@ -1262,20 +1202,6 @@
         });
       }
 
-      const attendanceImportFile = query('[data-attendance-import-file]');
-      if (attendanceImportFile) {
-        attendanceImportFile.addEventListener('change', event => {
-          const target = event && event.target ? event.target : attendanceImportFile;
-          const file = target.files && target.files.length ? target.files[0] : null;
-
-          return importAttendanceStatsFile(file)
-            .catch(error => renderAttendanceImportStatus(getErrorMessage(error)))
-            .finally(() => {
-              target.value = '';
-            });
-        });
-      }
-
       const rosterKeyword = query('[data-roster-keyword]');
       if (rosterKeyword) {
         rosterKeyword.addEventListener('input', event => {
@@ -1366,8 +1292,9 @@
               .catch(error => renderIdentity(error.message));
           }
 
-          if (button.dataset.action === 'export-roster') {
-            return exportRoster().catch(error => renderIdentity(error.message));
+          if (button.dataset.action === 'export-attendance-stats') {
+            exportAttendanceStats();
+            return;
           }
 
           if (button.dataset.action === 'export-activity-roster-view') {
@@ -1442,12 +1369,11 @@
 
     return {
       beginWebAdminLogin,
-      exportRoster,
+      exportAttendanceStats,
       loadActivityDetail,
       loadActivityLogs,
       loadAttendanceStats,
       loadNotificationLogs,
-      importAttendanceStatsFile,
       pollWebAdminLogin,
       logoutWebAdmin,
       searchUsers,

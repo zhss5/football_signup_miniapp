@@ -142,14 +142,12 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     users: createElement({ navTarget: 'users' }),
     activities: createElement({ navTarget: 'activities' }),
     attendanceStats: createElement({ navTarget: 'attendance-stats' }),
-    exports: createElement({ navTarget: 'exports' }),
     logs: createElement({ navTarget: 'logs' })
   };
   const views = {
     users: createElement({ adminView: 'users' }),
     activities: createElement({ adminView: 'activities' }),
     attendanceStats: createElement({ adminView: 'attendance-stats' }),
-    exports: createElement({ adminView: 'exports' }),
     logs: createElement({ adminView: 'logs' })
   };
   const elements = {
@@ -170,13 +168,14 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-users-search-button]': createElement(),
     '[data-activities-search-button]': createElement(),
     '[data-stats-load-button]': createElement(),
+    '[data-stats-export-button]': createElement({
+      action: 'export-attendance-stats'
+    }),
     '[data-activities-table]': createElement(),
     '[data-users-table]': createElement(),
     '[data-activity-context-menu]': createElement(),
     '[data-attendance-stats-table]': createElement(),
     '[data-attendance-stats-empty]': createElement(),
-    '[data-attendance-import-file]': createElement(),
-    '[data-attendance-import-status]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-roster-keyword]': createElement(),
@@ -192,14 +191,12 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       nav.users,
       nav.activities,
       nav.attendanceStats,
-      nav.exports,
       nav.logs
     ],
     '[data-admin-view]': [
       views.users,
       views.activities,
       views.attendanceStats,
-      views.exports,
       views.logs
     ]
   });
@@ -263,7 +260,6 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.users.hidden).toBe(false);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.exports.hidden).toBe(false);
   expect(nav.logs.hidden).toBe(false);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
@@ -325,10 +321,10 @@ test('organizers can use operations views but do not see user management', async
   expect(nav.users.hidden).toBe(true);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.exports.hidden).toBe(false);
-  expect(nav.logs.hidden).toBe(false);
+  expect(nav.logs.hidden).toBe(true);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
+  expect(views.logs.hidden).toBe(true);
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).not.toHaveBeenCalled();
 });
@@ -356,7 +352,6 @@ test('sidebar navigation activates only the selected content view', async () => 
 
   expect(views.attendanceStats.hidden).toBe(false);
   expect(views.activities.hidden).toBe(true);
-  expect(views.exports.hidden).toBe(true);
   expect(views.logs.hidden).toBe(true);
   expect(app.state.activeView).toBe('attendance-stats');
   expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
@@ -686,108 +681,44 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
 });
 
-test('attendance stats imports CSV rows into the stats table', async () => {
-  const { app, elements } = buildHarness({
-    _id: 'openid_admin',
-    roles: ['user', 'admin']
-  });
-  const fileInput = elements['[data-attendance-import-file]'];
-  fileInput.files = [
-    {
-      name: 'attendance.csv',
-      text: jest.fn().mockResolvedValue(
-        '参与者,备注,报名次数,出勤,缺勤,出勤率\n张虹生,酱油2,3,2,1,66.67%\n人员1,,1,1,0,100%'
-      )
-    }
-  ];
-
-  await app.start();
-  await fileInput.eventHandlers.change({
-    target: fileInput
-  });
-
-  const html = elements['[data-attendance-stats-table]'].innerHTML;
-  expect(html).toContain('张虹生');
-  expect(html).toContain('酱油2');
-  expect(html).toContain('66.67%');
-  expect(html).toContain('人员1');
-  expect(elements['[data-attendance-import-status]'].textContent).toContain('已导入 2 行');
-  expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
-});
-
-test('attendance stats imports Excel rows when the spreadsheet reader is available', async () => {
-  const xlsx = {
-    read: jest.fn().mockReturnValue({
-      SheetNames: ['统计'],
-      Sheets: {
-        统计: {}
-      }
-    }),
-    utils: {
-      sheet_to_json: jest.fn().mockReturnValue([
-        ['参与者', '备注', '报名次数', '出勤', '缺勤'],
-        ['张虹生', '酱油2', 2, 1, 1]
-      ])
-    }
-  };
-  const { app, elements } = buildHarness(
+test('attendance stats exports loaded rows as CSV text', async () => {
+  const { app, appRoot, elements } = buildHarness(
     {
       _id: 'openid_admin',
       roles: ['user', 'admin']
     },
-    {},
     {
-      runtimeRoot: {
-        XLSX: xlsx
-      }
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            managerAlias: '酱油2',
+            signupCount: 2,
+            presentCount: 1,
+            absentCount: 1,
+            attendanceRate: 0.5
+          },
+          {
+            participantName: '人员1',
+            managerAlias: '',
+            signupCount: 1,
+            presentCount: 1,
+            absentCount: 0,
+            attendanceRate: 1
+          }
+        ]
+      })
     }
   );
-  const fileInput = elements['[data-attendance-import-file]'];
-  fileInput.files = [
-    {
-      name: 'attendance.xlsx',
-      arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8))
-    }
-  ];
 
   await app.start();
-  await fileInput.eventHandlers.change({
-    target: fileInput
-  });
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  appRoot.click(elements['[data-stats-export-button]']);
 
-  expect(xlsx.read).toHaveBeenCalledWith(expect.any(ArrayBuffer), {
-    type: 'array'
-  });
-  expect(xlsx.utils.sheet_to_json).toHaveBeenCalledWith({}, {
-    defval: '',
-    header: 1,
-    raw: false
-  });
-  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
-  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
-  expect(elements['[data-attendance-import-status]'].textContent).toContain('已导入 1 行');
-});
-
-test('attendance stats import reports a clear error when Excel support is unavailable', async () => {
-  const { app, elements } = buildHarness({
-    _id: 'openid_admin',
-    roles: ['user', 'admin']
-  });
-  const fileInput = elements['[data-attendance-import-file]'];
-  fileInput.files = [
-    {
-      name: 'attendance.xlsx',
-      arrayBuffer: jest.fn()
-    }
-  ];
-
-  await app.start();
-  await fileInput.eventHandlers.change({
-    target: fileInput
-  });
-
-  expect(fileInput.files[0].arrayBuffer).not.toHaveBeenCalled();
-  expect(elements['[data-attendance-import-status]'].textContent).toContain('Excel 解析库未加载');
+  expect(elements['[data-export-output]'].value).toContain('参与者,备注,报名次数,出勤,缺勤,出勤率');
+  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,1,50.00%');
+  expect(elements['[data-export-output]'].value).toContain('人员1,,1,1,0,100.00%');
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {
