@@ -157,15 +157,11 @@
       : shortenOpenId(targetOpenId);
   }
 
-  function appendManagerAlias(name, managerAlias) {
+  function getPreferredDisplayName(name, managerAlias) {
     const displayName = String(name || '').trim();
     const alias = String(managerAlias || '').trim();
 
-    if (!alias || alias === displayName) {
-      return displayName;
-    }
-
-    return displayName ? `${displayName}（${alias}）` : alias;
+    return alias || displayName;
   }
 
   function getLogOperatorName(log) {
@@ -183,7 +179,7 @@
     const targetOpenId = String(log.targetOpenId || log.userOpenId || '').trim();
 
     if (operatorName) {
-      return appendManagerAlias(operatorName, log.operatorManagerAlias);
+      return getPreferredDisplayName(operatorName, log.operatorManagerAlias);
     }
 
     if (operatorOpenId && operatorOpenId === targetOpenId && targetDisplayName) {
@@ -247,7 +243,7 @@
 
   function buildActivityLogRows(items = []) {
     return items.map(log => {
-      const targetDisplayName = appendManagerAlias(
+      const targetDisplayName = getPreferredDisplayName(
         getLogTargetDisplayName(log),
         log.targetManagerAlias
       );

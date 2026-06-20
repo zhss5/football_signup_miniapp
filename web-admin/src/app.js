@@ -209,6 +209,7 @@
       activityDetailLogRows: [],
       activityDetailRosterKeyword: '',
       activityDetailLogKeyword: '',
+      activityDetailLoading: false,
       notificationLogRows: [],
       exportCsv: '',
       activeView: DEFAULT_ADMIN_VIEW
@@ -844,7 +845,41 @@
     }
 
     function closeActivityDetail() {
+      state.activityDetailLoading = false;
+      renderActivityDetailLoading(false);
       setHidden(query('[data-activity-detail]'), true);
+    }
+
+    function renderActivityDetailLoading(isLoading = state.activityDetailLoading) {
+      setHidden(query('[data-activity-detail-loading]'), !isLoading);
+      setHidden(query('[data-activity-detail-body]'), isLoading);
+    }
+
+    function beginActivityDetailLoading(activityId) {
+      const row = getActivityRowById(activityId);
+      state.selectedActivityId = activityId;
+      state.rosterRows = [];
+      state.activityDetailLogRows = [];
+      state.activityDetailLoading = true;
+      state.exportCsv = '';
+      resetActivityDetailFilters();
+      renderActivityRows();
+
+      setHidden(query('[data-activity-detail]'), false);
+
+      const title = query('[data-activity-title]');
+      if (title) {
+        title.textContent = row && row.title ? row.title : '正在加载活动详情...';
+      }
+
+      const output = query('[data-export-output]');
+      if (output) {
+        output.value = '';
+      }
+
+      renderRosterRows();
+      renderActivityDetailLogRows();
+      renderActivityDetailLoading(true);
     }
 
     async function searchActivities() {
@@ -859,32 +894,39 @@
     }
 
     async function loadActivityDetail(activityId) {
-      const [detail, activityDetailLogRows] = await Promise.all([
-        api.getActivityDetail(activityId),
-        loadAllActivityLogRows(activityId)
-      ]);
-      state.selectedActivityId = activityId;
-      state.rosterRows = activityUi.buildRosterRows(detail);
-      state.activityDetailLogRows = activityDetailLogRows;
-      state.exportCsv = '';
-      resetActivityDetailFilters();
-      renderActivityRows();
+      beginActivityDetailLoading(activityId);
 
-      const detailPanel = query('[data-activity-detail]');
-      setHidden(detailPanel, false);
+      try {
+        const [detail, activityDetailLogRows] = await Promise.all([
+          api.getActivityDetail(activityId),
+          loadAllActivityLogRows(activityId)
+        ]);
+        state.selectedActivityId = activityId;
+        state.rosterRows = activityUi.buildRosterRows(detail);
+        state.activityDetailLogRows = activityDetailLogRows;
+        state.activityDetailLoading = false;
+        state.exportCsv = '';
+        resetActivityDetailFilters();
+        renderActivityRows();
 
-      const title = query('[data-activity-title]');
-      if (title) {
-        title.textContent = detail.activity && detail.activity.title ? detail.activity.title : activityId;
+        const title = query('[data-activity-title]');
+        if (title) {
+          title.textContent = detail.activity && detail.activity.title ? detail.activity.title : activityId;
+        }
+
+        const output = query('[data-export-output]');
+        if (output) {
+          output.value = '';
+        }
+
+        renderActivityDetailLoading(false);
+        renderRosterRows();
+        renderActivityDetailLogRows();
+      } catch (error) {
+        state.activityDetailLoading = false;
+        renderActivityDetailLoading(false);
+        throw error;
       }
-
-      const output = query('[data-export-output]');
-      if (output) {
-        output.value = '';
-      }
-
-      renderRosterRows();
-      renderActivityDetailLogRows();
     }
 
     async function confirmActivity(activityId) {
@@ -1081,6 +1123,7 @@
       state.activityDetailLogRows = [];
       state.activityDetailRosterKeyword = '';
       state.activityDetailLogKeyword = '';
+      state.activityDetailLoading = false;
       state.notificationLogRows = [];
       state.exportCsv = '';
       hideActivityContextMenu();
@@ -1234,6 +1277,10 @@
             const row = event.target.closest('[data-activity-id]');
             if (row) {
               hideActivityContextMenu();
+              if (Number(event.detail) >= 2) {
+                return loadActivityDetail(row.dataset.activityId).catch(error => renderIdentity(error.message));
+              }
+
               selectActivity(row.dataset.activityId);
               return;
             }
@@ -1345,6 +1392,10 @@
           }
 
           hideActivityContextMenu();
+          if (state.activityDetailLoading && state.selectedActivityId === row.dataset.activityId) {
+            return;
+          }
+
           return loadActivityDetail(row.dataset.activityId).catch(error => renderIdentity(error.message));
         });
       }

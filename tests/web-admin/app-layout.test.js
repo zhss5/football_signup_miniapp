@@ -67,13 +67,14 @@ function createAppRoot(elements, groups) {
         doubleClickHandler = handler;
       }
     }),
-    click(element) {
+    click(element, eventOverrides = {}) {
       if (!clickHandler) {
         throw new Error('click handler was not registered');
       }
 
       return clickHandler({
-        target: createTarget(element)
+        target: createTarget(element),
+        ...eventOverrides
       });
     },
     dblclick(element) {
@@ -178,6 +179,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-attendance-stats-empty]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
+    '[data-activity-detail-loading]': createElement(),
+    '[data-activity-detail-body]': createElement(),
     '[data-roster-keyword]': createElement(),
     '[data-activity-detail-logs-keyword]': createElement(),
     '[data-export-output]': createElement(),
@@ -480,6 +483,63 @@ test('double-clicking an activity row opens the detail modal', async () => {
   expect(elements['[data-activity-detail]'].hidden).toBe(false);
   expect(elements['[data-activity-title]'].textContent).toBe('双击打开活动');
   expect(elements['[data-activities-table]'].innerHTML).toContain('class="is-selected"');
+});
+
+test('second click from a browser double-click opens detail modal and shows loading state', async () => {
+  const detailDeferred = createDeferred();
+  const getActivityDetail = jest.fn().mockReturnValue(detailDeferred.promise);
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail,
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_pending',
+            title: 'Pending Activity',
+            startAt: '2026-06-19T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'pending',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 1
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({
+    activityId: 'activity_pending'
+  });
+  elements['[data-activity-detail]'].hidden = true;
+  elements['[data-activity-detail-loading]'].hidden = true;
+  elements['[data-activity-detail-body]'].hidden = false;
+
+  await app.start();
+  const pending = appRoot.click(row, { detail: 2 });
+
+  expect(getActivityDetail).toHaveBeenCalledWith('activity_pending');
+  expect(app.state.selectedActivityId).toBe('activity_pending');
+  expect(elements['[data-activity-detail]'].hidden).toBe(false);
+  expect(elements['[data-activity-detail-loading]'].hidden).toBe(false);
+  expect(elements['[data-activity-detail-body]'].hidden).toBe(true);
+
+  await appRoot.dblclick(row);
+  expect(getActivityDetail).toHaveBeenCalledTimes(1);
+
+  detailDeferred.resolve({
+    activity: {
+      title: 'Loaded Activity'
+    },
+    teams: []
+  });
+  await pending;
+
+  expect(elements['[data-activity-detail-loading]'].hidden).toBe(true);
+  expect(elements['[data-activity-detail-body]'].hidden).toBe(false);
+  expect(elements['[data-activity-title]'].textContent).toBe('Loaded Activity');
 });
 
 test('right-clicking a pending activity shows open and confirm actions in a context menu', async () => {
@@ -1026,9 +1086,11 @@ test('activity detail loads and renders current activity operation logs', async 
         _id: 'log_1',
         action: 'registration_moved',
         operatorOpenId: 'openid_admin',
-        operatorName: '管理员张',
+        operatorName: 'Admin Zhang',
+        operatorManagerAlias: 'Captain',
         targetOpenId: 'openid_player',
         targetName: 'Alex',
+        targetManagerAlias: 'Left foot',
         fromTeamName: 'Red',
         toTeamName: 'Green',
         createdAt: '2026-06-10T12:00:00.000Z'
@@ -1060,8 +1122,8 @@ test('activity detail loads and renders current activity operation logs', async 
     skip: 0
   });
   const html = elements['[data-activity-detail-logs-table]'].innerHTML;
-  expect(html).toContain('Alex 从 Red 换到 Green');
-  expect(html).toContain('管理员张');
+  expect(html).toContain('Left foot 从 Red 换到 Green');
+  expect(html).toContain('Captain');
   expect(html).toContain('title="openid_admin"');
   expect(html).not.toContain('<code>openid_admin</code>');
   expect(html).toContain('2026-06-10 20:00');
@@ -1113,8 +1175,10 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
             action: 'signup_joined',
             operatorOpenId: 'openid_alex',
             operatorName: 'Alex',
+            operatorManagerAlias: 'Left foot',
             targetOpenId: 'openid_alex',
             targetName: 'Alex',
+            targetManagerAlias: 'Left foot',
             teamName: 'Red',
             createdAt: '2026-06-10T10:00:00.000Z'
           },
@@ -1123,8 +1187,10 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
             action: 'signup_cancelled',
             operatorOpenId: 'openid_ben',
             operatorName: 'Ben',
+            operatorManagerAlias: 'Goalkeeper',
             targetOpenId: 'openid_ben',
             targetName: 'Ben',
+            targetManagerAlias: 'Goalkeeper',
             createdAt: '2026-06-10T11:00:00.000Z'
           }
         ]
@@ -1149,8 +1215,8 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
 
   expect(elements['[data-export-output]'].value).toContain('操作,操作人,报名人,时间');
   expect(elements['[data-export-output]'].value).not.toContain('Alex 报名');
-  expect(elements['[data-export-output]'].value).toContain('Ben 取消报名');
-  expect(elements['[data-export-output]'].value).toContain('Ben');
+  expect(elements['[data-export-output]'].value).toContain('Goalkeeper 取消报名');
+  expect(elements['[data-export-output]'].value).toContain('Goalkeeper');
 });
 
 test('activity detail close action hides the modal', async () => {

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-console-export" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-detail-loading" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -179,7 +179,12 @@
                     </button>
                   </div>
 
-                  <div class="activity-detail-body">
+                  <div class="activity-detail-loading" data-activity-detail-loading hidden>
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <span>正在加载活动详情...</span>
+                  </div>
+
+                  <div class="activity-detail-body" data-activity-detail-body>
                     <section class="detail-subsection">
                       <div class="detail-subsection-header">
                         <h4>活动报名人列表</h4>
@@ -338,13 +343,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-console-export"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-console-export"></script>
-    <script src="./src/roles.js?v=20260620-console-export"></script>
-    <script src="./src/api.js?v=20260620-console-export"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-console-export"></script>
-    <script src="./src/user-management.js?v=20260620-console-export"></script>
-    <script src="./src/activity-management.js?v=20260620-console-export"></script>
-    <script src="./src/app.js?v=20260620-console-export"></script>
+    <script src="./config.test.js?v=20260620-detail-loading"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-detail-loading"></script>
+    <script src="./src/roles.js?v=20260620-detail-loading"></script>
+    <script src="./src/api.js?v=20260620-detail-loading"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-detail-loading"></script>
+    <script src="./src/user-management.js?v=20260620-detail-loading"></script>
+    <script src="./src/activity-management.js?v=20260620-detail-loading"></script>
+    <script src="./src/app.js?v=20260620-detail-loading"></script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-console-export';
+const WEB_ADMIN_ASSET_VERSION = '20260620-detail-loading';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -77,7 +77,10 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-activity-detail-logs-keyword');
   expect(html).toContain('data-action="export-activity-roster-view"');
   expect(html).toContain('data-action="export-activity-logs-view"');
+  expect(html).toContain('data-activity-detail-loading');
+  expect(html).toContain('正在加载活动详情...');
   expect(html).toContain('activity-detail-body');
+  expect(html).toContain('data-activity-detail-body');
   expect(html).toContain('导出CSV');
   expect(html).toContain('活动报名人列表');
   expect(html).toContain('data-activity-detail-logs-table');
