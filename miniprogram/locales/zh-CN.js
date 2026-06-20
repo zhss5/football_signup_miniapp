@@ -177,6 +177,10 @@ module.exports = {
       title: '取消活动',
       content: '该操作会停止新的报名，并将活动标记为已取消。'
     },
+    cancelSignup: {
+      title: '退出报名',
+      content: '确认退出本次报名？'
+    },
     deleteActivity: {
       title: '删除活动',
       content: '只有无人报名的活动才可以删除，删除后活动仍会保留在你的历史记录中。'

@@ -222,6 +222,10 @@ module.exports = {
       title: 'Cancel Activity',
       content: 'This will stop new signups and notify subscribed participants.'
     },
+    cancelSignup: {
+      title: 'Cancel Signup',
+      content: 'Leave this activity?'
+    },
     confirmProceeding: {
       title: 'Confirm Activity',
       content: 'Mark this activity as confirmed and notify subscribed participants?'

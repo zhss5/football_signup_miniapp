@@ -53,6 +53,7 @@ describe('activity detail page', () => {
   let updateParticipantManagerAlias;
   let updateTeamColor;
   let addProxyRegistration;
+  let cancelRegistration;
   let moveRegistration;
   let removeRegistration;
   let buildTeamListVm;
@@ -91,6 +92,7 @@ describe('activity detail page', () => {
     ({ updateTeamColor } = require('../../../miniprogram/services/activity-service'));
     ({ resolveActivityCoverImage } = require('../../../miniprogram/services/activity-service'));
     ({ addProxyRegistration } = require('../../../miniprogram/services/registration-service'));
+    ({ cancelRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ moveRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ removeRegistration } = require('../../../miniprogram/services/registration-service'));
     ({ buildTeamListVm } = require('../../../miniprogram/utils/formatters'));
@@ -1212,6 +1214,59 @@ describe('activity detail page', () => {
     expect(global.wx.navigateTo).toHaveBeenCalledWith({
       url: '/pages/activity-create/index?mode=copy&activityId=activity_123'
     });
+  });
+
+  test('onCancelSignup does not cancel when the confirmation is dismissed', async () => {
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: false });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onCancelSignup.call(ctx);
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Cancel Signup',
+        content: 'Leave this activity?'
+      })
+    );
+    expect(cancelRegistration).not.toHaveBeenCalled();
+    expect(ctx.reload).not.toHaveBeenCalled();
+  });
+
+  test('onCancelSignup confirms before cancelling signup and reloading detail', async () => {
+    cancelRegistration.mockResolvedValue({
+      status: 'cancelled'
+    });
+    global.wx.showModal.mockImplementation(({ success }) => {
+      success({ confirm: true });
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onCancelSignup.call(ctx);
+
+    expect(global.wx.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Cancel Signup',
+        content: 'Leave this activity?'
+      })
+    );
+    expect(cancelRegistration).toHaveBeenCalledWith('activity_123');
+    expect(ctx.reload).toHaveBeenCalled();
   });
 
   test('onRemoveRegistration confirms removal, calls the service, and reloads detail', async () => {

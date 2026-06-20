@@ -459,6 +459,18 @@ Page({
 
   async onCancelSignup() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
+    const confirmed = await new Promise(resolve => {
+      wx.showModal({
+        title: translate('modal.cancelSignup.title'),
+        content: translate('modal.cancelSignup.content'),
+        success: result => resolve(Boolean(result.confirm))
+      });
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       await cancelRegistration(this.data.activityId);
       await this.reload();
