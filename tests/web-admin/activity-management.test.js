@@ -3,6 +3,7 @@ const {
   buildActivitySearchParams,
   buildActivityLogRows,
   buildAttendanceRows,
+  formatBeijingDateTime,
   buildNotificationLogRows,
   buildRosterRows,
   buildStatsRows,
@@ -49,7 +50,7 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
     {
       activityId: 'activity_1',
       title: 'Friday Football',
-      startAt: '2026-06-05T20:00:00.000Z',
+      startAt: '2026-06-06 04:00',
       status: 'published',
       confirmStatus: 'pending',
       statusText: 'published / pending',
@@ -58,6 +59,13 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       joinedCount: 12
     }
   ]);
+});
+
+test('formatBeijingDateTime renders timestamps in Beijing time', () => {
+  expect(formatBeijingDateTime('2026-06-10T12:00:00.000Z')).toBe('2026-06-10 20:00');
+  expect(formatBeijingDateTime('2026-12-31T18:30:00.000Z')).toBe('2027-01-01 02:30');
+  expect(formatBeijingDateTime('')).toBe('');
+  expect(formatBeijingDateTime('not-a-date')).toBe('not-a-date');
 });
 
 test('buildRosterRows flattens team members with manager aliases and attendance', () => {
@@ -191,7 +199,7 @@ test('stats and log row builders keep stable display fields', () => {
       targetName: 'Alex',
       summary: 'Alex 标记为缺勤',
       status: '',
-      createdAt: '2026-06-10T10:00:00.000Z'
+      createdAt: '2026-06-10 18:00'
     },
     {
       id: 'log_2',
@@ -201,7 +209,7 @@ test('stats and log row builders keep stable display fields', () => {
       targetName: 'Alex',
       summary: 'Alex 从 Red 换到 Green',
       status: '',
-      createdAt: '2026-06-10T11:00:00.000Z'
+      createdAt: '2026-06-10 19:00'
     },
     {
       id: 'log_3',
@@ -211,7 +219,7 @@ test('stats and log row builders keep stable display fields', () => {
       targetName: 'Alex',
       summary: 'Alex 备注从 Old 改为 New',
       status: '',
-      createdAt: '2026-06-10T12:00:00.000Z'
+      createdAt: '2026-06-10 20:00'
     }
   ]);
 
@@ -232,7 +240,7 @@ test('stats and log row builders keep stable display fields', () => {
       operatorOpenId: '',
       targetOpenId: 'openid_player',
       status: 'failed',
-      createdAt: '2026-06-10T11:00:00.000Z'
+      createdAt: '2026-06-10 19:00'
     }
   ]);
 });

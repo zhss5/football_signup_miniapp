@@ -15,6 +15,32 @@
     return Math.floor(number);
   }
 
+  function padDatePart(value) {
+    return String(value).padStart(2, '0');
+  }
+
+  function formatBeijingDateTime(value) {
+    const text = String(value || '').trim();
+    if (!text) {
+      return '';
+    }
+
+    const timestamp = Date.parse(text);
+    if (!Number.isFinite(timestamp)) {
+      return text;
+    }
+
+    const beijingDate = new Date(timestamp + 8 * 60 * 60 * 1000);
+    return [
+      beijingDate.getUTCFullYear(),
+      padDatePart(beijingDate.getUTCMonth() + 1),
+      padDatePart(beijingDate.getUTCDate())
+    ].join('-') + ' ' + [
+      padDatePart(beijingDate.getUTCHours()),
+      padDatePart(beijingDate.getUTCMinutes())
+    ].join(':');
+  }
+
   function buildActivitySearchParams(input = {}) {
     return {
       scope: 'web-admin',
@@ -32,7 +58,7 @@
     return items.map(activity => ({
       activityId: activity._id || '',
       title: activity.title || '',
-      startAt: activity.startAt || '',
+      startAt: formatBeijingDateTime(activity.startAt),
       status: activity.status || '',
       confirmStatus: activity.confirmStatus || 'pending',
       statusText: `${activity.status || ''} / ${activity.confirmStatus || 'pending'}`,
@@ -170,7 +196,7 @@
       targetName: getLogTargetName(log),
       summary: buildActivityLogSummary(log),
       status: '',
-      createdAt: log.createdAt || ''
+      createdAt: formatBeijingDateTime(log.createdAt)
     }));
   }
 
@@ -181,7 +207,7 @@
       operatorOpenId: log.operatorOpenId || '',
       targetOpenId: log.targetOpenId || log.userOpenId || '',
       status: log.status || '',
-      createdAt: log.createdAt || ''
+      createdAt: formatBeijingDateTime(log.createdAt)
     }));
   }
 
@@ -213,6 +239,7 @@
     buildActivityRows,
     buildActivitySearchParams,
     buildAttendanceRows,
+    formatBeijingDateTime,
     buildNotificationLogRows,
     buildRosterRows,
     buildStatsRows,

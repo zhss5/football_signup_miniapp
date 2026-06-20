@@ -355,6 +355,8 @@ test('activity rows render a confirm action only for pending published activitie
   expect(html).toContain('data-activity-id="activity_pending"');
   expect(html).toContain('确认举行');
   expect(html).toContain('class="table-actions"');
+  expect(html).toContain('2026-06-19 20:00');
+  expect(html).not.toContain('2026-06-19T12:00:00.000Z');
 });
 
 test('activity confirm button calls notify wrapper and refreshes activities', async () => {
@@ -821,7 +823,8 @@ test('activity detail loads and renders current activity operation logs', async 
   const html = elements['[data-activity-detail-logs-table]'].innerHTML;
   expect(html).toContain('Alex 从 Red 换到 Green');
   expect(html).toContain('openid_admin');
-  expect(html).toContain('2026-06-10T12:00:00.000Z');
+  expect(html).toContain('2026-06-10 20:00');
+  expect(html).not.toContain('2026-06-10T12:00:00.000Z');
 });
 
 test('activity detail loads all activity operation log pages', async () => {
