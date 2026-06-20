@@ -809,6 +809,13 @@ select {
   color: #172033;
 }
 
+.role-toggle input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+}
+
 .role-toggle input:disabled + span {
   color: #9aa7b8;
 }

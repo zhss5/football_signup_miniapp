@@ -32,6 +32,51 @@ async function loadUser(db, openid) {
   return res && res.data ? res.data : null;
 }
 
+function pickAvatarUrl(user, registrationAvatarUrl) {
+  return (
+    user.avatarUrl ||
+    user.avatarURL ||
+    user.avatar ||
+    user.photoUrl ||
+    user.photoURL ||
+    registrationAvatarUrl ||
+    ''
+  );
+}
+
+function getRegistrationAvatarTimestamp(registration) {
+  return String(
+    registration.updatedAt ||
+    registration.joinedAt ||
+    registration.createdAt ||
+    ''
+  );
+}
+
+async function loadRegistrationAvatarUrlsByUser(db) {
+  try {
+    const res = await db.collection(COLLECTIONS.REGISTRATIONS).get();
+    const registrations = Array.isArray(res.data) ? res.data : [];
+    return registrations.reduce((acc, registration) => {
+      const userOpenId = String(registration.userOpenId || '').trim();
+      const avatarUrl = String(registration.avatarUrl || '').trim();
+      if (!userOpenId || !avatarUrl || registration.proxyRegistration) {
+        return acc;
+      }
+
+      const timestamp = getRegistrationAvatarTimestamp(registration);
+      const current = acc[userOpenId];
+      if (!current || timestamp >= current.timestamp) {
+        acc[userOpenId] = { avatarUrl, timestamp };
+      }
+
+      return acc;
+    }, {});
+  } catch (error) {
+    return {};
+  }
+}
+
 function userMatchesKeyword(user, keyword) {
   if (!keyword) {
     return true;
@@ -49,13 +94,15 @@ function userMatchesKeyword(user, keyword) {
     .some(value => String(value).toLowerCase().includes(keyword));
 }
 
-function toSafeUser(user) {
+function toSafeUser(user, registrationAvatarsByUser = {}) {
+  const registrationAvatar = registrationAvatarsByUser[user._id] || {};
+
   return {
     _id: user._id || '',
     preferredName: user.preferredName || '',
     displayName: user.displayName || '',
     nickName: user.nickName || user.nickname || '',
-    avatarUrl: user.avatarUrl || user.avatarURL || user.avatar || user.photoUrl || user.photoURL || '',
+    avatarUrl: pickAvatarUrl(user, registrationAvatar.avatarUrl),
     managerAlias: user.managerAlias || '',
     roles: getRoles(user),
     createdAt: user.createdAt || '',
@@ -93,8 +140,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const res = await db.collection(COLLECTIONS.USERS).get();
   const users = Array.isArray(res.data) ? res.data : [];
+  const registrationAvatarsByUser = await loadRegistrationAvatarUrlsByUser(db);
   const filtered = users
-    .map(toSafeUser)
+    .map(user => toSafeUser(user, registrationAvatarsByUser))
     .filter(user => userMatchesKeyword(user, keyword))
     .filter(user => (role ? hasRole(user, role) : true))
     .sort(compareUsers);

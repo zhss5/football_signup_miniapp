@@ -36,7 +36,8 @@ function createFakeDb(options = {}) {
         lastActiveAt: '2026-05-13T00:00:00.000Z'
       },
       ...(options.users || {})
-    }
+    },
+    registrations: options.registrations || {}
   };
 
   return {
@@ -159,6 +160,60 @@ test('listUsers exposes legacy avatar fields as avatarUrl', async () => {
     expect.objectContaining({
       _id: 'openid_legacy_avatar',
       avatarUrl: 'cloud://test-env/user-avatars/legacy.jpg'
+    })
+  ]);
+});
+
+test('listUsers falls back to the latest real registration avatar', async () => {
+  const db = createFakeDb({
+    users: {
+      openid_profile_without_avatar: {
+        _id: 'openid_profile_without_avatar',
+        preferredName: 'No Avatar Profile',
+        avatarUrl: '',
+        roles: ['user'],
+        createdAt: '2026-05-05T00:00:00.000Z',
+        lastActiveAt: '2026-05-15T00:00:00.000Z'
+      }
+    },
+    registrations: {
+      old_registration: {
+        _id: 'old_registration',
+        userOpenId: 'openid_profile_without_avatar',
+        proxyRegistration: false,
+        avatarUrl: 'cloud://test-env/user-avatars/old.jpg',
+        joinedAt: '2026-05-10T00:00:00.000Z',
+        updatedAt: '2026-05-10T00:00:00.000Z'
+      },
+      latest_registration: {
+        _id: 'latest_registration',
+        userOpenId: 'openid_profile_without_avatar',
+        proxyRegistration: false,
+        avatarUrl: 'cloud://test-env/user-avatars/latest.jpg',
+        joinedAt: '2026-05-11T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:00.000Z'
+      },
+      proxy_registration: {
+        _id: 'proxy_registration',
+        userOpenId: 'openid_profile_without_avatar',
+        proxyRegistration: true,
+        avatarUrl: 'cloud://test-env/user-avatars/proxy.jpg',
+        joinedAt: '2026-05-13T00:00:00.000Z',
+        updatedAt: '2026-05-13T00:00:00.000Z'
+      }
+    }
+  });
+
+  const result = await listUsers.main(
+    { keyword: 'No Avatar', limit: 20, skip: 0 },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+
+  expect(result.items).toEqual([
+    expect.objectContaining({
+      _id: 'openid_profile_without_avatar',
+      avatarUrl: 'cloud://test-env/user-avatars/latest.jpg'
     })
   ]);
 });

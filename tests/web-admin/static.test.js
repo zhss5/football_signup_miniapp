@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-log-targetless';
+const WEB_ADMIN_ASSET_VERSION = '20260620-user-avatar-roles';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -165,6 +165,15 @@ test('web admin user management row actions have stable spacing', () => {
   expect(css).toContain('flex-wrap: wrap');
   expect(css).not.toContain('.table-actions');
   expect(css).toContain('.inline-status');
+});
+
+test('role management checkboxes keep compact native sizing', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('.role-toggle input[type="checkbox"]');
+  expect(css).toContain('width: 18px');
+  expect(css).toContain('height: 18px');
+  expect(css).toContain('flex: 0 0 18px');
 });
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {
