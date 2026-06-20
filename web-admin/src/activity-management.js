@@ -114,6 +114,214 @@
     }));
   }
 
+  const IMPORT_STAT_HEADER_ALIASES = {
+    participantName: ['参与者', '报名人', '报名名', '姓名', '名称', 'participantname', 'name', 'signupname'],
+    managerAlias: ['备注', '管理备注', '识别名', 'manageralias', 'alias', 'note'],
+    signupCount: ['报名次数', '报名数', '总报名', 'signupcount', 'signups'],
+    presentCount: ['出勤', '出勤次数', 'presentcount', 'present'],
+    absentCount: ['缺勤', '缺勤次数', 'absentcount', 'absent'],
+    attendanceRateText: ['出勤率', 'attendancerate', 'attendanceratetext', 'rate']
+  };
+
+  function normalizeImportText(value) {
+    return String(value ?? '').replace(/^\uFEFF/, '').trim();
+  }
+
+  function normalizeImportHeader(value) {
+    return normalizeImportText(value).replace(/\s+/g, '').toLowerCase();
+  }
+
+  function buildImportHeaderIndex(headers = []) {
+    const normalizedHeaders = headers.map(normalizeImportHeader);
+
+    return Object.keys(IMPORT_STAT_HEADER_ALIASES).reduce((index, fieldName) => {
+      const aliases = IMPORT_STAT_HEADER_ALIASES[fieldName].map(normalizeImportHeader);
+      const columnIndex = normalizedHeaders.findIndex(header => aliases.includes(header));
+
+      if (columnIndex >= 0) {
+        index[fieldName] = columnIndex;
+      }
+
+      return index;
+    }, {});
+  }
+
+  function countDelimiterOccurrences(line, delimiter) {
+    let count = 0;
+    let quoted = false;
+
+    for (let index = 0; index < line.length; index += 1) {
+      const character = line[index];
+
+      if (character === '"') {
+        if (quoted && line[index + 1] === '"') {
+          index += 1;
+        } else {
+          quoted = !quoted;
+        }
+        continue;
+      }
+
+      if (!quoted && character === delimiter) {
+        count += 1;
+      }
+    }
+
+    return count;
+  }
+
+  function detectDelimitedTextSeparator(text) {
+    const firstDataLine = String(text || '')
+      .split(/\r?\n/)
+      .find(line => line.trim());
+    const delimiters = [',', '\t', ';'];
+
+    if (!firstDataLine) {
+      return ',';
+    }
+
+    return delimiters
+      .map(delimiter => ({
+        delimiter,
+        count: countDelimiterOccurrences(firstDataLine, delimiter)
+      }))
+      .sort((left, right) => right.count - left.count)[0].delimiter;
+  }
+
+  function parseDelimitedTable(text, delimiter) {
+    const source = String(text || '');
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let quoted = false;
+
+    for (let index = 0; index < source.length; index += 1) {
+      const character = source[index];
+
+      if (quoted) {
+        if (character === '"') {
+          if (source[index + 1] === '"') {
+            cell += '"';
+            index += 1;
+          } else {
+            quoted = false;
+          }
+        } else {
+          cell += character;
+        }
+        continue;
+      }
+
+      if (character === '"') {
+        quoted = true;
+        continue;
+      }
+
+      if (character === delimiter) {
+        row.push(cell);
+        cell = '';
+        continue;
+      }
+
+      if (character === '\r' || character === '\n') {
+        if (character === '\r' && source[index + 1] === '\n') {
+          index += 1;
+        }
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = '';
+        continue;
+      }
+
+      cell += character;
+    }
+
+    row.push(cell);
+    rows.push(row);
+
+    return rows
+      .map(items => items.map(normalizeImportText))
+      .filter(items => items.some(Boolean));
+  }
+
+  function normalizeImportedCount(value) {
+    const number = Number(normalizeImportText(value).replace(/,/g, ''));
+    if (!Number.isFinite(number) || number < 0) {
+      return 0;
+    }
+
+    return Math.floor(number);
+  }
+
+  function normalizeImportedRateText(value, presentCount, signupCount) {
+    const text = normalizeImportText(value);
+
+    if (text) {
+      if (text.includes('%')) {
+        return text;
+      }
+
+      const number = Number(text.replace(/,/g, ''));
+      if (Number.isFinite(number)) {
+        const percentage = number > 1 ? number : number * 100;
+        return `${percentage.toFixed(2)}%`;
+      }
+    }
+
+    if (signupCount > 0) {
+      return `${((presentCount / signupCount) * 100).toFixed(2)}%`;
+    }
+
+    return '0.00%';
+  }
+
+  function getImportedRowValue(row, headerIndex, fieldName) {
+    const columnIndex = headerIndex[fieldName];
+    return Number.isInteger(columnIndex) ? row[columnIndex] : '';
+  }
+
+  function buildImportedStatsRowsFromTable(tableRows = []) {
+    const rows = tableRows
+      .map(row => (Array.isArray(row) ? row.map(normalizeImportText) : []))
+      .filter(row => row.some(Boolean));
+
+    if (!rows.length) {
+      return [];
+    }
+
+    const headerIndex = buildImportHeaderIndex(rows[0]);
+    if (!Number.isInteger(headerIndex.participantName)) {
+      return [];
+    }
+
+    return rows.slice(1)
+      .map(row => {
+        const signupCount = normalizeImportedCount(getImportedRowValue(row, headerIndex, 'signupCount'));
+        const presentCount = normalizeImportedCount(getImportedRowValue(row, headerIndex, 'presentCount'));
+        const absentCount = normalizeImportedCount(getImportedRowValue(row, headerIndex, 'absentCount'));
+
+        return {
+          participantName: normalizeImportText(getImportedRowValue(row, headerIndex, 'participantName')),
+          managerAlias: normalizeImportText(getImportedRowValue(row, headerIndex, 'managerAlias')),
+          signupCount,
+          presentCount,
+          absentCount,
+          attendanceRateText: normalizeImportedRateText(
+            getImportedRowValue(row, headerIndex, 'attendanceRateText'),
+            presentCount,
+            signupCount
+          )
+        };
+      })
+      .filter(row => row.participantName || row.signupCount || row.presentCount || row.absentCount);
+  }
+
+  function buildImportedStatsRowsFromText(text) {
+    const delimiter = detectDelimitedTextSeparator(text);
+    return buildImportedStatsRowsFromTable(parseDelimitedTable(text, delimiter));
+  }
+
   const ATTENDANCE_LABELS = {
     absent: '缺勤',
     present: '出勤'
@@ -296,6 +504,8 @@
     buildActivitySearchParams,
     buildAttendanceRows,
     formatBeijingDateTime,
+    buildImportedStatsRowsFromTable,
+    buildImportedStatsRowsFromText,
     buildNotificationLogRows,
     buildRosterRows,
     buildStatsRows,

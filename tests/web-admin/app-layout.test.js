@@ -137,7 +137,7 @@ function createDeferred() {
   };
 }
 
-function buildHarness(user, apiOverrides = {}) {
+function buildHarness(user, apiOverrides = {}, options = {}) {
   const nav = {
     users: createElement({ navTarget: 'users' }),
     activities: createElement({ navTarget: 'activities' }),
@@ -175,6 +175,8 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-activity-context-menu]': createElement(),
     '[data-attendance-stats-table]': createElement(),
     '[data-attendance-stats-empty]': createElement(),
+    '[data-attendance-import-file]': createElement(),
+    '[data-attendance-import-status]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-roster-keyword]': createElement(),
@@ -234,6 +236,7 @@ function buildHarness(user, apiOverrides = {}) {
     appRoot,
     api,
     autoPoll: false,
+    runtimeRoot: options.runtimeRoot,
     storage
   });
 
@@ -681,6 +684,110 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('酱油仔');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
+});
+
+test('attendance stats imports CSV rows into the stats table', async () => {
+  const { app, elements } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+  const fileInput = elements['[data-attendance-import-file]'];
+  fileInput.files = [
+    {
+      name: 'attendance.csv',
+      text: jest.fn().mockResolvedValue(
+        '参与者,备注,报名次数,出勤,缺勤,出勤率\n张虹生,酱油2,3,2,1,66.67%\n人员1,,1,1,0,100%'
+      )
+    }
+  ];
+
+  await app.start();
+  await fileInput.eventHandlers.change({
+    target: fileInput
+  });
+
+  const html = elements['[data-attendance-stats-table]'].innerHTML;
+  expect(html).toContain('张虹生');
+  expect(html).toContain('酱油2');
+  expect(html).toContain('66.67%');
+  expect(html).toContain('人员1');
+  expect(elements['[data-attendance-import-status]'].textContent).toContain('已导入 2 行');
+  expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
+});
+
+test('attendance stats imports Excel rows when the spreadsheet reader is available', async () => {
+  const xlsx = {
+    read: jest.fn().mockReturnValue({
+      SheetNames: ['统计'],
+      Sheets: {
+        统计: {}
+      }
+    }),
+    utils: {
+      sheet_to_json: jest.fn().mockReturnValue([
+        ['参与者', '备注', '报名次数', '出勤', '缺勤'],
+        ['张虹生', '酱油2', 2, 1, 1]
+      ])
+    }
+  };
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {},
+    {
+      runtimeRoot: {
+        XLSX: xlsx
+      }
+    }
+  );
+  const fileInput = elements['[data-attendance-import-file]'];
+  fileInput.files = [
+    {
+      name: 'attendance.xlsx',
+      arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8))
+    }
+  ];
+
+  await app.start();
+  await fileInput.eventHandlers.change({
+    target: fileInput
+  });
+
+  expect(xlsx.read).toHaveBeenCalledWith(expect.any(ArrayBuffer), {
+    type: 'array'
+  });
+  expect(xlsx.utils.sheet_to_json).toHaveBeenCalledWith({}, {
+    defval: '',
+    header: 1,
+    raw: false
+  });
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
+  expect(elements['[data-attendance-import-status]'].textContent).toContain('已导入 1 行');
+});
+
+test('attendance stats import reports a clear error when Excel support is unavailable', async () => {
+  const { app, elements } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+  const fileInput = elements['[data-attendance-import-file]'];
+  fileInput.files = [
+    {
+      name: 'attendance.xlsx',
+      arrayBuffer: jest.fn()
+    }
+  ];
+
+  await app.start();
+  await fileInput.eventHandlers.change({
+    target: fileInput
+  });
+
+  expect(fileInput.files[0].arrayBuffer).not.toHaveBeenCalled();
+  expect(elements['[data-attendance-import-status]'].textContent).toContain('Excel 解析库未加载');
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {

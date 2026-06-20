@@ -308,6 +308,13 @@
       }
     }
 
+    function renderAttendanceImportStatus(message) {
+      const status = query('[data-attendance-import-status]');
+      if (status) {
+        status.textContent = message || '';
+      }
+    }
+
     function renderLoginQrPayload(payload) {
       const output = query('[data-login-payload]');
       if (output) {
@@ -941,6 +948,66 @@
       });
       state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
       renderStatsRows();
+      renderAttendanceImportStatus('');
+    }
+
+    function isExcelFile(file) {
+      return /\.(xlsx|xls)$/i.test(file && file.name ? file.name : '');
+    }
+
+    async function readExcelTableRows(file) {
+      const spreadsheet = runtimeBrowserRoot && runtimeBrowserRoot.XLSX;
+      if (
+        !spreadsheet ||
+        typeof spreadsheet.read !== 'function' ||
+        !spreadsheet.utils ||
+        typeof spreadsheet.utils.sheet_to_json !== 'function'
+      ) {
+        throw new Error('Excel 解析库未加载，请刷新页面后重试。');
+      }
+
+      if (!file || typeof file.arrayBuffer !== 'function') {
+        throw new Error('当前浏览器不支持读取 Excel 文件，请另存为 CSV 后导入。');
+      }
+
+      const workbook = spreadsheet.read(await file.arrayBuffer(), {
+        type: 'array'
+      });
+      const firstSheetName = workbook && Array.isArray(workbook.SheetNames)
+        ? workbook.SheetNames[0]
+        : '';
+      const sheet = firstSheetName && workbook.Sheets
+        ? workbook.Sheets[firstSheetName]
+        : null;
+
+      if (!sheet) {
+        return [];
+      }
+
+      return spreadsheet.utils.sheet_to_json(sheet, {
+        defval: '',
+        header: 1,
+        raw: false
+      });
+    }
+
+    async function importAttendanceStatsFile(file) {
+      if (!file) {
+        return;
+      }
+
+      renderAttendanceImportStatus('导入中...');
+      const importedRows = isExcelFile(file)
+        ? activityUi.buildImportedStatsRowsFromTable(await readExcelTableRows(file))
+        : activityUi.buildImportedStatsRowsFromText(await file.text());
+
+      state.statsRows = importedRows;
+      renderStatsRows();
+      renderAttendanceImportStatus(
+        importedRows.length
+          ? `已导入 ${importedRows.length} 行，仅更新当前页面表格。`
+          : '没有可导入的数据，请检查表头。'
+      );
     }
 
     async function exportRoster() {
@@ -1195,6 +1262,20 @@
         });
       }
 
+      const attendanceImportFile = query('[data-attendance-import-file]');
+      if (attendanceImportFile) {
+        attendanceImportFile.addEventListener('change', event => {
+          const target = event && event.target ? event.target : attendanceImportFile;
+          const file = target.files && target.files.length ? target.files[0] : null;
+
+          return importAttendanceStatsFile(file)
+            .catch(error => renderAttendanceImportStatus(getErrorMessage(error)))
+            .finally(() => {
+              target.value = '';
+            });
+        });
+      }
+
       const rosterKeyword = query('[data-roster-keyword]');
       if (rosterKeyword) {
         rosterKeyword.addEventListener('input', event => {
@@ -1366,6 +1447,7 @@
       loadActivityLogs,
       loadAttendanceStats,
       loadNotificationLogs,
+      importAttendanceStatsFile,
       pollWebAdminLogin,
       logoutWebAdmin,
       searchUsers,

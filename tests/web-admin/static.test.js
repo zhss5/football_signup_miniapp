@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-detail-export-names';
+const WEB_ADMIN_ASSET_VERSION = '20260620-attendance-import';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -62,6 +62,10 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-role="admin"');
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
+  expect(html).toContain('data-attendance-import-file');
+  expect(html).toContain('data-attendance-import-status');
+  expect(html).toContain('accept=".csv,.tsv,.txt,.xlsx,.xls"');
+  expect(html).toContain('导入Excel/CSV');
   expect(html).toContain('data-attendance-stats-empty');
   expect(html).toContain('data-activity-context-menu');
   expect(html).toContain('role="menu"');
@@ -136,13 +140,15 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const qrIndex = html.indexOf(`src="./vendor/qrcode.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+  const xlsxIndex = html.indexOf(`src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
   expect(runtimeIndex).toBeGreaterThan(configIndex);
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
   expect(qrIndex).toBeGreaterThan(apiIndex);
-  expect(appIndex).toBeGreaterThan(qrIndex);
+  expect(xlsxIndex).toBeGreaterThan(qrIndex);
+  expect(appIndex).toBeGreaterThan(xlsxIndex);
 });
 
 test('web admin static shell vendors the QR renderer for hosted login smoke', () => {
@@ -150,6 +156,15 @@ test('web admin static shell vendors the QR renderer for hosted login smoke', ()
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
 
   expect(html).not.toContain('cdn.jsdelivr.net/npm/qrcode');
+  expect(fs.existsSync(vendorPath)).toBe(true);
+  expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
+});
+
+test('web admin static shell vendors the Excel renderer for attendance imports', () => {
+  const vendorPath = path.join(process.cwd(), 'web-admin/vendor/xlsx.full.min.js');
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+
+  expect(html).toContain(`src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   expect(fs.existsSync(vendorPath)).toBe(true);
   expect(fs.statSync(vendorPath).size).toBeGreaterThan(1000);
 });
