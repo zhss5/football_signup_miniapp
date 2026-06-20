@@ -110,6 +110,7 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
             userOpenId: 'openid_player',
             signupName: 'Alex',
             managerAlias: 'Zhang San',
+            avatarUrl: 'cloud://test-env/activity-avatars/player.jpg',
             preferredPositions: ['forward', 'goalkeeper'],
             proxyRegistration: false,
             attendanceStatus: 'present'
@@ -135,6 +136,7 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
       userOpenId: 'openid_player',
       signupName: 'Alex',
       managerAlias: 'Zhang San',
+      avatarUrl: 'cloud://test-env/activity-avatars/player.jpg',
       preferredPositions: 'forward / goalkeeper',
       proxyRegistration: false,
       attendanceStatus: 'present'
@@ -146,6 +148,7 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
       userOpenId: 'proxy_1',
       signupName: 'Guest',
       managerAlias: '',
+      avatarUrl: '',
       preferredPositions: '',
       proxyRegistration: true,
       attendanceStatus: 'absent'
@@ -174,7 +177,17 @@ test('stats and log row builders keep stable display fields', () => {
         signupCount: 2,
         presentCount: 1,
         absentCount: 1,
-        attendanceRate: 0.5
+        attendanceRate: 0.5,
+        details: [
+          {
+            activityTitle: 'Sunday Match',
+            teamName: 'White',
+            signupName: 'Alex',
+            managerAlias: 'Left foot',
+            attendanceStatus: 'absent',
+            startAt: '2026-06-10T12:00:00.000Z'
+          }
+        ]
       }
     ])
   ).toEqual([
@@ -184,7 +197,18 @@ test('stats and log row builders keep stable display fields', () => {
       signupCount: 2,
       presentCount: 1,
       absentCount: 1,
-      attendanceRateText: '50.00%'
+      attendanceRateText: '50.00%',
+      details: [
+        {
+          activityId: '',
+          activityTitle: 'Sunday Match',
+          teamName: 'White',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'absent',
+          startAt: '2026-06-10 20:00'
+        }
+      ]
     }
   ]);
 

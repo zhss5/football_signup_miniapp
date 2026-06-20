@@ -42,8 +42,7 @@
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',
-    'attendance-stats': '出勤统计',
-    logs: '全局日志'
+    'attendance-stats': '出勤统计'
   };
   const ROLE_LABELS = {
     user: '普通用户',
@@ -69,7 +68,7 @@
 
   function getAllowedAdminViews(user) {
     return roles.isAdmin(user)
-      ? ['users', 'activities', 'attendance-stats', 'logs']
+      ? ['users', 'activities', 'attendance-stats']
       : ['activities', 'attendance-stats'];
   }
 
@@ -207,6 +206,8 @@
       selectedActivityId: '',
       rosterRows: [],
       statsRows: [],
+      attendanceDetailRows: [],
+      attendanceDetailTitle: '',
       activityLogRows: [],
       activityDetailLogRows: [],
       activityDetailRosterKeyword: '',
@@ -322,7 +323,7 @@
       return typeof value === 'string' && value.trim().startsWith('cloud://');
     }
 
-    async function resolveUserAvatarRows(rows = []) {
+    async function resolveAvatarRows(rows = []) {
       const cloudAvatarUrls = Array.from(
         new Set(rows.map(row => row.avatarUrl).filter(isCloudFileId))
       );
@@ -521,12 +522,17 @@
 
     function renderRows() {
       const table = query('[data-users-table]');
+      const count = query('[data-users-count]');
+      if (count) {
+        count.textContent = `共 ${state.rows.length} 行`;
+      }
+
       if (!table) {
         return;
       }
 
       table.innerHTML = state.rows
-        .map(row => {
+        .map((row, index) => {
           const controls = row.roleControls
             .map(control => {
               const label = formatRoleLabel(control.role);
@@ -549,6 +555,7 @@
 
           return (
             `<tr data-openid="${escapeHtml(row.openid)}">` +
+            `<td>${index + 1}</td>` +
             `<td>${renderUserCell(row)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
             `<td><div class="manager-alias-control">` +
@@ -570,24 +577,27 @@
     }
 
     function getAvatarText(row = {}) {
-      const source = String(row.displayName || row.openid || '').trim();
+      const source = String(row.displayName || row.signupName || row.openid || '').trim();
       return source ? Array.from(source)[0].toUpperCase() : '?';
     }
 
-    function renderUserCell(row = {}) {
-      const displayName = String(row.displayName || row.openid || '').trim();
+    function renderAvatarNameCell(row = {}, displayName) {
+      const name = String(displayName || row.displayName || row.signupName || row.openid || '').trim();
       const avatarUrl = String(row.avatarUrl || '').trim();
       const avatarSourceUrl = String(row.avatarSourceUrl || row.avatarUrl || '').trim();
-      const fallbackText = getAvatarText(row);
+      const fallbackText = getAvatarText({
+        ...row,
+        displayName: name
+      });
       const avatar = avatarUrl
         ? (
           `<button type="button" class="user-avatar-button" ` +
           `data-action="preview-user-avatar" ` +
           `data-avatar-url="${escapeHtml(avatarUrl)}" ` +
           `data-avatar-source-url="${escapeHtml(avatarSourceUrl)}" ` +
-          `data-avatar-name="${escapeHtml(displayName)}" ` +
-          `aria-label="查看${escapeHtml(displayName)}头像">` +
-          `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" ` +
+          `data-avatar-name="${escapeHtml(name)}" ` +
+          `aria-label="查看${escapeHtml(name)}头像">` +
+          `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name)}" ` +
           `onerror="this.hidden=true;this.parentNode.classList.add('is-broken')" />` +
           `<span class="user-avatar-fallback-text">${escapeHtml(fallbackText)}</span>` +
           `</button>`
@@ -597,6 +607,16 @@
       return (
         `<div class="user-display">` +
         avatar +
+        `<span class="user-display-name">${escapeHtml(name)}</span>` +
+        `</div>`
+      );
+    }
+
+    function renderUserCell(row = {}) {
+      const displayName = String(row.displayName || row.openid || '').trim();
+
+      return (
+        `<div class="user-display">` +
         `<span class="user-display-name">${escapeHtml(displayName)}</span>` +
         `</div>`
       );
@@ -605,8 +625,7 @@
     async function searchUsers() {
       state.search = getSearchFormValues();
       const result = await api.listUsers(state.search);
-      const rows = users.buildUserRows(result.items || [], state.currentUser);
-      state.rows = await resolveUserAvatarRows(rows);
+      state.rows = users.buildUserRows(result.items || [], state.currentUser);
       state.hasMore = Boolean(result.hasMore);
       renderRows();
     }
@@ -663,12 +682,17 @@
 
     function renderActivityRows() {
       const table = query('[data-activities-table]');
+      const count = query('[data-activities-count]');
+      if (count) {
+        count.textContent = `共 ${state.activities.length} 行`;
+      }
+
       if (!table) {
         return;
       }
 
       table.innerHTML = state.activities
-        .map(row => {
+        .map((row, index) => {
           const selected = row.activityId && row.activityId === state.selectedActivityId;
           const selectedAttributes = selected
             ? ` class="is-selected" aria-selected="true"`
@@ -679,6 +703,7 @@
             `data-can-confirm-proceeding="${row.canConfirmProceeding ? 'true' : 'false'}"` +
             selectedAttributes +
             `>` +
+            `<td>${index + 1}</td>` +
             `<td>${escapeHtml(row.title)}</td>` +
             `<td>${escapeHtml(row.startAt)}</td>` +
             `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
@@ -763,15 +788,22 @@
 
     function renderRosterRows() {
       const table = query('[data-roster-table]');
+      const rows = getFilteredRosterRows();
+      const count = query('[data-roster-count]');
+      if (count) {
+        count.textContent = `共 ${rows.length} 行`;
+      }
+
       if (!table) {
         return;
       }
 
-      table.innerHTML = getFilteredRosterRows()
-        .map(row => (
+      table.innerHTML = rows
+        .map((row, index) => (
           `<tr data-registration-id="${escapeHtml(row.registrationId)}">` +
+          `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.teamName)}</td>` +
-          `<td>${escapeHtml(row.signupName)}</td>` +
+          `<td>${renderAvatarNameCell(row, row.signupName)}</td>` +
           `<td><div class="roster-alias-control">` +
           `<input type="text" data-manager-alias="${escapeHtml(row.userOpenId)}" ` +
           `value="${escapeHtml(row.managerAlias)}" ${row.proxyRegistration ? 'disabled ' : ''}/>` +
@@ -799,6 +831,10 @@
       const table = query('[data-attendance-stats-table]');
       const empty = query('[data-attendance-stats-empty]');
       const hasRows = state.statsRows.length > 0;
+      const count = query('[data-attendance-stats-count]');
+      if (count) {
+        count.textContent = `共 ${state.statsRows.length} 行`;
+      }
 
       if (empty) {
         empty.textContent = hasRows ? '' : ATTENDANCE_STATS_EMPTY_TEXT;
@@ -810,8 +846,9 @@
       }
 
       table.innerHTML = state.statsRows
-        .map(row => (
-          `<tr>` +
+        .map((row, index) => (
+          `<tr data-attendance-stats-index="${index}" tabindex="0">` +
+          `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.participantName)}</td>` +
           `<td>${escapeHtml(row.managerAlias)}</td>` +
           `<td>${escapeHtml(row.signupCount)}</td>` +
@@ -821,6 +858,61 @@
           `</tr>`
         ))
         .join('');
+    }
+
+    function renderAttendanceDetailRows() {
+      const table = query('[data-attendance-detail-table]');
+      const count = query('[data-attendance-detail-count]');
+      const rows = state.attendanceDetailRows || [];
+
+      if (count) {
+        count.textContent = `共 ${rows.length} 行`;
+      }
+
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = rows
+        .map((row, index) => (
+          `<tr>` +
+          `<td>${index + 1}</td>` +
+          `<td>${escapeHtml(row.activityTitle || row.activityId)}</td>` +
+          `<td>${escapeHtml(row.startAt)}</td>` +
+          `<td>${escapeHtml(row.teamName)}</td>` +
+          `<td>${escapeHtml(row.signupName)}</td>` +
+          `<td>${escapeHtml(row.managerAlias)}</td>` +
+          `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function showAttendanceDetail(index) {
+      const row = state.statsRows[Number(index)];
+      const modal = query('[data-attendance-detail]');
+      const title = query('[data-attendance-detail-title]');
+      if (!row || !modal) {
+        return;
+      }
+
+      const name = String(row.managerAlias || row.participantName || '').trim();
+      state.attendanceDetailRows = Array.isArray(row.details) ? row.details : [];
+      state.attendanceDetailTitle = name ? `${name} 出勤明细` : '出勤明细';
+
+      if (title) {
+        title.textContent = state.attendanceDetailTitle;
+      }
+
+      renderAttendanceDetailRows();
+      setHidden(modal, false);
+    }
+
+    function closeAttendanceDetail() {
+      state.attendanceDetailRows = [];
+      state.attendanceDetailTitle = '';
+      renderAttendanceDetailRows();
+      setHidden(query('[data-attendance-detail]'), true);
     }
 
     function renderActivityLogRows() {
@@ -897,13 +989,20 @@
 
     function renderActivityDetailLogRows() {
       const table = query('[data-activity-detail-logs-table]');
+      const rows = getFilteredActivityDetailLogRows();
+      const count = query('[data-activity-detail-logs-count]');
+      if (count) {
+        count.textContent = `共 ${rows.length} 行`;
+      }
+
       if (!table) {
         return;
       }
 
-      table.innerHTML = getFilteredActivityDetailLogRows()
-        .map(row => (
+      table.innerHTML = rows
+        .map((row, index) => (
           `<tr>` +
+          `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
           `<td>${renderPersonCell(row.operatorDisplayName, row.operatorOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
@@ -1059,7 +1158,7 @@
           loadAllActivityLogRows(activityId)
         ]);
         state.selectedActivityId = activityId;
-        state.rosterRows = activityUi.buildRosterRows(detail);
+        state.rosterRows = await resolveAvatarRows(activityUi.buildRosterRows(detail));
         state.activityDetailLogRows = activityDetailLogRows;
         state.activityDetailLoading = false;
         state.exportCsv = '';
@@ -1309,6 +1408,8 @@
       state.activities = [];
       state.rosterRows = [];
       state.statsRows = [];
+      state.attendanceDetailRows = [];
+      state.attendanceDetailTitle = '';
       state.activityLogRows = [];
       state.activityDetailLogRows = [];
       state.activityDetailRosterKeyword = '';
@@ -1317,6 +1418,7 @@
       state.notificationLogRows = [];
       state.exportCsv = '';
       hideActivityContextMenu();
+      closeAttendanceDetail();
 
       if (api && typeof api.setWebAdminSessionToken === 'function') {
         api.setWebAdminSessionToken('');
@@ -1511,6 +1613,11 @@
             return;
           }
 
+          if (button.dataset.action === 'close-attendance-detail') {
+            closeAttendanceDetail();
+            return;
+          }
+
           if (button.dataset.action === 'close-activity-detail') {
             hideActivityContextMenu();
             closeActivityDetail();
@@ -1606,6 +1713,12 @@
         });
 
         appRoot.addEventListener('dblclick', event => {
+          const statsRow = event.target.closest('[data-attendance-stats-index]');
+          if (statsRow) {
+            showAttendanceDetail(statsRow.dataset.attendanceStatsIndex);
+            return;
+          }
+
           const row = event.target.closest('[data-activity-id]');
           if (!row) {
             return;

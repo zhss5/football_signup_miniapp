@@ -41,7 +41,6 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
     {
       openid: 'openid_player',
       displayName: 'Player Li',
-      avatarUrl: 'https://example.com/player.jpg',
       managerAlias: 'Left foot',
       rolesText: 'user',
       roleControls: [
@@ -52,7 +51,7 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
   ]);
 });
 
-test('buildUserRows accepts common legacy avatar fields', () => {
+test('buildUserRows does not expose activity-scoped avatars on the user-management page', () => {
   const rows = buildUserRows(
     [
       {
@@ -70,9 +69,9 @@ test('buildUserRows accepts common legacy avatar fields', () => {
 
   expect(rows[0]).toMatchObject({
     openid: 'openid_player',
-    displayName: 'Player Li',
-    avatarUrl: 'cloud://test-env/user-avatars/player.jpg'
+    displayName: 'Player Li'
   });
+  expect(rows[0]).not.toHaveProperty('avatarUrl');
 });
 
 test('admin role update payload can only toggle organizer', () => {

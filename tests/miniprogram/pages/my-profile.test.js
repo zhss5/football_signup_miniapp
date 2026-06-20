@@ -641,12 +641,12 @@ describe('my page profile marker', () => {
 
     await pageConfig.onShow.call(ctx);
 
-    expect(ctx.data.createdItems.find(item => item.id === 'expired_pending')).toMatchObject({
-      overdueUnresolved: true
-    });
-    expect(ctx.data.createdItems.find(item => item.id === 'expired_confirmed')).toMatchObject({
-      overdueUnresolved: false
-    });
+    expect(ctx.data.createdItems.find(item => item.id === 'expired_pending')).not.toHaveProperty(
+      'overdueUnresolved'
+    );
+    expect(ctx.data.createdItems.find(item => item.id === 'expired_confirmed')).not.toHaveProperty(
+      'overdueUnresolved'
+    );
 
     expect(notifyActivityParticipants).not.toHaveBeenCalled();
   });

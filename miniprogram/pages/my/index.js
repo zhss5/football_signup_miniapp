@@ -53,15 +53,6 @@ function compareStartDesc(left, right) {
   return getActivityStartTime(right) - getActivityStartTime(left);
 }
 
-function isOverdueUnresolvedActivity(item = {}, now = Date.now()) {
-  if (item.status !== 'published' || item.confirmStatus === 'confirmed') {
-    return false;
-  }
-
-  const endAt = getActivityEndTime(item);
-  return Boolean(endAt && endAt < now);
-}
-
 function getActivityKey(item = {}) {
   return item.id || item._id || '';
 }
@@ -87,15 +78,9 @@ function resolveHasMore(result = {}, itemCount, limit) {
   return itemCount >= limit;
 }
 
-function prepareMyActivityItems(items = [], translate, now = Date.now()) {
+function prepareMyActivityItems(items = [], translate) {
   return items
-    .map(item => {
-      const viewModel = buildActivityCardVm(item, undefined, translate);
-      return {
-        ...viewModel,
-        overdueUnresolved: isOverdueUnresolvedActivity(viewModel, now)
-      };
-    })
+    .map(item => buildActivityCardVm(item, undefined, translate))
     .sort(compareStartDesc);
 }
 

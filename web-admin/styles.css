@@ -467,6 +467,27 @@ select {
   line-height: 20px;
 }
 
+.table-summary {
+  margin: 0 0 10px;
+  color: #66758d;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.detail-subsection-tools .table-summary {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.data-table tr[data-attendance-stats-index] {
+  cursor: pointer;
+}
+
+.data-table tr[data-attendance-stats-index]:hover td {
+  background: #f6f9ff;
+}
+
 .role-toggle-list {
   display: flex;
   flex-wrap: wrap;
@@ -599,6 +620,31 @@ select {
   max-width: min(520px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
   padding: 44px 20px 20px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(23, 32, 51, 0.2);
+}
+
+.attendance-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.36);
+}
+
+.attendance-detail-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1040px, calc(100vw - 48px));
+  max-height: min(680px, calc(100vh - 48px));
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 20px;
   border: 1px solid #d9e1ee;
   border-radius: 8px;
   background: #ffffff;

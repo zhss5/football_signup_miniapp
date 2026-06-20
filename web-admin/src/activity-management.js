@@ -86,6 +86,7 @@
         userOpenId: member.userOpenId || '',
         signupName: member.signupName || '',
         managerAlias: member.proxyRegistration ? '' : member.managerAlias || '',
+        avatarUrl: String(member.avatarUrl || '').trim(),
         preferredPositions: Array.isArray(member.preferredPositions)
           ? member.preferredPositions.filter(Boolean).join(' / ')
           : '',
@@ -118,7 +119,16 @@
       signupCount: Number(row.signupCount) || 0,
       presentCount: Number(row.presentCount) || 0,
       absentCount: Number(row.absentCount) || 0,
-      attendanceRateText: toPercent(row.attendanceRate)
+      attendanceRateText: toPercent(row.attendanceRate),
+      details: (Array.isArray(row.details) ? row.details : []).map(detail => ({
+        activityId: detail.activityId || '',
+        activityTitle: detail.activityTitle || '',
+        teamName: detail.teamName || '',
+        signupName: detail.signupName || '',
+        managerAlias: detail.managerAlias || '',
+        attendanceStatus: detail.attendanceStatus || 'present',
+        startAt: formatBeijingDateTime(detail.startAt)
+      }))
     }));
   }
 

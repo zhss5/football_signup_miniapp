@@ -110,7 +110,36 @@ test('admin can get date-range attendance stats for confirmed activities', async
       signupCount: 3,
       presentCount: 2,
       absentCount: 1,
-      attendanceRate: 0.6667
+      attendanceRate: 0.6667,
+      details: [
+        {
+          activityId: 'activity_1',
+          activityTitle: 'Confirmed Match 1',
+          startAt: '2026-05-01T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'present'
+        },
+        {
+          activityId: 'activity_2',
+          activityTitle: 'Confirmed Match 2',
+          startAt: '2026-05-08T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'absent'
+        },
+        {
+          activityId: 'activity_other',
+          activityTitle: 'Other Organizer Match',
+          startAt: '2026-05-08T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'present'
+        }
+      ]
     },
     {
       participantName: 'Ben',
@@ -118,7 +147,18 @@ test('admin can get date-range attendance stats for confirmed activities', async
       signupCount: 1,
       presentCount: 1,
       absentCount: 0,
-      attendanceRate: 1
+      attendanceRate: 1,
+      details: [
+        {
+          activityId: 'activity_1',
+          activityTitle: 'Confirmed Match 1',
+          startAt: '2026-05-01T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Ben',
+          managerAlias: '',
+          attendanceStatus: 'present'
+        }
+      ]
     }
   ]);
 });
@@ -135,7 +175,27 @@ test('organizer stats include only their own activities', async () => {
       signupCount: 2,
       presentCount: 1,
       absentCount: 1,
-      attendanceRate: 0.5
+      attendanceRate: 0.5,
+      details: [
+        {
+          activityId: 'activity_1',
+          activityTitle: 'Confirmed Match 1',
+          startAt: '2026-05-01T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'present'
+        },
+        {
+          activityId: 'activity_2',
+          activityTitle: 'Confirmed Match 2',
+          startAt: '2026-05-08T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          attendanceStatus: 'absent'
+        }
+      ]
     },
     {
       participantName: 'Ben',
@@ -143,7 +203,18 @@ test('organizer stats include only their own activities', async () => {
       signupCount: 1,
       presentCount: 1,
       absentCount: 0,
-      attendanceRate: 1
+      attendanceRate: 1,
+      details: [
+        {
+          activityId: 'activity_1',
+          activityTitle: 'Confirmed Match 1',
+          startAt: '2026-05-01T12:00:00.000Z',
+          teamName: '',
+          signupName: 'Ben',
+          managerAlias: '',
+          attendanceStatus: 'present'
+        }
+      ]
     }
   ]);
 });

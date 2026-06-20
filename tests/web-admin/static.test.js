@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-activity-capacity-organizer';
+const WEB_ADMIN_ASSET_VERSION = '20260620-roster-attendance-detail';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -36,15 +36,14 @@ test('web admin workspace uses a Chinese sidebar plus independent content views'
   expect(html).toContain('data-nav-target="users"');
   expect(html).toContain('data-nav-target="activities"');
   expect(html).toContain('data-nav-target="attendance-stats"');
-  expect(html).toContain('data-nav-target="logs"');
+  expect(html).not.toContain('data-nav-target="logs"');
   expect(html).toContain('data-admin-view="users"');
   expect(html).toContain('data-admin-view="activities"');
   expect(html).toContain('data-admin-view="attendance-stats"');
-  expect(html).toContain('data-admin-view="logs"');
   expect(html).toContain('用户管理');
   expect(html).toContain('活动管理');
   expect(html).toContain('出勤统计');
-  expect(html).toContain('全局日志');
+  expect(html).not.toContain('全局日志');
   expect(html).not.toContain('data-nav-target="exports"');
   expect(html).not.toContain('data-admin-view="exports"');
   expect(html).not.toContain('名单导出');
@@ -58,18 +57,22 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-user-avatar-preview');
   expect(html).toContain('data-user-avatar-preview-image');
   expect(html).toContain('data-action="close-user-avatar-preview"');
+  expect(html).toContain('data-users-count');
   const usersTableStart = html.indexOf('class="data-table users-table"');
   const usersTableEnd = html.indexOf('<tbody data-users-table>', usersTableStart);
   const usersHeaderBlock = usersTableStart >= 0 && usersTableEnd > usersTableStart
     ? html.slice(usersTableStart, usersTableEnd)
     : '';
-  expect((usersHeaderBlock.match(/<th>/g) || []).length).toBe(5);
+  expect((usersHeaderBlock.match(/<th>/g) || []).length).toBe(6);
+  expect(usersHeaderBlock).toContain('<th>序号</th>');
   expect(usersHeaderBlock).not.toContain('<th>操作</th>');
   expect(html).toContain('data-activities-search-button');
+  expect(html).toContain('data-activities-count');
   expect(html).toContain('name="activityOrganizerKeyword"');
   expect(html).toContain('list="activityOrganizerOptions"');
   expect(html).toContain('data-activity-organizer-options');
   expect(html).toContain('<th>最大可报名数</th>');
+  expect(html).toContain('<th>序号</th>');
   expect(html).not.toContain('组织者 OpenID');
   expect(html).toContain('data-stats-load-button');
   expect(html).toContain('data-role-filter');
@@ -83,13 +86,21 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).not.toContain('data-attendance-import-status');
   expect(html).not.toContain('导入Excel/CSV');
   expect(html).toContain('data-attendance-stats-empty');
+  expect(html).toContain('data-attendance-stats-count');
+  expect(html).toContain('data-attendance-detail');
+  expect(html).toContain('data-attendance-detail-title');
+  expect(html).toContain('data-attendance-detail-table');
+  expect(html).toContain('data-attendance-detail-count');
+  expect(html).toContain('data-action="close-attendance-detail"');
   expect(html).toContain('data-activity-context-menu');
   expect(html).toContain('role="menu"');
   expect(html).toContain('class="activity-detail-modal"');
   expect(html).toContain('role="dialog"');
   expect(html).toContain('data-action="close-activity-detail"');
   expect(html).toContain('data-roster-keyword');
+  expect(html).toContain('data-roster-count');
   expect(html).toContain('data-activity-detail-logs-keyword');
+  expect(html).toContain('data-activity-detail-logs-count');
   expect(html).toContain('data-action="export-activity-roster-view"');
   expect(html).toContain('data-action="export-activity-logs-view"');
   expect(html).toContain('data-activity-detail-loading');
@@ -102,22 +113,21 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('报名活动流水');
   expect(html).toContain('已确认或已开始');
   const statsStart = html.indexOf('data-admin-view="attendance-stats"');
-  const logsStart = html.indexOf('data-admin-view="logs"', statsStart);
-  const statsBlock = statsStart >= 0 && logsStart > statsStart
-    ? html.slice(statsStart, logsStart)
+  const statsEnd = html.indexOf('<tbody data-attendance-stats-table>', statsStart);
+  const statsBlock = statsStart >= 0 && statsEnd > statsStart
+    ? html.slice(statsStart, statsEnd)
     : '';
   expect(statsBlock).toContain('<th>备注</th>');
   expect(html).not.toContain('data-action="export-roster"');
-  expect(html).toContain('data-action="load-activity-logs"');
-  expect(html).toContain('data-action="load-notification-logs"');
-  expect(html).toContain('data-logs-status');
-  expect(html).toContain('<th>活动</th>');
-  expect(html).toContain('<th>错误信息</th>');
+  expect(html).not.toContain('data-action="load-activity-logs"');
+  expect(html).not.toContain('data-action="load-notification-logs"');
+  expect(html).not.toContain('data-logs-status');
   const rosterHeaderStart = html.indexOf('活动报名人列表');
   const rosterHeaderEnd = html.indexOf('<tbody data-roster-table>', rosterHeaderStart);
   const rosterHeaderBlock = rosterHeaderStart >= 0 && rosterHeaderEnd > rosterHeaderStart
     ? html.slice(rosterHeaderStart, rosterHeaderEnd)
     : '';
+  expect(rosterHeaderBlock).toContain('<th>序号</th>');
   expect(rosterHeaderBlock).not.toContain('<th>操作</th>');
   const detailLogsHeaderStart = html.indexOf('报名活动流水');
   const detailLogsHeaderEnd = html.indexOf('<tbody data-activity-detail-logs-table>', detailLogsHeaderStart);
@@ -125,6 +135,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
     detailLogsHeaderStart >= 0 && detailLogsHeaderEnd > detailLogsHeaderStart
       ? html.slice(detailLogsHeaderStart, detailLogsHeaderEnd)
       : '';
+  expect(detailLogsHeaderBlock).toContain('<th>序号</th>');
   expect(detailLogsHeaderBlock).toContain('<th>操作</th>');
   expect(detailLogsHeaderBlock).toContain('<th>操作人</th>');
   expect(detailLogsHeaderBlock).toContain('<th>时间</th>');
@@ -133,7 +144,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('角色');
   expect(html).toContain('搜索');
   expect(html).toContain('出勤状态');
-  expect(html).toContain('加载操作日志');
+  expect(html).not.toContain('加载操作日志');
   expect((html.match(/<th>备注<\/th>/g) || []).length).toBeGreaterThanOrEqual(2);
   expect(html).not.toContain('管理识别名');
 });

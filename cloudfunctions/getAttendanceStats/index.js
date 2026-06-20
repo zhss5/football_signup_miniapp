@@ -139,18 +139,31 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         managerAlias: '',
         signupCount: 0,
         presentCount: 0,
-        absentCount: 0
+        absentCount: 0,
+        details: []
       };
     }
 
     const row = acc[participantName];
     const managerAlias = getManagerAlias(registration, userById);
+    const activity = activityById[registration.activityId];
+    const attendanceStatus = normalizeAttendanceStatus(registration.attendanceStatus);
     row.signupCount += 1;
     if (!row.managerAlias && managerAlias) {
       row.managerAlias = managerAlias;
     }
 
-    if (normalizeAttendanceStatus(registration.attendanceStatus) === 'absent') {
+    row.details.push({
+      activityId: activity._id || registration.activityId || '',
+      activityTitle: activity.title || '',
+      startAt: activity.startAt || '',
+      teamName: registration.teamName || '',
+      signupName: registration.signupName || participantName,
+      managerAlias,
+      attendanceStatus
+    });
+
+    if (attendanceStatus === 'absent') {
       row.absentCount += 1;
     } else {
       row.presentCount += 1;
@@ -162,6 +175,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const items = Object.values(statsByName)
     .map(row => ({
       ...row,
+      details: row.details.sort((left, right) => {
+        const leftTime = parseTimestamp(left.startAt) || 0;
+        const rightTime = parseTimestamp(right.startAt) || 0;
+        if (leftTime !== rightTime) {
+          return leftTime - rightTime;
+        }
+
+        return String(left.activityTitle || '').localeCompare(String(right.activityTitle || ''));
+      }),
       attendanceRate: toAttendanceRate(row.presentCount, row.signupCount)
     }))
     .sort((left, right) => left.participantName.localeCompare(right.participantName));

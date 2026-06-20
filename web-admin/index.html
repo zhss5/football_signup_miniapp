@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-activity-capacity-organizer" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-roster-attendance-detail" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -41,7 +41,6 @@
               <button type="button" data-nav-target="users">用户管理</button>
               <button type="button" data-nav-target="activities">活动管理</button>
               <button type="button" data-nav-target="attendance-stats">出勤统计</button>
-              <button type="button" data-nav-target="logs">全局日志</button>
             </nav>
           </aside>
 
@@ -82,9 +81,12 @@
 
               <p data-users-status class="inline-status" aria-live="polite"></p>
 
+              <p data-users-count class="table-summary">共 0 行</p>
+
               <table class="data-table users-table">
                 <thead>
                   <tr>
+                    <th>序号</th>
                     <th>用户</th>
                     <th>OpenID</th>
                     <th>备注</th>
@@ -141,9 +143,12 @@
                 <button type="submit" data-activities-search-button>搜索</button>
               </form>
 
+              <p data-activities-count class="table-summary">共 0 行</p>
+
               <table class="data-table">
                 <thead>
                   <tr>
+                    <th>序号</th>
                     <th>活动</th>
                     <th>开始时间</th>
                     <th>状态</th>
@@ -196,6 +201,7 @@
                       <div class="detail-subsection-header">
                         <h4>活动报名人列表</h4>
                         <div class="detail-subsection-tools">
+                          <span data-roster-count class="table-summary">共 0 行</span>
                           <button type="button" data-action="export-activity-roster-view">
                             导出CSV
                           </button>
@@ -213,8 +219,9 @@
                         <table class="data-table">
                           <thead>
                             <tr>
+                              <th>序号</th>
                               <th>队伍</th>
-                              <th>报名名</th>
+                              <th>报名人</th>
                               <th>备注</th>
                               <th>位置偏好</th>
                               <th>代报名</th>
@@ -230,6 +237,7 @@
                       <div class="detail-subsection-header">
                         <h4>报名活动流水</h4>
                         <div class="detail-subsection-tools">
+                          <span data-activity-detail-logs-count class="table-summary">共 0 行</span>
                           <button type="button" data-action="export-activity-logs-view">
                             导出CSV
                           </button>
@@ -247,6 +255,7 @@
                         <table class="data-table">
                           <thead>
                             <tr>
+                              <th>序号</th>
                               <th>操作</th>
                               <th>操作人</th>
                               <th>时间</th>
@@ -286,9 +295,12 @@
                 统计已确认或已开始且未取消/未删除的活动；当前范围内没有出勤记录。
               </p>
 
+              <p data-attendance-stats-count class="table-summary">共 0 行</p>
+
               <table class="data-table">
                 <thead>
                   <tr>
+                    <th>序号</th>
                     <th>参与者</th>
                     <th>备注</th>
                     <th>报名次数</th>
@@ -300,46 +312,50 @@
                 <tbody data-attendance-stats-table></tbody>
               </table>
             </section>
-
-            <section data-admin-view="logs" class="panel" hidden>
-              <h3>全局日志</h3>
-
-              <div class="log-actions">
-                <button type="button" data-action="load-activity-logs">加载操作日志</button>
-                <button type="button" data-action="load-notification-logs">加载通知日志</button>
-              </div>
-              <p data-logs-status class="inline-status" aria-live="polite" hidden></p>
-
-              <div class="log-grid">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>操作</th>
-                      <th>活动</th>
-                      <th>操作者</th>
-                      <th>对象</th>
-                      <th>创建时间</th>
-                    </tr>
-                  </thead>
-                  <tbody data-activity-logs-table></tbody>
-                </table>
-
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>类型</th>
-                      <th>活动</th>
-                      <th>对象</th>
-                      <th>状态</th>
-                      <th>错误信息</th>
-                      <th>创建时间</th>
-                    </tr>
-                  </thead>
-                  <tbody data-notification-logs-table></tbody>
-                </table>
-              </div>
-            </section>
             </main>
+          </div>
+
+          <div
+            data-attendance-detail
+            class="attendance-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="attendance-detail-title"
+            hidden
+          >
+            <div class="attendance-detail-dialog">
+              <div class="detail-header">
+                <div>
+                  <span class="detail-eyebrow">出勤明细</span>
+                  <h4 id="attendance-detail-title" data-attendance-detail-title></h4>
+                </div>
+                <button
+                  type="button"
+                  class="modal-close-button"
+                  data-action="close-attendance-detail"
+                  aria-label="关闭出勤明细"
+                >
+                  关闭
+                </button>
+              </div>
+              <p data-attendance-detail-count class="table-summary">共 0 行</p>
+              <div class="detail-table-scroll">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>活动</th>
+                      <th>开始时间</th>
+                      <th>队伍</th>
+                      <th>报名名</th>
+                      <th>备注</th>
+                      <th>出勤状态</th>
+                    </tr>
+                  </thead>
+                  <tbody data-attendance-detail-table></tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div
@@ -377,13 +393,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/roles.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/api.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/user-management.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/activity-management.js?v=20260620-activity-capacity-organizer"></script>
-    <script src="./src/app.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./config.test.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/roles.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/api.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/user-management.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/activity-management.js?v=20260620-roster-attendance-detail"></script>
+    <script src="./src/app.js?v=20260620-roster-attendance-detail"></script>
   </body>
 </html>

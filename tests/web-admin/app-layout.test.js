@@ -41,6 +41,13 @@ function createTarget(element) {
         return element;
       }
 
+      if (
+        selector === '[data-attendance-stats-index]' &&
+        Object.prototype.hasOwnProperty.call(element.dataset, 'attendanceStatsIndex')
+      ) {
+        return element;
+      }
+
       return null;
     })
   };
@@ -175,10 +182,17 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       action: 'export-attendance-stats'
     }),
     '[data-activities-table]': createElement(),
+    '[data-activities-count]': createElement(),
     '[data-users-table]': createElement(),
+    '[data-users-count]': createElement(),
     '[data-activity-context-menu]': createElement(),
     '[data-attendance-stats-table]': createElement(),
+    '[data-attendance-stats-count]': createElement(),
     '[data-attendance-stats-empty]': createElement(),
+    '[data-attendance-detail]': createElement(),
+    '[data-attendance-detail-title]': createElement(),
+    '[data-attendance-detail-table]': createElement(),
+    '[data-attendance-detail-count]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-activity-detail-loading]': createElement(),
@@ -187,8 +201,10 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-activity-detail-logs-keyword]': createElement(),
     '[data-export-output]': createElement(),
     '[data-roster-table]': createElement(),
+    '[data-roster-count]': createElement(),
     '[data-activity-logs-table]': createElement(),
     '[data-activity-detail-logs-table]': createElement(),
+    '[data-activity-detail-logs-count]': createElement(),
     '[data-notification-logs-table]': createElement(),
     '[data-logs-status]': createElement(),
     '[name="statsStartAt"]': createElement(),
@@ -279,9 +295,10 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.users.hidden).toBe(false);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.logs.hidden).toBe(false);
+  expect(nav.logs.hidden).toBe(true);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
+  expect(views.logs.hidden).toBe(true);
   expect(elements['[data-current-view-title]'].textContent).toBe('活动管理');
   expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(api.listActivities).toHaveBeenCalled();
@@ -546,8 +563,11 @@ test('activity rows render selectable activity metadata without inline actions',
   expect(html).not.toContain('2026-06-19T12:00:00.000Z');
   expect(html).toContain('title="openid_owner">Coach Zhang</span>');
   expect(html).toContain('openid_fallback');
+  expect(html).toContain('<td>1</td>');
   expect(html).toContain('<td>12</td>');
+  expect(html).toContain('<td>2</td>');
   expect(html).toContain('<td>20</td>');
+  expect(elements['[data-activities-count]'].textContent).toBe('共 2 行');
   expect(elements['[data-activity-organizer-options]'].innerHTML).toContain('value="Coach Zhang"');
   expect(elements['[data-activity-organizer-options]'].innerHTML).not.toContain('openid_owner');
 });
@@ -906,7 +926,25 @@ test('attendance stats submit renders rows and hides the empty state', async () 
             signupCount: 2,
             presentCount: 1,
             absentCount: 1,
-            attendanceRate: 0.5
+            attendanceRate: 0.5,
+            details: [
+              {
+                activityTitle: '测试0618',
+                teamName: '队伍1',
+                signupName: '张虹生',
+                managerAlias: '酱油仔',
+                attendanceStatus: 'absent',
+                startAt: '2026-06-19T12:00:00.000Z'
+              },
+              {
+                activityTitle: '测试0621',
+                teamName: '队伍1',
+                signupName: '张虹生',
+                managerAlias: '酱油仔',
+                attendanceStatus: 'present',
+                startAt: '2026-06-22T00:00:00.000Z'
+              }
+            ]
           }
         ]
       })
@@ -921,7 +959,70 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('酱油仔');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain(
+    'data-attendance-stats-index="0"'
+  );
+  expect(elements['[data-attendance-stats-count]'].textContent).toBe('共 1 行');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
+});
+
+test('double-clicking an attendance stats row opens activity-level details', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            managerAlias: '酱油20',
+            signupCount: 4,
+            presentCount: 2,
+            absentCount: 2,
+            attendanceRate: 0.5,
+            details: [
+              {
+                activityTitle: '测试0618',
+                teamName: '队伍1',
+                signupName: '张虹生',
+                managerAlias: '酱油20',
+                attendanceStatus: 'absent',
+                startAt: '2026-06-19T12:00:00.000Z'
+              },
+              {
+                activityTitle: '测试0621',
+                teamName: '队伍1',
+                signupName: '张虹生',
+                managerAlias: '酱油20',
+                attendanceStatus: 'present',
+                startAt: '2026-06-22T00:00:00.000Z'
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({ attendanceStatsIndex: '0' });
+  elements['[data-attendance-detail]'].hidden = true;
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  appRoot.dblclick(row);
+
+  expect(elements['[data-attendance-detail]'].hidden).toBe(false);
+  expect(elements['[data-attendance-detail-title]'].textContent).toContain('酱油20');
+  expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('测试0618');
+  expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('缺勤');
+  expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('测试0621');
+  expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('出勤');
+  expect(elements['[data-attendance-detail-count]'].textContent).toBe('共 2 行');
+
+  appRoot.click(createElement({ action: 'close-attendance-detail' }));
+  expect(elements['[data-attendance-detail]'].hidden).toBe(true);
 });
 
 test('attendance stats exports loaded rows as CSV text', async () => {
@@ -990,10 +1091,10 @@ test('user rows render Chinese role labels without changing role values', async 
   const html = elements['[data-users-table]'].innerHTML;
   expect(html).toContain('普通用户、组织者');
   expect(html).toContain('class="user-display"');
-  expect(html).toContain('class="user-avatar-button"');
-  expect(html).toContain('data-action="preview-user-avatar"');
-  expect(html).toContain('data-avatar-url="https://example.com/avatar.jpg"');
-  expect(html).toContain('src="https://example.com/avatar.jpg"');
+  expect(html).not.toContain('class="user-avatar-button"');
+  expect(html).not.toContain('data-action="preview-user-avatar"');
+  expect(html).not.toContain('data-avatar-url="https://example.com/avatar.jpg"');
+  expect(html).not.toContain('src="https://example.com/avatar.jpg"');
   expect(html).toContain('data-role="organizer"');
   expect(html).toContain('data-user-manager-alias="openid_player"');
   expect(html).toContain('value="Left foot"');
@@ -1012,9 +1113,10 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
+  expect(elements['[data-users-count]'].textContent).toBe('共 1 行');
 });
 
-test('user rows resolve CloudBase avatar file IDs before rendering', async () => {
+test('user rows ignore CloudBase avatar file IDs on the user management page', async () => {
   const resolveFileUrls = jest.fn().mockResolvedValue({
     'cloud://test-env/user-avatars/player.jpg': 'https://tmp.example.com/player.jpg'
   });
@@ -1040,27 +1142,36 @@ test('user rows resolve CloudBase avatar file IDs before rendering', async () =>
 
   await app.start();
 
-  expect(resolveFileUrls).toHaveBeenCalledWith(['cloud://test-env/user-avatars/player.jpg']);
+  expect(resolveFileUrls).not.toHaveBeenCalled();
   const html = elements['[data-users-table]'].innerHTML;
-  expect(html).toContain('data-avatar-url="https://tmp.example.com/player.jpg"');
-  expect(html).toContain('data-avatar-source-url="cloud://test-env/user-avatars/player.jpg"');
-  expect(html).toContain('src="https://tmp.example.com/player.jpg"');
+  expect(html).not.toContain('data-avatar-url=');
+  expect(html).not.toContain('data-avatar-source-url=');
+  expect(html).not.toContain('src="https://tmp.example.com/player.jpg"');
 });
 
-test('clicking a user avatar opens the large avatar preview', async () => {
+test('clicking a roster avatar opens the large avatar preview', async () => {
   const { app, appRoot, elements } = buildHarness(
     {
       _id: 'openid_admin',
       roles: ['user', 'admin']
     },
     {
-      listUsers: jest.fn().mockResolvedValue({
-        items: [
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: { title: '活动1' },
+        teams: [
           {
-            _id: 'openid_player',
-            preferredName: 'Alex',
-            avatarUrl: 'https://example.com/avatar-large.jpg',
-            roles: ['user']
+            _id: 'team_1',
+            teamName: '队伍1',
+            members: [
+              {
+                registrationId: 'reg_1',
+                userOpenId: 'openid_player',
+                signupName: 'Alex',
+                avatarUrl: 'https://example.com/avatar-large.jpg',
+                preferredPositions: [],
+                attendanceStatus: 'present'
+              }
+            ]
           }
         ]
       })
@@ -1070,6 +1181,11 @@ test('clicking a user avatar opens the large avatar preview', async () => {
   elements['[data-user-avatar-preview]'].hidden = true;
 
   await app.start();
+  await app.loadActivityDetail('activity_1');
+  expect(elements['[data-roster-table]'].innerHTML).toContain('class="user-avatar-button"');
+  expect(elements['[data-roster-table]'].innerHTML).toContain(
+    'data-avatar-url="https://example.com/avatar-large.jpg"'
+  );
   appRoot.click(createElement({
     action: 'preview-user-avatar',
     avatarUrl: 'https://example.com/avatar-large.jpg',
@@ -1085,6 +1201,49 @@ test('clicking a user avatar opens the large avatar preview', async () => {
   appRoot.click(createElement({ action: 'close-user-avatar-preview' }));
 
   expect(elements['[data-user-avatar-preview]'].hidden).toBe(true);
+});
+
+test('activity detail roster resolves CloudBase avatar file IDs before rendering', async () => {
+  const resolveFileUrls = jest.fn().mockResolvedValue({
+    'cloud://test-env/activity-avatars/player.jpg': 'https://tmp.example.com/player.jpg'
+  });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      resolveFileUrls,
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: { title: '活动1' },
+        teams: [
+          {
+            _id: 'team_1',
+            teamName: '队伍1',
+            members: [
+              {
+                registrationId: 'reg_1',
+                userOpenId: 'openid_player',
+                signupName: 'Alex',
+                avatarUrl: 'cloud://test-env/activity-avatars/player.jpg',
+                preferredPositions: [],
+                attendanceStatus: 'present'
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  expect(resolveFileUrls).toHaveBeenCalledWith(['cloud://test-env/activity-avatars/player.jpg']);
+  const html = elements['[data-roster-table]'].innerHTML;
+  expect(html).toContain('data-avatar-url="https://tmp.example.com/player.jpg"');
+  expect(html).toContain('data-avatar-source-url="cloud://test-env/activity-avatars/player.jpg"');
+  expect(html).toContain('src="https://tmp.example.com/player.jpg"');
 });
 
 test('user search button shows spinner feedback while the request is pending', async () => {
@@ -1338,6 +1497,9 @@ test('activity detail renders Chinese roster operation labels while keeping enum
 
   const html = elements['[data-roster-table]'].innerHTML;
   expect(elements['[data-activity-title]'].textContent).toBe('周五足球');
+  expect(elements['[data-roster-count]'].textContent).toBe('共 2 行');
+  expect(html).toContain('<td>1</td>');
+  expect(html).toContain('<td>2</td>');
   expect(html).toContain('出勤');
   expect(html).toContain('缺勤');
   expect(html).toContain('是');
@@ -1400,6 +1562,8 @@ test('activity detail loads and renders current activity operation logs', async 
     skip: 0
   });
   const html = elements['[data-activity-detail-logs-table]'].innerHTML;
+  expect(elements['[data-activity-detail-logs-count]'].textContent).toBe('共 1 行');
+  expect(html).toContain('<td>1</td>');
   expect(html).toContain('Left foot 从 Red 换到 Green');
   expect(html).toContain('Captain');
   expect(html).toContain('title="openid_admin"');

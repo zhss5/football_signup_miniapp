@@ -59,10 +59,6 @@
     <block wx:for="{{createdItems}}" wx:key="_id">
       <view class="created-activity-card">
         <activity-card item="{{item}}" embedded="{{true}}" bind:tapcard="goDetail" />
-        <view wx:if="{{item.overdueUnresolved}}" class="overdue-unresolved-panel">
-          <text class="overdue-title">{{i18n.my.overdueUnresolvedTitle}}</text>
-          <text class="overdue-copy">{{i18n.my.overdueUnresolvedCopy}}</text>
-        </view>
         <view wx:if="{{item.canDeleteActivity}}" class="activity-action-footer">
           <button
             wx:if="{{item.canDeleteActivity}}"

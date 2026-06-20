@@ -204,9 +204,7 @@ module.exports = {
     webAdminLoginConfirmTitle: 'Confirm web admin login',
     webAdminLoginConfirmContent: 'Allow this browser to sign in as your admin account?',
     loadMore: 'Load more',
-    loadingMore: 'Loading...',
-    overdueUnresolvedTitle: 'Activity needs a result',
-    overdueUnresolvedCopy: 'This activity has ended. Confirm it as held or cancel it.'
+    loadingMore: 'Loading...'
   },
   teamEditor: {
     addTeam: 'Add Team',

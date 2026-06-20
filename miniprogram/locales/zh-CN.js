@@ -334,9 +334,6 @@ module.exports.home.loadMore = '\u52a0\u8f7d\u66f4\u591a';
 module.exports.home.loadingMore = '\u52a0\u8f7d\u4e2d...';
 module.exports.my.loadMore = '\u52a0\u8f7d\u66f4\u591a';
 module.exports.my.loadingMore = '\u52a0\u8f7d\u4e2d...';
-module.exports.my.overdueUnresolvedTitle = '\u6d3b\u52a8\u9700\u8981\u5904\u7406\u7ed3\u679c';
-module.exports.my.overdueUnresolvedCopy =
-  '\u6d3b\u52a8\u5df2\u7ed3\u675f\uff0c\u8bf7\u786e\u8ba4\u4e3e\u884c\u6216\u53d6\u6d88\u6d3b\u52a8\u3002';
 module.exports.my.webAdminLoginTitle = 'Web \u540e\u53f0';
 module.exports.my.webAdminLoginHint =
   '\u626b\u63cf Web \u540e\u53f0\u767b\u5f55\u7801\uff0c\u4f7f\u7528\u4f60\u7684\u5fae\u4fe1\u6743\u9650\u767b\u5f55\u3002';
