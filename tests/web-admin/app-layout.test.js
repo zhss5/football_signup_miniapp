@@ -185,6 +185,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-activity-detail-logs-keyword]': createElement(),
     '[data-export-output]': createElement(),
     '[data-roster-table]': createElement(),
+    '[data-activity-logs-table]': createElement(),
     '[data-activity-detail-logs-table]': createElement(),
     '[name="statsStartAt"]': createElement(),
     '[name="statsEndAt"]': createElement()
@@ -270,6 +271,44 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).toHaveBeenCalled();
+});
+
+test('global activity logs render the activity title column', async () => {
+  const listActivityLogs = jest.fn().mockResolvedValue({
+    items: [
+      {
+        _id: 'log_1',
+        activityId: 'activity_1',
+        activityTitle: 'Sunday Match',
+        action: 'signup_joined',
+        operatorOpenId: 'openid_player',
+        targetOpenId: 'openid_player',
+        targetName: 'Alex',
+        teamName: 'Green',
+        createdAt: '2026-06-10T10:00:00.000Z'
+      }
+    ]
+  });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listActivityLogs }
+  );
+
+  await app.start();
+  await app.loadActivityLogs();
+
+  expect(listActivityLogs).toHaveBeenCalledWith({
+    activityId: '',
+    limit: 50,
+    skip: 0
+  });
+  const html = elements['[data-activity-logs-table]'].innerHTML;
+  expect(html).toContain('Sunday Match');
+  expect(html).toContain('title="activity_1"');
+  expect(html).toContain('Alex 报名 Green');
 });
 
 test('logged-in users see account details in the topbar', async () => {

@@ -257,6 +257,8 @@
 
       return {
         id: log._id || log.id || '',
+        activityId: log.activityId || '',
+        activityTitle: log.activityTitle || '',
         type: log.action || '',
         operatorOpenId: log.operatorOpenId || '',
         operatorName,

@@ -189,6 +189,8 @@ test('stats and log row builders keep stable display fields', () => {
     buildActivityLogRows([
       {
         _id: 'log_1',
+        activityId: 'activity_1',
+        activityTitle: 'Sunday Match',
         action: 'attendance_update',
         operatorOpenId: 'openid_admin',
         operatorName: 'Admin Zhang',
@@ -223,6 +225,8 @@ test('stats and log row builders keep stable display fields', () => {
   ).toEqual([
     {
       id: 'log_1',
+      activityId: 'activity_1',
+      activityTitle: 'Sunday Match',
       type: 'attendance_update',
       operatorOpenId: 'openid_admin',
       operatorName: 'Admin Zhang',
@@ -238,6 +242,8 @@ test('stats and log row builders keep stable display fields', () => {
     },
     {
       id: 'log_2',
+      activityId: '',
+      activityTitle: '',
       type: 'registration_moved',
       operatorOpenId: 'openid_admin',
       operatorName: '',
@@ -253,6 +259,8 @@ test('stats and log row builders keep stable display fields', () => {
     },
     {
       id: 'log_3',
+      activityId: '',
+      activityTitle: '',
       type: 'manager_alias_update',
       operatorOpenId: 'openid_admin',
       operatorName: '',

@@ -721,6 +721,7 @@
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.summary || row.type)}</td>` +
+          `<td>${renderActivityCell(row)}</td>` +
           `<td>${renderPersonCell(row.operatorDisplayName, row.operatorOpenId)}</td>` +
           `<td>${renderPersonCell(row.targetDisplayName || row.targetName, row.targetOpenId)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
@@ -782,6 +783,21 @@
       }
 
       return `<span class="person-display" title="${escapeHtml(title)}">${escapeHtml(text)}</span>`;
+    }
+
+    function renderActivityCell(row) {
+      const text = String((row && row.activityTitle) || (row && row.activityId) || '').trim();
+      const title = String((row && row.activityId) || '').trim();
+
+      if (!text) {
+        return '';
+      }
+
+      if (!title || text === title) {
+        return escapeHtml(text);
+      }
+
+      return `<span class="activity-display" title="${escapeHtml(title)}">${escapeHtml(text)}</span>`;
     }
 
     function renderNotificationLogRows() {
