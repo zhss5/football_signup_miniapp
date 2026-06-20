@@ -879,7 +879,6 @@
           `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.activityTitle || row.activityId)}</td>` +
           `<td>${escapeHtml(row.startAt)}</td>` +
-          `<td>${escapeHtml(row.teamName)}</td>` +
           `<td>${escapeHtml(row.signupName)}</td>` +
           `<td>${escapeHtml(row.managerAlias)}</td>` +
           `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +

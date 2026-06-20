@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-roster-attendance-detail';
+const WEB_ADMIN_ASSET_VERSION = '20260620-attendance-detail-signup-name';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -91,6 +91,8 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-attendance-detail-title');
   expect(html).toContain('data-attendance-detail-table');
   expect(html).toContain('data-attendance-detail-count');
+  expect(html).toContain('<th>报名名称</th>');
+  expect(html).not.toContain('<th>报名名</th>');
   expect(html).toContain('data-action="close-attendance-detail"');
   expect(html).toContain('data-activity-context-menu');
   expect(html).toContain('role="menu"');

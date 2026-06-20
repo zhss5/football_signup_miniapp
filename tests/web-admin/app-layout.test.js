@@ -1016,6 +1016,7 @@ test('double-clicking an attendance stats row opens activity-level details', asy
   expect(elements['[data-attendance-detail]'].hidden).toBe(false);
   expect(elements['[data-attendance-detail-title]'].textContent).toContain('酱油20');
   expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('测试0618');
+  expect(elements['[data-attendance-detail-table]'].innerHTML).not.toContain('队伍1');
   expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('缺勤');
   expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('测试0621');
   expect(elements['[data-attendance-detail-table]'].innerHTML).toContain('出勤');
