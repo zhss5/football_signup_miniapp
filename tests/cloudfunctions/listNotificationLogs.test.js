@@ -74,6 +74,7 @@ test('admin can list notification logs across activities', async () => {
   expect(result.items.map(item => item._id)).toEqual(['log_2', 'log_1']);
   expect(result.items[0]).toMatchObject({
     activityId: 'activity_2',
+    activityTitle: 'Other Activity',
     notificationType: 'cancelled',
     status: 'failed',
     errorMessage: 'quota exceeded'

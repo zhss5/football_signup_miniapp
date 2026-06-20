@@ -52,6 +52,29 @@ test('buildUserRows exposes role controls using operator boundaries', () => {
   ]);
 });
 
+test('buildUserRows accepts common legacy avatar fields', () => {
+  const rows = buildUserRows(
+    [
+      {
+        _id: 'openid_player',
+        preferredName: 'Player Li',
+        avatarURL: 'cloud://test-env/user-avatars/player.jpg',
+        roles: ['user']
+      }
+    ],
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    }
+  );
+
+  expect(rows[0]).toMatchObject({
+    openid: 'openid_player',
+    displayName: 'Player Li',
+    avatarUrl: 'cloud://test-env/user-avatars/player.jpg'
+  });
+});
+
 test('admin role update payload can only toggle organizer', () => {
   expect(
     buildRoleUpdatePayload(

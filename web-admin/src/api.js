@@ -67,6 +67,52 @@
         : data;
     }
 
+    function isCloudFileId(value) {
+      return typeof value === 'string' && value.trim().startsWith('cloud://');
+    }
+
+    function getStorageApp() {
+      return (
+        options.cloudbaseApp ||
+        (options.runtimeRoot && options.runtimeRoot.cloudbaseApp) ||
+        (root && root.cloudbaseApp) ||
+        null
+      );
+    }
+
+    async function resolveFileUrls(fileIds = []) {
+      const uniqueFileIds = Array.from(
+        new Set((Array.isArray(fileIds) ? fileIds : []).map(String).filter(isCloudFileId))
+      );
+
+      if (!uniqueFileIds.length) {
+        return {};
+      }
+
+      const app = getStorageApp();
+      if (!app || typeof app.getTempFileURL !== 'function') {
+        return uniqueFileIds.reduce((map, fileId) => {
+          map[fileId] = fileId;
+          return map;
+        }, {});
+      }
+
+      const response = await app.getTempFileURL({ fileList: uniqueFileIds });
+      const fileList =
+        (response && Array.isArray(response.fileList) && response.fileList) ||
+        (response && response.result && Array.isArray(response.result.fileList) && response.result.fileList) ||
+        [];
+
+      return fileList.reduce((map, file) => {
+        const fileId = String(file.fileID || file.fileId || '').trim();
+        const tempUrl = String(file.tempFileURL || file.tempFileUrl || '').trim();
+        if (fileId && tempUrl) {
+          map[fileId] = tempUrl;
+        }
+        return map;
+      }, {});
+    }
+
     return {
       setWebAdminSessionToken(token) {
         webAdminSessionToken = String(token || '');
@@ -170,7 +216,9 @@
         return invoke('listNotificationLogs', withWebAdminSession({
           ...params
         }));
-      }
+      },
+
+      resolveFileUrls
     };
   }
 

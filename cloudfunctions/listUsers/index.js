@@ -55,7 +55,7 @@ function toSafeUser(user) {
     preferredName: user.preferredName || '',
     displayName: user.displayName || '',
     nickName: user.nickName || user.nickname || '',
-    avatarUrl: user.avatarUrl || '',
+    avatarUrl: user.avatarUrl || user.avatarURL || user.avatar || user.photoUrl || user.photoURL || '',
     managerAlias: user.managerAlias || '',
     roles: getRoles(user),
     createdAt: user.createdAt || '',

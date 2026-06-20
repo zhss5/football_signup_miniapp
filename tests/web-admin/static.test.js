@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-avatar-lifecycle-stats';
+const WEB_ADMIN_ASSET_VERSION = '20260620-admin-polish-logs';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -95,7 +95,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('活动报名人列表');
   expect(html).toContain('data-activity-detail-logs-table');
   expect(html).toContain('报名活动流水');
-  expect(html).toContain('仅统计已确认举行活动');
+  expect(html).toContain('已确认或已开始');
   const statsStart = html.indexOf('data-admin-view="attendance-stats"');
   const logsStart = html.indexOf('data-admin-view="logs"', statsStart);
   const statsBlock = statsStart >= 0 && logsStart > statsStart
@@ -105,7 +105,15 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).not.toContain('data-action="export-roster"');
   expect(html).toContain('data-action="load-activity-logs"');
   expect(html).toContain('data-action="load-notification-logs"');
+  expect(html).toContain('data-logs-status');
   expect(html).toContain('<th>活动</th>');
+  expect(html).toContain('<th>错误信息</th>');
+  const rosterHeaderStart = html.indexOf('活动报名人列表');
+  const rosterHeaderEnd = html.indexOf('<tbody data-roster-table>', rosterHeaderStart);
+  const rosterHeaderBlock = rosterHeaderStart >= 0 && rosterHeaderEnd > rosterHeaderStart
+    ? html.slice(rosterHeaderStart, rosterHeaderEnd)
+    : '';
+  expect(rosterHeaderBlock).not.toContain('<th>操作</th>');
   expect(html).toContain('关键词');
   expect(html).toContain('角色');
   expect(html).toContain('搜索');
@@ -139,11 +147,12 @@ test('web admin user management row actions have stable spacing', () => {
 
   expect(css).toContain('.manager-alias-control');
   expect(css).toContain('.role-management-control');
+  expect(css).toContain('.roster-alias-control');
+  expect(css).toContain('.attendance-status-control');
   expect(css).toContain('.user-display');
   expect(css).toContain('.user-avatar-button');
   expect(css).toContain('.avatar-preview-modal');
-  expect(css).toContain('gap: 10px');
-  expect(css).toContain('gap: 14px');
+  expect(css).toContain('flex-wrap: wrap');
   expect(css).not.toContain('.table-actions');
   expect(css).toContain('.inline-status');
 });

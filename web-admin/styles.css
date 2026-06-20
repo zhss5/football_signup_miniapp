@@ -329,7 +329,8 @@ select {
 }
 
 .toolbar button.is-loading::before,
-.data-table button.is-loading::before {
+.data-table button.is-loading::before,
+.log-actions button.is-loading::before {
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.45);
@@ -419,6 +420,7 @@ select {
 }
 
 .data-table .user-avatar-button {
+  position: relative;
   overflow: hidden;
   background: #ffffff;
   cursor: zoom-in;
@@ -429,6 +431,22 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.user-avatar-fallback-text {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #eef4ff;
+  color: #1d4fae;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.data-table .user-avatar-button.is-broken .user-avatar-fallback-text {
+  display: inline-flex;
 }
 
 .user-avatar-fallback {
@@ -450,8 +468,9 @@ select {
 }
 
 .role-toggle-list {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
 }
 
 .manager-alias-control,
@@ -463,8 +482,8 @@ select {
 }
 
 .role-management-control {
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  gap: 10px;
 }
 
 .manager-alias-control input {
@@ -475,6 +494,27 @@ select {
 .role-management-control > button {
   flex: 0 0 auto;
   justify-content: center;
+  min-width: 88px;
+}
+
+.roster-alias-control,
+.attendance-status-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.roster-alias-control input {
+  width: 180px;
+}
+
+.attendance-status-control span {
+  min-width: 40px;
+}
+
+.attendance-status-control button,
+.roster-alias-control button {
   min-width: 88px;
 }
 

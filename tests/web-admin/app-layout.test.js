@@ -189,6 +189,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-roster-table]': createElement(),
     '[data-activity-logs-table]': createElement(),
     '[data-activity-detail-logs-table]': createElement(),
+    '[data-notification-logs-table]': createElement(),
+    '[data-logs-status]': createElement(),
     '[name="statsStartAt"]': createElement(),
     '[name="statsEndAt"]': createElement()
   };
@@ -228,6 +230,10 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     getAttendanceStats: jest.fn().mockResolvedValue({
       items: []
     }),
+    listNotificationLogs: jest.fn().mockResolvedValue({
+      items: []
+    }),
+    resolveFileUrls: jest.fn().mockResolvedValue({}),
     ...apiOverrides
   };
   const storage = {
@@ -311,6 +317,89 @@ test('global activity logs render the activity title column', async () => {
   expect(html).toContain('Sunday Match');
   expect(html).toContain('title="activity_1"');
   expect(html).toContain('Alex 报名 Green');
+});
+
+test('global log buttons show loading feedback while fetching logs', async () => {
+  const deferred = createDeferred();
+  const listActivityLogs = jest.fn()
+    .mockResolvedValueOnce({
+      items: []
+    })
+    .mockReturnValueOnce(deferred.promise);
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listActivityLogs }
+  );
+  const button = createElement({ action: 'load-activity-logs' });
+  button.textContent = '加载操作日志';
+
+  await app.start();
+  listActivityLogs.mockClear();
+  const clickResult = appRoot.click(button);
+
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toBe('加载中...');
+  expect(elements['[data-logs-status]'].textContent).toContain('操作日志加载中');
+
+  deferred.resolve({ items: [] });
+  await clickResult;
+
+  expect(button.disabled).toBe(false);
+  expect(elements['[data-logs-status]'].textContent).toContain('操作日志已加载');
+});
+
+test('notification log loading errors are shown in the global logs panel', async () => {
+  const listNotificationLogs = jest.fn().mockRejectedValue(new Error('notification logs unavailable'));
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listNotificationLogs }
+  );
+  const button = createElement({ action: 'load-notification-logs' });
+  button.textContent = '加载通知日志';
+
+  await app.start();
+  await appRoot.click(button);
+
+  expect(elements['[data-logs-status]'].textContent).toContain('notification logs unavailable');
+});
+
+test('loadNotificationLogs renders activity and error details', async () => {
+  const listNotificationLogs = jest.fn().mockResolvedValue({
+    items: [
+      {
+        _id: 'notice_1',
+        activityId: 'activity_1',
+        activityTitle: '周五足球',
+        notificationType: 'proceeding',
+        targetOpenId: 'openid_player',
+        status: 'failed',
+        errorMessage: 'quota exceeded',
+        createdAt: '2026-06-10T10:00:00.000Z'
+      }
+    ]
+  });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listNotificationLogs }
+  );
+
+  await app.start();
+  await app.loadNotificationLogs();
+
+  const html = elements['[data-notification-logs-table]'].innerHTML;
+  expect(html).toContain('周五足球');
+  expect(html).toContain('title="activity_1"');
+  expect(html).toContain('failed');
+  expect(html).toContain('quota exceeded');
 });
 
 test('logged-in users see account details in the topbar', async () => {
@@ -724,7 +813,7 @@ test('activity confirm button calls notify wrapper and refreshes activities', as
   expect(listActivities).toHaveBeenCalledTimes(2);
 });
 
-test('attendance stats submit shows confirmed-activity empty state for blank results', async () => {
+test('attendance stats submit shows eligible-activity empty state for blank results', async () => {
   const { app, appRoot, api, elements } = buildHarness(
     {
       _id: 'openid_admin',
@@ -750,7 +839,7 @@ test('attendance stats submit shows confirmed-activity empty state for blank res
   });
   expect(elements['[data-attendance-stats-table]'].innerHTML).toBe('');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(false);
-  expect(elements['[data-attendance-stats-empty]'].textContent).toContain('仅统计已确认举行活动');
+  expect(elements['[data-attendance-stats-empty]'].textContent).toContain('已确认或已开始');
 });
 
 test('attendance stats submit renders rows and hides the empty state', async () => {
@@ -874,6 +963,39 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
+});
+
+test('user rows resolve CloudBase avatar file IDs before rendering', async () => {
+  const resolveFileUrls = jest.fn().mockResolvedValue({
+    'cloud://test-env/user-avatars/player.jpg': 'https://tmp.example.com/player.jpg'
+  });
+  const { app, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listUsers: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'openid_player',
+            preferredName: '张三',
+            avatarUrl: 'cloud://test-env/user-avatars/player.jpg',
+            roles: ['user']
+          }
+        ]
+      }),
+      resolveFileUrls
+    }
+  );
+
+  await app.start();
+
+  expect(resolveFileUrls).toHaveBeenCalledWith(['cloud://test-env/user-avatars/player.jpg']);
+  const html = elements['[data-users-table]'].innerHTML;
+  expect(html).toContain('data-avatar-url="https://tmp.example.com/player.jpg"');
+  expect(html).toContain('data-avatar-source-url="cloud://test-env/user-avatars/player.jpg"');
+  expect(html).toContain('src="https://tmp.example.com/player.jpg"');
 });
 
 test('clicking a user avatar opens the large avatar preview', async () => {
@@ -1173,8 +1295,16 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('否');
   expect(html).toContain('data-next-status="absent"');
   expect(html).toContain('标记缺勤');
-  expect(html).toContain('class="table-actions"');
   expect(html).toContain('保存备注');
+  expect(html).toContain('class="roster-alias-control"');
+  expect(html).toContain('class="attendance-status-control"');
+  expect(html).toMatch(
+    /<td><div class="roster-alias-control">[\s\S]*data-manager-alias="openid_player"[\s\S]*data-action="save-manager-alias"[\s\S]*<\/div><\/td>/
+  );
+  expect(html).toMatch(
+    /<td><div class="attendance-status-control">[\s\S]*出勤[\s\S]*data-action="toggle-attendance"[\s\S]*标记缺勤[\s\S]*<\/div><\/td>/
+  );
+  expect(html).not.toContain('class="table-actions"');
   expect(html).not.toContain('Save Alias');
 });
 
@@ -1227,6 +1357,97 @@ test('activity detail loads and renders current activity operation logs', async 
   expect(html).not.toContain('<code>openid_admin</code>');
   expect(html).toContain('2026-06-10 20:00');
   expect(html).not.toContain('2026-06-10T12:00:00.000Z');
+});
+
+test('activity detail attendance and alias actions update the current rows without reloading the detail', async () => {
+  const getActivityDetail = jest.fn().mockResolvedValue({
+    activity: {
+      title: 'Friday Football'
+    },
+    teams: [
+      {
+        teamName: 'Red',
+        members: [
+          {
+            registrationId: 'reg_1',
+            userOpenId: 'openid_player',
+            signupName: 'Alex',
+            managerAlias: 'Old alias',
+            preferredPositions: ['forward'],
+            proxyRegistration: false,
+            attendanceStatus: 'present'
+          }
+        ]
+      }
+    ]
+  });
+  const setRegistrationAttendance = jest.fn().mockResolvedValue({
+    registration: {
+      registrationId: 'reg_1',
+      attendanceStatus: 'absent'
+    }
+  });
+  const updateParticipantManagerAlias = jest.fn().mockResolvedValue({
+    user: {
+      _id: 'openid_player',
+      managerAlias: 'New alias'
+    }
+  });
+  const listActivityLogs = jest.fn()
+    .mockResolvedValueOnce({
+      items: []
+    })
+    .mockResolvedValue({
+      items: [
+        {
+          _id: 'log_1',
+          action: 'attendance_update',
+          operatorOpenId: 'openid_admin',
+          targetOpenId: 'openid_player',
+          targetName: 'Alex',
+          attendanceStatus: 'absent',
+          createdAt: '2026-06-10T10:00:00.000Z'
+        }
+      ]
+    });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail,
+      listActivityLogs,
+      setRegistrationAttendance,
+      updateParticipantManagerAlias
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  getActivityDetail.mockClear();
+
+  await appRoot.click(createElement({
+    action: 'toggle-attendance',
+    registrationId: 'reg_1',
+    nextStatus: 'absent'
+  }));
+
+  expect(getActivityDetail).not.toHaveBeenCalled();
+  expect(elements['[data-roster-table]'].innerHTML).toContain('缺勤');
+  expect(elements['[data-roster-table]'].innerHTML).toContain('标记出勤');
+
+  elements['[data-manager-alias="openid_player"]'] = {
+    value: 'New alias'
+  };
+  await appRoot.click(createElement({
+    action: 'save-manager-alias',
+    targetOpenid: 'openid_player'
+  }));
+
+  expect(getActivityDetail).not.toHaveBeenCalled();
+  expect(elements['[data-roster-table]'].innerHTML).toContain('New alias');
+  expect(elements['[data-activity-detail-logs-table]'].innerHTML).toContain('Alex 标记为缺勤');
 });
 
 test('activity detail exports filtered roster and activity logs as CSV text', async () => {

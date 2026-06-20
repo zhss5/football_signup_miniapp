@@ -38,6 +38,7 @@
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
+  const ATTENDANCE_STATS_EMPTY_TEXT = '统计已确认或已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',
@@ -191,6 +192,7 @@
 
     const api = options.api ||
       apiModule.createApiClient(apiModule.createDefaultCallFunction(options.runtimeRoot), {
+        runtimeRoot: options.runtimeRoot,
         webAdminSessionToken: readStoredWebAdminSessionToken()
       });
     const state = {
@@ -211,6 +213,7 @@
       activityDetailLogKeyword: '',
       activityDetailLoading: false,
       notificationLogRows: [],
+      logStatus: '',
       exportCsv: '',
       activeView: DEFAULT_ADMIN_VIEW
     };
@@ -303,6 +306,45 @@
       const status = query('[data-users-status]');
       if (status) {
         status.textContent = message || '';
+      }
+    }
+
+    function renderLogStatus(message) {
+      state.logStatus = message || '';
+      const status = query('[data-logs-status]');
+      if (status) {
+        status.textContent = state.logStatus;
+        setHidden(status, !state.logStatus);
+      }
+    }
+
+    function isCloudFileId(value) {
+      return typeof value === 'string' && value.trim().startsWith('cloud://');
+    }
+
+    async function resolveUserAvatarRows(rows = []) {
+      const cloudAvatarUrls = Array.from(
+        new Set(rows.map(row => row.avatarUrl).filter(isCloudFileId))
+      );
+
+      if (!cloudAvatarUrls.length || !api || typeof api.resolveFileUrls !== 'function') {
+        return rows;
+      }
+
+      try {
+        const urlByFileId = await api.resolveFileUrls(cloudAvatarUrls);
+        return rows.map(row => {
+          const resolvedAvatarUrl = urlByFileId[row.avatarUrl];
+          return resolvedAvatarUrl
+            ? {
+                ...row,
+                avatarSourceUrl: row.avatarUrl,
+                avatarUrl: resolvedAvatarUrl
+              }
+            : row;
+        });
+      } catch (error) {
+        return rows;
       }
     }
 
@@ -535,17 +577,22 @@
     function renderUserCell(row = {}) {
       const displayName = String(row.displayName || row.openid || '').trim();
       const avatarUrl = String(row.avatarUrl || '').trim();
+      const avatarSourceUrl = String(row.avatarSourceUrl || row.avatarUrl || '').trim();
+      const fallbackText = getAvatarText(row);
       const avatar = avatarUrl
         ? (
           `<button type="button" class="user-avatar-button" ` +
           `data-action="preview-user-avatar" ` +
           `data-avatar-url="${escapeHtml(avatarUrl)}" ` +
+          `data-avatar-source-url="${escapeHtml(avatarSourceUrl)}" ` +
           `data-avatar-name="${escapeHtml(displayName)}" ` +
           `aria-label="查看${escapeHtml(displayName)}头像">` +
-          `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" />` +
+          `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" ` +
+          `onerror="this.hidden=true;this.parentNode.classList.add('is-broken')" />` +
+          `<span class="user-avatar-fallback-text">${escapeHtml(fallbackText)}</span>` +
           `</button>`
         )
-        : `<span class="user-avatar-fallback">${escapeHtml(getAvatarText(row))}</span>`;
+        : `<span class="user-avatar-fallback">${escapeHtml(fallbackText)}</span>`;
 
       return (
         `<div class="user-display">` +
@@ -558,7 +605,8 @@
     async function searchUsers() {
       state.search = getSearchFormValues();
       const result = await api.listUsers(state.search);
-      state.rows = users.buildUserRows(result.items || [], state.currentUser);
+      const rows = users.buildUserRows(result.items || [], state.currentUser);
+      state.rows = await resolveUserAvatarRows(rows);
       state.hasMore = Boolean(result.hasMore);
       renderRows();
     }
@@ -691,22 +739,23 @@
           `<tr data-registration-id="${escapeHtml(row.registrationId)}">` +
           `<td>${escapeHtml(row.teamName)}</td>` +
           `<td>${escapeHtml(row.signupName)}</td>` +
-          `<td>` +
+          `<td><div class="roster-alias-control">` +
           `<input type="text" data-manager-alias="${escapeHtml(row.userOpenId)}" ` +
           `value="${escapeHtml(row.managerAlias)}" ${row.proxyRegistration ? 'disabled ' : ''}/>` +
+          `<button type="button" data-action="save-manager-alias" ` +
+          `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
+          `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
+          `</div>` +
           `</td>` +
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
-          `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +
-          `<td><div class="table-actions">` +
+          `<td><div class="attendance-status-control">` +
+          `<span>${escapeHtml(formatStatusText(row.attendanceStatus))}</span>` +
           `<button type="button" data-action="toggle-attendance" ` +
           `data-registration-id="${escapeHtml(row.registrationId)}" ` +
           `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
           `${escapeHtml(formatAttendanceAction(row.nextAttendanceStatus))}` +
           `</button>` +
-          `<button type="button" data-action="save-manager-alias" ` +
-          `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
-          `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
           `</div></td>` +
           `</tr>`
         ))
@@ -719,7 +768,7 @@
       const hasRows = state.statsRows.length > 0;
 
       if (empty) {
-        empty.textContent = hasRows ? '' : '仅统计已确认举行活动；当前范围内没有出勤记录。';
+        empty.textContent = hasRows ? '' : ATTENDANCE_STATS_EMPTY_TEXT;
         setHidden(empty, hasRows);
       }
 
@@ -867,8 +916,10 @@
         .map(row => (
           `<tr>` +
           `<td>${escapeHtml(row.type)}</td>` +
+          `<td>${renderActivityCell(row)}</td>` +
           `<td><code>${escapeHtml(row.targetOpenId)}</code></td>` +
           `<td>${escapeHtml(row.status)}</td>` +
+          `<td>${escapeHtml(row.errorMessage)}</td>` +
           `<td>${escapeHtml(row.createdAt)}</td>` +
           `</tr>`
         ))
@@ -1015,14 +1066,33 @@
       }
     }
 
+    async function refreshActivityDetailLogs(activityId) {
+      state.activityDetailLogRows = await loadAllActivityLogRows(activityId);
+      renderActivityDetailLogRows();
+    }
+
     async function toggleAttendance(registrationId, nextStatus) {
       const activityId = getSelectedActivityId();
       if (!activityId || !registrationId || !nextStatus) {
         return;
       }
 
-      await api.setRegistrationAttendance(activityId, registrationId, nextStatus);
-      await loadActivityDetail(activityId);
+      const result = await api.setRegistrationAttendance(activityId, registrationId, nextStatus);
+      const updatedRegistration = (result && result.registration) || {};
+      const updatedRegistrationId =
+        updatedRegistration.registrationId || updatedRegistration._id || registrationId;
+      const attendanceStatus = updatedRegistration.attendanceStatus || nextStatus;
+
+      state.rosterRows = state.rosterRows.map(row =>
+        row.registrationId === updatedRegistrationId
+          ? {
+              ...row,
+              attendanceStatus
+            }
+          : row
+      );
+      renderRosterRows();
+      await refreshActivityDetailLogs(activityId);
     }
 
     async function saveManagerAlias(targetOpenId) {
@@ -1032,8 +1102,23 @@
         return;
       }
 
-      await api.updateParticipantManagerAlias(activityId, targetOpenId, input.value || '');
-      await loadActivityDetail(activityId);
+      const result = await api.updateParticipantManagerAlias(activityId, targetOpenId, input.value || '');
+      const user = (result && result.user) || {};
+      const managerAlias =
+        Object.prototype.hasOwnProperty.call(user, 'managerAlias')
+          ? user.managerAlias
+          : input.value || '';
+
+      state.rosterRows = state.rosterRows.map(row =>
+        row.userOpenId === targetOpenId && !row.proxyRegistration
+          ? {
+              ...row,
+              managerAlias
+            }
+          : row
+      );
+      renderRosterRows();
+      await refreshActivityDetailLogs(activityId);
     }
 
     async function saveUserManagerAlias(targetOpenId) {
@@ -1413,12 +1498,16 @@
           }
 
           if (button.dataset.action === 'toggle-attendance') {
-            return toggleAttendance(button.dataset.registrationId, button.dataset.nextStatus)
+            return runWithButtonElement(button, '更新中...', () =>
+              toggleAttendance(button.dataset.registrationId, button.dataset.nextStatus)
+            )
               .catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'save-manager-alias') {
-            return saveManagerAlias(button.dataset.targetOpenid)
+            return runWithButtonElement(button, '保存中...', () =>
+              saveManagerAlias(button.dataset.targetOpenid)
+            )
               .catch(error => renderIdentity(error.message));
           }
 
@@ -1438,11 +1527,27 @@
           }
 
           if (button.dataset.action === 'load-activity-logs') {
-            return loadActivityLogs().catch(error => renderIdentity(error.message));
+            return runWithButtonElement(button, '加载中...', async () => {
+              renderLogStatus('操作日志加载中...');
+              await loadActivityLogs();
+              renderLogStatus('操作日志已加载');
+            }).catch(error => {
+              const message = getErrorMessage(error);
+              renderLogStatus(message);
+              renderIdentity(message);
+            });
           }
 
           if (button.dataset.action === 'load-notification-logs') {
-            return loadNotificationLogs().catch(error => renderIdentity(error.message));
+            return runWithButtonElement(button, '加载中...', async () => {
+              renderLogStatus('通知日志加载中...');
+              await loadNotificationLogs();
+              renderLogStatus('通知日志已加载');
+            }).catch(error => {
+              const message = getErrorMessage(error);
+              renderLogStatus(message);
+              renderIdentity(message);
+            });
           }
 
           if (button.dataset.action === 'restart-login') {

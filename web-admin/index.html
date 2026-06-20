@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-avatar-lifecycle-stats" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-admin-polish-logs" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -211,7 +211,6 @@
                               <th>位置偏好</th>
                               <th>代报名</th>
                               <th>出勤状态</th>
-                              <th>操作</th>
                             </tr>
                           </thead>
                           <tbody data-roster-table></tbody>
@@ -277,7 +276,7 @@
               </form>
 
               <p data-attendance-stats-empty class="inline-status" aria-live="polite" hidden>
-                仅统计已确认举行活动；当前范围内没有出勤记录。
+                统计已确认或已开始且未取消/未删除的活动；当前范围内没有出勤记录。
               </p>
 
               <table class="data-table">
@@ -302,6 +301,7 @@
                 <button type="button" data-action="load-activity-logs">加载操作日志</button>
                 <button type="button" data-action="load-notification-logs">加载通知日志</button>
               </div>
+              <p data-logs-status class="inline-status" aria-live="polite" hidden></p>
 
               <div class="log-grid">
                 <table class="data-table">
@@ -321,8 +321,10 @@
                   <thead>
                     <tr>
                       <th>类型</th>
+                      <th>活动</th>
                       <th>对象</th>
                       <th>状态</th>
+                      <th>错误信息</th>
                       <th>创建时间</th>
                     </tr>
                   </thead>
@@ -368,13 +370,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/roles.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/api.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/user-management.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/activity-management.js?v=20260620-avatar-lifecycle-stats"></script>
-    <script src="./src/app.js?v=20260620-avatar-lifecycle-stats"></script>
+    <script src="./config.test.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/roles.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/api.js?v=20260620-admin-polish-logs"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/user-management.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/activity-management.js?v=20260620-admin-polish-logs"></script>
+    <script src="./src/app.js?v=20260620-admin-polish-logs"></script>
   </body>
 </html>

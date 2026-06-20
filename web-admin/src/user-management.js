@@ -33,6 +33,15 @@
     );
   }
 
+  function getAvatarUrl(user = {}) {
+    return (
+      String(user.avatarUrl || '').trim() ||
+      String(user.avatarURL || '').trim() ||
+      String(user.avatar || '').trim() ||
+      String(user.photoUrl || user.photoURL || '').trim()
+    );
+  }
+
   function buildUserRows(users = [], operator) {
     return users.map(user => {
       const normalizedRoles = roles.normalizeRoles(user.roles);
@@ -40,7 +49,7 @@
       return {
         openid: user._id || '',
         displayName: getDisplayName(user),
-        avatarUrl: String(user.avatarUrl || '').trim(),
+        avatarUrl: getAvatarUrl(user),
         managerAlias: String(user.managerAlias || '').trim(),
         rolesText: normalizedRoles.join(', '),
         roleControls: roles.buildRoleControls(operator, {

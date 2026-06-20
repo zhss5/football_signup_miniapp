@@ -61,7 +61,7 @@
       startAt: formatBeijingDateTime(activity.startAt),
       status: activity.status || '',
       confirmStatus: activity.confirmStatus || 'pending',
-      statusText: `${activity.status || ''} / ${activity.confirmStatus || 'pending'}`,
+      statusText: activity.status || '',
       canConfirmProceeding:
         activity.status === 'published' && activity.confirmStatus !== 'confirmed',
       organizerOpenId: activity.organizerOpenId || '',
@@ -278,10 +278,13 @@
   function buildNotificationLogRows(items = []) {
     return items.map(log => ({
       id: log._id || log.id || '',
+      activityId: log.activityId || '',
+      activityTitle: log.activityTitle || '',
       type: log.notificationType || log.type || '',
       operatorOpenId: log.operatorOpenId || '',
       targetOpenId: log.targetOpenId || log.userOpenId || '',
       status: log.status || '',
+      errorMessage: log.errorMessage || log.error || '',
       createdAt: formatBeijingDateTime(log.createdAt)
     }));
   }

@@ -41,10 +41,11 @@ function compareByCreatedAtDesc(left, right) {
   return String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
 }
 
-function toSafeLog(log) {
+function toSafeLog(log, activity) {
   return {
     _id: log._id || '',
     activityId: log.activityId || '',
+    activityTitle: (activity && activity.title) || '',
     notificationType: log.notificationType || log.type || '',
     targetOpenId: log.targetOpenId || log.userOpenId || '',
     status: log.status || '',
@@ -84,6 +85,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       .filter(activity => callerIsAdmin || activity.organizerOpenId === openid)
       .map(activity => activity._id)
   );
+  const activityById = new Map(
+    activities.map(activity => [activity._id, activity])
+  );
 
   if (activityId && !allowedActivityIds.has(activityId)) {
     throw businessError('Only the organizer or an admin can list notification logs');
@@ -94,7 +98,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .filter(log => (notificationType ? (log.notificationType || log.type) === notificationType : true))
     .filter(log => (status ? log.status === status : true))
     .sort(compareByCreatedAtDesc)
-    .map(toSafeLog);
+    .map(log => toSafeLog(log, activityById.get(log.activityId)));
 
   return {
     items: filtered.slice(skip, skip + limit),

@@ -55,7 +55,7 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       startAt: '2026-06-06 04:00',
       status: 'published',
       confirmStatus: 'pending',
-      statusText: 'published / pending',
+      statusText: 'published',
       canConfirmProceeding: true,
       organizerOpenId: 'openid_owner',
       organizerName: 'Owner Zhang',
@@ -280,19 +280,25 @@ test('stats and log row builders keep stable display fields', () => {
     buildNotificationLogRows([
       {
         _id: 'notice_1',
+        activityId: 'activity_1',
+        activityTitle: '周五足球',
         notificationType: 'cancelled',
         targetOpenId: 'openid_player',
         status: 'failed',
+        errorMessage: 'quota exceeded',
         createdAt: '2026-06-10T11:00:00.000Z'
       }
     ])
   ).toEqual([
     {
       id: 'notice_1',
+      activityId: 'activity_1',
+      activityTitle: '周五足球',
       type: 'cancelled',
       operatorOpenId: '',
       targetOpenId: 'openid_player',
       status: 'failed',
+      errorMessage: 'quota exceeded',
       createdAt: '2026-06-10 19:00'
     }
   ]);

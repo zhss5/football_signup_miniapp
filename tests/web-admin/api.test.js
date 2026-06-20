@@ -116,6 +116,48 @@ test('api client delegates role changes to updateUserRoles', async () => {
   });
 });
 
+test('api client resolves CloudBase file IDs to temporary URLs', async () => {
+  const callFunction = jest.fn();
+  const getTempFileURL = jest.fn().mockResolvedValue({
+    fileList: [
+      {
+        fileID: 'cloud://test-env/user-avatars/player.jpg',
+        tempFileURL: 'https://tmp.example.com/player.jpg'
+      }
+    ]
+  });
+  const api = createApiClient(callFunction, {
+    runtimeRoot: {
+      cloudbaseApp: {
+        getTempFileURL
+      }
+    }
+  });
+
+  await expect(
+    api.resolveFileUrls([
+      'cloud://test-env/user-avatars/player.jpg',
+      'https://example.com/plain.jpg'
+    ])
+  ).resolves.toEqual({
+    'cloud://test-env/user-avatars/player.jpg': 'https://tmp.example.com/player.jpg'
+  });
+  expect(getTempFileURL).toHaveBeenCalledWith({
+    fileList: ['cloud://test-env/user-avatars/player.jpg']
+  });
+  expect(callFunction).not.toHaveBeenCalled();
+});
+
+test('api client leaves CloudBase file IDs unchanged when storage API is unavailable', async () => {
+  const api = createApiClient(jest.fn());
+
+  await expect(api.resolveFileUrls(['cloud://test-env/user-avatars/player.jpg']))
+    .resolves
+    .toEqual({
+      'cloud://test-env/user-avatars/player.jpg': 'cloud://test-env/user-avatars/player.jpg'
+    });
+});
+
 test('api client delegates activity operations to existing cloud functions', async () => {
   const callFunction = jest.fn().mockResolvedValue({ items: [], rows: [] });
   const api = createApiClient(callFunction);

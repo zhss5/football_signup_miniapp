@@ -135,6 +135,34 @@ test('listUsers returns and searches manager aliases', async () => {
   });
 });
 
+test('listUsers exposes legacy avatar fields as avatarUrl', async () => {
+  const db = createFakeDb({
+    users: {
+      openid_legacy_avatar: {
+        _id: 'openid_legacy_avatar',
+        preferredName: 'Legacy Avatar',
+        avatarURL: 'cloud://test-env/user-avatars/legacy.jpg',
+        roles: ['user'],
+        createdAt: '2026-05-04T00:00:00.000Z',
+        lastActiveAt: '2026-05-14T00:00:00.000Z'
+      }
+    }
+  });
+
+  const result = await listUsers.main(
+    { keyword: 'legacy', limit: 20, skip: 0 },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+
+  expect(result.items).toEqual([
+    expect.objectContaining({
+      _id: 'openid_legacy_avatar',
+      avatarUrl: 'cloud://test-env/user-avatars/legacy.jpg'
+    })
+  ]);
+});
+
 test('listUsers accepts a web admin session token for a WeChat super admin', async () => {
   const db = createFakeDb({
     users: {
