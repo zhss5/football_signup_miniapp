@@ -614,6 +614,7 @@
     function getActivityFormValues() {
       const keyword = query('[name="activityKeyword"]');
       const status = query('[name="activityStatus"]');
+      const organizerKeyword = query('[name="activityOrganizerKeyword"]');
       const organizerOpenId = query('[name="activityOrganizerOpenId"]');
       const startAtFrom = query('[name="activityStartAtFrom"]');
       const startAtTo = query('[name="activityStartAtTo"]');
@@ -621,12 +622,43 @@
       return activityUi.buildActivitySearchParams({
         keyword: keyword ? keyword.value : '',
         status: status ? status.value : '',
+        organizerKeyword: organizerKeyword ? organizerKeyword.value : '',
         organizerOpenId: organizerOpenId ? organizerOpenId.value : '',
         startAtFrom: startAtFrom ? startAtFrom.value : '',
         startAtTo: startAtTo ? startAtTo.value : '',
         limit: 20,
         skip: 0
       });
+    }
+
+    function getActivityOrganizerOptionLabel(row) {
+      return (
+        String(row.organizerManagerAlias || '').trim() ||
+        String(row.organizerName || '').trim() ||
+        ''
+      );
+    }
+
+    function renderActivityOrganizerOptions() {
+      const datalist = query('[data-activity-organizer-options]');
+      if (!datalist) {
+        return;
+      }
+
+      const seen = new Set();
+      datalist.innerHTML = (state.activities || [])
+        .map(getActivityOrganizerOptionLabel)
+        .filter(Boolean)
+        .filter(label => {
+          if (seen.has(label)) {
+            return false;
+          }
+
+          seen.add(label);
+          return true;
+        })
+        .map(label => `<option value="${escapeHtml(label)}"></option>`)
+        .join('');
     }
 
     function renderActivityRows() {
@@ -652,6 +684,7 @@
             `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
             `<td>${renderPersonCell(row.organizerDisplayName, row.organizerOpenId)}</td>` +
             `<td>${escapeHtml(row.joinedCount)}</td>` +
+            `<td>${escapeHtml(row.signupLimitTotal)}</td>` +
             `</tr>`
           );
         })
@@ -1014,6 +1047,7 @@
       }
       hideActivityContextMenu();
       renderActivityRows();
+      renderActivityOrganizerOptions();
     }
 
     async function loadActivityDetail(activityId) {

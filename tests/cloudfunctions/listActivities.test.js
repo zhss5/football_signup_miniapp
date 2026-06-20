@@ -321,6 +321,73 @@ test('web-admin scope lets admin filter activities by date status organizer and 
   expect(result.hasMore).toBe(false);
 });
 
+test('web-admin scope lets admin filter activities by organizer name or alias', async () => {
+  cloud.database.mockReturnValue(
+    createFakeDb({
+      users: [
+        { _id: 'openid_admin', roles: ['user', 'admin'] },
+        {
+          _id: 'openid_owner',
+          preferredName: 'Owner Zhang',
+          managerAlias: 'Coach Zhang',
+          roles: ['user', 'organizer']
+        },
+        {
+          _id: 'openid_other',
+          preferredName: 'Owner Li',
+          managerAlias: 'Coach Li',
+          roles: ['user', 'organizer']
+        }
+      ],
+      activities: [
+        {
+          _id: 'activity_zhang',
+          title: 'Zhang Match',
+          organizerOpenId: 'openid_owner',
+          startAt: '2026-06-01T20:00:00.000Z',
+          status: 'published'
+        },
+        {
+          _id: 'activity_li',
+          title: 'Li Match',
+          organizerOpenId: 'openid_other',
+          startAt: '2026-06-02T20:00:00.000Z',
+          status: 'published'
+        }
+      ]
+    })
+  );
+
+  await expect(
+    listActivities.main(
+      {
+        scope: 'web-admin',
+        organizerKeyword: 'Coach Zhang'
+      },
+      { OPENID: 'openid_admin' }
+    )
+  ).resolves.toMatchObject({
+    items: [
+      expect.objectContaining({
+        _id: 'activity_zhang',
+        organizerName: 'Owner Zhang',
+        organizerManagerAlias: 'Coach Zhang'
+      })
+    ],
+    hasMore: false
+  });
+
+  const byName = await listActivities.main(
+    {
+      scope: 'web-admin',
+      organizerKeyword: 'Owner Li'
+    },
+    { OPENID: 'openid_admin' }
+  );
+
+  expect(byName.items.map(item => item._id)).toEqual(['activity_li']);
+});
+
 test('web-admin scope limits organizers to their own activities and rejects regular users', async () => {
   const db = createFakeDb({
     users: [

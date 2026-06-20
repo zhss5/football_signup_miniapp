@@ -15,7 +15,7 @@ test('buildActivitySearchParams keeps listActivities filters API-shaped', () => 
     buildActivitySearchParams({
       keyword: ' Friday ',
       status: 'published',
-      organizerOpenId: ' openid_owner ',
+      organizerKeyword: ' Coach Zhang ',
       startAtFrom: '2026-06-01',
       startAtTo: '2026-06-30',
       limit: '50',
@@ -25,7 +25,8 @@ test('buildActivitySearchParams keeps listActivities filters API-shaped', () => 
     scope: 'web-admin',
     keyword: 'Friday',
     status: 'published',
-    organizerOpenId: 'openid_owner',
+    organizerKeyword: 'Coach Zhang',
+    organizerOpenId: '',
     startAtFrom: '2026-06-01',
     startAtTo: '2026-06-30',
     limit: 50,
@@ -45,7 +46,8 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
         organizerOpenId: 'openid_owner',
         organizerName: 'Owner Zhang',
         organizerManagerAlias: 'Coach Zhang',
-        joinedCount: 12
+        joinedCount: 12,
+        signupLimitTotal: 24
       }
     ])
   ).toEqual([
@@ -61,7 +63,8 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       organizerName: 'Owner Zhang',
       organizerManagerAlias: 'Coach Zhang',
       organizerDisplayName: 'Coach Zhang',
-      joinedCount: 12
+      joinedCount: 12,
+      signupLimitTotal: 24
     }
   ]);
 });

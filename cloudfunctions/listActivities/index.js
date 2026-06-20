@@ -104,6 +104,21 @@ function matchesKeyword(activity, keyword) {
     .some(value => String(value).toLowerCase().includes(keyword));
 }
 
+function matchesOrganizerKeyword(activity, keyword) {
+  if (!keyword) {
+    return true;
+  }
+
+  return [
+    activity.organizerManagerAlias,
+    activity.organizerName,
+    activity.organizerPreferredName,
+    activity.organizerOpenId
+  ]
+    .filter(Boolean)
+    .some(value => String(value).toLowerCase().includes(keyword));
+}
+
 function matchesDateRange(activity, startAtFrom, startAtTo) {
   const startAt = parseTimestamp(activity.startAt);
   const rangeStart = parseTimestamp(startAtFrom);
@@ -136,6 +151,7 @@ async function listWebAdminActivities(db, payload, openid, limit, skip) {
   const keyword = String(payload.keyword || '').trim().toLowerCase();
   const status = String(payload.status || '').trim();
   const organizerOpenId = String(payload.organizerOpenId || '').trim();
+  const organizerKeyword = String(payload.organizerKeyword || '').trim().toLowerCase();
   const filtered = (Array.isArray(res.data) ? res.data : [])
     .filter(activity => (status ? activity.status === status : activity.status !== 'deleted'))
     .filter(activity => (callerIsAdmin ? true : activity.organizerOpenId === openid))
@@ -146,11 +162,14 @@ async function listWebAdminActivities(db, payload, openid, limit, skip) {
       matchesDateRange(activity, payload.startAtFrom || payload.startAt, payload.startAtTo || payload.endAt)
     )
     .filter(activity => matchesKeyword(activity, keyword));
-  const sorted = sortActivitiesByStartDesc(filtered);
+  const withOrganizerProfiles = await enrichActivitiesWithOrganizerProfiles(db, filtered);
+  const sorted = sortActivitiesByStartDesc(
+    withOrganizerProfiles.filter(activity => matchesOrganizerKeyword(activity, organizerKeyword))
+  );
   const pageItems = sorted.slice(skip, skip + limit);
 
   return {
-    items: await enrichActivitiesWithOrganizerProfiles(db, pageItems),
+    items: pageItems,
     hasMore: sorted.length > skip + limit
   };
 }

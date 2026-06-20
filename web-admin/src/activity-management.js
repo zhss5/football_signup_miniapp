@@ -46,6 +46,7 @@
       scope: 'web-admin',
       keyword: String(input.keyword || '').trim(),
       status: String(input.status || '').trim(),
+      organizerKeyword: String(input.organizerKeyword || '').trim(),
       organizerOpenId: String(input.organizerOpenId || '').trim(),
       startAtFrom: String(input.startAtFrom || '').trim(),
       startAtTo: String(input.startAtTo || '').trim(),
@@ -71,7 +72,8 @@
         activity.organizerName || activity.organizerPreferredName || '',
         activity.organizerManagerAlias
       ) || activity.organizerOpenId || '',
-      joinedCount: Number(activity.joinedCount) || 0
+      joinedCount: Number(activity.joinedCount) || 0,
+      signupLimitTotal: Number(activity.signupLimitTotal) || 0
     }));
   }
 

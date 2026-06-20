@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-user-avatar-roles';
+const WEB_ADMIN_ASSET_VERSION = '20260620-activity-capacity-organizer';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -66,6 +66,11 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect((usersHeaderBlock.match(/<th>/g) || []).length).toBe(5);
   expect(usersHeaderBlock).not.toContain('<th>操作</th>');
   expect(html).toContain('data-activities-search-button');
+  expect(html).toContain('name="activityOrganizerKeyword"');
+  expect(html).toContain('list="activityOrganizerOptions"');
+  expect(html).toContain('data-activity-organizer-options');
+  expect(html).toContain('<th>最大可报名数</th>');
+  expect(html).not.toContain('组织者 OpenID');
   expect(html).toContain('data-stats-load-button');
   expect(html).toContain('data-role-filter');
   expect(html).toContain('data-role="organizer"');

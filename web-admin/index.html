@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-user-avatar-roles" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-activity-capacity-organizer" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -102,7 +102,7 @@
               <form data-action="search-activities" class="toolbar">
                 <label>
                   <span>关键词</span>
-                  <input name="activityKeyword" type="search" placeholder="标题、场地、openid" />
+                  <input name="activityKeyword" type="search" placeholder="标题、场地" />
                 </label>
 
                 <label>
@@ -117,8 +117,15 @@
                 </label>
 
                 <label>
-                  <span>组织者 OpenID</span>
-                  <input name="activityOrganizerOpenId" type="search" placeholder="管理员筛选" />
+                  <span>组织者</span>
+                  <input
+                    name="activityOrganizerKeyword"
+                    type="search"
+                    list="activityOrganizerOptions"
+                    placeholder="组织者姓名或备注"
+                  />
+                  <datalist id="activityOrganizerOptions" data-activity-organizer-options></datalist>
+                  <input name="activityOrganizerOpenId" type="hidden" />
                 </label>
 
                 <label>
@@ -142,6 +149,7 @@
                     <th>状态</th>
                     <th>组织者</th>
                     <th>报名数</th>
+                    <th>最大可报名数</th>
                   </tr>
                 </thead>
                 <tbody data-activities-table></tbody>
@@ -369,13 +377,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/roles.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/api.js?v=20260620-user-avatar-roles"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/user-management.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/activity-management.js?v=20260620-user-avatar-roles"></script>
-    <script src="./src/app.js?v=20260620-user-avatar-roles"></script>
+    <script src="./config.test.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/roles.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/api.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/user-management.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/activity-management.js?v=20260620-activity-capacity-organizer"></script>
+    <script src="./src/app.js?v=20260620-activity-capacity-organizer"></script>
   </body>
 </html>

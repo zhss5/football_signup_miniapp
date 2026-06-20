@@ -192,7 +192,14 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-notification-logs-table]': createElement(),
     '[data-logs-status]': createElement(),
     '[name="statsStartAt"]': createElement(),
-    '[name="statsEndAt"]': createElement()
+    '[name="statsEndAt"]': createElement(),
+    '[name="activityKeyword"]': createElement(),
+    '[name="activityStatus"]': createElement(),
+    '[name="activityOrganizerKeyword"]': createElement(),
+    '[name="activityOrganizerOpenId"]': createElement(),
+    '[name="activityStartAtFrom"]': createElement(),
+    '[name="activityStartAtTo"]': createElement(),
+    '[data-activity-organizer-options]': createElement()
   };
   const appRoot = createAppRoot(elements, {
     '[data-nav-target]': [
@@ -509,7 +516,8 @@ test('activity rows render selectable activity metadata without inline actions',
             organizerOpenId: 'openid_owner',
             organizerName: 'Owner Zhang',
             organizerManagerAlias: 'Coach Zhang',
-            joinedCount: 1
+            joinedCount: 1,
+            signupLimitTotal: 12
           },
           {
             _id: 'activity_confirmed',
@@ -518,7 +526,8 @@ test('activity rows render selectable activity metadata without inline actions',
             status: 'published',
             confirmStatus: 'confirmed',
             organizerOpenId: 'openid_fallback',
-            joinedCount: 2
+            joinedCount: 2,
+            signupLimitTotal: 20
           }
         ]
       })
@@ -537,6 +546,46 @@ test('activity rows render selectable activity metadata without inline actions',
   expect(html).not.toContain('2026-06-19T12:00:00.000Z');
   expect(html).toContain('title="openid_owner">Coach Zhang</span>');
   expect(html).toContain('openid_fallback');
+  expect(html).toContain('<td>12</td>');
+  expect(html).toContain('<td>20</td>');
+  expect(elements['[data-activity-organizer-options]'].innerHTML).toContain('value="Coach Zhang"');
+  expect(elements['[data-activity-organizer-options]'].innerHTML).not.toContain('openid_owner');
+});
+
+test('activity search uses organizer keyword instead of requiring an openid', async () => {
+  const listActivities = jest.fn().mockResolvedValue({ items: [] });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivities
+    }
+  );
+
+  elements['[name="activityKeyword"]'].value = '  title  ';
+  elements['[name="activityStatus"]'].value = 'published';
+  elements['[name="activityOrganizerKeyword"]'].value = '  Coach Zhang  ';
+  elements['[name="activityStartAtFrom"]'].value = '2026-06-01';
+  elements['[name="activityStartAtTo"]'].value = '2026-06-30';
+
+  await app.start();
+  listActivities.mockClear();
+  const { result } = appRoot.submit(elements['[data-action="search-activities"]']);
+  await result;
+
+  expect(listActivities).toHaveBeenCalledWith({
+    scope: 'web-admin',
+    keyword: 'title',
+    status: 'published',
+    organizerKeyword: 'Coach Zhang',
+    organizerOpenId: '',
+    startAtFrom: '2026-06-01',
+    startAtTo: '2026-06-30',
+    limit: 20,
+    skip: 0
+  });
 });
 
 test('clicking an activity row selects it without opening the detail modal', async () => {
