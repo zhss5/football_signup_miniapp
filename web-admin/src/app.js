@@ -1220,6 +1220,16 @@
 
           showActivityContextMenu(row.dataset.activityId, event.clientX, event.clientY);
         });
+
+        appRoot.addEventListener('dblclick', event => {
+          const row = event.target.closest('[data-activity-id]');
+          if (!row) {
+            return;
+          }
+
+          hideActivityContextMenu();
+          return loadActivityDetail(row.dataset.activityId).catch(error => renderIdentity(error.message));
+        });
       }
     }
 

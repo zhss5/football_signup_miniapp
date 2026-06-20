@@ -49,6 +49,7 @@ function createTarget(element) {
 function createAppRoot(elements, groups) {
   let clickHandler = null;
   let contextMenuHandler = null;
+  let doubleClickHandler = null;
 
   return {
     querySelector: jest.fn(selector => elements[selector] || null),
@@ -61,6 +62,10 @@ function createAppRoot(elements, groups) {
       if (eventName === 'contextmenu') {
         contextMenuHandler = handler;
       }
+
+      if (eventName === 'dblclick') {
+        doubleClickHandler = handler;
+      }
     }),
     click(element) {
       if (!clickHandler) {
@@ -68,6 +73,15 @@ function createAppRoot(elements, groups) {
       }
 
       return clickHandler({
+        target: createTarget(element)
+      });
+    },
+    dblclick(element) {
+      if (!doubleClickHandler) {
+        throw new Error('dblclick handler was not registered');
+      }
+
+      return doubleClickHandler({
         target: createTarget(element)
       });
     },
@@ -424,6 +438,50 @@ test('clicking an activity row selects it without opening the detail modal', asy
   expect(elements['[data-activity-detail]'].hidden).toBe(true);
   expect(elements['[data-activities-table]'].innerHTML).toContain('class="is-selected"');
   expect(elements['[data-activities-table]'].innerHTML).toContain('aria-selected="true"');
+});
+
+test('double-clicking an activity row opens the detail modal', async () => {
+  const getActivityDetail = jest.fn().mockResolvedValue({
+    activity: {
+      title: '双击打开活动'
+    },
+    teams: []
+  });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail,
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_pending',
+            title: '待确认活动',
+            startAt: '2026-06-19T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'pending',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 1
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({
+    activityId: 'activity_pending'
+  });
+  elements['[data-activity-detail]'].hidden = true;
+
+  await app.start();
+  await appRoot.dblclick(row);
+
+  expect(getActivityDetail).toHaveBeenCalledWith('activity_pending');
+  expect(app.state.selectedActivityId).toBe('activity_pending');
+  expect(elements['[data-activity-detail]'].hidden).toBe(false);
+  expect(elements['[data-activity-title]'].textContent).toBe('双击打开活动');
+  expect(elements['[data-activities-table]'].innerHTML).toContain('class="is-selected"');
 });
 
 test('right-clicking a pending activity shows open and confirm actions in a context menu', async () => {
