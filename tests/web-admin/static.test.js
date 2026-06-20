@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-organizer-display';
+const WEB_ADMIN_ASSET_VERSION = '20260620-detail-split';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -175,6 +175,18 @@ test('web admin shell uses a CloudBase-like console layout', () => {
   expect(css).toContain('grid-template-columns: 188px minmax(0, 1fr)');
   expect(css).toContain('border-right: 1px solid #e5e8ef');
   expect(css).toContain('box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04)');
+});
+
+test('activity detail dialog splits roster and logs into fixed half-height panes', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('width: min(1360px, calc(100vw - 48px))');
+  expect(css).toContain('height: min(860px, calc(100vh - 48px))');
+  expect(css).toContain('grid-template-rows: minmax(0, 1fr) minmax(0, 1fr)');
+  expect(css).toContain('.detail-subsection');
+  expect(css).toContain('overflow: hidden');
+  expect(css).toContain('.detail-table-scroll');
+  expect(css).toContain('overflow: auto');
 });
 
 test('web admin test config targets only the test CloudBase environment', () => {

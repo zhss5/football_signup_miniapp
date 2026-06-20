@@ -181,6 +181,37 @@ test('listActivityLogs enriches rows with participant and team display names', a
   ]);
 });
 
+test('listActivityLogs preserves attendance status for attendance updates', async () => {
+  const db = createFakeDb({
+    activity_logs: [
+      {
+        _id: 'log_absent',
+        activityId: 'activity_1',
+        action: 'attendance_update',
+        operatorOpenId: 'openid_owner',
+        userOpenId: 'openid_player',
+        registrationId: 'reg_1',
+        attendanceStatus: 'absent',
+        createdAt: '2026-06-10T12:00:00.000Z'
+      }
+    ]
+  });
+
+  const result = await listActivityLogs.main(
+    { activityId: 'activity_1', action: 'attendance_update' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(result.items).toEqual([
+    expect.objectContaining({
+      _id: 'log_absent',
+      action: 'attendance_update',
+      attendanceStatus: 'absent'
+    })
+  ]);
+});
+
 test('super_admin can filter activity logs by action', async () => {
   const db = createFakeDb();
 

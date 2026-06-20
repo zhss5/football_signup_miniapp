@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-organizer-display" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-detail-split" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -202,20 +202,22 @@
                           </label>
                         </div>
                       </div>
-                      <table class="data-table">
-                        <thead>
-                          <tr>
-                            <th>队伍</th>
-                            <th>报名名</th>
-                            <th>备注</th>
-                            <th>位置偏好</th>
-                            <th>代报名</th>
-                            <th>出勤状态</th>
-                            <th>操作</th>
-                          </tr>
-                        </thead>
-                        <tbody data-roster-table></tbody>
-                      </table>
+                      <div class="detail-table-scroll">
+                        <table class="data-table">
+                          <thead>
+                            <tr>
+                              <th>队伍</th>
+                              <th>报名名</th>
+                              <th>备注</th>
+                              <th>位置偏好</th>
+                              <th>代报名</th>
+                              <th>出勤状态</th>
+                              <th>操作</th>
+                            </tr>
+                          </thead>
+                          <tbody data-roster-table></tbody>
+                        </table>
+                      </div>
                     </section>
 
                     <section class="detail-subsection">
@@ -235,17 +237,19 @@
                           </label>
                         </div>
                       </div>
-                      <table class="data-table">
-                        <thead>
-                          <tr>
-                            <th>操作</th>
-                            <th>操作人</th>
-                            <th>报名人</th>
-                            <th>时间</th>
-                          </tr>
-                        </thead>
-                        <tbody data-activity-detail-logs-table></tbody>
-                      </table>
+                      <div class="detail-table-scroll">
+                        <table class="data-table">
+                          <thead>
+                            <tr>
+                              <th>操作</th>
+                              <th>操作人</th>
+                              <th>报名人</th>
+                              <th>时间</th>
+                            </tr>
+                          </thead>
+                          <tbody data-activity-detail-logs-table></tbody>
+                        </table>
+                      </div>
                     </section>
                   </div>
                 </div>
@@ -343,13 +347,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-organizer-display"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-organizer-display"></script>
-    <script src="./src/roles.js?v=20260620-organizer-display"></script>
-    <script src="./src/api.js?v=20260620-organizer-display"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-organizer-display"></script>
-    <script src="./src/user-management.js?v=20260620-organizer-display"></script>
-    <script src="./src/activity-management.js?v=20260620-organizer-display"></script>
-    <script src="./src/app.js?v=20260620-organizer-display"></script>
+    <script src="./config.test.js?v=20260620-detail-split"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260620-detail-split"></script>
+    <script src="./src/roles.js?v=20260620-detail-split"></script>
+    <script src="./src/api.js?v=20260620-detail-split"></script>
+    <script src="./vendor/qrcode.min.js?v=20260620-detail-split"></script>
+    <script src="./src/user-management.js?v=20260620-detail-split"></script>
+    <script src="./src/activity-management.js?v=20260620-detail-split"></script>
+    <script src="./src/app.js?v=20260620-detail-split"></script>
   </body>
 </html>

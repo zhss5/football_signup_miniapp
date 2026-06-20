@@ -114,6 +114,7 @@ function toSafeLog(log, activityById, registrationById, teamById, userById) {
     toTeamName: teamById[toTeamId] ? teamById[toTeamId].teamName || '' : '',
     before: log.before || {},
     after: log.after || {},
+    attendanceStatus: log.attendanceStatus || (log.after && log.after.attendanceStatus) || '',
     createdAt: log.createdAt || ''
   };
 }

@@ -473,8 +473,8 @@ select {
 .activity-detail-dialog {
   display: flex;
   flex-direction: column;
-  width: min(1180px, 100%);
-  max-height: min(780px, calc(100vh - 48px));
+  width: min(1360px, calc(100vw - 48px));
+  height: min(860px, calc(100vh - 48px));
   box-sizing: border-box;
   overflow: hidden;
   padding: 20px;
@@ -547,17 +547,25 @@ select {
 }
 
 .activity-detail-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding-right: 4px;
 }
 
 .detail-subsection {
-  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 0;
 }
 
 .detail-subsection + .detail-subsection {
-  margin-top: 18px;
+  margin-top: 0;
+  padding-top: 16px;
   border-top: 1px solid #e5ebf4;
 }
 
@@ -613,6 +621,21 @@ select {
   border-radius: 6px;
   background: #ffffff;
   color: #172033;
+}
+
+.detail-table-scroll {
+  min-height: 0;
+  overflow: auto;
+}
+
+.detail-table-scroll .data-table {
+  margin-bottom: 0;
+}
+
+.detail-table-scroll .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .person-display {
@@ -709,7 +732,8 @@ select {
   }
 
   .activity-detail-dialog {
-    max-height: calc(100vh - 24px);
+    width: 100%;
+    height: calc(100vh - 24px);
     padding: 16px;
   }
 
