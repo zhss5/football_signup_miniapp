@@ -1187,6 +1187,9 @@ test('clicking a roster avatar opens the large avatar preview', async () => {
   expect(elements['[data-roster-table]'].innerHTML).toContain(
     'data-avatar-url="https://example.com/avatar-large.jpg"'
   );
+  expect(elements['[data-roster-table]'].innerHTML).toContain(
+    "removeAttribute('data-action')"
+  );
   appRoot.click(createElement({
     action: 'preview-user-avatar',
     avatarUrl: 'https://example.com/avatar-large.jpg',

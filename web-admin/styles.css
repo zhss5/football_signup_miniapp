@@ -449,6 +449,10 @@ select {
   display: inline-flex;
 }
 
+.data-table .user-avatar-button.is-broken {
+  cursor: default;
+}
+
 .user-avatar-fallback {
   display: inline-flex;
   align-items: center;

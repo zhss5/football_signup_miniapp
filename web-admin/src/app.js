@@ -598,7 +598,9 @@
           `data-avatar-name="${escapeHtml(name)}" ` +
           `aria-label="查看${escapeHtml(name)}头像">` +
           `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name)}" ` +
-          `onerror="this.hidden=true;this.parentNode.classList.add('is-broken')" />` +
+          `onerror="this.hidden=true;this.parentNode.classList.add('is-broken');` +
+          `this.parentNode.disabled=true;this.parentNode.removeAttribute('data-action');` +
+          `this.parentNode.removeAttribute('data-avatar-url')" />` +
           `<span class="user-avatar-fallback-text">${escapeHtml(fallbackText)}</span>` +
           `</button>`
         )

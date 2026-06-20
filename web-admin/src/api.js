@@ -91,10 +91,7 @@
 
       const app = getStorageApp();
       if (!app || typeof app.getTempFileURL !== 'function') {
-        return uniqueFileIds.reduce((map, fileId) => {
-          map[fileId] = fileId;
-          return map;
-        }, {});
+        return {};
       }
 
       const response = await app.getTempFileURL({ fileList: uniqueFileIds });

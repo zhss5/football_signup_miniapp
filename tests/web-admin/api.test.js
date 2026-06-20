@@ -148,14 +148,12 @@ test('api client resolves CloudBase file IDs to temporary URLs', async () => {
   expect(callFunction).not.toHaveBeenCalled();
 });
 
-test('api client leaves CloudBase file IDs unchanged when storage API is unavailable', async () => {
+test('api client does not expose CloudBase file IDs when storage API is unavailable', async () => {
   const api = createApiClient(jest.fn());
 
   await expect(api.resolveFileUrls(['cloud://test-env/user-avatars/player.jpg']))
     .resolves
-    .toEqual({
-      'cloud://test-env/user-avatars/player.jpg': 'cloud://test-env/user-avatars/player.jpg'
-    });
+    .toEqual({});
 });
 
 test('api client delegates activity operations to existing cloud functions', async () => {
