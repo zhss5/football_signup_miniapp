@@ -548,28 +548,71 @@
 
       table.innerHTML = state.activities
         .map(row => {
-          const confirmButton = row.canConfirmProceeding
-            ? `<button type="button" data-action="confirm-activity" ` +
-              `data-activity-id="${escapeHtml(row.activityId)}" ` +
-              `data-confirm-action="true">确认举行</button>`
-            : '';
+          const selected = row.activityId && row.activityId === state.selectedActivityId;
+          const selectedAttributes = selected
+            ? ` class="is-selected" aria-selected="true"`
+            : ` aria-selected="false"`;
 
           return (
-            `<tr data-activity-id="${escapeHtml(row.activityId)}">` +
+            `<tr data-activity-id="${escapeHtml(row.activityId)}" ` +
+            `data-can-confirm-proceeding="${row.canConfirmProceeding ? 'true' : 'false'}"` +
+            selectedAttributes +
+            `>` +
             `<td>${escapeHtml(row.title)}</td>` +
             `<td>${escapeHtml(row.startAt)}</td>` +
             `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
             `<td><code>${escapeHtml(row.organizerOpenId)}</code></td>` +
             `<td>${escapeHtml(row.joinedCount)}</td>` +
-            `<td><div class="table-actions">` +
-            `<button type="button" data-action="load-activity-detail" ` +
-            `data-activity-id="${escapeHtml(row.activityId)}">打开</button>` +
-            confirmButton +
-            `</div></td>` +
             `</tr>`
           );
         })
         .join('');
+    }
+
+    function getActivityRowById(activityId) {
+      return (state.activities || []).find(row => row.activityId === activityId) || null;
+    }
+
+    function hideActivityContextMenu() {
+      const menu = query('[data-activity-context-menu]');
+      if (!menu) {
+        return;
+      }
+
+      setHidden(menu, true);
+    }
+
+    function selectActivity(activityId) {
+      if (!getActivityRowById(activityId)) {
+        return;
+      }
+
+      state.selectedActivityId = activityId;
+      renderActivityRows();
+    }
+
+    function showActivityContextMenu(activityId, x, y) {
+      const row = getActivityRowById(activityId);
+      const menu = query('[data-activity-context-menu]');
+      if (!row || !menu) {
+        return;
+      }
+
+      selectActivity(activityId);
+
+      const confirmButton = row.canConfirmProceeding
+        ? `<button type="button" role="menuitem" data-action="confirm-activity" ` +
+          `data-activity-id="${escapeHtml(row.activityId)}" ` +
+          `data-confirm-action="true">确认举行</button>`
+        : '';
+
+      menu.innerHTML =
+        `<button type="button" role="menuitem" data-action="load-activity-detail" ` +
+        `data-activity-id="${escapeHtml(row.activityId)}">打开</button>` +
+        confirmButton;
+      menu.style.left = `${Math.max(0, Number(x) || 0)}px`;
+      menu.style.top = `${Math.max(0, Number(y) || 0)}px`;
+      setHidden(menu, false);
     }
 
     function getFilteredRosterRows() {
@@ -782,6 +825,10 @@
       state.activitySearch = getActivityFormValues();
       const result = await api.listActivities(state.activitySearch);
       state.activities = activityUi.buildActivityRows(result.items || []);
+      if (state.selectedActivityId && !getActivityRowById(state.selectedActivityId)) {
+        state.selectedActivityId = '';
+      }
+      hideActivityContextMenu();
       renderActivityRows();
     }
 
@@ -795,6 +842,7 @@
       state.activityDetailLogRows = activityDetailLogRows;
       state.exportCsv = '';
       resetActivityDetailFilters();
+      renderActivityRows();
 
       const detailPanel = query('[data-activity-detail]');
       setHidden(detailPanel, false);
@@ -929,6 +977,7 @@
       state.activityDetailLogKeyword = '';
       state.notificationLogRows = [];
       state.exportCsv = '';
+      hideActivityContextMenu();
 
       if (api && typeof api.setWebAdminSessionToken === 'function') {
         api.setWebAdminSessionToken('');
@@ -1069,12 +1118,21 @@
         appRoot.addEventListener('click', event => {
           const navButton = event.target.closest('[data-nav-target]');
           if (navButton) {
+            hideActivityContextMenu();
             setActiveAdminView(navButton.dataset.navTarget);
             return;
           }
 
           const button = event.target.closest('[data-action]');
           if (!button) {
+            const row = event.target.closest('[data-activity-id]');
+            if (row) {
+              hideActivityContextMenu();
+              selectActivity(row.dataset.activityId);
+              return;
+            }
+
+            hideActivityContextMenu();
             return;
           }
 
@@ -1101,15 +1159,18 @@
           }
 
           if (button.dataset.action === 'close-activity-detail') {
+            hideActivityContextMenu();
             closeActivityDetail();
             return;
           }
 
           if (button.dataset.action === 'load-activity-detail') {
+            hideActivityContextMenu();
             return loadActivityDetail(button.dataset.activityId).catch(error => renderIdentity(error.message));
           }
 
           if (button.dataset.action === 'confirm-activity') {
+            hideActivityContextMenu();
             return runWithButtonElement(button, '确认中...', () =>
               confirmActivity(button.dataset.activityId)
             ).catch(error => renderIdentity(error.message));
@@ -1144,6 +1205,20 @@
           if (button.dataset.action === 'logout') {
             return logoutWebAdmin().catch(error => renderIdentity(error.message));
           }
+        });
+
+        appRoot.addEventListener('contextmenu', event => {
+          const row = event.target.closest('[data-activity-id]');
+          if (!row) {
+            hideActivityContextMenu();
+            return;
+          }
+
+          if (typeof event.preventDefault === 'function') {
+            event.preventDefault();
+          }
+
+          showActivityContextMenu(row.dataset.activityId, event.clientX, event.clientY);
         });
       }
     }

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-detail-modal';
+const WEB_ADMIN_ASSET_VERSION = '20260620-activity-context-menu';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -63,6 +63,8 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
   expect(html).toContain('data-attendance-stats-empty');
+  expect(html).toContain('data-activity-context-menu');
+  expect(html).toContain('role="menu"');
   expect(html).toContain('class="activity-detail-modal"');
   expect(html).toContain('role="dialog"');
   expect(html).toContain('data-action="close-activity-detail"');

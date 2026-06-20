@@ -366,6 +366,18 @@ select {
   color: #46546b;
 }
 
+.data-table tr[data-activity-id] {
+  cursor: pointer;
+}
+
+.data-table tr[data-activity-id]:hover td {
+  background: #f6f9ff;
+}
+
+.data-table tr[data-activity-id].is-selected td {
+  background: #eaf1ff;
+}
+
 .data-table input {
   width: 160px;
   min-width: 0;
@@ -406,6 +418,36 @@ select {
   align-items: center;
   gap: 8px;
   cursor: wait;
+}
+
+.activity-context-menu {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  min-width: 132px;
+  padding: 6px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(23, 32, 51, 0.18);
+}
+
+.activity-context-menu button {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #172033;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-context-menu button:hover {
+  background: #eef4ff;
+  color: #1d4fae;
 }
 
 .activity-detail-modal {

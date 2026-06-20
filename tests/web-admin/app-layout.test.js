@@ -7,6 +7,7 @@ function createElement(dataset = {}) {
     textContent: '',
     value: '',
     dataset,
+    style: {},
     disabled: false,
     eventHandlers: {},
     attributes: {},
@@ -36,6 +37,10 @@ function createTarget(element) {
         return element;
       }
 
+      if (selector === '[data-activity-id]' && element.dataset.activityId) {
+        return element;
+      }
+
       return null;
     })
   };
@@ -43,6 +48,7 @@ function createTarget(element) {
 
 function createAppRoot(elements, groups) {
   let clickHandler = null;
+  let contextMenuHandler = null;
 
   return {
     querySelector: jest.fn(selector => elements[selector] || null),
@@ -50,6 +56,10 @@ function createAppRoot(elements, groups) {
     addEventListener: jest.fn((eventName, handler) => {
       if (eventName === 'click') {
         clickHandler = handler;
+      }
+
+      if (eventName === 'contextmenu') {
+        contextMenuHandler = handler;
       }
     }),
     click(element) {
@@ -60,6 +70,24 @@ function createAppRoot(elements, groups) {
       return clickHandler({
         target: createTarget(element)
       });
+    },
+    contextmenu(element, eventOverrides = {}) {
+      if (!contextMenuHandler) {
+        throw new Error('contextmenu handler was not registered');
+      }
+
+      const event = {
+        preventDefault: jest.fn(),
+        target: createTarget(element),
+        clientX: 120,
+        clientY: 80,
+        ...eventOverrides
+      };
+      const result = contextMenuHandler(event);
+      return {
+        event,
+        result
+      };
     },
     submit(element) {
       const handler = element.eventHandlers && element.eventHandlers.submit;
@@ -130,6 +158,7 @@ function buildHarness(user, apiOverrides = {}) {
     '[data-stats-load-button]': createElement(),
     '[data-activities-table]': createElement(),
     '[data-users-table]': createElement(),
+    '[data-activity-context-menu]': createElement(),
     '[data-attendance-stats-table]': createElement(),
     '[data-attendance-stats-empty]': createElement(),
     '[data-activity-detail]': createElement(),
@@ -317,7 +346,7 @@ test('sidebar navigation activates only the selected content view', async () => 
   expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
 });
 
-test('activity rows render a confirm action only for pending published activities', async () => {
+test('activity rows render selectable activity metadata without inline actions', async () => {
   const { app, elements } = buildHarness(
     {
       _id: 'openid_admin',
@@ -352,13 +381,124 @@ test('activity rows render a confirm action only for pending published activitie
   await app.start();
 
   const html = elements['[data-activities-table]'].innerHTML;
-  expect(html).toContain('data-action="confirm-activity"');
-  expect((html.match(/data-action="confirm-activity"/g) || []).length).toBe(1);
+  expect(html).not.toContain('data-action="confirm-activity"');
+  expect(html).not.toContain('data-action="load-activity-detail"');
   expect(html).toContain('data-activity-id="activity_pending"');
-  expect(html).toContain('确认举行');
-  expect(html).toContain('class="table-actions"');
+  expect(html).toContain('data-can-confirm-proceeding="true"');
+  expect(html).toContain('data-can-confirm-proceeding="false"');
   expect(html).toContain('2026-06-19 20:00');
   expect(html).not.toContain('2026-06-19T12:00:00.000Z');
+});
+
+test('clicking an activity row selects it without opening the detail modal', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_pending',
+            title: '待确认活动',
+            startAt: '2026-06-19T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'pending',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 1
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({
+    activityId: 'activity_pending'
+  });
+  elements['[data-activity-detail]'].hidden = true;
+
+  await app.start();
+  appRoot.click(row);
+
+  expect(app.state.selectedActivityId).toBe('activity_pending');
+  expect(elements['[data-activity-detail]'].hidden).toBe(true);
+  expect(elements['[data-activities-table]'].innerHTML).toContain('class="is-selected"');
+  expect(elements['[data-activities-table]'].innerHTML).toContain('aria-selected="true"');
+});
+
+test('right-clicking a pending activity shows open and confirm actions in a context menu', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_pending',
+            title: '待确认活动',
+            startAt: '2026-06-19T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'pending',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 1
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({
+    activityId: 'activity_pending'
+  });
+
+  await app.start();
+  const { event } = appRoot.contextmenu(row, {
+    clientX: 160,
+    clientY: 96
+  });
+
+  expect(event.preventDefault).toHaveBeenCalled();
+  expect(app.state.selectedActivityId).toBe('activity_pending');
+  expect(elements['[data-activity-context-menu]'].hidden).toBe(false);
+  expect(elements['[data-activity-context-menu]'].style.left).toBe('160px');
+  expect(elements['[data-activity-context-menu]'].style.top).toBe('96px');
+  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('data-action="load-activity-detail"');
+  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('data-action="confirm-activity"');
+  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('确认举行');
+});
+
+test('right-clicking a confirmed activity only shows the open action in the context menu', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      listActivities: jest.fn().mockResolvedValue({
+        items: [
+          {
+            _id: 'activity_confirmed',
+            title: '已确认活动',
+            startAt: '2026-06-20T12:00:00.000Z',
+            status: 'published',
+            confirmStatus: 'confirmed',
+            organizerOpenId: 'openid_owner',
+            joinedCount: 2
+          }
+        ]
+      })
+    }
+  );
+  const row = createElement({
+    activityId: 'activity_confirmed'
+  });
+
+  await app.start();
+  appRoot.contextmenu(row);
+
+  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('data-action="load-activity-detail"');
+  expect(elements['[data-activity-context-menu]'].innerHTML).not.toContain('data-action="confirm-activity"');
 });
 
 test('activity confirm button calls notify wrapper and refreshes activities', async () => {
