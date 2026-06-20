@@ -91,6 +91,18 @@ test('web admin search buttons have loading spinner styling', () => {
   expect(css).toContain('@keyframes admin-spin');
 });
 
+test('web admin login QR panel is centered instead of pinned to the right column', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('.login-panel');
+  expect(css).toContain('grid-template-columns: minmax(0, 620px)');
+  expect(css).toContain('justify-content: center');
+  expect(css).toContain('justify-items: center');
+  expect(css).toContain('.login-qr-card');
+  expect(css).toContain('width: min(100%, 300px)');
+  expect(css).not.toContain('grid-template-columns: minmax(0, 1fr) 300px');
+});
+
 test('web admin user management row actions have stable spacing', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
