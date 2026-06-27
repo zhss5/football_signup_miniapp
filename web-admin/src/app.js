@@ -560,12 +560,9 @@
             `<td>${index + 1}</td>` +
             `<td>${renderUserCell(row)}</td>` +
             `<td><code>${escapeHtml(row.openid)}</code></td>` +
-            `<td><div class="manager-alias-control">` +
-            `<input type="text" data-user-manager-alias="${escapeHtml(row.openid)}" ` +
-            `value="${escapeHtml(row.managerAlias)}" maxlength="128" />` +
-            `<button type="button" data-action="save-user-manager-alias" ` +
-            `data-target-openid="${escapeHtml(row.openid)}" aria-label="保存用户备注">保存备注</button>` +
-            `</div></td>` +
+            `<td>${renderEditableTextControl(row.managerAlias, 'edit-user-manager-alias', {
+              'target-openid': row.openid
+            })}</td>` +
             `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
             `<td><div class="role-management-control">` +
             `<div class="role-toggle-list">${controls}</div>` +
@@ -1161,6 +1158,21 @@
       });
     }
 
+    function openUserManagerAliasEditor(targetOpenId) {
+      const row = state.rows.find(item => item.openid === targetOpenId);
+      if (!row) {
+        return;
+      }
+
+      openTextEditDialog({
+        kind: 'userManagerAlias',
+        targetId: targetOpenId,
+        title: '编辑备注',
+        value: row.managerAlias || '',
+        maxLength: 128
+      });
+    }
+
     function openPerformanceDescriptionEditor(registrationId) {
       const row = state.rosterRows.find(item => item.registrationId === registrationId);
       if (!row) {
@@ -1444,6 +1456,9 @@
         await saveActivitySummary(value);
       } else if (edit.kind === 'managerAlias') {
         await saveManagerAlias(edit.targetId, value);
+      } else if (edit.kind === 'userManagerAlias') {
+        await saveUserManagerAlias(edit.targetId, value);
+        renderUsersStatus('备注已保存');
       } else if (edit.kind === 'performanceDescription') {
         await savePerformanceDescription(edit.targetId, value);
       }
@@ -1451,13 +1466,12 @@
       closeTextEditDialog();
     }
 
-    async function saveUserManagerAlias(targetOpenId) {
-      const input = query(`[data-user-manager-alias="${escapeSelectorValue(targetOpenId)}"]`);
-      if (!targetOpenId || !input) {
+    async function saveUserManagerAlias(targetOpenId, managerAlias) {
+      if (!targetOpenId) {
         return;
       }
 
-      await api.updateUserManagerAlias(targetOpenId, input.value || '');
+      await api.updateUserManagerAlias(targetOpenId, managerAlias || '');
       await searchUsers();
     }
 
@@ -1794,17 +1808,6 @@
             });
           }
 
-          if (button.dataset.action === 'save-user-manager-alias') {
-            return runWithButtonElement(button, '保存中...', async () => {
-              await saveUserManagerAlias(button.dataset.targetOpenid);
-              renderUsersStatus('备注已保存');
-            }).catch(error => {
-              const message = getErrorMessage(error);
-              renderUsersStatus(message);
-              renderIdentity(message);
-            });
-          }
-
           if (button.dataset.action === 'preview-user-avatar') {
             showUserAvatarPreview(button.dataset.avatarUrl, button.dataset.avatarName);
             return;
@@ -1847,6 +1850,11 @@
 
           if (button.dataset.action === 'edit-manager-alias') {
             openManagerAliasEditor(button.dataset.targetOpenid);
+            return;
+          }
+
+          if (button.dataset.action === 'edit-user-manager-alias') {
+            openUserManagerAliasEditor(button.dataset.targetOpenid);
             return;
           }
 

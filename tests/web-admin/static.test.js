@@ -187,7 +187,7 @@ test('web admin login QR panel is centered instead of pinned to the right column
 test('web admin user management row actions have stable spacing', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
-  expect(css).toContain('.manager-alias-control');
+  expect(css).not.toContain('.manager-alias-control');
   expect(css).toContain('.role-management-control');
   expect(css).toContain('.editable-text-control');
   expect(css).toContain('.editable-text-action');

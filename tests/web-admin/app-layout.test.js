@@ -1105,20 +1105,24 @@ test('user rows render Chinese role labels without changing role values', async 
   expect(html).not.toContain('data-avatar-url="https://example.com/avatar.jpg"');
   expect(html).not.toContain('src="https://example.com/avatar.jpg"');
   expect(html).toContain('data-role="organizer"');
-  expect(html).toContain('data-user-manager-alias="openid_player"');
-  expect(html).toContain('value="Left foot"');
-  expect(html).toContain('data-action="save-user-manager-alias"');
-  expect(html).toContain('class="manager-alias-control"');
+  expect(html).toContain('Left foot');
+  expect(html).toContain('data-action="edit-user-manager-alias"');
+  expect(html).toContain('data-target-openid="openid_player"');
+  expect(html).toContain('class="editable-text-control"');
+  expect(html).toContain('class="editable-text-action"');
+  expect(html).not.toContain('data-user-manager-alias="openid_player"');
+  expect(html).not.toContain('data-action="save-user-manager-alias"');
+  expect(html).not.toContain('class="manager-alias-control"');
   expect(html).toContain('class="role-management-control"');
   expect(html).toMatch(
-    /<td><div class="manager-alias-control">[\s\S]*data-user-manager-alias="openid_player"[\s\S]*data-action="save-user-manager-alias"[\s\S]*<\/div><\/td>/
+    /<td><div class="editable-text-control">[\s\S]*Left foot[\s\S]*data-action="edit-user-manager-alias"[\s\S]*<\/div><\/td>/
   );
   expect(html).toMatch(
     /<td><div class="role-management-control"><div class="role-toggle-list">[\s\S]*data-role="organizer"[\s\S]*data-action="save-roles"[\s\S]*<\/div><\/td>/
   );
   expect(html).not.toContain('class="table-actions"');
   expect(html).toContain('aria-label="保存用户角色"');
-  expect(html).toContain('aria-label="保存用户备注"');
+  expect(html).not.toContain('aria-label="保存用户备注"');
   expect(html).toContain('组织者');
   expect(html).toContain('保存');
   expect(html).not.toContain('Save');
@@ -1301,7 +1305,7 @@ test('user search button shows spinner feedback while the request is pending', a
   expect(button.classList.toggle).toHaveBeenCalledWith('is-loading', false);
 });
 
-test('user manager alias can be saved from user management', async () => {
+test('user manager alias can be edited from user management dialog', async () => {
   const updateUserManagerAlias = jest.fn().mockResolvedValue({
     user: {
       _id: 'openid_player',
@@ -1327,19 +1331,24 @@ test('user manager alias can be saved from user management', async () => {
       updateUserManagerAlias
     }
   );
-  elements['[data-user-manager-alias="openid_player"]'] = {
-    value: 'New alias'
-  };
-
   await app.start();
   appRoot.click(createElement({
-    action: 'save-user-manager-alias',
+    action: 'edit-user-manager-alias',
     targetOpenid: 'openid_player'
+  }));
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(false);
+  expect(elements['[data-text-edit-title]'].textContent).toBe('编辑备注');
+  expect(elements['[data-text-edit-input]'].value).toBe('Old alias');
+  elements['[data-text-edit-input]'].value = 'New alias';
+
+  await appRoot.click(createElement({
+    action: 'save-text-edit'
   }));
 
   await Promise.resolve();
 
   expect(updateUserManagerAlias).toHaveBeenCalledWith('openid_player', 'New alias');
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 });
 
 test('user role save button shows progress and completion feedback', async () => {
@@ -1404,7 +1413,7 @@ test('user role save button shows progress and completion feedback', async () =>
   expect(elements['[data-users-status]'].textContent).toContain('角色已保存');
 });
 
-test('user manager alias save button shows progress and completion feedback', async () => {
+test('user manager alias dialog save button shows progress and completion feedback', async () => {
   const deferred = createDeferred();
   const updateUserManagerAlias = jest.fn().mockReturnValue(deferred.promise);
   const listUsers = jest.fn()
@@ -1438,16 +1447,18 @@ test('user manager alias save button shows progress and completion feedback', as
       updateUserManagerAlias
     }
   );
-  const button = createElement({
-    action: 'save-user-manager-alias',
-    targetOpenid: 'openid_player'
-  });
-  button.textContent = '保存备注';
-  elements['[data-user-manager-alias="openid_player"]'] = {
-    value: 'New alias'
-  };
 
   await app.start();
+  appRoot.click(createElement({
+    action: 'edit-user-manager-alias',
+    targetOpenid: 'openid_player'
+  }));
+  elements['[data-text-edit-input]'].value = 'New alias';
+
+  const button = createElement({
+    action: 'save-text-edit'
+  });
+  button.textContent = '保存';
   const clickResult = appRoot.click(button);
 
   expect(button.disabled).toBe(true);

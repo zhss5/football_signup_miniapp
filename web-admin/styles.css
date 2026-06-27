@@ -498,7 +498,6 @@ select {
   gap: 8px 12px;
 }
 
-.manager-alias-control,
 .role-management-control {
   display: flex;
   align-items: center;
@@ -511,11 +510,6 @@ select {
   gap: 10px;
 }
 
-.manager-alias-control input {
-  flex: 0 1 160px;
-}
-
-.manager-alias-control button,
 .role-management-control > button {
   flex: 0 0 auto;
   justify-content: center;
