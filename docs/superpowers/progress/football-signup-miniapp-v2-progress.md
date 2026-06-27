@@ -94,6 +94,11 @@ Completed:
 - Version 2 still does not introduce runtime MySQL migration, CloudBase/MySQL dual-write, or a self-hosted HTTP API switch.
 - `bootstrapV2Collections` cloud function now provides an explicit, idempotent CloudBase readiness step for missing V2 collections.
 - `scripts/deploy-v2-bootstrap.ps1` and `npm run deploy:v2-bootstrap` deploy and invoke the bootstrap step through CloudBase CLI without deleting or recreating existing V1 data collections.
+- final V2 product rules confirmed on 2026-06-27:
+  - proxy attendance statistics use proxy signup name as the proxy identity.
+  - attendance statistics include only started, non-cancelled, non-deleted activities and do not require `confirmStatus: confirmed`.
+  - copy activity preserves source start/end/signup-deadline time-of-day but requires a new calendar date.
+  - ordinary participants do not see `内战` / `外战`; activity type is manager-facing for create/edit and Web Admin statistics.
 
 ## 4. Planned Version 2 Scope
 
@@ -119,6 +124,7 @@ Completed:
 - Add web-admin activity list and filters.
 - Support filtering by date range, status, organizer, and keyword.
 - Add activity detail review with teams, registrations, proxy signups, preferred positions, and notification state.
+- Keep activity type manager-facing: organizers/admins use it in create/edit flows and Web Admin statistics; ordinary participants do not see `内战` / `外战`.
 - Add activity duplication so managers can create a new activity from a previous activity's reusable settings.
 - Keep `admin` visibility global.
 - Keep `organizer` visibility limited to activities they created.

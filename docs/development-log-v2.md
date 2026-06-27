@@ -4,6 +4,17 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-27 - Final V2 Product Rule Confirmation
+
+Confirmed the remaining Version 2 product rules after implementation review.
+
+Confirmed rules:
+
+- Proxy attendance statistics use the proxy signup name as the Version 2 unique identity. The same proxy name across activities is counted as the same proxy participant.
+- Attendance statistics include only activities whose start time has passed and whose activity state is neither cancelled nor deleted. `confirmStatus` is not an inclusion condition.
+- Copy Activity preserves the source start/end/signup-deadline time-of-day, but not the source calendar date. Managers must choose the new date before publishing.
+- Ordinary participants do not see `内战` / `外战`. Activity type remains available to organizers/admins in create/edit flows and in Web Admin attendance statistics.
+
 ## 2026-06-27 - Copy Activity Time-Of-Day Preservation
 
 Adjusted the copy-activity flow so recurring activities keep their usual time slots without copying the old calendar date.
