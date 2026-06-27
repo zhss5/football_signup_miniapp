@@ -75,6 +75,10 @@
                   <text class="member-name {{member.attendanceStatus === 'absent' ? 'member-name-absent' : ''}}">{{member.signupName}}</text>
                   <text wx:if="{{member.managerAliasVisible}}" class="member-manager-alias-inline {{member.attendanceStatus === 'absent' ? 'member-manager-alias-absent' : ''}}">（{{member.managerAliasText}}）</text>
                   <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
+                  <view wx:if="{{member.attendanceStatus === 'absent'}}" class="member-attendance-badge">
+                    <view class="member-attendance-dot"></view>
+                    <text>{{member.attendanceStatusText}}</text>
+                  </view>
                 </view>
                 <text wx:if="{{member.preferredPositionsVisible}}" class="member-position-text {{member.attendanceStatus === 'absent' ? 'member-position-absent' : ''}}">{{member.preferredPositionsText}}</text>
               </view>

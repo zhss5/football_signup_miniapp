@@ -5,6 +5,7 @@
   border-radius: 24rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.05);
 }
 
 .team-head {
@@ -34,6 +35,12 @@
 
 .team-count {
   flex: 0 0 auto;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  background: #f1f5f3;
+  color: #475569;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
 .member-list {
@@ -199,6 +206,29 @@
   font-weight: 600;
 }
 
+.member-attendance-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  color: #c2410c;
+  background: #fff7ed;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  font-weight: 600;
+}
+
+.member-attendance-dot {
+  flex: 0 0 auto;
+  width: 12rpx;
+  height: 12rpx;
+  margin-right: 8rpx;
+  border-radius: 50%;
+  background: #ea580c;
+}
+
 .member-position-text {
   display: block;
   margin-top: 4rpx;
@@ -232,9 +262,9 @@
 }
 
 .member-action-move {
-  color: #166534;
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  color: #374151;
+  background: #ffffff;
+  border-color: #e5e7eb;
 }
 
 .member-action-cancel {
