@@ -214,6 +214,7 @@
       activityDetailLogKeyword: '',
       activityDetailLoading: false,
       activitySummary: '',
+      textEdit: null,
       notificationLogRows: [],
       logStatus: '',
       exportCsv: '',
@@ -809,20 +810,12 @@
           `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.teamName)}</td>` +
           `<td>${renderAvatarNameCell(row, row.signupName)}</td>` +
-          `<td><div class="roster-alias-control">` +
-          `<input type="text" data-manager-alias="${escapeHtml(row.userOpenId)}" ` +
-          `value="${escapeHtml(row.managerAlias)}" ${row.proxyRegistration ? 'disabled ' : ''}/>` +
-          `<button type="button" data-action="save-manager-alias" ` +
-          `data-target-openid="${escapeHtml(row.userOpenId)}" ` +
-          `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
-          `</div>` +
-          `</td>` +
-          `<td><div class="roster-performance-control">` +
-          `<textarea data-performance-description="${escapeHtml(row.registrationId)}" ` +
-          `maxlength="500">${escapeHtml(row.performanceDescription)}</textarea>` +
-          `<button type="button" data-action="save-performance-description" ` +
-          `data-registration-id="${escapeHtml(row.registrationId)}">保存表现</button>` +
-          `</div></td>` +
+          `<td>${renderEditableTextControl(row.managerAlias, 'edit-manager-alias', {
+            'target-openid': row.userOpenId
+          }, row.proxyRegistration)}</td>` +
+          `<td>${renderEditableTextControl(row.performanceDescription, 'edit-performance-description', {
+            'registration-id': row.registrationId
+          })}</td>` +
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
           `<td><div class="attendance-status-control">` +
@@ -836,6 +829,24 @@
           `</tr>`
         ))
         .join('');
+    }
+
+    function renderEditableTextControl(value, action, dataAttributes = {}, disabled = false) {
+      const text = String(value || '').trim();
+      const display = text
+        ? escapeHtml(text)
+        : '<span class="editable-text-empty">未填写</span>';
+      const attrs = Object.keys(dataAttributes)
+        .map(key => `data-${key}="${escapeHtml(dataAttributes[key])}"`)
+        .join(' ');
+
+      return (
+        `<div class="editable-text-control">` +
+        `<span class="editable-text-value" title="${escapeHtml(text)}">${display}</span>` +
+        `<button type="button" data-action="${escapeHtml(action)}" ${attrs} ` +
+        `${disabled ? 'disabled ' : ''}>编辑</button>` +
+        `</div>`
+      );
     }
 
     function renderStatsRows() {
@@ -1068,10 +1079,101 @@
     }
 
     function renderActivitySummary() {
-      const summaryInput = query('[data-activity-summary]');
-      if (summaryInput) {
-        summaryInput.value = state.activitySummary || '';
+      const summaryDisplay = query('[data-activity-summary-display]');
+      if (summaryDisplay) {
+        const text = String(state.activitySummary || '').trim();
+        summaryDisplay.innerHTML = text
+          ? escapeHtml(text)
+          : '<span class="editable-text-empty">未填写</span>';
       }
+    }
+
+    function renderTextEditDialog() {
+      const modal = query('[data-text-edit-dialog]');
+      const title = query('[data-text-edit-title]');
+      const input = query('[data-text-edit-input]');
+      const edit = state.textEdit;
+
+      if (!modal) {
+        return;
+      }
+
+      setHidden(modal, !edit);
+
+      if (!edit) {
+        if (title) {
+          title.textContent = '';
+        }
+
+        if (input) {
+          input.value = '';
+          input.removeAttribute('maxlength');
+        }
+
+        return;
+      }
+
+      if (title) {
+        title.textContent = edit.title;
+      }
+
+      if (input) {
+        input.value = edit.value || '';
+        if (edit.maxLength) {
+          input.setAttribute('maxlength', String(edit.maxLength));
+        } else {
+          input.removeAttribute('maxlength');
+        }
+      }
+    }
+
+    function closeTextEditDialog() {
+      state.textEdit = null;
+      renderTextEditDialog();
+    }
+
+    function openTextEditDialog(edit) {
+      state.textEdit = edit;
+      renderTextEditDialog();
+    }
+
+    function openActivitySummaryEditor() {
+      openTextEditDialog({
+        kind: 'activitySummary',
+        title: '编辑活动总结',
+        value: state.activitySummary || '',
+        maxLength: 2000
+      });
+    }
+
+    function openManagerAliasEditor(targetOpenId) {
+      const row = state.rosterRows.find(item => item.userOpenId === targetOpenId && !item.proxyRegistration);
+      if (!row) {
+        return;
+      }
+
+      openTextEditDialog({
+        kind: 'managerAlias',
+        targetId: targetOpenId,
+        title: '编辑备注',
+        value: row.managerAlias || '',
+        maxLength: 128
+      });
+    }
+
+    function openPerformanceDescriptionEditor(registrationId) {
+      const row = state.rosterRows.find(item => item.registrationId === registrationId);
+      if (!row) {
+        return;
+      }
+
+      openTextEditDialog({
+        kind: 'performanceDescription',
+        targetId: registrationId,
+        title: '编辑表现描述',
+        value: row.performanceDescription || '',
+        maxLength: 500
+      });
     }
 
     function getSelectedActivityId() {
@@ -1118,6 +1220,7 @@
 
     function closeActivityDetail() {
       state.activityDetailLoading = false;
+      closeTextEditDialog();
       renderActivityDetailLoading(false);
       setHidden(query('[data-activity-detail]'), true);
     }
@@ -1135,6 +1238,7 @@
       state.activityDetailLogRows = [];
       state.activityDetailLoading = true;
       state.activitySummary = '';
+      state.textEdit = null;
       state.exportCsv = '';
       resetActivityDetailFilters();
       renderActivityRows();
@@ -1154,6 +1258,7 @@
       renderRosterRows();
       renderActivityDetailLogRows();
       renderActivitySummary();
+      renderTextEditDialog();
       renderActivityDetailLoading(true);
     }
 
@@ -1251,19 +1356,19 @@
       await refreshActivityDetailLogs(activityId);
     }
 
-    async function saveManagerAlias(targetOpenId) {
+    async function saveManagerAlias(targetOpenId, nextValue) {
       const activityId = getSelectedActivityId();
-      const input = query(`[data-manager-alias="${escapeSelectorValue(targetOpenId)}"]`);
-      if (!activityId || !targetOpenId || !input) {
+      if (!activityId || !targetOpenId) {
         return;
       }
 
-      const result = await api.updateParticipantManagerAlias(activityId, targetOpenId, input.value || '');
+      const value = nextValue || '';
+      const result = await api.updateParticipantManagerAlias(activityId, targetOpenId, value);
       const user = (result && result.user) || {};
       const managerAlias =
         Object.prototype.hasOwnProperty.call(user, 'managerAlias')
           ? user.managerAlias
-          : input.value || '';
+          : value;
 
       state.rosterRows = state.rosterRows.map(row =>
         row.userOpenId === targetOpenId && !row.proxyRegistration
@@ -1277,36 +1382,34 @@
       await refreshActivityDetailLogs(activityId);
     }
 
-    async function saveActivitySummary() {
+    async function saveActivitySummary(nextValue) {
       const activityId = getSelectedActivityId();
-      const input = query('[data-activity-summary]');
-      if (!activityId || !input) {
+      if (!activityId) {
         return;
       }
 
+      const value = nextValue || '';
       const result = await api.updateActivityReview(activityId, {
-        activitySummary: input.value || ''
+        activitySummary: value
       });
       const activity = (result && result.activity) || {};
       state.activitySummary = Object.prototype.hasOwnProperty.call(activity, 'activitySummary')
         ? activity.activitySummary
-        : input.value || '';
+        : value;
       renderActivitySummary();
       await refreshActivityDetailLogs(activityId);
     }
 
-    async function savePerformanceDescription(registrationId) {
+    async function savePerformanceDescription(registrationId, nextValue) {
       const activityId = getSelectedActivityId();
-      const input = query(
-        `[data-performance-description="${escapeSelectorValue(registrationId)}"]`
-      );
-      if (!activityId || !registrationId || !input) {
+      if (!activityId || !registrationId) {
         return;
       }
 
+      const value = nextValue || '';
       const result = await api.updateActivityReview(activityId, {
         registrationId,
-        performanceDescription: input.value || ''
+        performanceDescription: value
       });
       const registration = (result && result.registration) || {};
       const performanceDescription = Object.prototype.hasOwnProperty.call(
@@ -1314,7 +1417,7 @@
         'performanceDescription'
       )
         ? registration.performanceDescription
-        : input.value || '';
+        : value;
 
       state.rosterRows = state.rosterRows.map(row =>
         row.registrationId === registrationId
@@ -1326,6 +1429,26 @@
       );
       renderRosterRows();
       await refreshActivityDetailLogs(activityId);
+    }
+
+    async function saveTextEdit() {
+      const edit = state.textEdit;
+      const input = query('[data-text-edit-input]');
+      const value = input ? input.value || '' : '';
+
+      if (!edit) {
+        return;
+      }
+
+      if (edit.kind === 'activitySummary') {
+        await saveActivitySummary(value);
+      } else if (edit.kind === 'managerAlias') {
+        await saveManagerAlias(edit.targetId, value);
+      } else if (edit.kind === 'performanceDescription') {
+        await savePerformanceDescription(edit.targetId, value);
+      }
+
+      closeTextEditDialog();
     }
 
     async function saveUserManagerAlias(targetOpenId) {
@@ -1722,22 +1845,28 @@
               .catch(error => renderIdentity(error.message));
           }
 
-          if (button.dataset.action === 'save-manager-alias') {
-            return runWithButtonElement(button, '保存中...', () =>
-              saveManagerAlias(button.dataset.targetOpenid)
-            )
-              .catch(error => renderIdentity(error.message));
+          if (button.dataset.action === 'edit-manager-alias') {
+            openManagerAliasEditor(button.dataset.targetOpenid);
+            return;
           }
 
-          if (button.dataset.action === 'save-activity-summary') {
-            return runWithButtonElement(button, '保存中...', saveActivitySummary)
-              .catch(error => renderIdentity(error.message));
+          if (button.dataset.action === 'edit-activity-summary') {
+            openActivitySummaryEditor();
+            return;
           }
 
-          if (button.dataset.action === 'save-performance-description') {
-            return runWithButtonElement(button, '保存中...', () =>
-              savePerformanceDescription(button.dataset.registrationId)
-            )
+          if (button.dataset.action === 'edit-performance-description') {
+            openPerformanceDescriptionEditor(button.dataset.registrationId);
+            return;
+          }
+
+          if (button.dataset.action === 'cancel-text-edit') {
+            closeTextEditDialog();
+            return;
+          }
+
+          if (button.dataset.action === 'save-text-edit') {
+            return runWithButtonElement(button, '保存中...', saveTextEdit)
               .catch(error => renderIdentity(error.message));
           }
 

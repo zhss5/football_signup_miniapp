@@ -522,28 +522,29 @@ select {
   min-width: 88px;
 }
 
-.roster-alias-control,
-.attendance-status-control,
-.roster-performance-control {
+.editable-text-control,
+.attendance-status-control {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
 
-.roster-alias-control input {
-  width: 180px;
+.editable-text-control {
+  max-width: 320px;
 }
 
-.roster-performance-control textarea {
-  width: 220px;
-  min-height: 34px;
-  max-height: 72px;
-  box-sizing: border-box;
-  padding: 7px 8px;
-  border: 1px solid #c9d4e5;
-  border-radius: 6px;
-  resize: vertical;
+.editable-text-value {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editable-text-empty {
+  color: #9aa7b8;
 }
 
 .attendance-status-control span {
@@ -551,8 +552,7 @@ select {
 }
 
 .attendance-status-control button,
-.roster-alias-control button,
-.roster-performance-control button {
+.editable-text-control button {
   min-width: 88px;
 }
 
@@ -763,14 +763,91 @@ select {
   cursor: pointer;
 }
 
-.activity-summary-editor textarea {
+.editable-text-preview {
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #e5ebf4;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  line-height: 22px;
+  white-space: pre-wrap;
+}
+
+.text-edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.42);
+}
+
+.text-edit-dialog {
+  display: grid;
+  width: min(640px, calc(100vw - 48px));
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid #d9e1ee;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(23, 32, 51, 0.2);
+}
+
+.text-edit-header h4 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.text-edit-dialog textarea {
   width: 100%;
-  min-height: 70px;
+  min-height: 160px;
   box-sizing: border-box;
   padding: 10px;
   border: 1px solid #c9d4e5;
   border-radius: 6px;
+  color: #172033;
+  line-height: 22px;
   resize: vertical;
+}
+
+.text-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.text-edit-actions button {
+  height: 36px;
+  min-width: 88px;
+  padding: 0 14px;
+  border: 1px solid #c9d4e5;
+  border-radius: 2px;
+  background: #ffffff;
+  color: #46546b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.text-edit-actions button[data-action="save-text-edit"] {
+  border-color: #0052d9;
+  background: #0052d9;
+  color: #ffffff;
+}
+
+.text-edit-actions button:hover {
+  border-color: #2e6bd9;
+  color: #1d4fae;
+}
+
+.text-edit-actions button[data-action="save-text-edit"]:hover {
+  background: #1d4fae;
+  color: #ffffff;
 }
 
 .loading-spinner {

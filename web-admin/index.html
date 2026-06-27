@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260627-started-stats" />
+    <link rel="stylesheet" href="./styles.css?v=20260627-text-edit-dialogs" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -200,15 +200,9 @@
                   <section class="activity-summary-editor" data-activity-summary-editor hidden>
                     <div class="activity-summary-header">
                       <h4>活动总结</h4>
-                      <button type="button" data-action="save-activity-summary">
-                        保存总结
-                      </button>
+                      <button type="button" data-action="edit-activity-summary">编辑</button>
                     </div>
-                    <textarea
-                      data-activity-summary
-                      maxlength="2000"
-                      placeholder="活动总结，最多 2000 字"
-                    ></textarea>
+                    <div class="editable-text-preview" data-activity-summary-display></div>
                   </section>
 
                   <div class="activity-detail-body" data-activity-detail-body>
@@ -281,6 +275,26 @@
                         </table>
                       </div>
                     </section>
+                  </div>
+                </div>
+
+                <div
+                  data-text-edit-dialog
+                  class="text-edit-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="text-edit-title"
+                  hidden
+                >
+                  <div class="text-edit-dialog">
+                    <div class="text-edit-header">
+                      <h4 id="text-edit-title" data-text-edit-title></h4>
+                    </div>
+                    <textarea data-text-edit-input></textarea>
+                    <div class="text-edit-actions">
+                      <button type="button" data-action="cancel-text-edit">取消</button>
+                      <button type="button" data-action="save-text-edit">保存</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -417,13 +431,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260627-started-stats"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260627-started-stats"></script>
-    <script src="./src/roles.js?v=20260627-started-stats"></script>
-    <script src="./src/api.js?v=20260627-started-stats"></script>
-    <script src="./vendor/qrcode.min.js?v=20260627-started-stats"></script>
-    <script src="./src/user-management.js?v=20260627-started-stats"></script>
-    <script src="./src/activity-management.js?v=20260627-started-stats"></script>
-    <script src="./src/app.js?v=20260627-started-stats"></script>
+    <script src="./config.test.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/roles.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/api.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./vendor/qrcode.min.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/user-management.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/activity-management.js?v=20260627-text-edit-dialogs"></script>
+    <script src="./src/app.js?v=20260627-text-edit-dialogs"></script>
   </body>
 </html>

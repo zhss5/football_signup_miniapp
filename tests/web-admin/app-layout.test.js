@@ -198,7 +198,10 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-activity-detail-loading]': createElement(),
     '[data-activity-detail-body]': createElement(),
     '[data-activity-summary-editor]': createElement(),
-    '[data-activity-summary]': createElement(),
+    '[data-activity-summary-display]': createElement(),
+    '[data-text-edit-dialog]': createElement(),
+    '[data-text-edit-title]': createElement(),
+    '[data-text-edit-input]': createElement(),
     '[data-roster-keyword]': createElement(),
     '[data-activity-detail-logs-keyword]': createElement(),
     '[data-export-output]': createElement(),
@@ -1515,11 +1518,11 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('否');
   expect(html).toContain('data-next-status="absent"');
   expect(html).toContain('标记缺勤');
-  expect(html).toContain('保存备注');
-  expect(html).toContain('class="roster-alias-control"');
+  expect(html).toContain('编辑');
+  expect(html).toContain('class="editable-text-control"');
   expect(html).toContain('class="attendance-status-control"');
   expect(html).toMatch(
-    /<td><div class="roster-alias-control">[\s\S]*data-manager-alias="openid_player"[\s\S]*data-action="save-manager-alias"[\s\S]*<\/div><\/td>/
+    /<td><div class="editable-text-control">[\s\S]*老张[\s\S]*data-action="edit-manager-alias"[\s\S]*<\/div><\/td>/
   );
   expect(html).toMatch(
     /<td><div class="attendance-status-control">[\s\S]*出勤[\s\S]*data-action="toggle-attendance"[\s\S]*标记缺勤[\s\S]*<\/div><\/td>/
@@ -1673,24 +1676,32 @@ test('activity detail attendance and alias actions update the current rows witho
   expect(elements['[data-roster-table]'].innerHTML).toContain('缺勤');
   expect(elements['[data-roster-table]'].innerHTML).toContain('标记出勤');
 
-  elements['[data-manager-alias="openid_player"]'] = {
-    value: 'New alias'
-  };
   await appRoot.click(createElement({
-    action: 'save-manager-alias',
+    action: 'edit-manager-alias',
     targetOpenid: 'openid_player'
+  }));
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(false);
+  expect(elements['[data-text-edit-title]'].textContent).toBe('编辑备注');
+  expect(elements['[data-text-edit-input]'].value).toBe('Old alias');
+  elements['[data-text-edit-input]'].value = 'New alias';
+  await appRoot.click(createElement({
+    action: 'save-text-edit'
   }));
 
   expect(getActivityDetail).not.toHaveBeenCalled();
   expect(elements['[data-roster-table]'].innerHTML).toContain('New alias');
   expect(elements['[data-activity-detail-logs-table]'].innerHTML).toContain('Alex 标记为缺勤');
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 
-  elements['[data-performance-description="reg_1"]'] = {
-    value: 'Strong press'
-  };
   await appRoot.click(createElement({
-    action: 'save-performance-description',
+    action: 'edit-performance-description',
     registrationId: 'reg_1'
+  }));
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(false);
+  expect(elements['[data-text-edit-title]'].textContent).toBe('编辑表现描述');
+  elements['[data-text-edit-input]'].value = 'Strong press';
+  await appRoot.click(createElement({
+    action: 'save-text-edit'
   }));
 
   expect(updateActivityReview).toHaveBeenCalledWith('activity_1', {
@@ -1700,17 +1711,36 @@ test('activity detail attendance and alias actions update the current rows witho
   expect(getActivityDetail).not.toHaveBeenCalled();
   expect(elements['[data-roster-table]'].innerHTML).toContain('Strong press');
 
-  expect(elements['[data-activity-summary]'].value).toBe('Old summary');
-  elements['[data-activity-summary]'].value = 'Good match';
+  expect(elements['[data-activity-summary-display]'].innerHTML).toBe('Old summary');
+  updateActivityReview.mockClear();
   await appRoot.click(createElement({
-    action: 'save-activity-summary'
+    action: 'edit-activity-summary'
+  }));
+  elements['[data-text-edit-input]'].value = 'Discarded summary';
+  await appRoot.click(createElement({
+    action: 'cancel-text-edit'
+  }));
+  expect(updateActivityReview).not.toHaveBeenCalled();
+  expect(elements['[data-activity-summary-display]'].innerHTML).toBe('Old summary');
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
+
+  await appRoot.click(createElement({
+    action: 'edit-activity-summary'
+  }));
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(false);
+  expect(elements['[data-text-edit-title]'].textContent).toBe('编辑活动总结');
+  expect(elements['[data-text-edit-input]'].value).toBe('Old summary');
+  elements['[data-text-edit-input]'].value = 'Good match';
+  await appRoot.click(createElement({
+    action: 'save-text-edit'
   }));
 
   expect(updateActivityReview).toHaveBeenCalledWith('activity_1', {
     activitySummary: 'Good match'
   });
   expect(getActivityDetail).not.toHaveBeenCalled();
-  expect(elements['[data-activity-summary]'].value).toBe('Good match');
+  expect(elements['[data-activity-summary-display]'].innerHTML).toBe('Good match');
+  expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 });
 
 test('activity detail exports filtered roster and activity logs as CSV text', async () => {

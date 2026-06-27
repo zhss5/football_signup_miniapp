@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260627-started-stats';
+const WEB_ADMIN_ASSET_VERSION = '20260627-text-edit-dialogs';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -105,8 +105,13 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-action="close-activity-detail"');
   expect(html).toContain('data-roster-keyword');
   expect(html).toContain('data-roster-count');
-  expect(html).toContain('data-activity-summary');
-  expect(html).toContain('data-action="save-activity-summary"');
+  expect(html).toContain('data-activity-summary-display');
+  expect(html).toContain('data-action="edit-activity-summary"');
+  expect(html).toContain('data-text-edit-dialog');
+  expect(html).toContain('data-text-edit-title');
+  expect(html).toContain('data-text-edit-input');
+  expect(html).toContain('data-action="save-text-edit"');
+  expect(html).toContain('data-action="cancel-text-edit"');
   expect(html).toContain('活动总结');
   expect(html).toContain('data-activity-detail-logs-keyword');
   expect(html).toContain('data-activity-detail-logs-count');
@@ -184,9 +189,9 @@ test('web admin user management row actions have stable spacing', () => {
 
   expect(css).toContain('.manager-alias-control');
   expect(css).toContain('.role-management-control');
-  expect(css).toContain('.roster-alias-control');
+  expect(css).toContain('.editable-text-control');
   expect(css).toContain('.attendance-status-control');
-  expect(css).toContain('.roster-performance-control');
+  expect(css).toContain('.text-edit-modal');
   expect(css).toContain('.activity-summary-editor');
   expect(css).toContain('.user-display');
   expect(css).toContain('.user-avatar-button');
