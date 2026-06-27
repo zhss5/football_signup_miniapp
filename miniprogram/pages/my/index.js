@@ -84,12 +84,22 @@ function prepareMyActivityItems(items = [], translate) {
     .sort(compareStartDesc);
 }
 
+function getLanguageToolbarState(locale, languageOptions = []) {
+  const current = languageOptions.find(item => item.key === locale) || languageOptions[0] || {};
+  return {
+    currentLanguageLabel: current.label || '',
+    nextLocale: locale === 'zh-CN' ? 'en-US' : 'zh-CN'
+  };
+}
+
 Page({
   data: {
     locale: '',
     i18n: {},
     filterLabel: '',
     languageOptions: [],
+    currentLanguageLabel: '',
+    nextLocale: 'zh-CN',
     activeTab: 'created',
     tabs: [],
     createdFilter: 'all',
@@ -111,12 +121,15 @@ Page({
   applyI18n() {
     const locale = getAppLocale();
     const i18n = getMessages(locale);
+    const languageOptions = buildLanguageOptions(locale);
+    const languageToolbarState = getLanguageToolbarState(locale, languageOptions);
     setPageNavigationTitle('nav.myActivities', locale);
     this.setData({
       locale,
       i18n,
       filterLabel: i18n.my.filterLabel,
-      languageOptions: buildLanguageOptions(locale),
+      languageOptions,
+      ...languageToolbarState,
       tabs: [
         { key: 'created', label: i18n.my.tabs.created },
         { key: 'joined', label: i18n.my.tabs.joined }

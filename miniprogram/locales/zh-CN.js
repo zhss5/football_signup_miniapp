@@ -344,6 +344,7 @@ module.exports.my.webAdminLoginTitle = 'Web \u540e\u53f0';
 module.exports.my.webAdminLoginHint =
   '\u626b\u63cf Web \u540e\u53f0\u767b\u5f55\u7801\uff0c\u4f7f\u7528\u4f60\u7684\u5fae\u4fe1\u6743\u9650\u767b\u5f55\u3002';
 module.exports.my.webAdminLoginAction = '\u626b\u7801\u767b\u5f55';
+module.exports.my.webAdminToolbarAction = 'Web\u540e\u53f0\u626b\u7801';
 module.exports.my.webAdminLoginConfirmTitle = '\u786e\u8ba4\u767b\u5f55 Web \u540e\u53f0';
 module.exports.my.webAdminLoginConfirmContent =
   '\u5141\u8bb8\u8fd9\u4e2a\u6d4f\u89c8\u5668\u4f7f\u7528\u4f60\u7684\u7ba1\u7406\u5458\u8eab\u4efd\u767b\u5f55\uff1f';

@@ -20,8 +20,12 @@ describe('my activities page', () => {
     expect(wxml).toContain('onCreatedFilterTap');
     expect(wxml).toContain('onLanguageChange');
     expect(wxml).toContain('primary-tab-shell');
-    expect(wxml).toContain('top-tools-card');
-    expect(wxml).toContain('language-switch-track');
+    expect(wxml).toContain('top-toolbar');
+    expect(wxml).toContain('language-toolbar-button');
+    expect(wxml).toContain('toolbar-divider');
+    expect(wxml).toContain('web-admin-login-link');
+    expect(wxml).toContain('{{currentLanguageLabel}}');
+    expect(wxml).toContain('data-locale="{{nextLocale}}"');
     expect(wxml).toContain('filter-heading');
     expect(wxml).toContain('created-activity-card');
     expect(wxml).toContain('activity-action-footer');
@@ -30,13 +34,14 @@ describe('my activities page', () => {
     expect(wxml).not.toContain('catchtap="onConfirmActivityProceeding"');
     expect(wxml).not.toContain('catchtap="onCancelActivity"');
     expect(wxml).toContain('bindtap="loadMoreMyActivities"');
-    expect(wxml).toContain('web-admin-login-card');
     expect(wxml).toContain('bindtap="onConfirmWebAdminLogin"');
     expect(wxml.indexOf('activity-action-footer')).toBeGreaterThan(
       wxml.indexOf('created-activity-card')
     );
     expect(js).toContain("activeTab: 'created'");
     expect(js).toContain("languageOptions:");
+    expect(js).toContain('currentLanguageLabel:');
+    expect(js).toContain('nextLocale:');
     expect(js).toContain("locale:");
     expect(js).toContain('filterLabel');
     expect(js).not.toContain('isOverdueUnresolvedActivity');
@@ -44,14 +49,17 @@ describe('my activities page', () => {
     expect(js).not.toContain('onConfirmActivityProceeding');
     expect(js).not.toContain('onCancelActivity');
     expect(wxss).toContain('.primary-tab-shell');
-    expect(wxss).toContain('.top-tools-card');
-    expect(wxss).toContain('.language-switch-track');
-    expect(wxss).toContain('.web-admin-login-icon');
+    expect(wxss).toContain('.top-toolbar');
+    expect(wxss).toContain('.language-toolbar-button');
+    expect(wxss).toContain('.toolbar-divider');
+    expect(wxss).toContain('.web-admin-login-link');
+    expect(wxss).not.toContain('.top-tools-card');
+    expect(wxss).not.toContain('.web-admin-login-icon');
     expect(wxss).toContain('.filter-group');
     expect(wxss).toContain('.created-activity-card');
     expect(wxss).toContain('.activity-action-footer');
     expect(wxss).not.toContain('.overdue-unresolved-panel');
-    expect(wxss).toContain('.web-admin-login-card');
+    expect(wxss).not.toContain('.web-admin-login-card');
     expect(wxss).toContain('.pagination-row');
     expect(wxml).not.toContain('<text class="section-title">Joined Activities</text>');
   });

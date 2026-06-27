@@ -206,6 +206,7 @@ module.exports = {
     webAdminLoginTitle: 'Web Admin',
     webAdminLoginHint: 'Scan a web admin login code with your WeChat identity.',
     webAdminLoginAction: 'Scan login code',
+    webAdminToolbarAction: 'Web admin scan',
     webAdminLoginConfirmTitle: 'Confirm web admin login',
     webAdminLoginConfirmContent: 'Allow this browser to sign in as your admin account?',
     loadMore: 'Load more',
