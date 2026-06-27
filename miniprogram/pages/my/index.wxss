@@ -277,6 +277,7 @@
 .activity-action-button {
   min-width: 136rpx;
   min-height: 54rpx;
+  margin: 0 0 0 auto;
   padding: 0 20rpx;
   background: #ffffff;
   color: #dc2626;

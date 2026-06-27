@@ -39,7 +39,7 @@
 }
 
 .card-embedded .cover-frame {
-  padding-top: 40%;
+  padding-top: 80%;
 }
 
 .activity-card-title-row {
