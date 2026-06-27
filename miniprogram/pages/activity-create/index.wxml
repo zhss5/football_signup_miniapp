@@ -9,106 +9,124 @@
   </view>
 
   <block wx:else>
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.title}}</text>
-    <input
-      class="input"
-      placeholder="{{i18n.activityCreate.title}}"
-      data-field="title"
-      value="{{form.title}}"
-      bindinput="onFieldInput"
-    />
-  </view>
+  <view class="section-card">
+    <view class="section-head">
+      <view class="section-icon section-icon-info"></view>
+      <text class="section-title">{{i18n.activityCreate.basicInfoSection}}</text>
+    </view>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.title}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityCreate.title}}"
+        data-field="title"
+        value="{{form.title}}"
+        bindinput="onFieldInput"
+      />
+    </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.activityType}}</text>
-    <radio-group class="activity-type-options" bindchange="onActivityTypeChange">
-      <label
-        wx:for="{{activityTypeOptions}}"
-        wx:key="value"
-        class="activity-type-option"
-      >
-        <radio value="{{item.value}}" checked="{{form.activityType === item.value}}" />
-        <text>{{item.label}}</text>
-      </label>
-    </radio-group>
-  </view>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.activityType}}</text>
+      <radio-group class="activity-type-options" bindchange="onActivityTypeChange">
+        <label
+          wx:for="{{activityTypeOptions}}"
+          wx:key="value"
+          class="activity-type-option {{form.activityType === item.value ? 'activity-type-option-active' : ''}}"
+        >
+          <radio class="activity-type-radio" value="{{item.value}}" checked="{{form.activityType === item.value}}" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.activityDate}}</text>
-    <picker mode="date" value="{{form.activityDate}}" data-field="activityDate" bindchange="onPickerChange">
-      <view class="picker-input">{{form.activityDate}}</view>
-    </picker>
-  </view>
-
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.activityTime}}</text>
-    <text wx:if="{{isCopyMode}}" class="hint">{{i18n.activityCreate.copyTimeReviewHint}}</text>
-    <view class="picker-grid">
-      <view class="picker-cell">
-        <text class="sub-label">{{i18n.activityCreate.startTime}}</text>
-        <picker mode="time" value="{{form.startTime}}" data-field="startTime" bindchange="onPickerChange">
-          <view class="picker-input">{{form.startTime}}</view>
-        </picker>
-      </view>
-      <view class="picker-cell">
-        <text class="sub-label">{{i18n.activityCreate.endTime}}</text>
-        <picker mode="time" value="{{form.endTime}}" data-field="endTime" bindchange="onPickerChange">
-          <view class="picker-input">{{form.endTime}}</view>
-        </picker>
-      </view>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.insuranceLink}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityCreate.insuranceLinkPlaceholder}}"
+        data-field="insuranceLink"
+        value="{{form.insuranceLink}}"
+        bindinput="onFieldInput"
+      />
     </view>
   </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.signupDeadline}}</text>
-    <view class="picker-grid">
-      <view class="picker-cell">
-        <text class="sub-label">{{i18n.activityCreate.deadlineDate}}</text>
-        <picker mode="date" value="{{form.signupDeadlineDate}}" data-field="signupDeadlineDate" bindchange="onPickerChange">
-          <view class="picker-input">{{form.signupDeadlineDate}}</view>
-        </picker>
-      </view>
-      <view class="picker-cell">
-        <text class="sub-label">{{i18n.activityCreate.deadlineTime}}</text>
-        <picker mode="time" value="{{form.signupDeadlineTime}}" data-field="signupDeadlineTime" bindchange="onPickerChange">
-          <view class="picker-input">{{form.signupDeadlineTime}}</view>
-        </picker>
+  <view class="section-card">
+    <view class="section-head">
+      <view class="section-icon section-icon-calendar"></view>
+      <text class="section-title">{{i18n.activityCreate.scheduleSection}}</text>
+    </view>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.activityDate}}</text>
+      <picker mode="date" value="{{form.activityDate}}" data-field="activityDate" bindchange="onPickerChange">
+        <view class="picker-input">{{form.activityDate}}</view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.activityTime}}</text>
+      <text wx:if="{{isCopyMode}}" class="hint">{{i18n.activityCreate.copyTimeReviewHint}}</text>
+      <view class="picker-grid">
+        <view class="picker-cell">
+          <text class="sub-label">{{i18n.activityCreate.startTime}}</text>
+          <picker mode="time" value="{{form.startTime}}" data-field="startTime" bindchange="onPickerChange">
+            <view class="picker-input">{{form.startTime}}</view>
+          </picker>
+        </view>
+        <view class="picker-cell">
+          <text class="sub-label">{{i18n.activityCreate.endTime}}</text>
+          <picker mode="time" value="{{form.endTime}}" data-field="endTime" bindchange="onPickerChange">
+            <view class="picker-input">{{form.endTime}}</view>
+          </picker>
+        </view>
       </view>
     </view>
-    <text class="hint">{{i18n.activityCreate.deadlineHint}}</text>
+
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.signupDeadline}}</text>
+      <view class="picker-grid">
+        <view class="picker-cell">
+          <text class="sub-label">{{i18n.activityCreate.deadlineDate}}</text>
+          <picker mode="date" value="{{form.signupDeadlineDate}}" data-field="signupDeadlineDate" bindchange="onPickerChange">
+            <view class="picker-input">{{form.signupDeadlineDate}}</view>
+          </picker>
+        </view>
+        <view class="picker-cell">
+          <text class="sub-label">{{i18n.activityCreate.deadlineTime}}</text>
+          <picker mode="time" value="{{form.signupDeadlineTime}}" data-field="signupDeadlineTime" bindchange="onPickerChange">
+            <view class="picker-input">{{form.signupDeadlineTime}}</view>
+          </picker>
+        </view>
+      </view>
+      <text class="hint">{{i18n.activityCreate.deadlineHint}}</text>
+    </view>
   </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.insuranceLink}}</text>
-    <input
-      class="input"
-      placeholder="{{i18n.activityCreate.insuranceLinkPlaceholder}}"
-      data-field="insuranceLink"
-      value="{{form.insuranceLink}}"
-      bindinput="onFieldInput"
-    />
-  </view>
+  <view class="section-card">
+    <view class="section-head">
+      <view class="section-icon section-icon-users"></view>
+      <text class="section-title">{{i18n.activityCreate.teamsSection}}</text>
+    </view>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.teams}}</text>
+      <text class="hint">{{i18n.activityCreate.teamsHint}}</text>
+    </view>
+    <team-editor teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.teams}}</text>
-    <text class="hint">{{i18n.activityCreate.teamsHint}}</text>
-  </view>
-  <team-editor teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
-
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
-    <input
-      class="input"
-      placeholder="{{i18n.activityCreate.totalSignupLimitPlaceholder}}"
-      type="number"
-      data-field="signupLimitTotal"
-      value="{{form.signupLimitTotal}}"
-      bindinput="onFieldInput"
-    />
-    <text class="hint">{{namedTeamsSlotsText}}</text>
-    <text wx:if="{{benchSlots > 0}}" class="hint">{{benchSlotsText}}</text>
-    <text wx:if="{{overCapacity}}" class="error-text">{{i18n.activityCreate.overCapacity}}</text>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityCreate.totalSignupLimitPlaceholder}}"
+        type="number"
+        data-field="signupLimitTotal"
+        value="{{form.signupLimitTotal}}"
+        bindinput="onFieldInput"
+      />
+      <text class="hint">{{namedTeamsSlotsText}}</text>
+      <text wx:if="{{benchSlots > 0}}" class="hint">{{benchSlotsText}}</text>
+      <text wx:if="{{overCapacity}}" class="error-text">{{i18n.activityCreate.overCapacity}}</text>
+    </view>
   </view>
 
   <view class="notification-settings-group">
@@ -144,71 +162,82 @@
     </view>
   </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.coverImage}}</text>
-    <view class="upload-panel">
-      <view class="image-preview-frame" bindtap="onChooseActivityImage">
-        <image wx:if="{{form.coverImage}}" class="image-preview" src="{{form.coverImage}}" mode="aspectFill" />
-        <view wx:else class="upload-placeholder">+</view>
-      </view>
-      <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">{{i18n.activityCreate.removeImage}}</button>
-      <text class="hint">{{imageHintText}}</text>
+  <view class="section-card">
+    <view class="section-head">
+      <view class="section-icon section-icon-photo"></view>
+      <text class="section-title">{{i18n.activityCreate.displaySection}}</text>
     </view>
-  </view>
-
-  <view id="activity-description-field" class="field">
-    <text class="label">{{i18n.activityCreate.description}}</text>
-    <textarea
-      class="textarea"
-      placeholder="{{i18n.activityCreate.descriptionPlaceholder}}"
-      data-field="description"
-      value="{{form.description}}"
-      maxlength="2000"
-      adjust-position="{{true}}"
-      cursor-spacing="220"
-      show-confirm-bar="{{false}}"
-      bindinput="onFieldInput"
-      bindfocus="onDescriptionFocus"
-    />
-  </view>
-
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.detailImages}}</text>
-    <view class="upload-panel">
-      <view wx:if="{{form.detailImages.length}}" class="detail-images-grid">
-        <view wx:for="{{form.detailImages}}" wx:key="*this" class="detail-image-cell">
-          <image class="detail-image-preview" src="{{item}}" mode="aspectFill" />
-          <button
-            class="detail-image-remove"
-            data-index="{{index}}"
-            bindtap="onRemoveDetailImage"
-          >{{i18n.activityCreate.removeImage}}</button>
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.coverImage}}</text>
+      <view class="upload-panel">
+        <view class="image-preview-frame" bindtap="onChooseActivityImage">
+          <image wx:if="{{form.coverImage}}" class="image-preview" src="{{form.coverImage}}" mode="aspectFill" />
+          <view wx:else class="upload-placeholder"></view>
         </view>
+        <button wx:if="{{form.coverImage}}" class="ghost-button" bindtap="onRemoveActivityImage">{{i18n.activityCreate.removeImage}}</button>
+        <text class="hint">{{imageHintText}}</text>
       </view>
-      <button
-        wx:if="{{form.detailImages.length < maxDetailImages}}"
-        class="secondary-button"
-        bindtap="onChooseDetailImages"
-      >{{i18n.activityCreate.addDetailImages}}</button>
-      <text class="hint">{{detailImageHintText}}</text>
+    </view>
+
+    <view id="activity-description-field" class="field">
+      <text class="label">{{i18n.activityCreate.description}}</text>
+      <textarea
+        class="textarea"
+        placeholder="{{i18n.activityCreate.descriptionPlaceholder}}"
+        data-field="description"
+        value="{{form.description}}"
+        maxlength="2000"
+        adjust-position="{{true}}"
+        cursor-spacing="220"
+        show-confirm-bar="{{false}}"
+        bindinput="onFieldInput"
+        bindfocus="onDescriptionFocus"
+      />
+    </view>
+
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.detailImages}}</text>
+      <view class="upload-panel">
+        <view wx:if="{{form.detailImages.length}}" class="detail-images-grid">
+          <view wx:for="{{form.detailImages}}" wx:key="*this" class="detail-image-cell">
+            <image class="detail-image-preview" src="{{item}}" mode="aspectFill" />
+            <button
+              class="detail-image-remove"
+              data-index="{{index}}"
+              bindtap="onRemoveDetailImage"
+            >{{i18n.activityCreate.removeImage}}</button>
+          </view>
+        </view>
+        <button
+          wx:if="{{form.detailImages.length < maxDetailImages}}"
+          class="secondary-button"
+          bindtap="onChooseDetailImages"
+        >{{i18n.activityCreate.addDetailImages}}</button>
+        <text class="hint">{{detailImageHintText}}</text>
+      </view>
     </view>
   </view>
 
-  <view class="field">
-    <text class="label">{{i18n.activityCreate.location}}</text>
-    <input
-      class="input {{validationErrors.addressText ? 'input-error' : ''}}"
-      placeholder="{{i18n.activityCreate.addressPlaceholder}}"
-      data-field="addressText"
-      value="{{form.addressText}}"
-      bindinput="onFieldInput"
-    />
-    <text wx:if="{{validationErrors.addressText}}" class="error-text">{{validationErrors.addressText}}</text>
-    <text wx:if="{{selectedPinText}}" class="hint">{{selectedPinText}}</text>
-    <button class="secondary-button" bindtap="onChooseLocation">{{i18n.activityCreate.chooseOnMap}}</button>
+  <view class="section-card">
+    <view class="section-head">
+      <view class="section-icon section-icon-pin"></view>
+      <text class="section-title">{{i18n.activityCreate.location}}</text>
+    </view>
+    <view class="field">
+      <input
+        class="input {{validationErrors.addressText ? 'input-error' : ''}}"
+        placeholder="{{i18n.activityCreate.addressPlaceholder}}"
+        data-field="addressText"
+        value="{{form.addressText}}"
+        bindinput="onFieldInput"
+      />
+      <text wx:if="{{validationErrors.addressText}}" class="error-text">{{validationErrors.addressText}}</text>
+      <text wx:if="{{selectedPinText}}" class="hint">{{selectedPinText}}</text>
+      <button class="secondary-button map-button" bindtap="onChooseLocation">{{i18n.activityCreate.chooseOnMap}}</button>
+    </view>
   </view>
 
-  <button bindtap="onSubmit" loading="{{submitting}}">
+  <button class="submit-button" bindtap="onSubmit" loading="{{submitting}}">
     {{isEditMode ? i18n.activityCreate.saveChanges : i18n.activityCreate.publish}}
   </button>
   </block>

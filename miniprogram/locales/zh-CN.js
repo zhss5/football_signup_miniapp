@@ -85,6 +85,10 @@ module.exports = {
   },
   activityCreate: {
     title: '活动标题',
+    basicInfoSection: '基本信息',
+    scheduleSection: '时间安排',
+    teamsSection: '分队与人数',
+    displaySection: '展示内容',
     activityDate: '活动日期',
     activityTime: '活动时间',
     startTime: '开始时间',

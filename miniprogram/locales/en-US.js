@@ -104,6 +104,10 @@ module.exports = {
   },
   activityCreate: {
     title: 'Activity title',
+    basicInfoSection: 'Basic info',
+    scheduleSection: 'Schedule',
+    teamsSection: 'Teams and capacity',
+    displaySection: 'Content',
     activityType: 'Activity type',
     activityTypes: {
       internal: 'Internal',
