@@ -48,16 +48,16 @@
       </button>
       <view wx:if="{{createdFilterDropdownVisible}}" class="filter-menu">
         <block wx:for="{{createdFilterOptions}}" wx:key="key">
-          <button
-            size="mini"
+          <view
             class="filter-menu-item {{item.selected ? 'filter-menu-item-active' : ''}}"
+            hover-class="filter-menu-item-hover"
             data-filter-key="{{item.key}}"
             bindtap="onCreatedFilterSelect"
           >
             <text class="filter-menu-label">{{item.label}}</text>
             <text class="filter-menu-count">{{item.count}}</text>
-            <text wx:if="{{item.selected}}" class="filter-menu-check">✓</text>
-          </button>
+            <view wx:if="{{item.selected}}" class="filter-menu-check"></view>
+          </view>
         </block>
       </view>
     </view>

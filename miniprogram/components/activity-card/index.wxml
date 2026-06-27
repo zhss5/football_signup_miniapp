@@ -28,7 +28,10 @@
   </view>
   <view wx:if="{{item.activityTags && item.activityTags.length}}" class="activity-card-tags">
     <block wx:for="{{item.activityTags}}" wx:for-item="tag" wx:key="key">
-      <text class="tag tag-{{tag.tone}}">{{tag.label}}</text>
+      <view class="tag tag-{{tag.tone}}">
+        <view class="tag-icon tag-icon-{{tag.tone}}"></view>
+        <text>{{tag.label}}</text>
+      </view>
     </block>
   </view>
 </view>
