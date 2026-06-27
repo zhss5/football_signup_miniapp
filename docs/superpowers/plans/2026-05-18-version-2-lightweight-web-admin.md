@@ -30,7 +30,7 @@ The web admin should cover the highest-friction operational tasks first:
 - activity detail view with teams, registrations, proxy signups, preferred positions, and notification status.
 - activity duplication so organizers/admins can create a new activity from a previous activity's reusable settings.
 - roster export as CSV/XLSX.
-- attendance management for confirmed activities.
+- attendance management for started activities and manual corrections.
 - attendance statistics by participant over a selected date range.
 - basic notification-log review for troubleshooting.
 
@@ -81,7 +81,7 @@ Rules:
 - Organizers, admins, and super admins share the same alias value.
 - The alias can be edited from both the mini-program manager roster surface and the web admin. Both surfaces must call the same controlled backend API instead of writing directly to CloudBase.
 - Ordinary users cannot see or edit management aliases.
-- Proxy signups do not have a stable real WeChat identity yet, so cross-activity aliasing for proxy participants is deferred until a later participant-profile model exists.
+- Proxy signups do not have a stable real WeChat identity yet. Version 2 attendance statistics use the proxy signup name as the proxy participant identity; a later participant-profile model can replace name-based identity if needed.
 
 Participant operations should keep current state separate from historical trace data:
 
@@ -115,17 +115,17 @@ attendanceMarkedBy
 
 Default rule:
 
-- After an activity is confirmed as held, every active registration is counted as `present` by default.
+- After an activity has started, every active registration is counted as `present` by default.
 - If `attendanceStatus` is empty, statistics treat it as `present`.
 - Organizers/admins only write an attendance value when they manually mark a participant as `absent` or switch the participant back to `present`.
 
 Counting rules:
 
-- Only activities with `confirmStatus: 'confirmed'` are included in attendance statistics.
-- Cancelled, deleted, and unconfirmed activities are excluded.
+- Only activities whose start time has passed are included in attendance statistics.
+- Cancelled, deleted, and future activities are excluded.
 - Active registration records are included.
 - Proxy signups are included.
-- Version 2 can aggregate by signup display name first. A later version can add a participant profile/person identity model if name-based aggregation becomes inaccurate.
+- Version 2 aggregates real WeChat users by openid and proxy signups by proxy signup name. A later version can add a participant profile/person identity model if name-based proxy aggregation becomes inaccurate.
 
 Statistics columns:
 
@@ -138,7 +138,7 @@ Statistics columns:
 Formula:
 
 ```text
-signup count = active registrations in confirmed activities within the date range
+signup count = active registrations in started, non-cancelled, non-deleted activities within the date range
 absent count = registrations with attendanceStatus === 'absent'
 present count = signup count - absent count
 attendance rate = present count / signup count
@@ -148,13 +148,12 @@ attendance rate = present count / signup count
 
 Add attendance editing in both places, with different purposes:
 
-- Mini program Activity Detail: organizer/admin can quickly mark attendance on the phone after the activity ends.
+- Mini program Activity Detail: organizer/admin can quickly mark attendance on the phone.
 - Web admin: organizer/admin can review, batch-correct, audit, and export attendance data.
 
 Recommended guardrails:
 
 - Only the activity organizer or an admin can edit attendance.
-- Only confirmed activities allow attendance edits.
 - Regular users cannot edit attendance.
 - The UI should make the default visible: everyone is counted as present unless marked absent.
 
@@ -182,12 +181,7 @@ Copy rules:
 
 ### 7. Overdue Activity Handling
 
-After `endAt` passes, if an activity is still `published` and `confirmStatus: 'pending'`, organizers should see a clear action prompt:
-
-- confirm held.
-- cancel activity.
-
-No automatic confirmation should run in Version 2.
+The mini-program My page should not show an overdue unresolved action prompt. Organizers and admins can still confirm or cancel from the activity detail flow. No automatic confirmation should run in Version 2.
 
 ### 8. Roster Export Improvements
 
@@ -263,14 +257,14 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 ## Implementation Order
 
 1. Add attendance fields, update APIs/cloud functions, and add tests for the default-present attendance rules.
-2. Add mini program attendance editing for confirmed activities.
+2. Add mini program attendance editing for activity managers.
 3. Add shared participant manager aliases and participant operation audit logs.
 4. Build the web admin foundation: login, role guard, user search, regular-user permission add/remove, and activity list.
 5. Add activity duplication for creating new activities from previous reusable settings.
 6. Add web admin activity detail and attendance management.
 7. Add web admin attendance statistics with date range filters and export.
 8. Add Home/My pagination.
-9. Add overdue activity prompt.
+9. Keep overdue activity prompt out of the mini-program My page.
 10. Improve roster export formats.
 11. Add notification-log review.
 12. Add SQL migration readiness documentation and keep it aligned with Version 2 data-model changes.
@@ -286,7 +280,7 @@ Replace slider-only cover crop controls with drag/zoom gestures when time allows
 - Organizers/admins can set a shared management alias for a real WeChat signup user and see it across later activities.
 - Participant signup, cancellation, re-signup, removal, team movement, attendance change, and alias changes leave operation history.
 - Organizers/admins can copy an existing activity into a new activity draft without copying registrations or attendance history.
-- Organizers/admins can mark attendance from the mini program after a confirmed activity.
+- Organizers/admins can mark attendance from the mini program.
 - Admins can review and correct attendance from the web admin.
 - Admins can generate attendance statistics for a selected date range.
 - Organizers can export rosters and attendance data.

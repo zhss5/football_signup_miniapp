@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260627-activity-type-review';
+const WEB_ADMIN_ASSET_VERSION = '20260627-started-stats';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -121,7 +121,8 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('<th>表现描述</th>');
   expect(html).toContain('data-activity-detail-logs-table');
   expect(html).toContain('报名活动流水');
-  expect(html).toContain('已确认或已开始');
+  expect(html).toContain('统计已开始且未取消/未删除的活动');
+  expect(html).not.toContain('已确认或已开始');
   const statsStart = html.indexOf('data-admin-view="attendance-stats"');
   const statsEnd = html.indexOf('<tbody data-attendance-stats-table>', statsStart);
   const statsBlock = statsStart >= 0 && statsEnd > statsStart

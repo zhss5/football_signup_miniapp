@@ -586,7 +586,7 @@ describe('my page profile marker', () => {
     expect(ctx.data.createdLoadingMore).toBe(false);
   });
 
-  test('marks overdue unresolved created activities without exposing list actions', async () => {
+  test('does not mark overdue unresolved created activities or expose list actions', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
     ensureUserProfile.mockResolvedValue({
       user: {

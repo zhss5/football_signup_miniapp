@@ -34,17 +34,18 @@ Completed:
 - role removal keeps base `user` access.
 - the last active `super_admin` is protected.
 - role changes write `user_role_logs` audit records.
-- `setRegistrationAttendance` cloud function lets organizers/admins mark confirmed-activity registrations present or absent.
+- `setRegistrationAttendance` cloud function lets organizers/admins mark registrations present or absent.
 - attendance updates write registration fields and `activity_logs` audit rows.
 - `getActivityDetail` exposes attendance fields only to registration managers.
 - `getActivityDetail` exposes manager-only `registrationId` values needed for attendance edits.
-- mini-program Activity Detail shows confirmed-activity attendance state to registration managers.
+- mini-program Activity Detail shows attendance state to registration managers.
 - mini-program Activity Detail lets registration managers toggle members between present and absent.
-- attendance editing remains hidden from regular users and before activity confirmation.
+- attendance editing remains hidden from regular users.
 - `getAttendanceStats` cloud function returns date-range attendance statistics.
-- admin and super admin statistics include all confirmed activities.
-- organizer statistics include only their own confirmed activities.
-- statistics include proxy signups, count blank attendance status as present, and exclude cancelled/deleted/pending activities.
+- admin and super admin statistics include all started, non-cancelled, non-deleted activities.
+- organizer statistics include only their own started, non-cancelled, non-deleted activities.
+- statistics include proxy signups, count blank attendance status as present, and exclude future, cancelled, or deleted activities.
+- proxy signup statistics use the proxy signup name as the Version 2 unique identity.
 - environment strategy decision recorded: continue with one CloudBase environment for now, avoid deploying changed existing functions during Version 1 review, and use function-name isolation such as `getActivityDetailV2` when testing changed existing behavior in a trial build.
 - SQL migration readiness design documented in `docs/superpowers/specs/2026-06-10-sql-migration-readiness.md`.
 - `exportActivityRoster` cloud function returns CSV/XLSX-ready roster rows for authorized organizers/admins.
@@ -85,8 +86,9 @@ Completed:
 - SQL migration readiness mapping now documents web-admin activity/log API boundaries and notification-log field mapping.
 - Home activity list now loads additional pages with stable `limit` and `skip` parameters while preserving already-rendered cards.
 - My Created and Joined tabs now maintain independent pagination state and load additional pages with stable `limit` and `skip` parameters.
-- My Created tab now marks overdue unresolved activities when `endAt` has passed while the activity is still `published` and not `confirmed`.
-- overdue unresolved prompts reuse existing confirm/cancel actions; confirmation calls `notifyActivityParticipants(activityId, 'proceeding')` and no automatic confirmation is introduced.
+- My Created tab no longer shows an overdue unresolved activity prompt.
+- confirmation still calls `notifyActivityParticipants(activityId, 'proceeding')`; no automatic confirmation is introduced.
+- Web Admin static asset query versions must be bumped before every Web Admin upload/deployment to avoid CloudBase/CDN serving stale JS or CSS.
 - full regression passed after Web Admin QR login work with `npm test`: `79` suites and `607` tests.
 - final SQL migration readiness audit confirms V2 fields, stable enum strings, API contracts, log actions, CloudBase-to-SQL mappings, compatibility rules, and validation checks are documented.
 - Version 2 still does not introduce runtime MySQL migration, CloudBase/MySQL dual-write, or a self-hosted HTTP API switch.
@@ -127,7 +129,7 @@ Completed:
 - Store the shared alias on the user record so it follows the same participant across activities even if they change nickname or avatar.
 - Allow activity managers to edit the shared alias from both the mini-program roster surface and the web admin, using the same backend permission checks.
 - Keep manager aliases visible only to activity managers, admins, and super admins.
-- Keep proxy signup cross-activity identification deferred until a later participant-profile model exists.
+- Use proxy signup name as the Version 2 proxy identity for attendance statistics; keep richer proxy participant profiles deferred.
 - Record participant operation history separately from current registration state.
 - Audit participant self signup, self cancellation, re-signup, proxy signup, manager removal, team movement, attendance change, and manager alias change.
 - Capture operator, target participant, activity, registration, action type, timestamp, and before/after data where useful.
@@ -135,16 +137,16 @@ Completed:
 ### 4.5 Attendance Management
 
 - Track attendance on active registration records.
-- After an activity is confirmed as held, count active registrations as present by default.
+- After an activity has started, count active registrations as present by default.
 - Allow organizer/admin users to manually mark participants absent or present.
 - Add quick attendance editing in the mini program Activity Detail page.
 - Add review and correction workflows in the web admin.
-- Count only confirmed activities in attendance statistics.
+- Count only started activities that are not cancelled or deleted in attendance statistics.
 
 ### 4.6 Attendance Statistics And Export
 
 - Add date-range attendance statistics.
-- Aggregate by signup display name for Version 2.
+- Aggregate real WeChat signups by openid and proxy signups by proxy signup name for Version 2.
 - Include proxy signups in attendance statistics.
 - Show signup count, present count, absent count, and attendance rate.
 - Export rosters and attendance data as CSV/XLSX, including manager aliases where visible.
@@ -153,7 +155,7 @@ Completed:
 
 - Add notification-log review.
 - Add Home/My paginated loading.
-- Add overdue unresolved activity prompts after `endAt` for still-published pending activities.
+- Keep overdue unresolved activity prompts out of the mini-program My page.
 - Add copy-activity flow that copies reusable setup data but not registrations, attendance state, participant operation logs, notification logs, or subscription state.
 - Keep invite-code signup, automatic reminders, payments, refunds, runtime MySQL migration, and player technical analysis out of the first Version 2 implementation slice unless explicitly reprioritized.
 

@@ -71,7 +71,7 @@ function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activ
     return false;
   }
 
-  return activity.confirmStatus === 'confirmed' || startAt <= nowAt;
+  return startAt <= nowAt;
 }
 
 function getParticipantName(registration) {

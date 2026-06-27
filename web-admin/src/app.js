@@ -38,7 +38,7 @@
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
-  const ATTENDANCE_STATS_EMPTY_TEXT = '统计已确认或已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
+  const ATTENDANCE_STATS_EMPTY_TEXT = '统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',

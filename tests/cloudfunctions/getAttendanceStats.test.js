@@ -98,7 +98,7 @@ const dateRange = {
   endAt: '2026-05-31T23:59:59.999Z'
 };
 
-test('admin can get date-range attendance stats for confirmed activities', async () => {
+test('admin can get date-range attendance stats for started activities', async () => {
   const db = createFakeDb();
 
   const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_admin' }, { db });
@@ -246,7 +246,7 @@ test('attendance stats include participant manager alias notes', async () => {
   });
 });
 
-test('cancelled deleted future pending and out-of-range activities are excluded', async () => {
+test('cancelled deleted future and out-of-range activities are excluded', async () => {
   const db = createFakeDb({
     activities: {
       activity_pending: {
@@ -255,6 +255,13 @@ test('cancelled deleted future pending and out-of-range activities are excluded'
         status: 'published',
         confirmStatus: 'pending',
         startAt: '2026-05-09T12:00:00.000Z'
+      },
+      activity_confirmed_future: {
+        _id: 'activity_confirmed_future',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'confirmed',
+        startAt: '2026-05-12T12:00:00.000Z'
       },
       activity_cancelled: {
         _id: 'activity_cancelled',
@@ -283,6 +290,13 @@ test('cancelled deleted future pending and out-of-range activities are excluded'
         _id: 'reg_pending_player',
         activityId: 'activity_pending',
         signupName: 'Pending Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_confirmed_future_player: {
+        _id: 'reg_confirmed_future_player',
+        activityId: 'activity_confirmed_future',
+        signupName: 'Future Confirmed Player',
         status: 'joined',
         attendanceStatus: 'present'
       },
@@ -317,6 +331,7 @@ test('cancelled deleted future pending and out-of-range activities are excluded'
   const names = result.items.map(item => item.participantName);
 
   expect(names).not.toContain('Pending Player');
+  expect(names).not.toContain('Future Confirmed Player');
   expect(names).not.toContain('Cancelled Player');
   expect(names).not.toContain('Deleted Player');
   expect(names).not.toContain('Out Of Range Player');

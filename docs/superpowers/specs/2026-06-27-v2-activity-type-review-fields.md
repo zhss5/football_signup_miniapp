@@ -14,6 +14,7 @@ This note records the confirmed Version 2 behavior for activity type, attendance
 - Creating an activity requires choosing an activity type.
 - Editing an activity can change the activity type.
 - Expired activities can still be edited when the caller has normal edit permission and the activity is not deleted.
+- The mini-program does not show `internal` / `external` labels to ordinary participants.
 
 ## Attendance Statistics
 
@@ -22,10 +23,13 @@ This note records the confirmed Version 2 behavior for activity type, attendance
   - internal matches only.
   - external matches only.
 - Historical activities with missing `activityType` count as internal matches.
-- Existing attendance inclusion rules remain:
+- Attendance inclusion rules:
   - not cancelled.
   - not deleted.
-  - either already confirmed or activity start time has passed.
+  - activity start time has passed.
+- `confirmStatus` is not used as an attendance-statistics inclusion condition.
+- Proxy registrations are included in attendance statistics and are grouped by proxy signup name as the Version 2 unique identity.
+- Real WeChat signups continue to group by real user openid, with manager alias used only as display/identification metadata.
 
 ## Web Admin Review Fields
 

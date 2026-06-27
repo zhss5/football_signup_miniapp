@@ -913,7 +913,7 @@ test('attendance stats submit shows eligible-activity empty state for blank resu
   });
   expect(elements['[data-attendance-stats-table]'].innerHTML).toBe('');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(false);
-  expect(elements['[data-attendance-stats-empty]'].textContent).toContain('已确认或已开始');
+  expect(elements['[data-attendance-stats-empty]'].textContent).toContain('已开始且未取消/未删除');
 });
 
 test('attendance stats submit renders rows and hides the empty state', async () => {

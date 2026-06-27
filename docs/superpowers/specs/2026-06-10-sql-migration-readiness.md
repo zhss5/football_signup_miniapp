@@ -223,7 +223,7 @@ CREATE TABLE registrations (
 
 Allowed `status` values: `joined`, `cancelled`, `removed`.
 
-Allowed `attendance_status` values: empty string, `present`, `absent`. Empty string means present for confirmed activity statistics.
+Allowed `attendance_status` values: empty string, `present`, `absent`. Empty string means present for started, non-cancelled, non-deleted activity statistics.
 
 ### `activity_logs`
 
@@ -388,7 +388,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `registrations.phoneSnapshot` | `registrations.phone_snapshot` | Dormant compatibility field. |
 | `registrations.proxyRegistration` | `registrations.proxy_registration` | Boolean. |
 | `registrations.createdByOpenId` | `registrations.created_by_openid` | Proxy creator. |
-| `registrations.attendanceStatus` | `registrations.attendance_status` | Empty means present in confirmed activities. |
+| `registrations.attendanceStatus` | `registrations.attendance_status` | Empty means present in started, non-cancelled, non-deleted activities. |
 | `registrations.attendanceMarkedAt` | `registrations.attendance_marked_at` | Nullable. |
 | `registrations.attendanceMarkedBy` | `registrations.attendance_marked_by` | Empty string allowed. |
 | `activity_logs.targetOpenId` / `activity_logs.userOpenId` | `activity_logs.user_openid` | Prefer `targetOpenId`; fall back to legacy `userOpenId`. |
@@ -422,7 +422,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, and `listNotificationLogs`; do not couple the web-admin views to CloudBase collection layouts.
 14. Keep backend export functions row-based. CSV/XLSX file generation belongs in the web-admin or another client layer so a future self-hosted API can return the same rows from SQL.
 15. Keep mini-program pagination API-shaped with `limit` and `skip`. If SQL cursor pagination replaces offset pagination later, expose it as an additive API parameter and keep `limit`/`skip` compatible until old clients age out.
-16. Treat overdue unresolved prompts as derived UI state. Do not add a stored prompt flag unless a later workflow needs assignment, snooze, or resolution tracking.
+16. Keep overdue unresolved prompts out of the mini-program My page unless a later workflow needs assignment, snooze, or resolution tracking.
 17. Run `bootstrapV2Collections` as an explicit CloudBase readiness step for existing environments. It creates missing V2 collections only and does not perform runtime MySQL migration, dual-write, or HTTP API cutover.
 18. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
@@ -459,10 +459,10 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - Attendance stats in MySQL match CloudBase `getAttendanceStats` for the same date range.
 - Web-admin activity filters in SQL match CloudBase `listActivities` with `scope: web-admin` for the same role, date range, status, organizer, keyword, limit, and skip.
 - Mini-program list pagination in SQL matches CloudBase `listActivities` for `home`, `created`, and `joined` scopes with the same `limit`, `skip`, sort order, and visibility rules.
-- Overdue unresolved prompt counts match activities where `status = 'published'`, `confirm_status <> 'confirmed'`, and `end_at` is earlier than the comparison timestamp.
+- The mini-program My page does not show overdue unresolved prompts; SQL-backed list APIs should not introduce that prompt implicitly.
 - Roster export rows in SQL-backed APIs match CloudBase `exportActivityRoster` rows for the same activity and viewer role.
-- Empty `registrations.attendance_status` is counted as present only for confirmed activities.
-- Cancelled, deleted, and pending-confirmation activities are excluded from attendance statistics.
+- Empty `registrations.attendance_status` is counted as present only for started, non-cancelled, non-deleted activities included in attendance statistics.
+- Cancelled, deleted, and future activities are excluded from attendance statistics.
 - Activity-log and notification-log API responses match CloudBase `listActivityLogs` and `listNotificationLogs` permission boundaries and pagination for organizer, admin, super-admin, and ordinary-user callers.
 - Notification-log status counts match CloudBase for `sent`, `failed`, and `skipped`.
 

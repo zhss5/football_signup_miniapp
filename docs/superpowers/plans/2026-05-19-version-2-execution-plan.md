@@ -945,8 +945,9 @@ Manual production setup:
 
 - Seed the first `super_admin` by editing the target user document in CloudBase.
 - Confirm `user_role_logs` exists or is bootstrapped before testing web-admin role changes.
-- Upload a mini-program frontend build for mini-program attendance editing, pagination, and overdue prompts.
+- Upload a mini-program frontend build for mini-program attendance editing and pagination.
 - Upload a mini-program frontend build for the copy-activity flow.
+- Before every `web-admin/` upload, bump the static asset query version in `web-admin/index.html`.
 - Deploy or host `web-admin/` according to the chosen CloudBase hosting path.
 
 ### Single-Environment Testing Policy

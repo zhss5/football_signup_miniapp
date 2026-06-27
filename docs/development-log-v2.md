@@ -4,6 +4,32 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-27 - Started-Activity Attendance Statistics
+
+Aligned Version 2 attendance statistics with the final inclusion rule.
+
+Delivered behavior:
+
+- attendance statistics include activities only when the activity start time has passed and the activity is not cancelled or deleted.
+- `confirmStatus` no longer decides whether an activity is included in attendance statistics.
+- proxy registrations remain grouped by proxy signup name for attendance statistics.
+- the mini-program My page remains free of overdue unresolved activity prompts.
+- Web Admin static assets now use `20260627-started-stats` cache-busting query strings.
+
+Documentation:
+
+- updated Version 2 progress, activity type/review field spec, SQL migration readiness notes, and Web Admin deployment notes.
+- recorded that the mini-program does not show `internal` / `external` activity labels to ordinary participants.
+- recorded that future Web Admin uploads should bump static asset query versions before CloudBase hosting deployment.
+
+Verification:
+
+- red attendance test first failed because a future confirmed activity was still included.
+- targeted tests passed: `npm test -- tests/cloudfunctions/getAttendanceStats.test.js --runInBand`.
+- targeted Web Admin tests passed: `npm test -- tests/web-admin/static.test.js tests/web-admin/app-layout.test.js --runInBand`.
+- targeted mini-program My page tests passed: `npm test -- tests/miniprogram/pages/my-actions.test.js tests/miniprogram/pages/my-profile.test.js --runInBand`.
+- full regression passed: `npm test -- --runInBand` (`82` suites, `700` tests).
+
 ## 2026-06-27 - Proxy Attendance Statistics Identity
 
 Clarified and implemented the attendance statistics identity rule for proxy signups.
