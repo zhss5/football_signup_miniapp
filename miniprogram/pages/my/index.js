@@ -100,7 +100,8 @@ Page({
     languageOptions: [],
     currentLanguageLabel: '',
     nextLocale: 'zh-CN',
-    activeTab: 'created',
+    activeTab: 'joined',
+    showCreatedActivitiesTab: false,
     tabs: [],
     createdFilter: 'all',
     createdFilters: [],
@@ -156,12 +157,19 @@ Page({
       createdNextSkip: 0,
       joinedNextSkip: 0
     });
-    const profilePromise = this.refreshUserProfile();
-    await Promise.all([
-      profilePromise,
-      this.loadMyActivityList('created', translate, loadToken),
+    const showCreatedActivitiesTab = await this.refreshUserProfile();
+    const requests = [
       this.loadMyActivityList('joined', translate, loadToken)
-    ]);
+    ];
+    if (showCreatedActivitiesTab) {
+      requests.push(this.loadMyActivityList('created', translate, loadToken));
+    } else {
+      this.setData({
+        createdItemsAll: [],
+        createdItems: []
+      });
+    }
+    await Promise.all(requests);
   },
 
   async loadMyActivityList(scope, translate, loadToken, options = {}) {
@@ -260,17 +268,30 @@ Page({
   async refreshUserProfile() {
     try {
       const { user } = await ensureUserProfile();
+      const showCreatedActivitiesTab = canCreateActivity(user);
+      const shouldPreserveActiveTab =
+        showCreatedActivitiesTab &&
+        this.data.showCreatedActivitiesTab &&
+        (this.data.activeTab === 'created' || this.data.activeTab === 'joined');
       this.setData({
         userOpenId: user && user._id ? user._id : '',
         userRoleText: formatRoles(user),
-        canConfirmWebAdminLogin: canCreateActivity(user)
+        canConfirmWebAdminLogin: showCreatedActivitiesTab,
+        showCreatedActivitiesTab,
+        activeTab: showCreatedActivitiesTab
+          ? (shouldPreserveActiveTab ? this.data.activeTab : 'created')
+          : 'joined'
       });
+      return showCreatedActivitiesTab;
     } catch (error) {
       this.setData({
         userOpenId: '',
         userRoleText: '',
-        canConfirmWebAdminLogin: false
+        canConfirmWebAdminLogin: false,
+        showCreatedActivitiesTab: false,
+        activeTab: 'joined'
       });
+      return false;
     }
   },
 
@@ -367,6 +388,9 @@ Page({
 
   onTabChange(event) {
     const activeTab = event.currentTarget.dataset.tabKey;
+    if (activeTab === 'created' && !this.data.showCreatedActivitiesTab) {
+      return;
+    }
     this.setData({ activeTab });
   },
 
@@ -380,6 +404,9 @@ Page({
       typeof eventOrScope === 'string'
         ? eventOrScope
         : eventOrScope.currentTarget.dataset.scope;
+    if (scope === 'created' && !this.data.showCreatedActivitiesTab) {
+      return;
+    }
     const translate = makeTranslator(this.data.locale || getAppLocale());
     await this.loadMyActivityList(scope || this.data.activeTab, translate, this.myActivitiesLoadToken || 0, {
       append: true

@@ -20,6 +20,8 @@ describe('my activities page', () => {
     expect(wxml).toContain('onCreatedFilterTap');
     expect(wxml).toContain('onLanguageChange');
     expect(wxml).toContain('primary-tab-shell');
+    expect(wxml).toContain('wx:if="{{showCreatedActivitiesTab}}"');
+    expect(wxml).toContain("wx:if=\"{{showCreatedActivitiesTab && activeTab === 'created'}}\"");
     expect(wxml).toContain('top-toolbar');
     expect(wxml).toContain('language-toolbar-button');
     expect(wxml).toContain('toolbar-divider');
@@ -38,7 +40,8 @@ describe('my activities page', () => {
     expect(wxml.indexOf('activity-action-footer')).toBeGreaterThan(
       wxml.indexOf('created-activity-card')
     );
-    expect(js).toContain("activeTab: 'created'");
+    expect(js).toContain("activeTab: 'joined'");
+    expect(js).toContain('showCreatedActivitiesTab: false');
     expect(js).toContain("languageOptions:");
     expect(js).toContain('currentLanguageLabel:');
     expect(js).toContain('nextLocale:');

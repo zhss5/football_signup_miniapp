@@ -25,7 +25,7 @@
     </view>
   </view>
 
-  <view class="primary-tab-shell">
+  <view wx:if="{{showCreatedActivitiesTab}}" class="primary-tab-shell">
     <block wx:for="{{tabs}}" wx:key="key">
       <button
         size="mini"
@@ -38,7 +38,7 @@
     </block>
   </view>
 
-  <view wx:if="{{activeTab === 'created'}}" class="section">
+  <view wx:if="{{showCreatedActivitiesTab && activeTab === 'created'}}" class="section">
     <view class="filter-group">
       <text class="filter-heading">{{filterLabel}}</text>
       <view class="filter-row">
@@ -84,7 +84,7 @@
     </view>
   </view>
 
-  <view wx:elif="{{activeTab === 'joined'}}" class="section">
+  <view wx:else class="section">
     <block wx:for="{{joinedItems}}" wx:key="_id">
       <activity-card item="{{item}}" bind:tapcard="goDetail" />
     </block>

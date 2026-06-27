@@ -174,6 +174,11 @@ describe('my page profile marker', () => {
     await pageConfig.onShow.call(ctx);
 
     expect(ctx.data.canConfirmWebAdminLogin).toBe(false);
+    expect(ctx.data.showCreatedActivitiesTab).toBe(false);
+    expect(ctx.data.activeTab).toBe('joined');
+    expect(listActivities).toHaveBeenCalledTimes(1);
+    expect(listActivities).toHaveBeenCalledWith({ scope: 'joined', limit: 20, skip: 0 });
+    expect(listActivities).not.toHaveBeenCalledWith({ scope: 'created', limit: 20, skip: 0 });
   });
 
   test('confirms web admin login from a scanned QR payload', async () => {
@@ -250,7 +255,7 @@ describe('my page profile marker', () => {
     ensureUserProfile.mockResolvedValue({
       user: {
         _id: 'openid_owner',
-        roles: ['user']
+        roles: ['user', 'organizer']
       }
     });
     listActivities.mockImplementation(({ scope }) => {
@@ -319,7 +324,7 @@ describe('my page profile marker', () => {
     ensureUserProfile.mockResolvedValue({
       user: {
         _id: 'openid_owner',
-        roles: ['user']
+        roles: ['user', 'organizer']
       }
     });
     listActivities.mockImplementation(({ scope }) => {
@@ -372,8 +377,7 @@ describe('my page profile marker', () => {
     };
 
     const showPromise = pageConfig.onShow.call(ctx);
-    await Promise.resolve();
-    await Promise.resolve();
+    await showPromise;
 
     expect(ctx.data.createdItems.map(item => item.id)).toEqual(['created_1']);
     expect(ctx.data.joinedItems.map(item => item.id)).toEqual(['joined_1']);
@@ -385,7 +389,6 @@ describe('my page profile marker', () => {
     );
 
     resolveCovers();
-    await showPromise;
     await Promise.resolve();
     await Promise.resolve();
 
@@ -406,7 +409,7 @@ describe('my page profile marker', () => {
     ensureUserProfile.mockResolvedValue({
       user: {
         _id: 'openid_owner',
-        roles: ['user']
+        roles: ['user', 'organizer']
       }
     });
     listActivities.mockImplementation(({ scope }) => {
@@ -467,7 +470,7 @@ describe('my page profile marker', () => {
     ensureUserProfile.mockResolvedValue({
       user: {
         _id: 'openid_owner',
-        roles: ['user']
+        roles: ['user', 'organizer']
       }
     });
     listActivities.mockImplementation(({ scope }) => {
