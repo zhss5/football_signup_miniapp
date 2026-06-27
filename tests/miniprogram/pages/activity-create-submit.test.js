@@ -165,6 +165,8 @@ describe('activity create submit flow', () => {
 
     expect(wxml).toContain('data-field="insuranceLink"');
     expect(wxml).toContain('{{i18n.activityCreate.insuranceLink}}');
+    expect(wxml).toContain('{{i18n.activityCreate.activityType}}');
+    expect(wxml).toContain('bindchange="onActivityTypeChange"');
   });
 
   test('hides the reserved invite code field until invite-code enforcement is implemented', () => {

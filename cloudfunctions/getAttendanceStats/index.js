@@ -3,6 +3,7 @@ const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { hasRole, isAdmin } = require('./roles');
+const { normalizeActivityType } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -26,7 +27,25 @@ function getNowTimestamp(deps = {}) {
   return injected === null ? Date.now() : injected;
 }
 
-function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt) {
+function normalizeActivityTypeFilter(value) {
+  const type = String(value || '').trim();
+
+  if (!type || type === 'all') {
+    return 'all';
+  }
+
+  return normalizeActivityType(type);
+}
+
+function matchesActivityType(activity, activityTypeFilter) {
+  if (activityTypeFilter === 'all') {
+    return true;
+  }
+
+  return normalizeActivityType(activity.activityType) === activityTypeFilter;
+}
+
+function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activityTypeFilter) {
   if (!activity) {
     return false;
   }
@@ -45,6 +64,10 @@ function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt) {
   }
 
   if (rangeEnd !== null && startAt > rangeEnd) {
+    return false;
+  }
+
+  if (!matchesActivityType(activity, activityTypeFilter)) {
     return false;
   }
 
@@ -109,6 +132,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const rangeStart = parseTimestamp(payload.startAt);
   const rangeEnd = parseTimestamp(payload.endAt);
+  const activityTypeFilter = normalizeActivityTypeFilter(payload.activityType);
   const nowAt = getNowTimestamp(deps);
   const [activities, registrations, users] = await Promise.all([
     loadCollection(db, COLLECTIONS.ACTIVITIES),
@@ -124,7 +148,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   }, {});
   const activityById = activities.reduce((acc, activity) => {
     if (
-      isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt) &&
+      isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activityTypeFilter) &&
       (callerIsAdmin || activity.organizerOpenId === openid)
     ) {
       acc[activity._id] = activity;

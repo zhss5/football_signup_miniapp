@@ -5,7 +5,7 @@ const { businessError } = require('./errors');
 const { canCreateActivity } = require('./roles');
 const { normalizeTeamColorKey } = require('./team-colors');
 const { nowIso } = require('./time');
-const { validateActivityDraft } = require('./validators');
+const { normalizeActivityType, validateActivityDraft } = require('./validators');
 
 const BENCH_TEAM_NAME = '\u66ff\u8865';
 
@@ -89,6 +89,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const activityData = {
     title: event.title.trim(),
+    activityType: normalizeActivityType(event.activityType),
     organizerOpenId: openid,
     startAt: event.startAt,
     endAt: event.endAt,

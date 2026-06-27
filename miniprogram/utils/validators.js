@@ -6,6 +6,8 @@ const {
 } = require('./constants');
 const { t: translateText } = require('./i18n');
 
+const VALID_ACTIVITY_TYPES = ['internal', 'external'];
+
 function buildValidationError(field, key, translate = null) {
   const message = translate ? translate(key) : translateText(key, {}, 'en-US');
   const error = new Error(message);
@@ -31,6 +33,11 @@ function validateActivityDraft(draft, translate = null) {
 
   if (!draft.addressText || !draft.addressText.trim()) {
     throw buildValidationError('addressText', 'errors.activityAddressRequired', translate);
+  }
+
+  const activityType = String(draft.activityType || '').trim();
+  if (activityType && !VALID_ACTIVITY_TYPES.includes(activityType)) {
+    throw buildValidationError('activityType', 'errors.invalidActivityType', translate);
   }
 
   if (Array.from(String(draft.description || '')).length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {

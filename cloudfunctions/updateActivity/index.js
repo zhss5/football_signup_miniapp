@@ -5,7 +5,7 @@ const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
 const { normalizeTeamColorKey } = require('./team-colors');
 const { nowIso } = require('./time');
-const { validateActivityDraft } = require('./validators');
+const { normalizeActivityType, validateActivityDraft } = require('./validators');
 
 const BENCH_TEAM_NAME = '\u66ff\u8865';
 
@@ -104,6 +104,7 @@ function buildActivityUpdateData(event, activity, stamp) {
 
   return {
     title,
+    activityType: normalizeActivityType(event.activityType),
     startAt: event.startAt,
     endAt: event.endAt,
     signupDeadlineAt: event.signupDeadlineAt,

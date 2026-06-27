@@ -213,6 +213,7 @@
       activityDetailRosterKeyword: '',
       activityDetailLogKeyword: '',
       activityDetailLoading: false,
+      activitySummary: '',
       notificationLogRows: [],
       logStatus: '',
       exportCsv: '',
@@ -707,6 +708,7 @@
             `>` +
             `<td>${index + 1}</td>` +
             `<td>${escapeHtml(row.title)}</td>` +
+            `<td>${escapeHtml(row.activityTypeText)}</td>` +
             `<td>${escapeHtml(row.startAt)}</td>` +
             `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
             `<td>${renderPersonCell(row.organizerDisplayName, row.organizerOpenId)}</td>` +
@@ -777,6 +779,7 @@
           row.teamName,
           row.signupName,
           row.managerAlias,
+          row.performanceDescription,
           row.preferredPositions,
           formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
           row.userOpenId,
@@ -814,6 +817,12 @@
           `${row.proxyRegistration ? 'disabled ' : ''}>保存备注</button>` +
           `</div>` +
           `</td>` +
+          `<td><div class="roster-performance-control">` +
+          `<textarea data-performance-description="${escapeHtml(row.registrationId)}" ` +
+          `maxlength="500">${escapeHtml(row.performanceDescription)}</textarea>` +
+          `<button type="button" data-action="save-performance-description" ` +
+          `data-registration-id="${escapeHtml(row.registrationId)}">保存表现</button>` +
+          `</div></td>` +
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
           `<td><div class="attendance-status-control">` +
@@ -1058,6 +1067,13 @@
         .join('');
     }
 
+    function renderActivitySummary() {
+      const summaryInput = query('[data-activity-summary]');
+      if (summaryInput) {
+        summaryInput.value = state.activitySummary || '';
+      }
+    }
+
     function getSelectedActivityId() {
       return state.selectedActivityId || '';
     }
@@ -1109,6 +1125,7 @@
     function renderActivityDetailLoading(isLoading = state.activityDetailLoading) {
       setHidden(query('[data-activity-detail-loading]'), !isLoading);
       setHidden(query('[data-activity-detail-body]'), isLoading);
+      setHidden(query('[data-activity-summary-editor]'), isLoading);
     }
 
     function beginActivityDetailLoading(activityId) {
@@ -1117,6 +1134,7 @@
       state.rosterRows = [];
       state.activityDetailLogRows = [];
       state.activityDetailLoading = true;
+      state.activitySummary = '';
       state.exportCsv = '';
       resetActivityDetailFilters();
       renderActivityRows();
@@ -1135,6 +1153,7 @@
 
       renderRosterRows();
       renderActivityDetailLogRows();
+      renderActivitySummary();
       renderActivityDetailLoading(true);
     }
 
@@ -1162,6 +1181,9 @@
         state.rosterRows = await resolveAvatarRows(activityUi.buildRosterRows(detail));
         state.activityDetailLogRows = activityDetailLogRows;
         state.activityDetailLoading = false;
+        state.activitySummary = detail.activity && detail.activity.activitySummary
+          ? String(detail.activity.activitySummary)
+          : '';
         state.exportCsv = '';
         resetActivityDetailFilters();
         renderActivityRows();
@@ -1177,6 +1199,7 @@
         }
 
         renderActivityDetailLoading(false);
+        renderActivitySummary();
         renderRosterRows();
         renderActivityDetailLogRows();
       } catch (error) {
@@ -1254,6 +1277,57 @@
       await refreshActivityDetailLogs(activityId);
     }
 
+    async function saveActivitySummary() {
+      const activityId = getSelectedActivityId();
+      const input = query('[data-activity-summary]');
+      if (!activityId || !input) {
+        return;
+      }
+
+      const result = await api.updateActivityReview(activityId, {
+        activitySummary: input.value || ''
+      });
+      const activity = (result && result.activity) || {};
+      state.activitySummary = Object.prototype.hasOwnProperty.call(activity, 'activitySummary')
+        ? activity.activitySummary
+        : input.value || '';
+      renderActivitySummary();
+      await refreshActivityDetailLogs(activityId);
+    }
+
+    async function savePerformanceDescription(registrationId) {
+      const activityId = getSelectedActivityId();
+      const input = query(
+        `[data-performance-description="${escapeSelectorValue(registrationId)}"]`
+      );
+      if (!activityId || !registrationId || !input) {
+        return;
+      }
+
+      const result = await api.updateActivityReview(activityId, {
+        registrationId,
+        performanceDescription: input.value || ''
+      });
+      const registration = (result && result.registration) || {};
+      const performanceDescription = Object.prototype.hasOwnProperty.call(
+        registration,
+        'performanceDescription'
+      )
+        ? registration.performanceDescription
+        : input.value || '';
+
+      state.rosterRows = state.rosterRows.map(row =>
+        row.registrationId === registrationId
+          ? {
+              ...row,
+              performanceDescription
+            }
+          : row
+      );
+      renderRosterRows();
+      await refreshActivityDetailLogs(activityId);
+    }
+
     async function saveUserManagerAlias(targetOpenId) {
       const input = query(`[data-user-manager-alias="${escapeSelectorValue(targetOpenId)}"]`);
       if (!targetOpenId || !input) {
@@ -1267,9 +1341,11 @@
     async function loadAttendanceStats() {
       const startAt = query('[name="statsStartAt"]');
       const endAt = query('[name="statsEndAt"]');
+      const activityType = query('[name="statsActivityType"]');
       const result = await api.getAttendanceStats({
         startAt: startAt ? startAt.value : '',
-        endAt: endAt ? endAt.value : ''
+        endAt: endAt ? endAt.value : '',
+        activityType: activityType && activityType.value ? activityType.value : 'all'
       });
       state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
       renderStatsRows();
@@ -1349,8 +1425,9 @@
     function exportActivityRosterView() {
       const rows = getFilteredRosterRows().map(row => ({
         队伍: row.teamName,
-        报名名: row.signupName,
+        报名名称: row.signupName,
         备注: row.managerAlias,
+        表现描述: row.performanceDescription,
         位置偏好: formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
         代报名: row.proxyRegistration ? '是' : '否',
         出勤状态: formatStatusText(row.attendanceStatus)
@@ -1416,6 +1493,7 @@
       state.activityDetailRosterKeyword = '';
       state.activityDetailLogKeyword = '';
       state.activityDetailLoading = false;
+      state.activitySummary = '';
       state.notificationLogRows = [];
       state.exportCsv = '';
       hideActivityContextMenu();
@@ -1647,6 +1725,18 @@
           if (button.dataset.action === 'save-manager-alias') {
             return runWithButtonElement(button, '保存中...', () =>
               saveManagerAlias(button.dataset.targetOpenid)
+            )
+              .catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'save-activity-summary') {
+            return runWithButtonElement(button, '保存中...', saveActivitySummary)
+              .catch(error => renderIdentity(error.message));
+          }
+
+          if (button.dataset.action === 'save-performance-description') {
+            return runWithButtonElement(button, '保存中...', () =>
+              savePerformanceDescription(button.dataset.registrationId)
             )
               .catch(error => renderIdentity(error.message));
           }

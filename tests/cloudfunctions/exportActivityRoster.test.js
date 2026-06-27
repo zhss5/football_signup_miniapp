@@ -70,6 +70,7 @@ function createFakeDb(options = {}) {
         preferredPositions: ['Forward', 'Midfield'],
         proxyRegistration: false,
         attendanceStatus: 'absent',
+        performanceDescription: 'Strong pressing',
         joinedAt: '2026-06-01T10:00:00.000Z'
       },
       reg_ben: {
@@ -187,6 +188,7 @@ test('export rows include manager alias preferred positions proxy flag and atten
         signupName: 'Guest',
         preferredPositions: ['Defender'],
         proxyRegistration: true,
+        performanceDescription: 'Filled in at the back',
         joinedAt: '2026-06-01T10:03:00.000Z'
       }
     }
@@ -210,7 +212,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
       managerAlias: 'Zhang San',
       preferredPositions: ['Forward', 'Midfield'],
       proxyRegistration: false,
-      attendanceStatus: 'absent'
+      attendanceStatus: 'absent',
+      performanceDescription: 'Strong pressing'
     },
     {
       activityId: 'activity_1',
@@ -223,7 +226,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
       managerAlias: '',
       preferredPositions: ['Defender'],
       proxyRegistration: true,
-      attendanceStatus: 'present'
+      attendanceStatus: 'present',
+      performanceDescription: 'Filled in at the back'
     },
     {
       activityId: 'activity_1',
@@ -236,7 +240,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
       managerAlias: '',
       preferredPositions: ['Goalkeeper'],
       proxyRegistration: false,
-      attendanceStatus: 'present'
+      attendanceStatus: 'present',
+      performanceDescription: ''
     }
   ]);
 });

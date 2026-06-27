@@ -197,6 +197,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-activity-title]': createElement(),
     '[data-activity-detail-loading]': createElement(),
     '[data-activity-detail-body]': createElement(),
+    '[data-activity-summary-editor]': createElement(),
+    '[data-activity-summary]': createElement(),
     '[data-roster-keyword]': createElement(),
     '[data-activity-detail-logs-keyword]': createElement(),
     '[data-export-output]': createElement(),
@@ -209,6 +211,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-logs-status]': createElement(),
     '[name="statsStartAt"]': createElement(),
     '[name="statsEndAt"]': createElement(),
+    '[name="statsActivityType"]': createElement(),
     '[name="activityKeyword"]': createElement(),
     '[name="activityStatus"]': createElement(),
     '[name="activityOrganizerKeyword"]': createElement(),
@@ -250,6 +253,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     confirmActivity: jest.fn().mockResolvedValue({
       confirmed: true
     }),
+    updateActivityReview: jest.fn().mockResolvedValue({}),
     getAttendanceStats: jest.fn().mockResolvedValue({
       items: []
     }),
@@ -904,7 +908,8 @@ test('attendance stats submit shows eligible-activity empty state for blank resu
 
   expect(api.getAttendanceStats).toHaveBeenCalledWith({
     startAt: '2026-06-01',
-    endAt: '2026-06-30'
+    endAt: '2026-06-30',
+    activityType: 'all'
   });
   expect(elements['[data-attendance-stats-table]'].innerHTML).toBe('');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(false);
@@ -1579,7 +1584,8 @@ test('activity detail loads and renders current activity operation logs', async 
 test('activity detail attendance and alias actions update the current rows without reloading the detail', async () => {
   const getActivityDetail = jest.fn().mockResolvedValue({
     activity: {
-      title: 'Friday Football'
+      title: 'Friday Football',
+      activitySummary: 'Old summary'
     },
     teams: [
       {
@@ -1610,6 +1616,18 @@ test('activity detail attendance and alias actions update the current rows witho
       managerAlias: 'New alias'
     }
   });
+  const updateActivityReview = jest.fn()
+    .mockResolvedValueOnce({
+      registration: {
+        registrationId: 'reg_1',
+        performanceDescription: 'Strong press'
+      }
+    })
+    .mockResolvedValueOnce({
+      activity: {
+        activitySummary: 'Good match'
+      }
+    });
   const listActivityLogs = jest.fn()
     .mockResolvedValueOnce({
       items: []
@@ -1636,7 +1654,8 @@ test('activity detail attendance and alias actions update the current rows witho
       getActivityDetail,
       listActivityLogs,
       setRegistrationAttendance,
-      updateParticipantManagerAlias
+      updateParticipantManagerAlias,
+      updateActivityReview
     }
   );
 
@@ -1665,6 +1684,33 @@ test('activity detail attendance and alias actions update the current rows witho
   expect(getActivityDetail).not.toHaveBeenCalled();
   expect(elements['[data-roster-table]'].innerHTML).toContain('New alias');
   expect(elements['[data-activity-detail-logs-table]'].innerHTML).toContain('Alex 标记为缺勤');
+
+  elements['[data-performance-description="reg_1"]'] = {
+    value: 'Strong press'
+  };
+  await appRoot.click(createElement({
+    action: 'save-performance-description',
+    registrationId: 'reg_1'
+  }));
+
+  expect(updateActivityReview).toHaveBeenCalledWith('activity_1', {
+    registrationId: 'reg_1',
+    performanceDescription: 'Strong press'
+  });
+  expect(getActivityDetail).not.toHaveBeenCalled();
+  expect(elements['[data-roster-table]'].innerHTML).toContain('Strong press');
+
+  expect(elements['[data-activity-summary]'].value).toBe('Old summary');
+  elements['[data-activity-summary]'].value = 'Good match';
+  await appRoot.click(createElement({
+    action: 'save-activity-summary'
+  }));
+
+  expect(updateActivityReview).toHaveBeenCalledWith('activity_1', {
+    activitySummary: 'Good match'
+  });
+  expect(getActivityDetail).not.toHaveBeenCalled();
+  expect(elements['[data-activity-summary]'].value).toBe('Good match');
 });
 
 test('activity detail exports filtered roster and activity logs as CSV text', async () => {
@@ -1742,7 +1788,7 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
   elements['[data-roster-keyword]'].eventHandlers.input();
   appRoot.click(createElement({ action: 'export-activity-roster-view' }));
 
-  expect(elements['[data-export-output]'].value).toContain('队伍,报名名,备注,位置偏好,代报名,出勤状态');
+  expect(elements['[data-export-output]'].value).toContain('队伍,报名名称,备注,表现描述,位置偏好,代报名,出勤状态');
   expect(elements['[data-export-output]'].value).not.toContain('Alex');
   expect(elements['[data-export-output]'].value).toContain('Ben');
 

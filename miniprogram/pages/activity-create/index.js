@@ -32,6 +32,10 @@ const {
 const { canCreateActivity } = require('../../utils/roles');
 
 const DESCRIPTION_FIELD_SELECTOR = '#activity-description-field';
+const ACTIVITY_TYPE_OPTIONS = [
+  { value: 'internal', labelKey: 'activityCreate.activityTypes.internal' },
+  { value: 'external', labelKey: 'activityCreate.activityTypes.external' }
+];
 
 function getImagePath(result) {
   if (Array.isArray(result.tempFiles) && result.tempFiles[0]) {
@@ -314,6 +318,7 @@ Page({
     imageHintText: '',
     detailImageHintText: '',
     selectedPinText: '',
+    activityTypeOptions: [],
     authorizationChecked: false,
     canCreateActivity: false,
     canEditActivity: false,
@@ -382,7 +387,11 @@ Page({
         teamNamePrefix: i18n.teamEditor.teamNamePrefix,
         colorPaletteTitle: i18n.teamEditor.colorPaletteTitle,
         colorOptions: TEAM_COLOR_OPTIONS.map(option => translate(option.labelKey))
-      }
+      },
+      activityTypeOptions: ACTIVITY_TYPE_OPTIONS.map(option => ({
+        value: option.value,
+        label: translate(option.labelKey)
+      }))
     });
     this.syncDerivedState(form, translate);
     return translate;
@@ -544,6 +553,15 @@ Page({
     if (field === 'activityDate' && !this.data.form.signupDeadlineDate) {
       form.signupDeadlineDate = event.detail.value;
     }
+
+    this.syncDerivedState(form);
+  },
+
+  onActivityTypeChange(event) {
+    const form = {
+      ...this.data.form,
+      activityType: event.detail.value || 'internal'
+    };
 
     this.syncDerivedState(form);
   },

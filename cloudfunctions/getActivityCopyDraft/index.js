@@ -3,6 +3,7 @@ const { resolveOpenIdFromEvent } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
+const { normalizeActivityType } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -41,6 +42,7 @@ function buildCopyDraft(activity, teams) {
 
   return {
     title: normalizeString(activity.title),
+    activityType: normalizeActivityType(activity.activityType),
     startAt: '',
     endAt: '',
     signupDeadlineAt: '',

@@ -55,6 +55,15 @@
     };
   }
 
+  function normalizeActivityType(value) {
+    const type = String(value || '').trim();
+    return type === 'external' ? 'external' : 'internal';
+  }
+
+  function formatActivityType(value) {
+    return normalizeActivityType(value) === 'external' ? '外战' : '内战';
+  }
+
   function buildActivityRows(items = []) {
     return items.map(activity => ({
       activityId: activity._id || '',
@@ -62,6 +71,8 @@
       startAt: formatBeijingDateTime(activity.startAt),
       status: activity.status || '',
       confirmStatus: activity.confirmStatus || 'pending',
+      activityType: normalizeActivityType(activity.activityType),
+      activityTypeText: formatActivityType(activity.activityType),
       statusText: activity.status || '',
       canConfirmProceeding:
         activity.status === 'published' && activity.confirmStatus !== 'confirmed',
@@ -91,7 +102,8 @@
           ? member.preferredPositions.filter(Boolean).join(' / ')
           : '',
         proxyRegistration: Boolean(member.proxyRegistration),
-        attendanceStatus: member.attendanceStatus || 'present'
+        attendanceStatus: member.attendanceStatus || 'present',
+        performanceDescription: String(member.performanceDescription || '').trim()
       }))
     );
   }
@@ -256,6 +268,14 @@
       return `${targetName} 标记为${ATTENDANCE_LABELS[status] || status || '出勤状态'}`;
     }
 
+    if (log.action === 'activity_summary_update') {
+      return '更新活动总结';
+    }
+
+    if (log.action === 'performance_description_update') {
+      return `${targetName} 更新表现描述`;
+    }
+
     return log.action || '';
   }
 
@@ -329,6 +349,7 @@
     buildActivityRows,
     buildActivitySearchParams,
     buildAttendanceRows,
+    formatActivityType,
     formatBeijingDateTime,
     buildNotificationLogRows,
     buildRosterRows,

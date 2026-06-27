@@ -43,6 +43,7 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
         startAt: '2026-06-05T20:00:00.000Z',
         status: 'published',
         confirmStatus: 'pending',
+        activityType: 'external',
         organizerOpenId: 'openid_owner',
         organizerName: 'Owner Zhang',
         organizerManagerAlias: 'Coach Zhang',
@@ -57,6 +58,8 @@ test('buildActivityRows exposes operations-friendly activity metadata', () => {
       startAt: '2026-06-06 04:00',
       status: 'published',
       confirmStatus: 'pending',
+      activityType: 'external',
+      activityTypeText: '外战',
       statusText: 'published',
       canConfirmProceeding: true,
       organizerOpenId: 'openid_owner',
@@ -91,6 +94,20 @@ test('buildActivityRows displays organizers as alias then name then openid', () 
   ).toEqual(['Coach Zhang', 'Owner Li', 'openid_only']);
 });
 
+test('buildActivityRows treats missing activity type as internal', () => {
+  expect(
+    buildActivityRows([
+      {
+        _id: 'activity_old',
+        title: 'Historical Match'
+      }
+    ])[0]
+  ).toMatchObject({
+    activityType: 'internal',
+    activityTypeText: '内战'
+  });
+});
+
 test('formatBeijingDateTime renders timestamps in Beijing time', () => {
   expect(formatBeijingDateTime('2026-06-10T12:00:00.000Z')).toBe('2026-06-10 20:00');
   expect(formatBeijingDateTime('2026-12-31T18:30:00.000Z')).toBe('2027-01-01 02:30');
@@ -113,7 +130,8 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
             avatarUrl: 'cloud://test-env/activity-avatars/player.jpg',
             preferredPositions: ['forward', 'goalkeeper'],
             proxyRegistration: false,
-            attendanceStatus: 'present'
+            attendanceStatus: 'present',
+            performanceDescription: 'Pressed high'
           },
           {
             registrationId: 'reg_2',
@@ -139,7 +157,8 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
       avatarUrl: 'cloud://test-env/activity-avatars/player.jpg',
       preferredPositions: 'forward / goalkeeper',
       proxyRegistration: false,
-      attendanceStatus: 'present'
+      attendanceStatus: 'present',
+      performanceDescription: 'Pressed high'
     },
     {
       teamId: 'team_white',
@@ -151,7 +170,8 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
       avatarUrl: '',
       preferredPositions: '',
       proxyRegistration: true,
-      attendanceStatus: 'absent'
+      attendanceStatus: 'absent',
+      performanceDescription: ''
     }
   ]);
 });

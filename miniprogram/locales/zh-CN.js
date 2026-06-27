@@ -259,11 +259,17 @@ module.exports.activity.timeLabel = '\u6d3b\u52a8\u65f6\u95f4';
 module.exports.activity.activityImagesTitle = '\u6d3b\u52a8\u56fe\u7247';
 module.exports.activity.actions.confirmProceeding = '\u786e\u8ba4\u4e3e\u884c';
 module.exports.activityCreate.notificationSettings = '\u901a\u77e5\u8bbe\u7f6e';
+module.exports.activityCreate.activityType = '\u6d3b\u52a8\u7c7b\u578b';
+module.exports.activityCreate.activityTypes = {
+  internal: '\u5185\u6218',
+  external: '\u5916\u6218'
+};
 module.exports.activityCreate.notificationSettingsHint =
   '\u4ec5\u7528\u4e8e\u901a\u77e5\u6d88\u606f\uff0c\u4e0d\u4f1a\u5c55\u793a\u5728\u6d3b\u52a8\u8be6\u60c5\u9875\u3002';
 module.exports.activityCreate.notificationHint =
   '\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5\u6e29\u99a8\u63d0\u793a';
 module.exports.errors.activityDescriptionTooLong = '\u6d3b\u52a8\u8bf4\u660e\u6700\u591a\u652f\u6301 2000 \u5b57';
+module.exports.errors.invalidActivityType = '\u6d3b\u52a8\u7c7b\u578b\u65e0\u6548';
 module.exports.activityCreate.notificationHintPlaceholder =
   '\u53ef\u9009\uff0c\u7528\u4e8e\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5';
 module.exports.activityCreate.notificationHintHint =

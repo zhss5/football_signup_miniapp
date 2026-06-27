@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260620-avatar-preview-fallback';
+const WEB_ADMIN_ASSET_VERSION = '20260627-activity-type-review';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -72,6 +72,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('list="activityOrganizerOptions"');
   expect(html).toContain('data-activity-organizer-options');
   expect(html).toContain('<th>最大可报名数</th>');
+  expect(html).toContain('<th>活动类型</th>');
   expect(html).toContain('<th>序号</th>');
   expect(html).not.toContain('组织者 OpenID');
   expect(html).toContain('data-stats-load-button');
@@ -82,6 +83,9 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-action="load-attendance-stats"');
   expect(html).toContain('data-action="export-attendance-stats"');
   expect(html).toContain('导出出勤统计 CSV');
+  expect(html).toContain('name="statsActivityType"');
+  expect(html).toContain('内战统计');
+  expect(html).toContain('外战统计');
   expect(html).not.toContain('data-attendance-import-file');
   expect(html).not.toContain('data-attendance-import-status');
   expect(html).not.toContain('导入Excel/CSV');
@@ -101,6 +105,9 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-action="close-activity-detail"');
   expect(html).toContain('data-roster-keyword');
   expect(html).toContain('data-roster-count');
+  expect(html).toContain('data-activity-summary');
+  expect(html).toContain('data-action="save-activity-summary"');
+  expect(html).toContain('活动总结');
   expect(html).toContain('data-activity-detail-logs-keyword');
   expect(html).toContain('data-activity-detail-logs-count');
   expect(html).toContain('data-action="export-activity-roster-view"');
@@ -111,6 +118,7 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-activity-detail-body');
   expect(html).toContain('导出CSV');
   expect(html).toContain('活动报名人列表');
+  expect(html).toContain('<th>表现描述</th>');
   expect(html).toContain('data-activity-detail-logs-table');
   expect(html).toContain('报名活动流水');
   expect(html).toContain('已确认或已开始');
@@ -177,6 +185,8 @@ test('web admin user management row actions have stable spacing', () => {
   expect(css).toContain('.role-management-control');
   expect(css).toContain('.roster-alias-control');
   expect(css).toContain('.attendance-status-control');
+  expect(css).toContain('.roster-performance-control');
+  expect(css).toContain('.activity-summary-editor');
   expect(css).toContain('.user-display');
   expect(css).toContain('.user-avatar-button');
   expect(css).toContain('.avatar-preview-modal');

@@ -4,6 +4,7 @@ const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
 const { nowIso } = require('./time');
+const { normalizeActivityType } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -101,6 +102,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       (!Number.isFinite(deadline) || Date.parse(stamp) <= deadline)
   );
   const canManageRegistrations = canEditActivity(activity.data, viewerUser, openid);
+  const activityPayload = {
+    ...activity.data,
+    activityType: normalizeActivityType(activity.data.activityType)
+  };
+  if (!canManageRegistrations) {
+    delete activityPayload.activitySummary;
+    delete activityPayload.activitySummaryUpdatedAt;
+    delete activityPayload.activitySummaryUpdatedBy;
+  }
   const registrationNotificationSubscription = canManageRegistrations
     ? await getRegistrationNotificationSubscriptionState(db, event.activityId, openid)
     : {
@@ -146,6 +156,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         member.attendanceStatus = registration.attendanceStatus || 'present';
         member.attendanceMarkedAt = registration.attendanceMarkedAt || '';
         member.attendanceMarkedBy = registration.attendanceMarkedBy || '';
+        member.performanceDescription = String(registration.performanceDescription || '').trim();
 
         if (!registration.proxyRegistration) {
           member.managerAlias = String(user.managerAlias || '').trim();
@@ -157,7 +168,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }, {});
 
   return {
-    activity: activity.data,
+    activity: activityPayload,
     teams: teamsRes.data
       .filter(team => team.status !== 'inactive')
       .sort((left, right) => left.sort - right.sort)

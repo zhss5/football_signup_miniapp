@@ -25,6 +25,7 @@ function createFakeDb(options = {}) {
           longitude: 121.4737
         },
         description: 'Bring white and red kits.',
+        activityType: 'external',
         insuranceLink: 'https://insurance.example.com/apply',
         notificationHint: 'Bring both kits',
         registrationNoticeThreshold: 16,
@@ -140,6 +141,7 @@ test('organizer can start a copy draft from an activity they manage', async () =
       longitude: 121.4737
     },
     description: 'Bring white and red kits.',
+    activityType: 'external',
     insuranceLink: 'https://insurance.example.com/apply',
     notificationHint: 'Bring both kits',
     registrationNoticeThreshold: 16,

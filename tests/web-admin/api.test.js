@@ -54,6 +54,9 @@ test('api client attaches the web admin session token to protected calls', async
   await api.listUsers();
   await api.updateUserRoles('openid_player', ['user']);
   await api.confirmActivity('activity_1');
+  await api.updateActivityReview('activity_1', {
+    activitySummary: 'Summary'
+  });
 
   expect(callFunction).toHaveBeenCalledWith('ensureUserProfile', {
     webAdminSessionToken: 'session_1'
@@ -73,6 +76,11 @@ test('api client attaches the web admin session token to protected calls', async
   expect(callFunction).toHaveBeenCalledWith('notifyActivityParticipants', {
     activityId: 'activity_1',
     notificationType: 'proceeding',
+    webAdminSessionToken: 'session_1'
+  });
+  expect(callFunction).toHaveBeenCalledWith('updateActivityReview', {
+    activityId: 'activity_1',
+    activitySummary: 'Summary',
     webAdminSessionToken: 'session_1'
   });
 });
@@ -166,7 +174,11 @@ test('api client delegates activity operations to existing cloud functions', asy
   await api.setRegistrationAttendance('activity_1', 'reg_1', 'absent');
   await api.updateParticipantManagerAlias('activity_1', 'openid_player', 'Zhang San');
   await api.updateUserManagerAlias('openid_player', 'Left foot');
-  await api.getAttendanceStats({ startAt: '2026-06-01', endAt: '2026-06-30' });
+  await api.updateActivityReview('activity_1', {
+    registrationId: 'reg_1',
+    performanceDescription: 'Pressed high'
+  });
+  await api.getAttendanceStats({ startAt: '2026-06-01', endAt: '2026-06-30', activityType: 'external' });
   await api.exportActivityRoster('activity_1');
   await api.listActivityLogs({ activityId: 'activity_1' });
   await api.listNotificationLogs({ activityId: 'activity_1' });
@@ -196,9 +208,15 @@ test('api client delegates activity operations to existing cloud functions', asy
     targetOpenId: 'openid_player',
     managerAlias: 'Left foot'
   });
+  expect(callFunction).toHaveBeenCalledWith('updateActivityReview', {
+    activityId: 'activity_1',
+    registrationId: 'reg_1',
+    performanceDescription: 'Pressed high'
+  });
   expect(callFunction).toHaveBeenCalledWith('getAttendanceStats', {
     startAt: '2026-06-01',
-    endAt: '2026-06-30'
+    endAt: '2026-06-30',
+    activityType: 'external'
   });
   expect(callFunction).toHaveBeenCalledWith('exportActivityRoster', {
     activityId: 'activity_1'

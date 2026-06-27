@@ -88,6 +88,25 @@ describe('validateActivityDraft', () => {
     ).toThrow('Only one activity image is supported right now');
   });
 
+  test('rejects invalid activity type values', () => {
+    expect(() =>
+      validateActivityDraft({
+        title: 'Saturday 8-10',
+        activityType: 'league',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        signupLimitTotal: 12,
+        imageList: [],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      })
+    ).toThrow('Invalid activity type');
+  });
+
   test('rejects registration notice thresholds outside the total signup limit', () => {
     const draft = {
       title: 'Saturday 8-10',

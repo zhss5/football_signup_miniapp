@@ -2,6 +2,9 @@ const MAX_ACTIVITY_IMAGES = 1;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_DETAIL_IMAGES = 5;
 const MAX_SIGNUP_NAME_LENGTH = 16;
+const ACTIVITY_TYPE_INTERNAL = 'internal';
+const ACTIVITY_TYPE_EXTERNAL = 'external';
+const ACTIVITY_TYPE_VALUES = [ACTIVITY_TYPE_INTERNAL, ACTIVITY_TYPE_EXTERNAL];
 
 function normalizeSignupName(value) {
   const normalizedWhitespace = String(value || '')
@@ -22,6 +25,20 @@ function parseDate(value, fieldName) {
   return stamp;
 }
 
+function normalizeActivityType(value) {
+  const type = String(value || '').trim();
+
+  if (!type) {
+    return ACTIVITY_TYPE_INTERNAL;
+  }
+
+  if (!ACTIVITY_TYPE_VALUES.includes(type)) {
+    throw new Error('Invalid activity type');
+  }
+
+  return type;
+}
+
 function validateActivityDraft(draft) {
   if (!draft.title || !draft.title.trim()) {
     throw new Error('Activity title is required');
@@ -30,6 +47,8 @@ function validateActivityDraft(draft) {
   if (!draft.addressText || !draft.addressText.trim()) {
     throw new Error('Activity address is required');
   }
+
+  normalizeActivityType(draft.activityType);
 
   if (Array.from(String(draft.description || '')).length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {
     throw new Error('Activity description supports up to 2000 characters');
@@ -128,7 +147,11 @@ function validateSignupPayload(payload) {
 }
 
 module.exports = {
+  ACTIVITY_TYPE_EXTERNAL,
+  ACTIVITY_TYPE_INTERNAL,
+  ACTIVITY_TYPE_VALUES,
   MAX_SIGNUP_NAME_LENGTH,
+  normalizeActivityType,
   normalizeSignupName,
   validateActivityDraft,
   validateSignupPayload

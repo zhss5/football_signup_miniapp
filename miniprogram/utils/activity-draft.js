@@ -3,6 +3,9 @@ const { normalizeTeamColorKey } = require('./team-colors');
 
 const MAX_NOTIFICATION_HINT_LENGTH = 20;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
+const ACTIVITY_TYPE_INTERNAL = 'internal';
+const ACTIVITY_TYPE_EXTERNAL = 'external';
+const ACTIVITY_TYPE_VALUES = [ACTIVITY_TYPE_INTERNAL, ACTIVITY_TYPE_EXTERNAL];
 
 function limitTextLength(value, maxLength) {
   return Array.from(String(value || '')).slice(0, maxLength).join('');
@@ -11,6 +14,16 @@ function limitTextLength(value, maxLength) {
 function normalizeNotificationHint(value) {
   const text = String(value || '').replace(CONTROL_CHARACTER_PATTERN, ' ').trim();
   return limitTextLength(text, MAX_NOTIFICATION_HINT_LENGTH);
+}
+
+function normalizeActivityType(value) {
+  const type = String(value || '').trim();
+
+  if (!type) {
+    return ACTIVITY_TYPE_INTERNAL;
+  }
+
+  return ACTIVITY_TYPE_VALUES.includes(type) ? type : ACTIVITY_TYPE_INTERNAL;
 }
 
 function resolveNow(nowOption) {
@@ -70,6 +83,7 @@ function createDefaultActivityForm(options = {}) {
 
   return {
     title: '',
+    activityType: ACTIVITY_TYPE_INTERNAL,
     activityDate: defaultDate,
     startTime: '20:00',
     endTime: '22:00',
@@ -142,6 +156,7 @@ function buildActivityPayload(form) {
 
   return {
     ...payloadBase,
+    activityType: normalizeActivityType(form.activityType),
     teams,
     startAt: combineDateAndTime(form.activityDate, form.startTime),
     endAt: combineDateAndTime(form.activityDate, form.endTime),
@@ -184,6 +199,7 @@ function buildActivityEditForm(activity = {}, teams = []) {
 
   return {
     title: activity.title || '',
+    activityType: normalizeActivityType(activity.activityType),
     activityDate: startAt ? formatDateInputValue(startAt) : '',
     startTime: startAt ? formatTimeInputValue(startAt) : '',
     endTime: endAt ? formatTimeInputValue(endAt) : '',
@@ -229,6 +245,7 @@ function buildActivityCopyForm(draft = {}) {
 
   return {
     title: draft.title || '',
+    activityType: normalizeActivityType(draft.activityType),
     activityDate: '',
     startTime: '',
     endTime: '',
@@ -256,11 +273,15 @@ function buildActivityCopyForm(draft = {}) {
 }
 
 module.exports = {
+  ACTIVITY_TYPE_EXTERNAL,
+  ACTIVITY_TYPE_INTERNAL,
+  ACTIVITY_TYPE_VALUES,
   buildActivityCopyForm,
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
   getDefaultRegistrationNoticeThreshold,
+  normalizeActivityType,
   normalizeNotificationHint,
   normalizeRegistrationNoticeThreshold,
   summarizeTeamSlots

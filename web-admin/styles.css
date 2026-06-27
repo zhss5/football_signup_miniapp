@@ -523,7 +523,8 @@ select {
 }
 
 .roster-alias-control,
-.attendance-status-control {
+.attendance-status-control,
+.roster-performance-control {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -534,12 +535,24 @@ select {
   width: 180px;
 }
 
+.roster-performance-control textarea {
+  width: 220px;
+  min-height: 34px;
+  max-height: 72px;
+  box-sizing: border-box;
+  padding: 7px 8px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  resize: vertical;
+}
+
 .attendance-status-control span {
   min-width: 40px;
 }
 
 .attendance-status-control button,
-.roster-alias-control button {
+.roster-alias-control button,
+.roster-performance-control button {
   min-width: 88px;
 }
 
@@ -722,6 +735,44 @@ select {
   font-weight: 700;
 }
 
+.activity-summary-editor {
+  flex: 0 0 auto;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #e5e8ef;
+  border-radius: 2px;
+  background: #fbfcff;
+}
+
+.activity-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.activity-summary-header button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2e6bd9;
+  border-radius: 2px;
+  background: #2e6bd9;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activity-summary-editor textarea {
+  width: 100%;
+  min-height: 70px;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #c9d4e5;
+  border-radius: 6px;
+  resize: vertical;
+}
+
 .loading-spinner {
   width: 18px;
   height: 18px;
@@ -732,6 +783,7 @@ select {
 }
 
 .activity-detail-body {
+  flex: 1 1 auto;
   display: grid;
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;

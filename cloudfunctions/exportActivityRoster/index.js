@@ -67,6 +67,7 @@ function toExportRow(activity, registration, team, user) {
     preferredPositions: normalizeArray(registration.preferredPositions),
     proxyRegistration,
     attendanceStatus: normalizeAttendanceStatus(registration.attendanceStatus),
+    performanceDescription: String(registration.performanceDescription || '').trim(),
     teamSort: getTeamSort(team),
     joinedAt: registration.joinedAt || ''
   };

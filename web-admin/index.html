@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260620-avatar-preview-fallback" />
+    <link rel="stylesheet" href="./styles.css?v=20260627-activity-type-review" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -150,6 +150,7 @@
                   <tr>
                     <th>序号</th>
                     <th>活动</th>
+                    <th>活动类型</th>
                     <th>开始时间</th>
                     <th>状态</th>
                     <th>组织者</th>
@@ -196,6 +197,20 @@
                     <span>正在加载活动详情...</span>
                   </div>
 
+                  <section class="activity-summary-editor" data-activity-summary-editor hidden>
+                    <div class="activity-summary-header">
+                      <h4>活动总结</h4>
+                      <button type="button" data-action="save-activity-summary">
+                        保存总结
+                      </button>
+                    </div>
+                    <textarea
+                      data-activity-summary
+                      maxlength="2000"
+                      placeholder="活动总结，最多 2000 字"
+                    ></textarea>
+                  </section>
+
                   <div class="activity-detail-body" data-activity-detail-body>
                     <section class="detail-subsection">
                       <div class="detail-subsection-header">
@@ -223,6 +238,7 @@
                               <th>队伍</th>
                               <th>报名人</th>
                               <th>备注</th>
+                              <th>表现描述</th>
                               <th>位置偏好</th>
                               <th>代报名</th>
                               <th>出勤状态</th>
@@ -282,6 +298,15 @@
                 <label>
                   <span>统计结束</span>
                   <input name="statsEndAt" type="date" />
+                </label>
+
+                <label>
+                  <span>活动类型</span>
+                  <select name="statsActivityType">
+                    <option value="all">全部统计</option>
+                    <option value="internal">内战统计</option>
+                    <option value="external">外战统计</option>
+                  </select>
                 </label>
 
                 <button type="submit" data-stats-load-button>加载统计</button>
@@ -392,13 +417,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/roles.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/api.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./vendor/qrcode.min.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/user-management.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/activity-management.js?v=20260620-avatar-preview-fallback"></script>
-    <script src="./src/app.js?v=20260620-avatar-preview-fallback"></script>
+    <script src="./config.test.js?v=20260627-activity-type-review"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260627-activity-type-review"></script>
+    <script src="./src/roles.js?v=20260627-activity-type-review"></script>
+    <script src="./src/api.js?v=20260627-activity-type-review"></script>
+    <script src="./vendor/qrcode.min.js?v=20260627-activity-type-review"></script>
+    <script src="./src/user-management.js?v=20260627-activity-type-review"></script>
+    <script src="./src/activity-management.js?v=20260627-activity-type-review"></script>
+    <script src="./src/app.js?v=20260627-activity-type-review"></script>
   </body>
 </html>

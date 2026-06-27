@@ -22,6 +22,7 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
   ]);
   expect(form.insuranceLink).toBe('');
   expect(form.notificationHint).toBe('');
+  expect(form.activityType).toBe('internal');
   expect(form.registrationNoticeThreshold).toBe(10);
   expect(form).not.toHaveProperty('requirePhone');
 });
@@ -45,6 +46,7 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
     endTime: '22:00',
     signupDeadlineDate: '2026-04-26',
     signupDeadlineTime: '19:30',
+    activityType: 'external',
     addressText: 'Half Stone',
     insuranceLink: ' https://insurance.example.com/apply ',
     notificationHint: ' 请提前10分钟到场 ',
@@ -54,6 +56,7 @@ test('buildActivityPayload composes activity times and keeps a single uploaded i
   });
 
   expect(payload.insuranceLink).toBe('https://insurance.example.com/apply');
+  expect(payload.activityType).toBe('external');
   expect(payload.notificationHint).toBe('请提前10分钟到场');
   expect(payload.registrationNoticeThreshold).toBe(16);
   expect(payload.coverImage).toBe('wxfile://cover-1.png');
@@ -169,6 +172,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
       startAt,
       endAt,
       signupDeadlineAt,
+      activityType: 'external',
       addressText: 'Old address',
       addressName: 'Old field',
       location: {
@@ -215,6 +219,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     endTime: '22:00',
     signupDeadlineDate: '2026-04-26',
     signupDeadlineTime: '19:30',
+    activityType: 'external',
     addressText: 'Old address',
     addressName: 'Old field',
     description: 'Original notes',
@@ -241,6 +246,7 @@ test('buildActivityCopyForm maps reusable setup into a new draft without source 
     startAt: '',
     endAt: '',
     signupDeadlineAt: '',
+    activityType: 'external',
     addressText: 'Half Stone',
     addressName: 'Half Stone Football Park',
     location: {
@@ -282,6 +288,7 @@ test('buildActivityCopyForm maps reusable setup into a new draft without source 
     endTime: '',
     signupDeadlineDate: '',
     signupDeadlineTime: '',
+    activityType: 'external',
     addressText: 'Half Stone',
     addressName: 'Half Stone Football Park',
     description: 'Original notes',

@@ -64,6 +64,7 @@ test('createActivity stores activity and teams', async () => {
       startAt: '2026-04-26T20:00:00.000Z',
       endAt: '2026-04-26T22:00:00.000Z',
       signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+      activityType: 'external',
       addressText: 'Half Stone',
       signupLimitTotal: 12,
       requirePhone: false,
@@ -78,12 +79,50 @@ test('createActivity stores activity and teams', async () => {
   );
 
   expect(result.activityId).toBe('activity_1');
+  expect(writes[0].data.activityType).toBe('external');
   expect(writes[0].data.registrationNoticeThreshold).toBe(10);
   expect(writes.filter(item => item.name === 'activity_teams')).toHaveLength(2);
   expect(writes.filter(item => item.name === 'activity_teams').map(item => item.data.colorKey)).toEqual([
     'green',
     'red'
   ]);
+});
+
+test('createActivity defaults missing activityType to internal and rejects invalid values', async () => {
+  const writes = [];
+  const fakeDb = createFakeDbWithUserRoles(['organizer'], writes);
+  const basePayload = {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    signupLimitTotal: 12,
+    imageList: [],
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  };
+
+  await createActivity.main(
+    basePayload,
+    { OPENID: 'openid_a' },
+    { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+  );
+
+  expect(writes[0].data.activityType).toBe('internal');
+
+  await expect(
+    createActivity.main(
+      {
+        ...basePayload,
+        activityType: 'league'
+      },
+      { OPENID: 'openid_a' },
+      { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Invalid activity type');
 });
 
 test('createActivity stores map location, deadline, image list, and auto generates a bench team', async () => {

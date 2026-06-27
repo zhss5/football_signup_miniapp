@@ -21,6 +21,20 @@
   </view>
 
   <view class="field">
+    <text class="label">{{i18n.activityCreate.activityType}}</text>
+    <radio-group class="activity-type-options" bindchange="onActivityTypeChange">
+      <label
+        wx:for="{{activityTypeOptions}}"
+        wx:key="value"
+        class="activity-type-option"
+      >
+        <radio value="{{item.value}}" checked="{{form.activityType === item.value}}" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+
+  <view class="field">
     <text class="label">{{i18n.activityCreate.activityDate}}</text>
     <picker mode="date" value="{{form.activityDate}}" data-field="activityDate" bindchange="onPickerChange">
       <view class="picker-input">{{form.activityDate}}</view>

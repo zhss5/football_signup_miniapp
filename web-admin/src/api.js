@@ -193,6 +193,13 @@
         }));
       },
 
+      updateActivityReview(activityId, payload = {}) {
+        return invoke('updateActivityReview', withWebAdminSession({
+          activityId,
+          ...payload
+        }));
+      },
+
       getAttendanceStats(params = {}) {
         return invoke('getAttendanceStats', withWebAdminSession({
           ...params

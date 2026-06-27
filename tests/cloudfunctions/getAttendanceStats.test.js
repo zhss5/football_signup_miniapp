@@ -457,6 +457,72 @@ test('proxy signups with the same proxy name are grouped across activities', asy
   });
 });
 
+test('attendance stats can filter by activity type and treats historical missing type as internal', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_external: {
+        _id: 'activity_external',
+        title: 'External Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'confirmed',
+        activityType: 'external',
+        startAt: '2026-05-12T12:00:00.000Z'
+      },
+      activity_internal_explicit: {
+        _id: 'activity_internal_explicit',
+        title: 'Internal Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'confirmed',
+        activityType: 'internal',
+        startAt: '2026-05-13T12:00:00.000Z'
+      }
+    },
+    registrations: {
+      reg_external_player: {
+        _id: 'reg_external_player',
+        activityId: 'activity_external',
+        userOpenId: 'openid_external',
+        signupName: 'External Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_internal_player: {
+        _id: 'reg_internal_player',
+        activityId: 'activity_internal_explicit',
+        userOpenId: 'openid_internal',
+        signupName: 'Internal Player',
+        status: 'joined',
+        attendanceStatus: 'present'
+      }
+    }
+  });
+
+  const internalResult = await getAttendanceStats.main(
+    {
+      ...dateRange,
+      activityType: 'internal'
+    },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+  const externalResult = await getAttendanceStats.main(
+    {
+      ...dateRange,
+      activityType: 'external'
+    },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+
+  expect(internalResult.items.map(item => item.participantName)).toEqual(
+    expect.arrayContaining(['Alex', 'Ben', 'Internal Player'])
+  );
+  expect(internalResult.items.map(item => item.participantName)).not.toContain('External Player');
+  expect(externalResult.items.map(item => item.participantName)).toEqual(['External Player']);
+});
+
 test('real signups with the same display name are grouped by openid instead of name', async () => {
   const db = createFakeDb({
     users: {

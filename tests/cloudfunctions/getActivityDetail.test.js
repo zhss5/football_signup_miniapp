@@ -27,7 +27,8 @@ test('getActivityDetail groups joined members under each team', async () => {
     _id: 'activity_1',
     title: 'Saturday 8-10',
     organizerOpenId: 'openid_owner',
-    addressText: 'Half Stone'
+    addressText: 'Half Stone',
+    activitySummary: 'Manager-only summary'
   };
   const teams = [
     {
@@ -60,6 +61,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       attendanceStatus: 'absent',
       attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
       attendanceMarkedBy: 'openid_owner',
+      performanceDescription: 'Pressed well',
       joinedAt: '2026-04-19T10:00:00.000Z'
     },
     {
@@ -70,6 +72,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       status: 'joined',
       signupName: 'Chris',
       proxyRegistration: false,
+      performanceDescription: 'Good build-up play',
       joinedAt: '2026-04-19T10:05:00.000Z'
     }
   ];
@@ -150,6 +153,7 @@ test('getActivityDetail groups joined members under each team', async () => {
   );
 
   expect(result.teams).toHaveLength(2);
+  expect(result.activity.activitySummary).toBe('Manager-only summary');
   expect(result.teams[0].members[0]).toMatchObject({
     registrationId: 'activity_1_openid_a',
     signupName: 'Alex',
@@ -158,12 +162,14 @@ test('getActivityDetail groups joined members under each team', async () => {
     proxyRegistration: true,
     attendanceStatus: 'absent',
     attendanceMarkedAt: '2026-05-19T10:00:00.000Z',
-    attendanceMarkedBy: 'openid_owner'
+    attendanceMarkedBy: 'openid_owner',
+    performanceDescription: 'Pressed well'
   });
   expect(result.teams[1].members[0]).toMatchObject({
     signupName: 'Chris',
     avatarUrl: 'cloud://prod-env-123/user-avatars/chris.jpg',
-    managerAlias: 'Zhang San'
+    managerAlias: 'Zhang San',
+    performanceDescription: 'Good build-up play'
   });
 
   const regularResult = await getActivityDetail.main(
@@ -178,6 +184,8 @@ test('getActivityDetail groups joined members under each team', async () => {
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('registrationId');
   expect(regularResult.teams[0].members[0]).not.toHaveProperty('attendanceStatus');
+  expect(regularResult.teams[0].members[0]).not.toHaveProperty('performanceDescription');
+  expect(regularResult.activity).not.toHaveProperty('activitySummary');
   expect(regularResult.teams[1].members[0]).not.toHaveProperty('managerAlias');
 });
 

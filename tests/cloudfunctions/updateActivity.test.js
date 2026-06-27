@@ -23,6 +23,7 @@ function createFakeDb(options = {}) {
         signupDeadlineAt: '2026-04-26T19:30:00.000Z',
         addressText: 'Old address',
         addressName: 'Old field',
+        activityType: 'internal',
         location: null,
         description: '',
         insuranceLink: '',
@@ -175,6 +176,7 @@ function buildUpdatePayload(overrides = {}) {
     startAt: '2026-04-27T20:00:00.000Z',
     endAt: '2026-04-27T22:00:00.000Z',
     signupDeadlineAt: '2026-04-27T19:30:00.000Z',
+    activityType: 'external',
     addressText: 'New address',
     addressName: 'New field',
     location: {
@@ -209,10 +211,11 @@ test('updateActivity lets the activity organizer update editable fields and writ
   expect(result).toEqual({
     activityId: 'activity_1',
     updated: true,
-    changedFields: expect.arrayContaining(['title', 'addressText', 'signupLimitTotal'])
+    changedFields: expect.arrayContaining(['title', 'addressText', 'signupLimitTotal', 'activityType'])
   });
   expect(db.state.activities.activity_1).toMatchObject({
     title: 'Updated Match',
+    activityType: 'external',
     addressText: 'New address',
     insuranceLink: 'https://insurance.example.com/updated',
     notificationHint: 'Bring both kits',
@@ -232,6 +235,32 @@ test('updateActivity lets the activity organizer update editable fields and writ
     operatorOpenId: 'openid_owner',
     action: 'update_activity'
   });
+});
+
+test('updateActivity defaults missing activityType to internal and rejects invalid values', async () => {
+  const db = createFakeDb({
+    activity: {
+      activityType: undefined
+    }
+  });
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      activityType: ''
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1.activityType).toBe('internal');
+
+  await expect(
+    updateActivity.main(
+      buildUpdatePayload({ activityType: 'league' }),
+      { OPENID: 'openid_owner' },
+      { db: createFakeDb(), now: '2026-04-20T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Invalid activity type');
 });
 
 test('updateActivity lets an admin edit another organizer activity', async () => {
