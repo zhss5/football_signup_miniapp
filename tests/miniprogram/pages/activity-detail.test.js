@@ -493,7 +493,7 @@ describe('activity detail page', () => {
     );
 
     expect(wxml).toContain("activity.status === 'cancelled'");
-    expect(wxml).toContain('class="cancelled-banner"');
+    expect(wxml).toContain('class="hero-status cancelled-banner"');
     expect(wxml).toContain('{{i18n.activity.status.cancelled}}');
     expect(wxss).toContain('.cancelled-banner');
   });
@@ -508,8 +508,8 @@ describe('activity detail page', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('wx:if="{{activitySignupClosedVisible}}"');
-    expect(wxml).toContain('class="signup-closed-banner"');
+    expect(wxml).toContain('wx:elif="{{activitySignupClosedVisible}}"');
+    expect(wxml).toContain('class="hero-status signup-closed-banner"');
     expect(wxml).toContain('{{i18n.activity.status.signupClosed}}');
     expect(wxss).toContain('.signup-closed-banner');
   });
@@ -995,9 +995,10 @@ describe('activity detail page', () => {
     );
 
     expect(wxml).toContain('wx:if="{{activityTimeText}}"');
-    expect(wxml).toContain('{{i18n.activity.timeLabel}}');
+    expect(wxml).toContain('class="hero-info-icon hero-info-icon-time"');
     expect(wxml).toContain('{{activityTimeText}}');
     expect(wxss).toContain('.activity-time-row');
+    expect(wxss).toContain('.hero-info-icon-time');
   });
 
   test('reload exposes an activity time range for detail display', async () => {

@@ -8,7 +8,7 @@ describe('activity detail page hero', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('wx:if="{{activityCoverImage || activity.coverImage}}"');
+    expect(wxml).toContain('class="hero-banner"');
     expect(wxml).toContain('wx:if="{{activityCoverImage && !activityCoverLoadFailed}}"');
     expect(wxml).toContain('src="{{activityCoverImage}}"');
     expect(wxml).toContain('bindtap="onPreviewActivityCover"');

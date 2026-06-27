@@ -58,9 +58,16 @@
     <button wx:if="{{activity.insuranceLink}}" class="insurance-link-button" bindtap="onOpenInsuranceLink">
       {{i18n.activity.insurance.copyAction}}
     </button>
-    <text class="share-title">{{shareHintVisible ? i18n.activity.share.publishedTitle : i18n.activity.share.defaultTitle}}</text>
-    <text class="share-copy">{{shareHintVisible ? i18n.activity.share.publishedCopy : i18n.activity.share.defaultCopy}}</text>
-    <button class="share-button" open-type="share">{{i18n.activity.share.action}}</button>
+    <view class="share-main">
+      <view class="share-text">
+        <text class="share-title">{{shareHintVisible ? i18n.activity.share.publishedTitle : i18n.activity.share.defaultTitle}}</text>
+        <text class="share-copy">{{shareHintVisible ? i18n.activity.share.publishedCopy : i18n.activity.share.defaultCopy}}</text>
+      </view>
+      <button class="share-button" open-type="share">
+        <view class="share-button-icon"></view>
+        <text>{{i18n.activity.share.action}}</text>
+      </button>
+    </view>
   </view>
 
   <team-list

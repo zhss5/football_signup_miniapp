@@ -35,13 +35,13 @@
             data-team-id="{{item._id}}"
             data-team-name="{{item.teamName}}"
             bindtap="onProxySignupTap"
-          >{{item.proxySignupText}}</button>
+          ><view class="btn-icon btn-icon-proxy"></view><text>{{item.proxySignupText}}</text></button>
           <button
             wx:if="{{item.joinActionVisible}}"
             class="join-button"
             data-team-id="{{item._id}}"
             bindtap="onJoinTap"
-          >{{item.joinActionText}}</button>
+          ><view class="btn-icon btn-icon-join"></view><text>{{item.joinActionText}}</text></button>
         </view>
         <text class="team-count">{{item.joinedCount}} / {{item.maxMembers}}</text>
       </view>

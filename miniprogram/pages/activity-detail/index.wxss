@@ -17,7 +17,7 @@
 .hero-banner {
   position: relative;
   width: 100%;
-  padding-top: 62%;
+  padding-top: 80%;
   border-radius: 24rpx;
   overflow: hidden;
   background: #30412d;
@@ -116,10 +116,47 @@
   line-height: 1.5;
 }
 
+.share-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.share-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .share-button {
-  margin-top: 16rpx;
+  flex: 0 0 auto;
+  display: inline-block;
+  margin: 0;
+  min-width: 0;
+  padding: 0 28rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 999rpx;
   background: #16a34a;
   color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.share-button::after {
+  border: 0;
+}
+
+.share-button-icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28rpx 28rpx;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTgiIGN5PSI1IiByPSIzIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEyIiByPSIzIi8+PGNpcmNsZSBjeD0iMTgiIGN5PSIxOSIgcj0iMyIvPjxwYXRoIGQ9Ik04LjYgMTMuNWw2LjggNE0xNS40IDYuNWwtNi44IDQiLz48L3N2Zz4=");
 }
 
 .description-card {

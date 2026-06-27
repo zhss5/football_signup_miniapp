@@ -16,7 +16,7 @@ describe('cover image ratio styles', () => {
   test('activity detail hero renders covers inside the same 5:4 frame', () => {
     const content = readFile('miniprogram/pages/activity-detail/index.wxss');
 
-    expect(content).toContain('.cover-frame');
+    expect(content).toContain('.hero-banner');
     expect(content).toContain('padding-top: 80%;');
   });
 

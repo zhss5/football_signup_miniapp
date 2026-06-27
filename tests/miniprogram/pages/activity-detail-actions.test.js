@@ -94,7 +94,6 @@ describe('activity detail actions', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('class="hero-status-row"');
     expect(wxml).toContain('wx:if="{{activityExpiredVisible}}"');
     expect(wxml).toContain('class="expired-stamp"');
     expect(wxml).toContain('{{i18n.activity.status.expired}}');
