@@ -1,30 +1,35 @@
 <view class="page">
-  <view class="utility-row">
-    <text class="utility-label">{{i18n.my.languageLabel}}</text>
-    <block wx:for="{{languageOptions}}" wx:key="key">
+  <view class="top-tools-card">
+    <view class="utility-row">
+      <text class="utility-label">{{i18n.my.languageLabel}}</text>
+      <view class="language-switch-track">
+        <block wx:for="{{languageOptions}}" wx:key="key">
+          <button
+            size="mini"
+            class="utility-chip {{locale === item.key ? 'utility-chip-active' : ''}}"
+            data-locale="{{item.key}}"
+            bindtap="onLanguageChange"
+          >
+            {{item.label}}
+          </button>
+        </block>
+      </view>
+    </view>
+
+    <view wx:if="{{canConfirmWebAdminLogin}}" class="web-admin-login-card">
+      <view class="web-admin-login-icon">Web</view>
+      <view class="web-admin-login-copy">
+        <text class="web-admin-login-title">{{i18n.my.webAdminLoginTitle}}</text>
+        <text class="web-admin-login-hint">{{i18n.my.webAdminLoginHint}}</text>
+      </view>
       <button
         size="mini"
-        class="utility-chip {{locale === item.key ? 'utility-chip-active' : ''}}"
-        data-locale="{{item.key}}"
-        bindtap="onLanguageChange"
+        class="web-admin-login-button"
+        bindtap="onConfirmWebAdminLogin"
       >
-        {{item.label}}
+        {{i18n.my.webAdminLoginAction}}
       </button>
-    </block>
-  </view>
-
-  <view wx:if="{{canConfirmWebAdminLogin}}" class="web-admin-login-card">
-    <view class="web-admin-login-copy">
-      <text class="web-admin-login-title">{{i18n.my.webAdminLoginTitle}}</text>
-      <text class="web-admin-login-hint">{{i18n.my.webAdminLoginHint}}</text>
     </view>
-    <button
-      size="mini"
-      class="web-admin-login-button"
-      bindtap="onConfirmWebAdminLogin"
-    >
-      {{i18n.my.webAdminLoginAction}}
-    </button>
   </view>
 
   <view class="primary-tab-shell">

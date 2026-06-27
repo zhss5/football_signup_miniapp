@@ -1520,6 +1520,7 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('标记缺勤');
   expect(html).toContain('编辑');
   expect(html).toContain('class="editable-text-control"');
+  expect(html).toContain('class="editable-text-action"');
   expect(html).toContain('class="attendance-status-control"');
   expect(html).toMatch(
     /<td><div class="editable-text-control">[\s\S]*老张[\s\S]*data-action="edit-manager-alias"[\s\S]*<\/div><\/td>/

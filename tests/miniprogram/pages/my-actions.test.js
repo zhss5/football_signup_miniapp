@@ -20,6 +20,8 @@ describe('my activities page', () => {
     expect(wxml).toContain('onCreatedFilterTap');
     expect(wxml).toContain('onLanguageChange');
     expect(wxml).toContain('primary-tab-shell');
+    expect(wxml).toContain('top-tools-card');
+    expect(wxml).toContain('language-switch-track');
     expect(wxml).toContain('filter-heading');
     expect(wxml).toContain('created-activity-card');
     expect(wxml).toContain('activity-action-footer');
@@ -42,6 +44,9 @@ describe('my activities page', () => {
     expect(js).not.toContain('onConfirmActivityProceeding');
     expect(js).not.toContain('onCancelActivity');
     expect(wxss).toContain('.primary-tab-shell');
+    expect(wxss).toContain('.top-tools-card');
+    expect(wxss).toContain('.language-switch-track');
+    expect(wxss).toContain('.web-admin-login-icon');
     expect(wxss).toContain('.filter-group');
     expect(wxss).toContain('.created-activity-card');
     expect(wxss).toContain('.activity-action-footer');

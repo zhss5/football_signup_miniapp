@@ -843,7 +843,7 @@
       return (
         `<div class="editable-text-control">` +
         `<span class="editable-text-value" title="${escapeHtml(text)}">${display}</span>` +
-        `<button type="button" data-action="${escapeHtml(action)}" ${attrs} ` +
+        `<button type="button" class="editable-text-action" data-action="${escapeHtml(action)}" ${attrs} ` +
         `${disabled ? 'disabled ' : ''}>编辑</button>` +
         `</div>`
       );

@@ -522,21 +522,19 @@ select {
   min-width: 88px;
 }
 
-.editable-text-control,
-.attendance-status-control {
-  display: inline-flex;
+.editable-text-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  width: 100%;
+  max-width: 260px;
   gap: 8px;
   min-width: 0;
 }
 
-.editable-text-control {
-  max-width: 320px;
-}
-
 .editable-text-value {
+  display: block;
   min-width: 0;
-  max-width: 220px;
   overflow: hidden;
   color: #172033;
   text-overflow: ellipsis;
@@ -547,13 +545,29 @@ select {
   color: #9aa7b8;
 }
 
+.attendance-status-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .attendance-status-control span {
   min-width: 40px;
 }
 
-.attendance-status-control button,
-.editable-text-control button {
+.attendance-status-control button {
   min-width: 88px;
+}
+
+.editable-text-action {
+  min-width: 52px;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 26px;
 }
 
 .data-table button.is-loading {

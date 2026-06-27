@@ -190,6 +190,9 @@ test('web admin user management row actions have stable spacing', () => {
   expect(css).toContain('.manager-alias-control');
   expect(css).toContain('.role-management-control');
   expect(css).toContain('.editable-text-control');
+  expect(css).toContain('.editable-text-action');
+  expect(css).toContain('grid-template-columns: minmax(0, 1fr) auto');
+  expect(css).toContain('min-height: 28px');
   expect(css).toContain('.attendance-status-control');
   expect(css).toContain('.text-edit-modal');
   expect(css).toContain('.activity-summary-editor');
