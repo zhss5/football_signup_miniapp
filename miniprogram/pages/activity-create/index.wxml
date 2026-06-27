@@ -215,7 +215,7 @@
           wx:if="{{form.detailImages.length < maxDetailImages}}"
           class="secondary-button"
           bindtap="onChooseDetailImages"
-        >{{i18n.activityCreate.addDetailImages}}</button>
+        ><view class="sb-icon sb-icon-plus"></view><text>{{i18n.activityCreate.addDetailImages}}</text></button>
         <text class="hint">{{detailImageHintText}}</text>
       </view>
     </view>
@@ -236,7 +236,7 @@
       />
       <text wx:if="{{validationErrors.addressText}}" class="error-text">{{validationErrors.addressText}}</text>
       <text wx:if="{{selectedPinText}}" class="hint">{{selectedPinText}}</text>
-      <button class="secondary-button map-button" bindtap="onChooseLocation">{{i18n.activityCreate.chooseOnMap}}</button>
+      <button class="secondary-button map-button" bindtap="onChooseLocation"><view class="sb-icon sb-icon-map"></view><text>{{i18n.activityCreate.chooseOnMap}}</text></button>
     </view>
   </view>
 

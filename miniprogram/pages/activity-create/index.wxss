@@ -224,6 +224,42 @@
 
 .secondary-button {
   margin-top: 16rpx;
+  height: 80rpx;
+  line-height: 76rpx;
+  padding: 0 20rpx;
+  background: #ffffff;
+  color: #374151;
+  border: 2rpx solid #e5e7eb;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.secondary-button::after {
+  border: 0;
+}
+
+.sb-icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 26rpx 26rpx;
+}
+
+.sb-icon-plus {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDV2MTRNNSAxMmgxNCIvPjwvc3ZnPg==");
+}
+
+.sb-icon-map {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTU4MDNkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTkgNEwzIDZ2MTRsNi0yIDYgMiA2LTJWNGwtNiAyLTYtMnoiLz48cGF0aCBkPSJNOSA0djE0TTE1IDZ2MTQiLz48L3N2Zz4=");
+}
+
+.map-button {
+  border-color: #cfe9da;
 }
 
 .ghost-button {
