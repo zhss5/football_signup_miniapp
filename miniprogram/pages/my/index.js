@@ -78,9 +78,69 @@ function resolveHasMore(result = {}, itemCount, limit) {
   return itemCount >= limit;
 }
 
-function prepareMyActivityItems(items = [], translate) {
+function formatTimeOfDay(isoValue) {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function buildCreatedActivityTags(item = {}, translate) {
+  const activityType = item.activityType === 'external' ? 'external' : 'internal';
+  const confirmStatus = item.confirmStatus === 'confirmed' ? 'confirmed' : 'pending';
+  const signupDeadlineTime = formatTimeOfDay(item.signupDeadlineAt);
+  const tags = [
+    {
+      key: 'activityType',
+      label: translate(`activityCreate.activityTypes.${activityType}`),
+      tone: 'type'
+    },
+    {
+      key: 'confirmStatus',
+      label: translate(`activity.status.${confirmStatus}`),
+      tone: confirmStatus
+    }
+  ];
+
+  if (signupDeadlineTime) {
+    tags.push({
+      key: 'signupDeadline',
+      label: `${translate('activityCreate.signupDeadline')} ${signupDeadlineTime}`,
+      tone: 'deadline'
+    });
+  }
+
+  return tags;
+}
+
+function buildCreatedFilterOptions(filters = [], selectedKey, items = []) {
+  return filters.map(filter => ({
+    ...filter,
+    count: items.filter(item => matchesCreatedFilter(item, filter.key)).length,
+    selected: filter.key === selectedKey
+  }));
+}
+
+function resolveCreatedFilterLabel(filterOptions = [], filterKey) {
+  const matched = filterOptions.find(item => item.key === filterKey);
+  return matched ? matched.label : '';
+}
+
+function prepareMyActivityItems(items = [], translate, scope = '') {
   return items
-    .map(item => buildActivityCardVm(item, undefined, translate))
+    .map(item => {
+      const prepared = buildActivityCardVm(item, undefined, translate);
+      if (scope !== 'created') {
+        return prepared;
+      }
+
+      return {
+        ...prepared,
+        activityTags: buildCreatedActivityTags(prepared, translate)
+      };
+    })
     .sort(compareStartDesc);
 }
 
@@ -105,6 +165,9 @@ Page({
     tabs: [],
     createdFilter: 'all',
     createdFilters: [],
+    createdFilterDropdownVisible: false,
+    createdFilterOptions: [],
+    currentCreatedFilterLabel: '',
     createdItemsAll: [],
     createdItems: [],
     joinedItems: [],
@@ -142,6 +205,7 @@ Page({
         { key: 'deleted', label: i18n.my.filters.deleted }
       ]
     });
+    this.applyCreatedFilter(this.data.createdFilter, this.data.createdItemsAll);
     return makeTranslator(locale);
   },
 
@@ -166,7 +230,10 @@ Page({
     } else {
       this.setData({
         createdItemsAll: [],
-        createdItems: []
+        createdItems: [],
+        createdFilterDropdownVisible: false,
+        createdFilterOptions: [],
+        currentCreatedFilterLabel: ''
       });
     }
     await Promise.all(requests);
@@ -226,7 +293,7 @@ Page({
   },
 
   applyMyActivityItems(scope, items, translate, options = {}) {
-    const preparedItems = prepareMyActivityItems(items, translate);
+    const preparedItems = prepareMyActivityItems(items, translate, scope);
 
     if (scope === 'created') {
       const createdItemsAll = options.append
@@ -375,10 +442,17 @@ Page({
 
   applyCreatedFilter(filterKey, items = this.data.createdItemsAll) {
     const createdItems = items.filter(item => matchesCreatedFilter(item, filterKey));
+    const createdFilterOptions = buildCreatedFilterOptions(
+      this.data.createdFilters,
+      filterKey,
+      items
+    );
 
     this.setData({
       createdFilter: filterKey,
-      createdItems
+      createdItems,
+      createdFilterOptions,
+      currentCreatedFilterLabel: resolveCreatedFilterLabel(createdFilterOptions, filterKey)
     });
   },
 
@@ -391,12 +465,24 @@ Page({
     if (activeTab === 'created' && !this.data.showCreatedActivitiesTab) {
       return;
     }
-    this.setData({ activeTab });
+    this.setData({
+      activeTab,
+      createdFilterDropdownVisible: false
+    });
   },
 
-  onCreatedFilterTap(event) {
+  onCreatedFilterToggle() {
+    this.setData({
+      createdFilterDropdownVisible: !this.data.createdFilterDropdownVisible
+    });
+  },
+
+  onCreatedFilterSelect(event) {
     const filterKey = event.currentTarget.dataset.filterKey;
     this.applyCreatedFilter(filterKey);
+    this.setData({
+      createdFilterDropdownVisible: false
+    });
   },
 
   async loadMoreMyActivities(eventOrScope) {

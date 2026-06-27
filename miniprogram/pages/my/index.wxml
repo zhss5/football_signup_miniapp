@@ -1,26 +1,23 @@
 <view class="page">
   <view class="top-toolbar">
-    <view class="utility-row">
-      <text class="utility-label">{{i18n.my.languageLabel}}</text>
+    <view class="utility-pill-row">
       <button
         size="mini"
-        class="language-toolbar-button"
+        class="utility-pill language-toolbar-button"
         data-locale="{{nextLocale}}"
         bindtap="onLanguageChange"
       >
-        {{currentLanguageLabel}}
+        <text class="utility-pill-icon">◎</text>
+        <text>{{currentLanguageLabel}}</text>
       </button>
-    </view>
-
-    <view wx:if="{{canConfirmWebAdminLogin}}" class="toolbar-divider"></view>
-
-    <view wx:if="{{canConfirmWebAdminLogin}}" class="web-admin-login-link-wrap">
       <button
+        wx:if="{{canConfirmWebAdminLogin}}"
         size="mini"
-        class="web-admin-login-link"
+        class="utility-pill web-admin-login-link"
         bindtap="onConfirmWebAdminLogin"
       >
-        {{i18n.my.webAdminToolbarAction}}
+        <text class="utility-pill-icon">▦</text>
+        <text>{{i18n.my.webAdminToolbarAction}}</text>
       </button>
     </view>
   </view>
@@ -39,17 +36,27 @@
   </view>
 
   <view wx:if="{{showCreatedActivitiesTab && activeTab === 'created'}}" class="section">
-    <view class="filter-group">
-      <text class="filter-heading">{{filterLabel}}</text>
-      <view class="filter-row">
-        <block wx:for="{{createdFilters}}" wx:key="key">
+    <view class="created-filter-shell">
+      <button
+        size="mini"
+        class="filter-trigger {{createdFilterDropdownVisible ? 'filter-trigger-open' : ''}}"
+        bindtap="onCreatedFilterToggle"
+      >
+        <text class="filter-trigger-icon">▽</text>
+        <text class="filter-trigger-text">{{currentCreatedFilterLabel}}</text>
+        <text class="filter-trigger-caret">⌄</text>
+      </button>
+      <view wx:if="{{createdFilterDropdownVisible}}" class="filter-menu">
+        <block wx:for="{{createdFilterOptions}}" wx:key="key">
           <button
             size="mini"
-            class="filter-chip {{createdFilter === item.key ? 'filter-chip-active' : ''}}"
+            class="filter-menu-item {{item.selected ? 'filter-menu-item-active' : ''}}"
             data-filter-key="{{item.key}}"
-            bindtap="onCreatedFilterTap"
+            bindtap="onCreatedFilterSelect"
           >
-            {{item.label}}
+            <text class="filter-menu-label">{{item.label}}</text>
+            <text class="filter-menu-count">{{item.count}}</text>
+            <text wx:if="{{item.selected}}" class="filter-menu-check">✓</text>
           </button>
         </block>
       </view>

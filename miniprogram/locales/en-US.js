@@ -336,3 +336,5 @@ module.exports = {
     createPermissionCheckFailed: 'Unable to check create permission'
   }
 };
+
+module.exports.activity.status.pending = 'Pending';

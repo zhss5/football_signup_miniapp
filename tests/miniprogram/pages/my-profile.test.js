@@ -524,6 +524,96 @@ describe('my page profile marker', () => {
     expect(ctx.data.createdItems.map(item => item.id)).toEqual(['future_published']);
   });
 
+  test('builds created filter dropdown counts and filters from the popup menu', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-03T12:00:00.000Z'));
+    ensureUserProfile.mockResolvedValue({
+      user: {
+        _id: 'openid_owner',
+        roles: ['user', 'organizer']
+      }
+    });
+    listActivities.mockImplementation(({ scope }) => {
+      if (scope === 'created') {
+        return Promise.resolve({
+          items: [
+            {
+              _id: 'expired_published',
+              title: 'Expired Published',
+              startAt: '2026-05-01T12:00:00.000Z',
+              endAt: '2026-05-01T14:00:00.000Z',
+              status: 'published'
+            },
+            {
+              _id: 'future_published',
+              title: 'Future Published',
+              startAt: '2026-05-04T12:00:00.000Z',
+              endAt: '2026-05-04T14:00:00.000Z',
+              status: 'published'
+            },
+            {
+              _id: 'cancelled',
+              title: 'Cancelled',
+              startAt: '2026-05-05T12:00:00.000Z',
+              endAt: '2026-05-05T14:00:00.000Z',
+              status: 'cancelled'
+            },
+            {
+              _id: 'deleted',
+              title: 'Deleted',
+              startAt: '2026-05-06T12:00:00.000Z',
+              endAt: '2026-05-06T14:00:00.000Z',
+              status: 'deleted'
+            }
+          ],
+          hasMore: false
+        });
+      }
+
+      return Promise.resolve({ items: [], hasMore: false });
+    });
+
+    const ctx = {
+      ...pageConfig,
+      data: {
+        ...pageConfig.data
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    await pageConfig.onShow.call(ctx);
+    pageConfig.onCreatedFilterToggle.call(ctx);
+
+    expect(ctx.data.createdFilterDropdownVisible).toBe(true);
+    expect(ctx.data.currentCreatedFilterLabel).toBe('All');
+    expect(ctx.data.createdFilterOptions).toMatchObject([
+      { key: 'all', label: 'All', count: 4, selected: true },
+      { key: 'published', label: 'Active', count: 1, selected: false },
+      { key: 'cancelled', label: 'Cancelled', count: 1, selected: false },
+      { key: 'deleted', label: 'Deleted', count: 1, selected: false }
+    ]);
+
+    pageConfig.onCreatedFilterSelect.call(ctx, {
+      currentTarget: {
+        dataset: {
+          filterKey: 'published'
+        }
+      }
+    });
+
+    expect(ctx.data.createdFilterDropdownVisible).toBe(false);
+    expect(ctx.data.currentCreatedFilterLabel).toBe('Active');
+    expect(ctx.data.createdItems.map(item => item.id)).toEqual(['future_published']);
+    expect(ctx.data.createdFilterOptions.find(item => item.key === 'published')).toMatchObject({
+      count: 1,
+      selected: true
+    });
+  });
+
   test('loads more created activities from the next offset without replacing the first page', async () => {
     ensureUserProfile.mockResolvedValue({
       user: {

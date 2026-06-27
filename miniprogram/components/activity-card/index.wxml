@@ -10,11 +10,25 @@
     />
     <view wx:else class="cover-placeholder"></view>
   </view>
-  <text class="title">{{item.title}}</text>
-  <text wx:if="{{item.startDisplayText}}" class="meta">{{item.startPrefixText}}</text>
-  <text class="meta">{{item.addressText}}</text>
-  <view class="activity-card-footer">
-    <text class="meta capacity-text">{{item.capacityText}}</text>
+  <view class="activity-card-title-row">
+    <text class="title">{{item.title}}</text>
     <text class="status status-{{item.statusTone}}">{{item.statusText}}</text>
+  </view>
+  <view wx:if="{{item.startDisplayText}}" class="activity-card-meta-row">
+    <text class="meta-icon">◷</text>
+    <text class="meta">{{item.startPrefixText}}</text>
+  </view>
+  <view class="activity-card-meta-row">
+    <text class="meta-icon">⌖</text>
+    <text class="meta">{{item.addressText}}</text>
+  </view>
+  <view class="activity-card-meta-row">
+    <text class="meta-icon">♙</text>
+    <text class="meta capacity-text">{{item.capacityText}}</text>
+  </view>
+  <view wx:if="{{item.activityTags && item.activityTags.length}}" class="activity-card-tags">
+    <block wx:for="{{item.activityTags}}" wx:for-item="tag" wx:key="key">
+      <text class="tag tag-{{tag.tone}}">{{tag.label}}</text>
+    </block>
   </view>
 </view>

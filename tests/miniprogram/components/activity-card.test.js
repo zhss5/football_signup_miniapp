@@ -57,9 +57,11 @@ describe('activity card component', () => {
 
     expect(wxml).toContain('{{item.startDisplayText}}');
     expect(wxml).toContain('{{item.capacityText}}');
+    expect(wxml).toContain('activity-card-meta-row');
+    expect(wxml).toContain('meta-icon');
   });
 
-  test('renders card status as a footer badge with an expired tone style', () => {
+  test('renders card status as a title badge with an expired tone style and bottom tags', () => {
     const wxml = fs.readFileSync(
       path.join(__dirname, '../../../miniprogram/components/activity-card/index.wxml'),
       'utf8'
@@ -69,9 +71,13 @@ describe('activity card component', () => {
       'utf8'
     );
 
-    expect(wxml).toContain('class="activity-card-footer"');
+    expect(wxml).toContain('activity-card-title-row');
     expect(wxml).toContain('status-{{item.statusTone}}');
-    expect(wxss).toContain('.activity-card-footer');
+    expect(wxml).toContain('activity-card-tags');
+    expect(wxml).toContain('wx:for="{{item.activityTags}}"');
+    expect(wxss).toContain('.activity-card-title-row');
+    expect(wxss).toContain('.activity-card-tags');
+    expect(wxss).toContain('.tag');
     expect(wxss).toContain('.status-expired');
   });
 
