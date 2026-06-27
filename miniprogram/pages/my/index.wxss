@@ -137,7 +137,7 @@
   min-width: 160rpx;
   min-height: 58rpx;
   padding: 0 18rpx;
-  border: 2rpx solid #16a34a;
+  border: 2rpx solid #e2e8f0;
   border-radius: 999rpx;
   background: #ffffff;
   color: #14532d;
@@ -149,6 +149,7 @@
 
 .filter-trigger-open {
   background: #f0fdf4;
+  border-color: #16a34a;
 }
 
 .filter-trigger-icon,

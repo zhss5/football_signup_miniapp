@@ -67,7 +67,7 @@
 
 .meta-icon {
   flex: 0 0 28rpx;
-  color: #64748b;
+  color: #15803d;
   font-size: 24rpx;
   line-height: 34rpx;
   text-align: center;
