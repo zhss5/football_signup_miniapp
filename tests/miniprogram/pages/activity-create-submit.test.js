@@ -21,39 +21,50 @@ jest.mock('../../../miniprogram/services/notification-service', () => ({
   requestManagerRegistrationNotificationSubscriptionConsent: jest.fn()
 }));
 
-jest.mock('../../../miniprogram/utils/activity-draft', () => ({
-  buildActivityCopyForm: jest.fn(draft => ({
-    title: draft.title || '',
-    activityDate: '',
-    startTime: '',
-    endTime: '',
-    signupDeadlineDate: '',
-    signupDeadlineTime: '',
-    addressText: draft.addressText || '',
-    teams: draft.teams || []
-  })),
-  buildActivityEditForm: jest.fn(() => ({
-    title: 'Existing Thursday Match',
-    coverImage: 'cloud://cover-existing',
-    imageList: ['cloud://cover-existing']
-  })),
-  buildActivityPayload: jest.fn(form => form),
-  createDefaultActivityForm: jest.fn(() => ({
-    title: 'Thursday Match'
-  })),
-  getDefaultRegistrationNoticeThreshold: jest.fn(total =>
-    Number(total || 0) > 0 ? Math.ceil(Number(total || 0) * 0.8) : 0
-  ),
-  normalizeNotificationHint: jest.fn(value => {
-    const text = String(value || '').replace(/[\u0000-\u001F\u007F]+/g, ' ').trim();
-    return Array.from(text).slice(0, 20).join('');
-  }),
-  summarizeTeamSlots: jest.fn(() => ({
-    namedTeamSlots: 12,
-    benchSlots: 0,
-    overCapacity: false
-  }))
-}));
+jest.mock('../../../miniprogram/utils/activity-draft', () => {
+  function formatSourceTime(value) {
+    const date = new Date(value || '');
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  return {
+    buildActivityCopyForm: jest.fn(draft => ({
+      title: draft.title || '',
+      activityDate: '',
+      startTime: formatSourceTime(draft.sourceStartAt || draft.startAt),
+      endTime: formatSourceTime(draft.sourceEndAt || draft.endAt),
+      signupDeadlineDate: '',
+      signupDeadlineTime: formatSourceTime(draft.sourceSignupDeadlineAt || draft.signupDeadlineAt),
+      addressText: draft.addressText || '',
+      teams: draft.teams || []
+    })),
+    buildActivityEditForm: jest.fn(() => ({
+      title: 'Existing Thursday Match',
+      coverImage: 'cloud://cover-existing',
+      imageList: ['cloud://cover-existing']
+    })),
+    buildActivityPayload: jest.fn(form => form),
+    createDefaultActivityForm: jest.fn(() => ({
+      title: 'Thursday Match'
+    })),
+    getDefaultRegistrationNoticeThreshold: jest.fn(total =>
+      Number(total || 0) > 0 ? Math.ceil(Number(total || 0) * 0.8) : 0
+    ),
+    normalizeNotificationHint: jest.fn(value => {
+      const text = String(value || '').replace(/[\u0000-\u001F\u007F]+/g, ' ').trim();
+      return Array.from(text).slice(0, 20).join('');
+    }),
+    summarizeTeamSlots: jest.fn(() => ({
+      namedTeamSlots: 12,
+      benchSlots: 0,
+      overCapacity: false
+    }))
+  };
+});
 
 jest.mock('../../../miniprogram/utils/validators', () => ({
   validateActivityDraft: jest.fn()
@@ -613,11 +624,20 @@ describe('activity create submit flow', () => {
   });
 
   test('onLoad in copy mode loads a backend copy draft into the create form', async () => {
+    const sourceStartAt = new Date(2026, 3, 26, 20, 0).toISOString();
+    const sourceEndAt = new Date(2026, 3, 26, 22, 0).toISOString();
+    const sourceSignupDeadlineAt = new Date(2026, 3, 26, 19, 30).toISOString();
     getActivityCopyDraft.mockResolvedValue({
       sourceActivityId: 'activity_123',
       draft: {
         title: 'Original Match',
         addressText: 'Half Stone',
+        startAt: '',
+        endAt: '',
+        signupDeadlineAt: '',
+        sourceStartAt,
+        sourceEndAt,
+        sourceSignupDeadlineAt,
         status: 'draft',
         confirmStatus: 'pending',
         requiresTimeReview: true,
@@ -658,8 +678,10 @@ describe('activity create submit flow', () => {
     expect(ctx.data.form).toMatchObject({
       title: 'Original Match',
       activityDate: '',
-      startTime: '',
-      endTime: ''
+      startTime: '20:00',
+      endTime: '22:00',
+      signupDeadlineDate: '',
+      signupDeadlineTime: '19:30'
     });
   });
 

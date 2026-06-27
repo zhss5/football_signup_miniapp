@@ -157,6 +157,9 @@ test('organizer can start a copy draft from an activity they manage', async () =
     startAt: '',
     endAt: '',
     signupDeadlineAt: '',
+    sourceStartAt: '2026-04-26T20:00:00.000Z',
+    sourceEndAt: '2026-04-26T22:00:00.000Z',
+    sourceSignupDeadlineAt: '2026-04-26T19:30:00.000Z',
     requiresTimeReview: true
   });
   expect(result.draft.teams).toEqual([

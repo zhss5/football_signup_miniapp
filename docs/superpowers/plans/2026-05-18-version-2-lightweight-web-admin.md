@@ -174,9 +174,9 @@ Copy rules:
 
 - Activity creators can copy their own activities.
 - Admins and super admins can copy any activity.
-- Copy reusable setup fields: title, description, venue, location, images, team names, team colors, team capacities, signup limits, and notification settings.
+- Copy reusable setup fields: title, description, venue, location, images, team names, team colors, team capacities, signup limits, notification settings, and source time-of-day for start/end/signup deadline.
 - Do not copy registrations, attendance state, participant operation logs, notification logs, or subscription state.
-- The copied activity must be reviewed before saving, and the UI should force the manager to confirm or change the new activity time.
+- The copied activity must be reviewed before saving, and the UI should force the manager to choose the new date while pre-filling the source start/end/signup-deadline time-of-day.
 - The copied activity is a new activity with a new ID; later changes to either activity must not affect the other.
 
 ### 7. Overdue Activity Handling

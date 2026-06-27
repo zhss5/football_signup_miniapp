@@ -4,6 +4,22 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-27 - Copy Activity Time-Of-Day Preservation
+
+Adjusted the copy-activity flow so recurring activities keep their usual time slots without copying the old calendar date.
+
+Delivered behavior:
+
+- `getActivityCopyDraft` still leaves `startAt`, `endAt`, and `signupDeadlineAt` empty so a copied draft cannot be published with the source date by accident.
+- copy drafts now include API-only `sourceStartAt`, `sourceEndAt`, and `sourceSignupDeadlineAt` values.
+- the mini-program copy form extracts only the local `HH:mm` time from those source fields.
+- Activity date and signup deadline date stay blank until the manager reviews/selects the new date.
+
+Verification:
+
+- red tests first failed because the backend did not return source time fields and the copy form still cleared all time fields.
+- target tests passed: `npm test -- tests/cloudfunctions/getActivityCopyDraft.test.js tests/miniprogram/utils/activity-draft.test.js tests/miniprogram/pages/activity-create-submit.test.js --runInBand`.
+
 ## 2026-06-27 - Started-Activity Attendance Statistics
 
 Aligned Version 2 attendance statistics with the final inclusion rule.

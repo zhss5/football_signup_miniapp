@@ -227,6 +227,11 @@ function buildActivityEditForm(activity = {}, teams = []) {
 }
 
 function buildActivityCopyForm(draft = {}) {
+  const sourceStartAt = parseDateInput(draft.sourceStartAt || draft.startAt);
+  const sourceEndAt = parseDateInput(draft.sourceEndAt || draft.endAt);
+  const sourceSignupDeadlineAt = parseDateInput(
+    draft.sourceSignupDeadlineAt || draft.signupDeadlineAt
+  );
   const imageList = Array.isArray(draft.imageList)
     ? draft.imageList.filter(Boolean).slice(0, MAX_ACTIVITY_IMAGES)
     : draft.coverImage
@@ -247,10 +252,10 @@ function buildActivityCopyForm(draft = {}) {
     title: draft.title || '',
     activityType: normalizeActivityType(draft.activityType),
     activityDate: '',
-    startTime: '',
-    endTime: '',
+    startTime: sourceStartAt ? formatTimeInputValue(sourceStartAt) : '',
+    endTime: sourceEndAt ? formatTimeInputValue(sourceEndAt) : '',
     signupDeadlineDate: '',
-    signupDeadlineTime: '',
+    signupDeadlineTime: sourceSignupDeadlineAt ? formatTimeInputValue(sourceSignupDeadlineAt) : '',
     addressText: draft.addressText || '',
     addressName: draft.addressName || draft.addressText || '',
     location: draft.location || null,

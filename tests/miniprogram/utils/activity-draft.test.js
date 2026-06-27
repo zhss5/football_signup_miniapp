@@ -241,11 +241,17 @@ test('buildActivityEditForm maps an existing activity detail into the create for
 });
 
 test('buildActivityCopyForm maps reusable setup into a new draft without source ids', () => {
+  const sourceStartAt = new Date(2026, 3, 26, 20, 0).toISOString();
+  const sourceEndAt = new Date(2026, 3, 26, 22, 0).toISOString();
+  const sourceSignupDeadlineAt = new Date(2026, 3, 26, 19, 30).toISOString();
   const form = buildActivityCopyForm({
     title: 'Original Match',
     startAt: '',
     endAt: '',
     signupDeadlineAt: '',
+    sourceStartAt,
+    sourceEndAt,
+    sourceSignupDeadlineAt,
     activityType: 'external',
     addressText: 'Half Stone',
     addressName: 'Half Stone Football Park',
@@ -284,10 +290,10 @@ test('buildActivityCopyForm maps reusable setup into a new draft without source 
   expect(form).toMatchObject({
     title: 'Original Match',
     activityDate: '',
-    startTime: '',
-    endTime: '',
+    startTime: '20:00',
+    endTime: '22:00',
     signupDeadlineDate: '',
-    signupDeadlineTime: '',
+    signupDeadlineTime: '19:30',
     activityType: 'external',
     addressText: 'Half Stone',
     addressName: 'Half Stone Football Park',

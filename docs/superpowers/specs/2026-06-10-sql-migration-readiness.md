@@ -140,11 +140,11 @@ Allowed `status` values: `draft`, `published`, `closed`, `finished`, `cancelled`
 
 Allowed `confirm_status` values: `pending`, `confirmed`.
 
-`getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
+`getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. Copy drafts may include API-only `sourceStartAt`, `sourceEndAt`, and `sourceSignupDeadlineAt` fields so clients can reuse the source time-of-day without copying the source date. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
 
 Mini-program list pagination uses the existing `listActivities` API with stable `scope`, `limit`, and `skip` parameters. `home`, `created`, and `joined` scopes stay API-shaped and can later map to SQL `ORDER BY` plus `LIMIT/OFFSET` or cursor pagination without changing page-level payloads.
 
-Overdue unresolved prompts are derived state only. V2 computes them from existing `activities.status`, `activities.confirm_status`, and `activities.end_at` values; no CloudBase field or SQL column is added for the prompt itself.
+The mini-program My page does not show overdue unresolved prompts. V2 adds no CloudBase field or SQL column for that prompt.
 
 ### `activity_teams`
 
@@ -417,7 +417,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 8. Add audit rows for state-changing operations instead of overwriting the only copy of historical information.
 9. Avoid broad nested objects in new fields unless the data is low-query and belongs in JSON later.
 10. Use nullable SQL columns only when the current CloudBase data can genuinely be absent.
-11. Keep activity duplication as a white-listed API draft operation: copy reusable setup fields only, do not copy registrations, attendance state, activity logs, notification logs, subscription rows, confirmation metadata, cancellation state, or source document IDs.
+11. Keep activity duplication as a white-listed API draft operation: copy reusable setup fields only, allow API-only source time fields for time-of-day preservation, and do not copy registrations, attendance state, activity logs, notification logs, subscription rows, confirmation metadata, cancellation state, or source document IDs.
 12. Keep copy drafts API-shaped so a future self-hosted backend can implement the same contract over SQL without mini-program page-specific payloads.
 13. Keep web-admin calls routed through API-shaped function adapters such as `ensureUserProfile`, `listUsers`, `updateUserRoles`, `listActivities`, `getActivityDetail`, `setRegistrationAttendance`, `updateParticipantManagerAlias`, `getAttendanceStats`, `exportActivityRoster`, `listActivityLogs`, and `listNotificationLogs`; do not couple the web-admin views to CloudBase collection layouts.
 14. Keep backend export functions row-based. CSV/XLSX file generation belongs in the web-admin or another client layer so a future self-hosted API can return the same rows from SQL.

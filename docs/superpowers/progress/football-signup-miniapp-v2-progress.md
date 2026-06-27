@@ -64,7 +64,7 @@ Completed:
 - `getActivityCopyDraft` cloud function returns permission-checked copy drafts for organizers, admins, and super admins.
 - activity copy drafts include reusable setup fields only and exclude source IDs, registrations, attendance state, activity logs, notification logs, subscription state, confirmation state, and cancellation state.
 - mini-program Activity Detail exposes the copy action only to source activity managers.
-- mini-program Activity Create supports copy mode and requires the manager to choose the new activity time before publishing.
+- mini-program Activity Create supports copy mode, reuses source start/end/deadline time-of-day, and requires the manager to choose the new activity date before publishing.
 - `web-admin/` static foundation has been added without introducing a new build/runtime dependency.
 - web-admin login uses a mini-program QR confirmation bridge so browser sessions resolve back to a real WeChat `OPENID`.
 - `createWebAdminLogin`, `confirmWebAdminLogin`, and `pollWebAdminLogin` provide short-lived Web Admin login challenges and session tokens.
