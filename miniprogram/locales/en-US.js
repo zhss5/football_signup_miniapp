@@ -68,6 +68,7 @@ module.exports = {
     descriptionTitle: 'Description',
     timeLabel: 'Activity time',
     activityImagesTitle: 'Activity images',
+    managerActionsTitle: 'Manager actions',
     actions: {
       edit: 'Edit',
       join: 'Join',

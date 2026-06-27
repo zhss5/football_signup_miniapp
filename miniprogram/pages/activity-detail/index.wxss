@@ -9,23 +9,18 @@
 
 .hero {
   position: relative;
-  padding: 24rpx;
-  box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
-  background: #ffffff;
-  border-radius: 24rpx;
   margin-bottom: 24rpx;
 }
 
-.cover-frame {
+.hero-banner {
   position: relative;
   width: 100%;
-  padding-top: 80%;
-  border-radius: 20rpx;
+  padding-top: 62%;
+  border-radius: 24rpx;
   overflow: hidden;
-  margin-bottom: 20rpx;
+  background: #30412d;
 }
 
 .cover-image,
@@ -37,7 +32,44 @@
 }
 
 .cover-placeholder {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: linear-gradient(135deg, #30412d 0%, #395636 100%);
+}
+
+.hero-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 64rpx 28rpx 22rpx;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+}
+
+.hero-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.hero-status {
+  flex: 0 0 auto;
+}
+
+.hero-info-card {
+  position: relative;
+  margin: -28rpx 16rpx 0;
+  padding: 24rpx;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 28rpx rgba(15, 23, 42, 0.08);
 }
 
 .share-card {
@@ -145,7 +177,7 @@
   flex-wrap: wrap;
   gap: 10rpx;
   align-items: center;
-  margin-top: 14rpx;
+  margin-top: 0;
   color: #374151;
   font-size: 28rpx;
 }
@@ -276,8 +308,8 @@
 
 .expired-stamp {
   position: absolute;
-  right: 28rpx;
-  bottom: 30rpx;
+  right: 24rpx;
+  top: 24rpx;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -300,19 +332,36 @@
 }
 
 .action-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16rpx;
   margin-top: 24rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.05);
+}
+
+.action-panel-title {
+  grid-column: 1 / -1;
+  color: #9ca3af;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
 .action-button {
   width: 100%;
   margin: 0;
   color: #374151;
-  background: #ffffff;
+  background: #f7faf8;
   border: 2rpx solid #e5e7eb;
   border-radius: 16rpx;
+}
+
+.confirm-action-button,
+.danger-action-button {
+  grid-column: 1 / -1;
 }
 
 .action-button::after {
