@@ -37,9 +37,19 @@
 }
 
 .utility-pill-icon {
-  color: #14532d;
-  font-size: 24rpx;
-  line-height: 1;
+  width: 30rpx;
+  height: 30rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 30rpx 30rpx;
+}
+
+.utility-pill-icon-globe {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjNGI1NTYzJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PGNpcmNsZSBjeD0nMTInIGN5PScxMicgcj0nOScvPjxwYXRoIGQ9J00zIDEyaDE4Jy8+PHBhdGggZD0nTTEyIDNjMi42IDIuNyAyLjYgMTUuMyAwIDE4Jy8+PHBhdGggZD0nTTEyIDNjLTIuNiAyLjctMi42IDE1LjMgMCAxOCcvPjwvc3ZnPg==");
+}
+
+.utility-pill-icon-qr {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjMTQ3ODNkJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHJlY3QgeD0nNCcgeT0nNCcgd2lkdGg9JzYnIGhlaWdodD0nNicgcng9JzEnLz48cmVjdCB4PScxNCcgeT0nNCcgd2lkdGg9JzYnIGhlaWdodD0nNicgcng9JzEnLz48cmVjdCB4PSc0JyB5PScxNCcgd2lkdGg9JzYnIGhlaWdodD0nNicgcng9JzEnLz48cGF0aCBkPSdNMTQgMTRoMnYyJy8+PHBhdGggZD0nTTIwIDE0djInLz48cGF0aCBkPSdNMTYgMjBoNCcvPjwvc3ZnPg==");
 }
 
 .language-toolbar-button {
@@ -154,8 +164,22 @@
 
 .filter-trigger-icon,
 .filter-trigger-caret {
-  font-size: 22rpx;
-  line-height: 1;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.filter-trigger-icon {
+  width: 28rpx;
+  height: 28rpx;
+  background-size: 26rpx 26rpx;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjMTZhMzRhJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHBhdGggZD0nTTMgNWgxOGwtNyA4djVsLTQgMnYtN3onLz48L3N2Zz4=");
+}
+
+.filter-trigger-caret {
+  width: 24rpx;
+  height: 24rpx;
+  background-size: 22rpx 22rpx;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjNjQ3NDhiJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHBhdGggZD0nTTYgOWw2IDYgNi02Jy8+PC9zdmc+");
 }
 
 .filter-trigger-text {

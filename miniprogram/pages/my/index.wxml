@@ -7,7 +7,7 @@
         data-locale="{{nextLocale}}"
         bindtap="onLanguageChange"
       >
-        <text class="utility-pill-icon">◎</text>
+        <view class="utility-pill-icon utility-pill-icon-globe"></view>
         <text>{{currentLanguageLabel}}</text>
       </button>
       <button
@@ -16,7 +16,7 @@
         class="utility-pill web-admin-login-link"
         bindtap="onConfirmWebAdminLogin"
       >
-        <text class="utility-pill-icon">▦</text>
+        <view class="utility-pill-icon utility-pill-icon-qr"></view>
         <text>{{i18n.my.webAdminToolbarAction}}</text>
       </button>
     </view>
@@ -42,9 +42,9 @@
         class="filter-trigger {{createdFilterDropdownVisible ? 'filter-trigger-open' : ''}}"
         bindtap="onCreatedFilterToggle"
       >
-        <text class="filter-trigger-icon">▽</text>
+        <view class="filter-trigger-icon"></view>
         <text class="filter-trigger-text">{{currentCreatedFilterLabel}}</text>
-        <text class="filter-trigger-caret">⌄</text>
+        <view class="filter-trigger-caret"></view>
       </button>
       <view wx:if="{{createdFilterDropdownVisible}}" class="filter-menu">
         <block wx:for="{{createdFilterOptions}}" wx:key="key">

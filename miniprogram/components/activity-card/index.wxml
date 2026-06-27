@@ -15,15 +15,15 @@
     <text class="status status-{{item.statusTone}}">{{item.statusText}}</text>
   </view>
   <view wx:if="{{item.startDisplayText}}" class="activity-card-meta-row">
-    <text class="meta-icon">◷</text>
+    <view class="meta-icon meta-icon-time"></view>
     <text class="meta">{{item.startPrefixText}}</text>
   </view>
   <view class="activity-card-meta-row">
-    <text class="meta-icon">⌖</text>
+    <view class="meta-icon meta-icon-place"></view>
     <text class="meta">{{item.addressText}}</text>
   </view>
   <view class="activity-card-meta-row">
-    <text class="meta-icon">♙</text>
+    <view class="meta-icon meta-icon-count"></view>
     <text class="meta capacity-text">{{item.capacityText}}</text>
   </view>
   <view wx:if="{{item.activityTags && item.activityTags.length}}" class="activity-card-tags">
