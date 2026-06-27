@@ -13,13 +13,16 @@
     </view>
     <text class="title">{{activity.title}}</text>
     <view wx:if="{{activityTimeText}}" class="activity-time-row">
-      <text class="activity-time-label">{{i18n.activity.timeLabel}}</text>
+      <view class="hero-info-icon hero-info-icon-time"></view>
       <text class="activity-time-value">{{activityTimeText}}</text>
     </view>
     <view class="location-row">
       <view class="location" bindtap="onOpenLocation">
-        <text class="location-name">{{activity.addressName || activity.addressText}}</text>
-        <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
+        <view class="hero-info-icon hero-info-icon-place"></view>
+        <view class="location-text">
+          <text class="location-name">{{activity.addressName || activity.addressText}}</text>
+          <text wx:if="{{activity.addressName && activity.addressName !== activity.addressText}}" class="meta">{{activity.addressText}}</text>
+        </view>
       </view>
       <view wx:if="{{locationMapVisible}}" class="location-map-wrap">
         <map
