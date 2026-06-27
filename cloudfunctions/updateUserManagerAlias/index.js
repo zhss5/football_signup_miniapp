@@ -7,7 +7,7 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-const MAX_MANAGER_ALIAS_LENGTH = 128;
+const MAX_MANAGER_ALIAS_LENGTH = 40;
 
 async function loadUser(db, openid) {
   const res = await db.collection(COLLECTIONS.USERS).doc(openid).get();
@@ -56,7 +56,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const managerAlias = normalizeManagerAlias(payload.managerAlias);
   if (managerAlias.length > MAX_MANAGER_ALIAS_LENGTH) {
-    throw businessError('managerAlias cannot exceed 128 characters');
+    throw businessError('managerAlias cannot exceed 40 characters');
   }
 
   const targetUser = await loadUser(db, targetOpenId);

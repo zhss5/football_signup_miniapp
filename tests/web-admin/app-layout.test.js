@@ -1339,6 +1339,7 @@ test('user manager alias can be edited from user management dialog', async () =>
   expect(elements['[data-text-edit-dialog]'].hidden).toBe(false);
   expect(elements['[data-text-edit-title]'].textContent).toBe('编辑备注');
   expect(elements['[data-text-edit-input]'].value).toBe('Old alias');
+  expect(elements['[data-text-edit-input]'].attributes.maxlength).toBe('40');
   elements['[data-text-edit-input]'].value = 'New alias';
 
   await appRoot.click(createElement({
@@ -1351,7 +1352,7 @@ test('user manager alias can be edited from user management dialog', async () =>
   expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 });
 
-test('activity detail participant manager alias editor limits remarks to 20 characters', async () => {
+test('activity detail participant manager alias editor limits remarks to 40 characters', async () => {
   const getActivityDetail = jest.fn().mockResolvedValue({
     activity: {
       title: 'Friday Football'
@@ -1392,7 +1393,7 @@ test('activity detail participant manager alias editor limits remarks to 20 char
     targetOpenid: 'openid_player'
   }));
 
-  expect(elements['[data-text-edit-input]'].attributes.maxlength).toBe('20');
+  expect(elements['[data-text-edit-input]'].attributes.maxlength).toBe('40');
 });
 
 test('user role save button shows progress and completion feedback', async () => {

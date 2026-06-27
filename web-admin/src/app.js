@@ -1154,7 +1154,7 @@
         targetId: targetOpenId,
         title: '编辑备注',
         value: row.managerAlias || '',
-        maxLength: 20
+        maxLength: 40
       });
     }
 
@@ -1169,7 +1169,7 @@
         targetId: targetOpenId,
         title: '编辑备注',
         value: row.managerAlias || '',
-        maxLength: 128
+        maxLength: 40
       });
     }
 

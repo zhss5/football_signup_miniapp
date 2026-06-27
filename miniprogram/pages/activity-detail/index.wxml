@@ -188,6 +188,7 @@
           class="participant-dialog-input"
           value="{{participantDialogAlias}}"
           placeholder="{{i18n.modal.managerAlias.placeholder}}"
+          maxlength="40"
           bindinput="onParticipantAliasInput"
         />
       </view>

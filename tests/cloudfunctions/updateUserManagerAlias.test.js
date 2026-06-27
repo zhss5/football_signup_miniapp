@@ -81,6 +81,32 @@ test('updateUserManagerAlias lets admins update the user-level manager alias', a
   ]);
 });
 
+test('updateUserManagerAlias accepts manager aliases up to 40 characters', async () => {
+  const db = createFakeDb();
+  const fortyChars = 'a'.repeat(40);
+
+  const result = await updateUserManagerAlias.main(
+    { targetOpenId: 'openid_player', managerAlias: fortyChars },
+    { OPENID: 'openid_admin' },
+    { db, now: () => new Date('2026-06-17T10:00:00.000Z') }
+  );
+
+  expect(result.user.managerAlias).toBe(fortyChars);
+  expect(db.state.users.openid_player.managerAlias).toBe(fortyChars);
+});
+
+test('updateUserManagerAlias rejects manager aliases longer than 40 characters', async () => {
+  const db = createFakeDb();
+
+  await expect(
+    updateUserManagerAlias.main(
+      { targetOpenId: 'openid_player', managerAlias: 'a'.repeat(41) },
+      { OPENID: 'openid_admin' },
+      { db }
+    )
+  ).rejects.toThrow('managerAlias cannot exceed 40 characters');
+});
+
 test('updateUserManagerAlias rejects organizers', async () => {
   const db = createFakeDb();
 

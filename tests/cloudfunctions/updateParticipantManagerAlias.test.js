@@ -196,7 +196,25 @@ test('manager alias can be cleared with an empty string', async () => {
   expect(db.state.users.openid_player.managerAlias).toBe('');
 });
 
-test('manager alias rejects values longer than 20 characters', async () => {
+test('manager alias accepts values up to 40 characters', async () => {
+  const db = createFakeDb();
+  const fortyChars = 'a'.repeat(40);
+
+  const result = await updateParticipantManagerAlias.main(
+    {
+      activityId: 'activity_1',
+      targetOpenId: 'openid_player',
+      managerAlias: fortyChars
+    },
+    { OPENID: 'openid_owner' },
+    { db, now: fixedNow }
+  );
+
+  expect(result.user.managerAlias).toBe(fortyChars);
+  expect(db.state.users.openid_player.managerAlias).toBe(fortyChars);
+});
+
+test('manager alias rejects values longer than 40 characters', async () => {
   const db = createFakeDb();
 
   await expect(
@@ -204,12 +222,12 @@ test('manager alias rejects values longer than 20 characters', async () => {
       {
         activityId: 'activity_1',
         targetOpenId: 'openid_player',
-        managerAlias: 'a'.repeat(21)
+        managerAlias: 'a'.repeat(41)
       },
       { OPENID: 'openid_owner' },
       { db, now: fixedNow }
     )
-  ).rejects.toThrow('managerAlias cannot exceed 20 characters');
+  ).rejects.toThrow('managerAlias cannot exceed 40 characters');
 });
 
 test('manager alias only applies to real WeChat signup users', async () => {

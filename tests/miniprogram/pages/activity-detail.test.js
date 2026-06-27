@@ -603,6 +603,7 @@ describe('activity detail page', () => {
     expect(wxml).toContain('participantDialogMember.signupName');
     expect(wxml).toContain('wx:if="{{participantDialogAliasEditable}}"');
     expect(wxml).toContain('value="{{participantDialogAlias}}"');
+    expect(wxml).toContain('maxlength="40"');
     expect(wxml).toContain('bindinput="onParticipantAliasInput"');
     expect(wxml).toContain('bindtap="onParticipantAliasSave"');
     expect(wxss).toContain('.participant-dialog-panel');
