@@ -165,6 +165,17 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).not.toContain('管理识别名');
 });
 
+test('text edit dialog is mounted outside hidden admin view modals', () => {
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+  const dialogIndex = html.indexOf('data-text-edit-dialog');
+  const activityDetailIndex = html.indexOf('data-activity-detail');
+  const adminContentCloseIndex = html.indexOf('</main>', activityDetailIndex);
+  const activityDetailBlock = html.slice(activityDetailIndex, adminContentCloseIndex);
+
+  expect(dialogIndex).toBeGreaterThan(adminContentCloseIndex);
+  expect(activityDetailBlock).not.toContain('data-text-edit-dialog');
+});
+
 test('web admin search buttons have loading spinner styling', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
