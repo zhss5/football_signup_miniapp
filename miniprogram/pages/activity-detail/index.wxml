@@ -217,38 +217,42 @@
 
   <view wx:if="{{viewer && (viewer.canManageRegistrations || viewer.canEditActivity || viewer.canCancelActivity)}}" class="action-panel">
     <text class="action-panel-title">{{i18n.activity.managerActionsTitle}}</text>
-    <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
-      {{i18n.activity.actions.copyParticipantNames}}
-    </button>
+    <view class="action-grid">
+      <button wx:if="{{viewer.canManageRegistrations}}" class="action-button" bindtap="onCopyParticipantNames">
+        {{i18n.activity.actions.copyParticipantNames}}
+      </button>
 
-    <button
-      wx:if="{{viewer.canManageRegistrations}}"
-      class="action-button {{viewer.registrationNotificationSubscribed ? 'action-button-disabled' : ''}}"
-      disabled="{{viewer.registrationNotificationSubscribed}}"
-      bindtap="onSubscribeRegistrationNotifications"
-    >
-      {{viewer.registrationNotificationSubscribed ? i18n.activity.actions.registrationNotificationsSubscribed : i18n.activity.actions.subscribeRegistrationNotifications}}
-    </button>
+      <button
+        wx:if="{{viewer.canManageRegistrations}}"
+        class="action-button {{viewer.registrationNotificationSubscribed ? 'action-button-disabled' : ''}}"
+        disabled="{{viewer.registrationNotificationSubscribed}}"
+        bindtap="onSubscribeRegistrationNotifications"
+      >
+        {{viewer.registrationNotificationSubscribed ? i18n.activity.actions.registrationNotificationsSubscribed : i18n.activity.actions.subscribeRegistrationNotifications}}
+      </button>
 
-        <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
-          {{i18n.activity.actions.edit}}
-        </button>
+      <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">
+        {{i18n.activity.actions.edit}}
+      </button>
 
-        <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="onCopyActivity">
-          {{i18n.activity.actions.copyActivity}}
-        </button>
+      <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="onCopyActivity">
+        {{i18n.activity.actions.copyActivity}}
+      </button>
+    </view>
 
-        <button
-          wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
-      class="action-button confirm-action-button"
-      bindtap="onConfirmActivityProceeding"
-    >
-      {{i18n.activity.actions.confirmProceeding}}
-    </button>
+    <view wx:if="{{(viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed') || viewer.canCancelActivity}}" class="action-cta-row">
+      <button
+        wx:if="{{viewer.canEditActivity && activity.status === 'published' && activity.confirmStatus !== 'confirmed'}}"
+        class="action-button confirm-action-button"
+        bindtap="onConfirmActivityProceeding"
+      >
+        {{i18n.activity.actions.confirmProceeding}}
+      </button>
 
-    <button wx:if="{{viewer.canCancelActivity}}" class="action-button danger-action-button" bindtap="onCancelActivity">
-      {{i18n.activity.actions.cancelActivity}}
-    </button>
+      <button wx:if="{{viewer.canCancelActivity}}" class="action-button danger-action-button" bindtap="onCancelActivity">
+        {{i18n.activity.actions.cancelActivity}}
+      </button>
+    </view>
   </view>
 
 </view>

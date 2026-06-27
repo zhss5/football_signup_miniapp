@@ -332,8 +332,8 @@
 }
 
 .action-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16rpx;
   margin-top: 24rpx;
   padding: 24rpx;
@@ -344,10 +344,20 @@
 }
 
 .action-panel-title {
-  grid-column: 1 / -1;
   color: #9ca3af;
   font-size: 24rpx;
   font-weight: 600;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.action-cta-row {
+  display: flex;
+  gap: 14rpx;
 }
 
 .action-button {
@@ -357,11 +367,6 @@
   background: #f7faf8;
   border: 2rpx solid #e5e7eb;
   border-radius: 16rpx;
-}
-
-.confirm-action-button,
-.danger-action-button {
-  grid-column: 1 / -1;
 }
 
 .action-button::after {
@@ -375,16 +380,20 @@
   border-color: #e5e7eb;
 }
 
-.danger-action-button {
-  color: #b91c1c;
-  background: #ffffff;
-  border-color: #fecaca;
-}
-
 .confirm-action-button {
+  flex: 2;
+  width: auto;
   color: #ffffff;
   background: #16a34a;
   border-color: #16a34a;
+}
+
+.danger-action-button {
+  flex: 1;
+  width: auto;
+  color: #b91c1c;
+  background: #ffffff;
+  border-color: #fecaca;
 }
 
 .color-palette-backdrop {
