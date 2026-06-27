@@ -134,8 +134,11 @@
 
   <view class="notification-settings-group">
     <view class="notification-settings-header">
-      <text class="label">{{i18n.activityCreate.notificationSettings}}</text>
-      <text class="hint">{{i18n.activityCreate.notificationSettingsHint}}</text>
+      <view class="section-head">
+        <view class="section-icon section-icon-bell"></view>
+        <text class="section-title">{{i18n.activityCreate.notificationSettings}}</text>
+      </view>
+      <text class="section-subtitle">{{i18n.activityCreate.notificationSettingsHint}}</text>
     </view>
 
     <view class="field notification-settings-field">
