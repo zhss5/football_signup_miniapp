@@ -57,9 +57,12 @@
       <text class="section-title">{{i18n.activityCreate.scheduleSection}}</text>
     </view>
     <view class="field">
-      <text class="label">{{i18n.activityCreate.activityDate}}</text>
       <picker mode="date" value="{{form.activityDate}}" data-field="activityDate" bindchange="onPickerChange">
-        <view class="picker-input">{{form.activityDate}}</view>
+        <view class="picker-row">
+          <text class="picker-row-label">{{i18n.activityCreate.activityDate}}</text>
+          <text class="picker-row-value">{{form.activityDate}}</text>
+          <view class="picker-row-caret"></view>
+        </view>
       </picker>
     </view>
 

@@ -19,8 +19,9 @@
   height: 88rpx;
   line-height: 88rpx;
   padding: 0 18rpx;
-  border-radius: 24rpx;
-  background: #ffffff;
+  border-radius: 16rpx;
+  background: #f9fafb;
+  border: 2rpx solid #eef0ef;
 }
 
 .team-capacity {
@@ -29,16 +30,38 @@
 }
 
 .remove-button {
-  flex: 0 0 132rpx;
+  flex: 0 0 auto;
   margin: 0;
-  height: 88rpx;
-  line-height: 88rpx;
-  padding: 0;
+  height: 64rpx;
+  line-height: 60rpx;
+  padding: 0 22rpx;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #b91c1c;
+  border: 2rpx solid #fecaca;
+  border-radius: 14rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.remove-button::after {
+  border: 0;
 }
 
 .add-button {
-  margin-top: 8rpx;
+  margin-top: 12rpx;
+  height: 80rpx;
+  line-height: 76rpx;
+  background: #ffffff;
+  color: #15803d;
+  border: 2rpx dashed #bcd0c4;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.add-button::after {
+  border: 0;
 }
 
 .color-palette-backdrop {
