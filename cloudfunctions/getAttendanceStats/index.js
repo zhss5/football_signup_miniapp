@@ -61,6 +61,15 @@ function getParticipantName(registration) {
   ).trim();
 }
 
+function getParticipantStatsKey(registration, participantName) {
+  if (registration && registration.proxyRegistration === true) {
+    return `proxy-name:${participantName}`;
+  }
+
+  const userOpenId = String(registration && registration.userOpenId ? registration.userOpenId : '').trim();
+  return userOpenId ? `user-openid:${userOpenId}` : `name:${participantName}`;
+}
+
 function getManagerAlias(registration, userById) {
   if (!registration || registration.proxyRegistration) {
     return '';
@@ -133,8 +142,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       return acc;
     }
 
-    if (!acc[participantName]) {
-      acc[participantName] = {
+    const participantStatsKey = getParticipantStatsKey(registration, participantName);
+    if (!acc[participantStatsKey]) {
+      acc[participantStatsKey] = {
         participantName,
         managerAlias: '',
         signupCount: 0,
@@ -144,7 +154,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       };
     }
 
-    const row = acc[participantName];
+    const row = acc[participantStatsKey];
     const managerAlias = getManagerAlias(registration, userById);
     const activity = activityById[registration.activityId];
     const attendanceStatus = normalizeAttendanceStatus(registration.attendanceStatus);

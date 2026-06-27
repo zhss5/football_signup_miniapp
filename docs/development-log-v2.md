@@ -4,6 +4,21 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-27 - Proxy Attendance Statistics Identity
+
+Clarified and implemented the attendance statistics identity rule for proxy signups.
+
+Delivered behavior:
+
+- proxy registrations are grouped by their proxy signup name in attendance statistics, even when each proxy registration has a different generated proxy `userOpenId`.
+- real user registrations are grouped by real `userOpenId`, so two different users who happen to use the same signup name do not get merged.
+- the visible statistics payload shape is unchanged: rows still expose `participantName`, `managerAlias`, counts, rate, and per-activity details.
+
+Verification:
+
+- red test first failed because two real users with the same signup name were merged into one statistics row.
+- target attendance statistics test passed: `npm test -- tests/cloudfunctions/getAttendanceStats.test.js`.
+
 ## 2026-06-17 - Web Admin Default Chinese UI
 
 Changed the Web Admin default visible interface to Chinese while preserving the existing API contracts and CloudBase function behavior.

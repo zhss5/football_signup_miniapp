@@ -423,6 +423,86 @@ test('proxy signups are included by display name', async () => {
   });
 });
 
+test('proxy signups with the same proxy name are grouped across activities', async () => {
+  const db = createFakeDb({
+    registrations: {
+      reg_proxy_guest_1: {
+        _id: 'reg_proxy_guest_1',
+        activityId: 'activity_1',
+        userOpenId: 'proxy_openid_guest_1',
+        signupName: 'Guest Player',
+        status: 'joined',
+        proxyRegistration: true,
+        attendanceStatus: 'present'
+      },
+      reg_proxy_guest_2: {
+        _id: 'reg_proxy_guest_2',
+        activityId: 'activity_2',
+        userOpenId: 'proxy_openid_guest_2',
+        signupName: 'Guest Player',
+        status: 'joined',
+        proxyRegistration: true,
+        attendanceStatus: 'absent'
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
+
+  expect(result.items.find(item => item.participantName === 'Guest Player')).toMatchObject({
+    signupCount: 2,
+    presentCount: 1,
+    absentCount: 1,
+    attendanceRate: 0.5
+  });
+});
+
+test('real signups with the same display name are grouped by openid instead of name', async () => {
+  const db = createFakeDb({
+    users: {
+      openid_sam_1: { _id: 'openid_sam_1', roles: ['user'], managerAlias: 'Sam Left' },
+      openid_sam_2: { _id: 'openid_sam_2', roles: ['user'], managerAlias: 'Sam Right' }
+    },
+    registrations: {
+      reg_sam_1: {
+        _id: 'reg_sam_1',
+        activityId: 'activity_1',
+        userOpenId: 'openid_sam_1',
+        signupName: 'Sam',
+        status: 'joined',
+        attendanceStatus: 'present'
+      },
+      reg_sam_2: {
+        _id: 'reg_sam_2',
+        activityId: 'activity_2',
+        userOpenId: 'openid_sam_2',
+        signupName: 'Sam',
+        status: 'joined',
+        attendanceStatus: 'absent'
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
+  const samRows = result.items.filter(item => item.participantName === 'Sam');
+
+  expect(samRows).toHaveLength(2);
+  expect(samRows).toEqual(expect.arrayContaining([
+    expect.objectContaining({
+      managerAlias: 'Sam Left',
+      signupCount: 1,
+      presentCount: 1,
+      absentCount: 0
+    }),
+    expect.objectContaining({
+      managerAlias: 'Sam Right',
+      signupCount: 1,
+      presentCount: 0,
+      absentCount: 1
+    })
+  ]));
+});
+
 test('regular user cannot get attendance stats', async () => {
   const db = createFakeDb();
 
