@@ -1351,6 +1351,50 @@ test('user manager alias can be edited from user management dialog', async () =>
   expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 });
 
+test('activity detail participant manager alias editor limits remarks to 20 characters', async () => {
+  const getActivityDetail = jest.fn().mockResolvedValue({
+    activity: {
+      title: 'Friday Football'
+    },
+    teams: [
+      {
+        teamName: 'Red',
+        members: [
+          {
+            registrationId: 'reg_1',
+            userOpenId: 'openid_player',
+            signupName: 'Alex',
+            managerAlias: 'Old alias',
+            preferredPositions: [],
+            proxyRegistration: false,
+            attendanceStatus: 'present'
+          }
+        ]
+      }
+    ]
+  });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail,
+      listActivityLogs: jest.fn().mockResolvedValue({ items: [] })
+    }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  await appRoot.click(createElement({
+    action: 'edit-manager-alias',
+    targetOpenid: 'openid_player'
+  }));
+
+  expect(elements['[data-text-edit-input]'].attributes.maxlength).toBe('20');
+});
+
 test('user role save button shows progress and completion feedback', async () => {
   const deferred = createDeferred();
   const updateUserRoles = jest.fn().mockReturnValue(deferred.promise);

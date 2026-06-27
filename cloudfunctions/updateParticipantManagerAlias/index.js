@@ -7,7 +7,7 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-const MAX_MANAGER_ALIAS_LENGTH = 128;
+const MAX_MANAGER_ALIAS_LENGTH = 20;
 
 async function loadDoc(db, collectionName, id) {
   const res = await db.collection(collectionName).doc(id).get();
@@ -68,7 +68,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   }
 
   if (managerAlias.length > MAX_MANAGER_ALIAS_LENGTH) {
-    throw businessError('managerAlias cannot exceed 128 characters');
+    throw businessError('managerAlias cannot exceed 20 characters');
   }
 
   const [activity, actor, registrations] = await Promise.all([
