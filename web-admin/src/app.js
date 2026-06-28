@@ -993,7 +993,16 @@
       }
 
       const name = String(row.managerAlias || row.participantName || '').trim();
-      state.attendanceDetailRows = Array.isArray(row.details) ? row.details : [];
+      const parseDetailTime = value => {
+        const text = String(value || '').trim();
+        if (!text) {
+          return 0;
+        }
+        const ms = Date.parse(text.replace(' ', 'T'));
+        return Number.isNaN(ms) ? 0 : ms;
+      };
+      state.attendanceDetailRows = (Array.isArray(row.details) ? row.details.slice() : [])
+        .sort((left, right) => parseDetailTime(right.startAt) - parseDetailTime(left.startAt));
       state.attendanceDetailTitle = name ? `${name} 出勤明细` : '出勤明细';
 
       if (title) {
