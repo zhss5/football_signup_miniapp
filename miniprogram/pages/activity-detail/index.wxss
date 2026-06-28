@@ -627,8 +627,12 @@
 .proxy-signup-cancel,
 .proxy-signup-confirm {
   flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
   margin: 0;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
 .proxy-signup-cancel {
@@ -740,8 +744,9 @@
   line-height: 84rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   background: #f9fafb;
+  border: 2rpx solid #eef0ef;
 }
 
 .participant-dialog-attendance {
@@ -792,8 +797,12 @@
 .participant-dialog-cancel,
 .participant-dialog-save {
   flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
   margin: 0;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
 .participant-dialog-cancel {
