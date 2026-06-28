@@ -190,6 +190,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     row.details.push({
       activityId: activity._id || registration.activityId || '',
       activityTitle: activity.title || '',
+      activityType: normalizeActivityType(activity.activityType),
       startAt: activity.startAt || '',
       teamName: registration.teamName || '',
       signupName: registration.signupName || participantName,

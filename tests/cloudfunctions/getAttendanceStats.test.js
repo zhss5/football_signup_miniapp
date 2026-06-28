@@ -115,6 +115,7 @@ test('admin can get date-range attendance stats for started activities', async (
         {
           activityId: 'activity_1',
           activityTitle: 'Confirmed Match 1',
+          activityType: 'internal',
           startAt: '2026-05-01T12:00:00.000Z',
           teamName: '',
           signupName: 'Alex',
@@ -124,6 +125,7 @@ test('admin can get date-range attendance stats for started activities', async (
         {
           activityId: 'activity_2',
           activityTitle: 'Confirmed Match 2',
+          activityType: 'internal',
           startAt: '2026-05-08T12:00:00.000Z',
           teamName: '',
           signupName: 'Alex',
@@ -133,6 +135,7 @@ test('admin can get date-range attendance stats for started activities', async (
         {
           activityId: 'activity_other',
           activityTitle: 'Other Organizer Match',
+          activityType: 'internal',
           startAt: '2026-05-08T12:00:00.000Z',
           teamName: '',
           signupName: 'Alex',
@@ -152,6 +155,7 @@ test('admin can get date-range attendance stats for started activities', async (
         {
           activityId: 'activity_1',
           activityTitle: 'Confirmed Match 1',
+          activityType: 'internal',
           startAt: '2026-05-01T12:00:00.000Z',
           teamName: '',
           signupName: 'Ben',
@@ -180,6 +184,7 @@ test('organizer stats include only their own activities', async () => {
         {
           activityId: 'activity_1',
           activityTitle: 'Confirmed Match 1',
+          activityType: 'internal',
           startAt: '2026-05-01T12:00:00.000Z',
           teamName: '',
           signupName: 'Alex',
@@ -189,6 +194,7 @@ test('organizer stats include only their own activities', async () => {
         {
           activityId: 'activity_2',
           activityTitle: 'Confirmed Match 2',
+          activityType: 'internal',
           startAt: '2026-05-08T12:00:00.000Z',
           teamName: '',
           signupName: 'Alex',
@@ -208,6 +214,7 @@ test('organizer stats include only their own activities', async () => {
         {
           activityId: 'activity_1',
           activityTitle: 'Confirmed Match 1',
+          activityType: 'internal',
           startAt: '2026-05-01T12:00:00.000Z',
           teamName: '',
           signupName: 'Ben',
@@ -217,6 +224,28 @@ test('organizer stats include only their own activities', async () => {
       ]
     }
   ]);
+});
+
+test('attendance detail rows include activity type', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Confirmed Match 1',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'confirmed',
+        startAt: '2026-05-01T12:00:00.000Z',
+        activityType: 'external'
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
+  const alex = result.items.find(item => item.participantName === 'Alex');
+
+  expect(alex.details.find(row => row.activityId === 'activity_1').activityType).toBe('external');
+  expect(alex.details.find(row => row.activityId === 'activity_2').activityType).toBe('internal');
 });
 
 test('blank attendanceStatus counts as present', async () => {

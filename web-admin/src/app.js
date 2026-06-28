@@ -147,6 +147,10 @@
     return `<span class="status-pill status-pill-type">${escapeHtml(label)}</span>`;
   }
 
+  function formatActivityTypeText(value) {
+    return String(value || '').trim() === 'external' ? '外战' : '内战';
+  }
+
   function renderRatePill(text) {
     const label = String(text || '').trim();
     if (!label) {
@@ -975,6 +979,7 @@
           `<tr>` +
           `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.activityTitle || row.activityId)}</td>` +
+          `<td>${renderTypePill(formatActivityTypeText(row.activityType))}</td>` +
           `<td>${escapeHtml(row.startAt)}</td>` +
           `<td>${escapeHtml(row.signupName)}</td>` +
           `<td>${escapeHtml(row.managerAlias)}</td>` +
