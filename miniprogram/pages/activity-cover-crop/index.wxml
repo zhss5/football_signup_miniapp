@@ -20,6 +20,8 @@
         max="{{maxZoomPercent}}"
         value="{{cropModel.zoomPercent}}"
         show-value
+        activeColor="#16a34a"
+        block-color="#16a34a"
         bindchange="onZoomChange"
         bindchanging="onZoomChange"
       />
@@ -27,15 +29,15 @@
 
     <view wx:if="{{canPanX}}" class="control">
       <text class="control-label">{{i18n.coverCrop.controls.panX}}</text>
-      <slider value="{{cropModel.panXPercent}}" show-value bindchange="onPanXChange" bindchanging="onPanXChange" />
+      <slider value="{{cropModel.panXPercent}}" show-value activeColor="#16a34a" block-color="#16a34a" bindchange="onPanXChange" bindchanging="onPanXChange" />
     </view>
 
     <view wx:if="{{canPanY}}" class="control">
       <text class="control-label">{{i18n.coverCrop.controls.panY}}</text>
-      <slider value="{{cropModel.panYPercent}}" show-value bindchange="onPanYChange" bindchanging="onPanYChange" />
+      <slider value="{{cropModel.panYPercent}}" show-value activeColor="#16a34a" block-color="#16a34a" bindchange="onPanYChange" bindchanging="onPanYChange" />
     </view>
 
-    <button bindtap="onConfirm" loading="{{processing}}">{{i18n.coverCrop.actions.confirm}}</button>
+    <button class="confirm-button" bindtap="onConfirm" loading="{{processing}}">{{i18n.coverCrop.actions.confirm}}</button>
     <button class="secondary-button" bindtap="onCancel" disabled="{{processing}}">{{i18n.coverCrop.actions.cancel}}</button>
   </view>
 

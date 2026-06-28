@@ -72,9 +72,32 @@
   font-weight: 600;
 }
 
+.confirm-button {
+  height: 92rpx;
+  line-height: 92rpx;
+  background: #15803d;
+  color: #ffffff;
+  border-radius: 18rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.confirm-button::after {
+  border: 0;
+}
+
 .secondary-button {
-  background: #f9fafb;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #ffffff;
   color: #374151;
+  border: 2rpx solid #e5e7eb;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+
+.secondary-button::after {
+  border: 0;
 }
 
 .loading-state {
