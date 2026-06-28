@@ -6,7 +6,7 @@
     <view class="profile-row">
       <button class="avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
         <image wx:if="{{avatarUrl}}" class="avatar-image" src="{{avatarUrl}}" mode="aspectFill" />
-        <text wx:else class="avatar-placeholder">{{i18n.activityJoin.avatarPlaceholder}}</text>
+        <view wx:else class="avatar-placeholder"></view>
       </button>
       <view class="profile-copy">
         <text class="label">{{i18n.activityJoin.avatar}}</text>
