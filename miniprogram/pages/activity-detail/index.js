@@ -530,7 +530,6 @@ Page({
     };
     const aliasEditable = Boolean(detail.managerAliasEditable && member.userOpenId);
     const attendanceVisible = Boolean(
-      aliasEditable &&
       detail.attendanceActionVisible &&
       detail.registrationId &&
       detail.attendanceActionStatus

@@ -665,9 +665,9 @@ describe('activity detail page', () => {
         registrationId: 'registration_1',
         attendanceStatus: 'present',
         attendanceStatusText: 'Present',
-        attendanceActionVisible: true,
-        attendanceActionStatus: 'absent',
-        attendanceActionText: 'Mark absent'
+        attendanceActionVisible: false,
+        attendanceActionStatus: '',
+        attendanceActionText: ''
       }
     });
 
@@ -683,6 +683,45 @@ describe('activity detail page', () => {
     expect(ctx.data.participantDialogAttendanceVisible).toBe(false);
     expect(ctx.data.participantDialogRegistrationId).toBe('');
     expect(ctx.data.participantDialogAttendanceActionStatus).toBe('');
+  });
+
+  test('onMemberTap lets managers set attendance for proxy members without alias editing', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US'
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      }
+    };
+
+    pageConfig.onMemberTap.call(ctx, {
+      detail: {
+        userOpenId: '',
+        signupName: '队员2',
+        avatarText: '队',
+        proxyRegistration: true,
+        managerAlias: '',
+        managerAliasEditable: false,
+        registrationId: 'registration_proxy_1',
+        attendanceStatus: 'present',
+        attendanceStatusText: 'Present',
+        attendanceActionVisible: true,
+        attendanceActionStatus: 'absent',
+        attendanceActionText: 'Mark absent'
+      }
+    });
+
+    expect(ctx.data.participantDialogVisible).toBe(true);
+    expect(ctx.data.participantDialogAliasEditable).toBe(false);
+    expect(ctx.data.participantDialogAttendanceVisible).toBe(true);
+    expect(ctx.data.participantDialogRegistrationId).toBe('registration_proxy_1');
+    expect(ctx.data.participantDialogAttendanceStatus).toBe('present');
+    expect(ctx.data.participantDialogAttendanceActionStatus).toBe('absent');
   });
 
   test('onMemberTap opens an editable participant alias dialog for managers', () => {
