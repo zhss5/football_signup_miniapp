@@ -1103,19 +1103,29 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid #d5ded8;
-  border-radius: 9px;
-  background: #ffffff;
-  color: #344054;
-  font-weight: 600;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f3;
+  color: #64748b;
+  font-size: 0;
   cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.modal-close-button::before {
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  content: "";
+  mask: url("./assets/icons/close.svg") center / contain no-repeat;
 }
 
 .modal-close-button:hover {
-  border-color: var(--admin-green);
-  color: var(--admin-green);
+  background: #fdecec;
+  color: #c2362f;
 }
 
 .activity-detail-loading {
