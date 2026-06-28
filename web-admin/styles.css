@@ -11,10 +11,13 @@
   --admin-danger: #dc2626;
   color-scheme: light;
   font-family:
-    "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei",
+    "Noto Sans SC", sans-serif;
   color: var(--admin-text);
   background: var(--admin-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
