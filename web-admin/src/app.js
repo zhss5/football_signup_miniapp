@@ -407,7 +407,7 @@
       setHidden(query('[data-view="login"]'), false);
       setHidden(query('[data-view="forbidden"]'), true);
       setHidden(query('[data-view="workspace"]'), true);
-      renderLoginStatus('打开小程序，从“我的”页面扫描此二维码。');
+      renderLoginStatus('等待扫码确认...');
       renderLoginQrPayload(challenge && challenge.qrPayload ? challenge.qrPayload : '');
     }
 
@@ -1669,7 +1669,7 @@
       const result = await api.pollWebAdminLogin(challenge.loginId, challenge.pollToken);
 
       if (!result || result.status === 'pending') {
-        renderLoginStatus('等待小程序确认登录...');
+        renderLoginStatus('等待扫码确认...');
         return result;
       }
 

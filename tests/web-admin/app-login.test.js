@@ -53,9 +53,7 @@ test('web admin starts with a QR login challenge when no session token is stored
   expect(elements['[data-view="identity"]'].hidden).toBe(true);
   expect(elements['[data-view="login"]'].hidden).toBe(false);
   expect(elements['[data-view="workspace"]'].hidden).toBe(true);
-  expect(elements['[data-login-status]'].textContent).toBe(
-    '打开小程序，从“我的”页面扫描此二维码。'
-  );
+  expect(elements['[data-login-status]'].textContent).toBe('等待扫码确认...');
   expect(elements['[data-login-payload]'].value).toBe(
     'football-signup-web-admin-login:login_1:confirm_1'
   );
@@ -128,4 +126,38 @@ test('web admin stores a confirmed QR session and then loads the workspace', asy
   expect(api.getCurrentUser).toHaveBeenCalled();
   expect(elements['[data-view="login"]'].hidden).toBe(true);
   expect(elements['[data-view="workspace"]'].hidden).toBe(false);
+});
+
+test('web admin uses compact copy while QR login is pending', async () => {
+  const elements = {
+    '[data-view="identity"]': createElement(),
+    '[data-view="login"]': createElement(),
+    '[data-view="forbidden"]': createElement(),
+    '[data-view="workspace"]': createElement(),
+    '[data-login-status]': createElement(),
+    '[data-login-payload]': createElement(),
+    '[data-login-qr]': createElement()
+  };
+  const appRoot = createAppRoot(elements);
+  const api = {
+    createWebAdminLogin: jest.fn().mockResolvedValue({
+      loginId: 'login_1',
+      pollToken: 'poll_1',
+      qrPayload: 'football-signup-web-admin-login:login_1:confirm_1'
+    }),
+    pollWebAdminLogin: jest.fn().mockResolvedValue({
+      status: 'pending'
+    })
+  };
+
+  const app = createWebAdminApp({
+    appRoot,
+    api,
+    autoPoll: false
+  });
+
+  await app.start();
+  await app.pollWebAdminLogin();
+
+  expect(elements['[data-login-status]'].textContent).toBe('等待扫码确认...');
 });

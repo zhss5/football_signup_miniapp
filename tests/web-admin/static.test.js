@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260628-login-pixel';
+const WEB_ADMIN_ASSET_VERSION = '20260628-login-qr-fit';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -202,16 +202,19 @@ test('web admin login QR panel is centered instead of pinned to the right column
   expect(css).toContain('border-radius: 18px');
   expect(css).toContain('.login-brand-pill');
   expect(css).toContain('height: 26px');
-  expect(css).toContain('font-size: 12px');
+  expect(css).toContain('font-size: 11px');
   expect(css).toContain('.login-copy h1');
-  expect(css).toContain('font-size: 24px');
-  expect(css).toContain('line-height: 32px');
+  expect(css).toContain('font-size: 22px');
+  expect(css).toContain('line-height: 30px');
   expect(css).toContain('.login-actions');
   expect(css).toContain('grid-template-columns: minmax(0, auto) auto');
   expect(css).toContain('.login-qr-card');
   expect(css).toContain('width: 180px');
   expect(css).toContain('.login-qr-surface');
   expect(css).toContain('background: #ffffff url("./assets/icons/qr.svg") center / 98px 98px no-repeat');
+  expect(css).toContain('overflow: hidden');
+  expect(css).toContain('width: 150px !important');
+  expect(css).toContain('height: 150px !important');
   expect(css).toContain('.login-qr-note');
   expect(css).toContain('@media (max-width: 560px)');
   expect(css).not.toContain('grid-template-columns: minmax(0, 1fr) 300px');
