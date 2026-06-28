@@ -293,15 +293,15 @@ textarea {
   display: inline-flex;
   align-items: center;
   width: 100%;
-  min-height: 38px;
+  min-height: 40px;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 9px 14px;
   border: 0;
-  border-left: 3px solid transparent;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
   color: rgba(255, 255, 255, 0.84);
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
@@ -334,9 +334,9 @@ textarea {
 }
 
 .admin-nav button[aria-current="page"] {
-  border-left-color: #9ff0be;
   background: #16a34a;
   color: #ffffff;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
 }
 
 .admin-content {
@@ -502,8 +502,40 @@ textarea {
   border-radius: 9px;
   background: var(--admin-green);
   color: #ffffff;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+}
+
+.role-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+.role-pill-admin {
+  background: #e9f8ef;
+  color: #118a43;
+}
+
+.role-pill-organizer {
+  background: #e6f1fb;
+  color: #185fa5;
+}
+
+.role-pill-user {
+  background: #f1f3f5;
+  color: #64748b;
 }
 
 .toolbar button[type="submit"]::before,

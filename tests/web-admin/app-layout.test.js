@@ -1098,7 +1098,10 @@ test('user rows render Chinese role labels without changing role values', async 
   await app.start();
 
   const html = elements['[data-users-table]'].innerHTML;
-  expect(html).toContain('普通用户、组织者');
+  expect(html).toContain('class="role-pill role-pill-user"');
+  expect(html).toContain('class="role-pill role-pill-organizer"');
+  expect(html).toContain('普通用户');
+  expect(html).toContain('组织者');
   expect(html).toContain('class="user-display"');
   expect(html).not.toContain('class="user-avatar-button"');
   expect(html).not.toContain('data-action="preview-user-avatar"');

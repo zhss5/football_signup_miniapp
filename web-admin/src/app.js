@@ -84,6 +84,34 @@
       .join('、');
   }
 
+  function rolePillTone(role) {
+    if (role === 'admin' || role === 'super_admin') {
+      return 'admin';
+    }
+
+    if (role === 'organizer') {
+      return 'organizer';
+    }
+
+    return 'user';
+  }
+
+  function renderRolePills(rolesText) {
+    const items = String(rolesText || '')
+      .split(',')
+      .map(role => role.trim())
+      .filter(Boolean);
+    const list = items.length ? items : ['user'];
+
+    return list
+      .map(
+        role =>
+          `<span class="role-pill role-pill-${rolePillTone(role)}">` +
+          `${escapeHtml(formatRoleLabel(role))}</span>`
+      )
+      .join('');
+  }
+
   function formatDelimitedLabels(value, labels) {
     return String(value || '')
       .split('/')
@@ -563,7 +591,7 @@
             `<td>${renderEditableTextControl(row.managerAlias, 'edit-user-manager-alias', {
               'target-openid': row.openid
             })}</td>` +
-            `<td>${escapeHtml(formatRoleList(row.rolesText))}</td>` +
+            `<td><div class="role-pills">${renderRolePills(row.rolesText)}</div></td>` +
             `<td><div class="role-management-control">` +
             `<div class="role-toggle-list">${controls}</div>` +
             `<button type="button" data-action="save-roles" ` +
