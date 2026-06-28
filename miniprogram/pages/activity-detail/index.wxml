@@ -170,7 +170,7 @@
 
   <view wx:if="{{participantDialogVisible}}" class="participant-dialog-backdrop" catchtap="onParticipantDialogCancel">
     <view class="participant-dialog-panel" catchtap="noop">
-      <text class="participant-dialog-title">{{i18n.modal.participant.title}}</text>
+      <view class="participant-dialog-handle"></view>
       <view class="participant-dialog-profile">
         <image
           wx:if="{{participantDialogMember.avatarUrl}}"
@@ -185,7 +185,10 @@
       </view>
 
       <view wx:if="{{participantDialogAliasEditable}}" class="participant-dialog-field">
-        <text class="participant-dialog-label">{{i18n.modal.participant.aliasLabel}}</text>
+        <view class="participant-dialog-label-row">
+          <text class="participant-dialog-label">{{i18n.modal.participant.aliasLabel}}</text>
+          <text class="participant-dialog-counter">{{participantDialogAlias.length}}/40</text>
+        </view>
         <input
           class="participant-dialog-input"
           value="{{participantDialogAlias}}"

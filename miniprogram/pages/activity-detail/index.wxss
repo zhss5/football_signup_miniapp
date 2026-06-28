@@ -653,25 +653,27 @@
   background: #ffffff;
 }
 
-.participant-dialog-title {
-  display: block;
-  color: #111827;
-  font-size: 30rpx;
-  font-weight: 700;
+.participant-dialog-handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: 0 auto 12rpx;
+  border-radius: 999rpx;
+  background: #e5e7eb;
 }
 
 .participant-dialog-profile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 18rpx;
-  margin-top: 22rpx;
+  gap: 10rpx;
+  margin-top: 8rpx;
 }
 
 .participant-dialog-avatar-image,
 .participant-dialog-avatar-fallback {
   flex: 0 0 auto;
-  width: 96rpx;
-  height: 96rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
 }
 
@@ -681,12 +683,14 @@
   justify-content: center;
   background: #dcfce7;
   color: #166534;
-  font-size: 36rpx;
+  font-size: 40rpx;
   font-weight: 700;
+  box-shadow: 0 0 0 6rpx #ffffff, 0 0 0 10rpx #bbf7d0;
 }
 
 .participant-dialog-name {
   min-width: 0;
+  max-width: 100%;
   color: #111827;
   font-size: 32rpx;
   font-weight: 700;
@@ -699,12 +703,23 @@
   margin-top: 26rpx;
 }
 
+.participant-dialog-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
 .participant-dialog-label {
   display: block;
-  margin-bottom: 10rpx;
   color: #374151;
   font-size: 24rpx;
   font-weight: 600;
+}
+
+.participant-dialog-counter {
+  color: #c0c5cc;
+  font-size: 22rpx;
 }
 
 .participant-dialog-input {
