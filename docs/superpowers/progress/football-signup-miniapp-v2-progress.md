@@ -99,6 +99,10 @@ Completed:
   - attendance statistics include only started, non-cancelled, non-deleted activities and do not require `confirmStatus: confirmed`.
   - copy activity preserves source start/end/signup-deadline time-of-day but requires a new calendar date.
   - ordinary participants do not see `内战` / `外战`; activity type is manager-facing for create/edit and Web Admin statistics.
+- 2026-06-28 post-V2 UI modernization pass (style only): restyled the mini-program (My/Home/Detail/Create/Join/sheets/cover-crop), added vector + tabBar/activity-type icons, unified the "加载更多" pill, and modernized the Web Admin (login, sidebar, tables, detail modal, coloured pills, segmented attendance, icon edit/close buttons, restyled context menu without 确认举行). Web Admin static assets end this pass at `20260628-context-menu`.
+- 2026-06-28 functional fix: the mini-program proxy (代报名) member settings sheet now exposes present/absent controls; no cloud function change was required (`setRegistrationAttendance` already accepts proxy registration IDs).
+- full regression after the post-V2 UI pass and proxy attendance fix: `82` suites and `709` tests.
+- still deferred after the post-V2 pass (NOT implemented): invite-code signup; gesture-based (drag/zoom) cover crop, which remains slider-based; XLSX roster export, where the Web Admin still generates CSV only.
 
 ## 4. Planned Version 2 Scope
 
@@ -184,6 +188,8 @@ Completed:
 - Keep self-hosted backend migration as a later option for stronger `dev` / `test` / `prod` isolation, not as an immediate Version 2 dependency.
 
 ## 5. Next Implementation Step
+
+Version 2 is formally closed for acceptance as of 2026-06-28: the committed Version 2 scope and all Version 2 success criteria are complete and pass full regression (`82` suites, `709` tests). Invite-code signup, gesture-based (drag/zoom) cover crop, and XLSX roster export are confirmed deferred beyond Version 2; they were optional/conditional items in the plan, are not part of the Version 2 success criteria, and are not required for Version 2 acceptance.
 
 Prepare Version 2 deployment and acceptance using the deployment notes in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 

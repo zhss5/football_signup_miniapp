@@ -4,6 +4,62 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-06-28 - Version 2 Acceptance Closure
+
+Formally closed Version 2 for acceptance.
+
+Closure statement:
+
+- the committed Version 2 scope and all Version 2 success criteria are complete and pass full regression (`82` suites, `709` tests).
+- invite-code signup, gesture-based (drag/zoom) cover crop, and XLSX roster export are confirmed deferred beyond Version 2.
+- these three items were optional/conditional in the plan, are not part of the Version 2 success criteria, and are not required for Version 2 acceptance.
+
+## 2026-06-28 - Post-V2 UI Modernization Pass
+
+Ran a styling-only modernization pass across the mini-program and the Web Admin after the Version 2 functional scope was already complete. No cloud functions or business logic were changed in this pass except the proxy attendance fix logged separately below.
+
+Delivered behavior (mini-program, style only):
+
+- My page, Home, Activity Detail (immersive hero + grid action panel), Activity Create (section cards), Join page, participant/proxy/team bottom sheets, notification settings card, and cover-crop controls were restyled to the shared visual language.
+- Replaced glyph icons with inline vector (base64 SVG) icons and added PNG `tabBar` icons for 首页 / 我的, plus 内战 / 外战 activity-type icons.
+- `内战` / `外战` is presented as a segmented control for managers; ordinary participants still do not see activity type.
+- Kept the activity cover at a 5:4 ratio and the My-page delete button right-aligned per product direction.
+- Unified the Home and My "加载更多" buttons into a single pill style.
+
+Delivered behavior (Web Admin, style only):
+
+- Login screen, sidebar navigation (active pill, no left bar), data tables, and the activity-detail modal were modernized to match the agreed mockups.
+- Roles, statuses, activity type, and attendance rate now render as coloured pills; the role toggle saves instantly.
+- Attendance is edited through a segmented present/absent control; the inline text editor uses an icon-only edit button; modals use a round icon close button; the alias edit dialog is compact.
+- The activity context menu no longer offers 确认举行 and was restyled.
+- Fixed toolbar/date input icons (search icon only on `input[type="search"]`, no redundant calendar glyph on `input[type="date"]`).
+- Static asset cache-busting query strings end this pass at `20260628-context-menu`; `tests/web-admin/static.test.js` is kept in sync with that value.
+
+Deferred (still not implemented after this pass):
+
+- invite-code signup (planned only after the operational core is stable).
+- gesture-based (drag/zoom) cover crop; the crop page remains slider-based.
+- web-admin roster export remains CSV-only in the browser; XLSX output is not implemented.
+
+Verification:
+
+- full regression passed: `npm test -- --runInBand` (`82` suites, `709` tests).
+
+## 2026-06-28 - Proxy Member Attendance Fix
+
+Fixed a mini-program bug where opening the settings sheet for a 代报名 (proxy) member did not expose the present/absent controls, even though the backend already supports proxy attendance.
+
+Delivered behavior:
+
+- removed the manager-alias-editability precondition from the attendance action gating in `miniprogram/pages/activity-detail/index.js`; the attendance toggle now shows whenever the detail exposes `registrationId` and an attendance action status, independent of whether the alias is editable.
+- `miniprogram/utils/formatters.js` keeps `attendanceActionVisible` driven only by `canManageAttendance` and `registrationId`, so proxy registrations are no longer excluded.
+- no cloud function change was required; `setRegistrationAttendance` already accepts proxy registration IDs.
+
+Verification:
+
+- updated the activity-detail attendance test to use a realistic regular-user case and added a proxy-member attendance case.
+- full regression passed: `npm test -- --runInBand` (`82` suites, `709` tests).
+
 ## 2026-06-27 - Final V2 Product Rule Confirmation
 
 Confirmed the remaining Version 2 product rules after implementation review.
