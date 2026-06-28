@@ -610,13 +610,7 @@ describe('activity detail page', () => {
     expect(wxss).toContain('.participant-dialog-panel');
   });
 
-  test('onParticipantAttendanceChange updates member attendance and reloads detail', async () => {
-    setRegistrationAttendance.mockResolvedValue({
-      registration: {
-        _id: 'registration_1',
-        attendanceStatus: 'absent'
-      }
-    });
+  test('onParticipantAttendanceChange only changes the pending dialog status', async () => {
     const ctx = {
       data: {
         activityId: 'activity_123',
@@ -624,10 +618,10 @@ describe('activity detail page', () => {
         participantDialogRegistrationId: 'registration_1',
         participantDialogAttendanceVisible: true,
         participantDialogAttendanceStatus: 'present',
+        participantDialogOriginalAttendanceStatus: 'present',
         participantDialogAttendanceSaving: false
       },
       reload: jest.fn().mockResolvedValue(),
-      closeParticipantDialog: pageConfig.closeParticipantDialog,
       setData(update) {
         this.data = {
           ...this.data,
@@ -640,17 +634,10 @@ describe('activity detail page', () => {
       currentTarget: { dataset: { status: 'absent' } }
     });
 
-    expect(setRegistrationAttendance).toHaveBeenCalledWith(
-      'activity_123',
-      'registration_1',
-      'absent'
-    );
-    expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Attendance updated',
-      icon: 'success'
-    });
-    expect(ctx.data.participantDialogVisible).toBe(false);
-    expect(ctx.reload).toHaveBeenCalled();
+    expect(ctx.data.participantDialogAttendanceStatus).toBe('absent');
+    expect(setRegistrationAttendance).not.toHaveBeenCalled();
+    expect(global.wx.showToast).not.toHaveBeenCalled();
+    expect(ctx.reload).not.toHaveBeenCalled();
   });
 
   test('onMemberTap opens an info-only participant dialog for regular users', () => {
@@ -745,11 +732,17 @@ describe('activity detail page', () => {
     expect(ctx.data.participantDialogAttendanceActionText).toBe('Mark absent');
   });
 
-  test('onParticipantAliasSave updates the current participant alias and reloads detail', async () => {
+  test('onParticipantAliasSave applies changed alias and attendance status together', async () => {
     updateParticipantManagerAlias.mockResolvedValue({
       user: {
         _id: 'openid_player',
         managerAlias: 'Zhang San'
+      }
+    });
+    setRegistrationAttendance.mockResolvedValue({
+      registration: {
+        _id: 'registration_1',
+        attendanceStatus: 'absent'
       }
     });
 
@@ -759,6 +752,11 @@ describe('activity detail page', () => {
         locale: 'en-US',
         participantDialogAliasEditable: true,
         participantDialogAlias: '  Zhang San  ',
+        participantDialogOriginalAlias: 'Old Alias',
+        participantDialogRegistrationId: 'registration_1',
+        participantDialogAttendanceVisible: true,
+        participantDialogAttendanceStatus: 'absent',
+        participantDialogOriginalAttendanceStatus: 'present',
         participantDialogMember: {
           userOpenId: 'openid_player',
           signupName: 'Alex'
@@ -781,8 +779,13 @@ describe('activity detail page', () => {
       'openid_player',
       'Zhang San'
     );
+    expect(setRegistrationAttendance).toHaveBeenCalledWith(
+      'activity_123',
+      'registration_1',
+      'absent'
+    );
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Alias updated',
+      title: 'Saved',
       icon: 'success'
     });
     expect(ctx.data.participantDialogVisible).toBe(false);

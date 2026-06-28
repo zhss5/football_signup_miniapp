@@ -275,11 +275,13 @@ Page({
     participantDialogVisible: false,
     participantDialogMember: null,
     participantDialogAlias: '',
+    participantDialogOriginalAlias: '',
     participantDialogAliasEditable: false,
     participantDialogSaving: false,
     participantDialogRegistrationId: '',
     participantDialogAttendanceVisible: false,
     participantDialogAttendanceStatus: '',
+    participantDialogOriginalAttendanceStatus: '',
     participantDialogAttendanceStatusText: '',
     participantDialogAttendanceActionStatus: '',
     participantDialogAttendanceActionText: '',
@@ -539,10 +541,14 @@ Page({
       participantDialogMember: member,
       participantDialogAliasEditable: aliasEditable,
       participantDialogAlias: aliasEditable ? String(detail.managerAlias || '').trim() : '',
+      participantDialogOriginalAlias: aliasEditable ? String(detail.managerAlias || '').trim() : '',
       participantDialogSaving: false,
       participantDialogRegistrationId: attendanceVisible ? String(detail.registrationId || '') : '',
       participantDialogAttendanceVisible: attendanceVisible,
       participantDialogAttendanceStatus: attendanceVisible ? String(detail.attendanceStatus || '') : '',
+      participantDialogOriginalAttendanceStatus: attendanceVisible
+        ? String(detail.attendanceStatus || '')
+        : '',
       participantDialogAttendanceStatusText: attendanceVisible
         ? String(detail.attendanceStatusText || '')
         : '',
@@ -567,11 +573,13 @@ Page({
       participantDialogVisible: false,
       participantDialogMember: null,
       participantDialogAlias: '',
+      participantDialogOriginalAlias: '',
       participantDialogAliasEditable: false,
       participantDialogSaving: false,
       participantDialogRegistrationId: '',
       participantDialogAttendanceVisible: false,
       participantDialogAttendanceStatus: '',
+      participantDialogOriginalAttendanceStatus: '',
       participantDialogAttendanceStatusText: '',
       participantDialogAttendanceActionStatus: '',
       participantDialogAttendanceActionText: '',
@@ -601,12 +609,35 @@ Page({
     }
 
     const managerAlias = String(this.data.participantDialogAlias || '').trim();
+    const originalAlias = String(this.data.participantDialogOriginalAlias || '').trim();
+    const registrationId = String(this.data.participantDialogRegistrationId || '').trim();
+    const attendanceStatus = String(this.data.participantDialogAttendanceStatus || '').trim();
+    const originalAttendanceStatus = String(
+      this.data.participantDialogOriginalAttendanceStatus || ''
+    ).trim();
+    const aliasChanged = managerAlias !== originalAlias;
+    const attendanceChanged = Boolean(
+      this.data.participantDialogAttendanceVisible &&
+      registrationId &&
+      attendanceStatus &&
+      attendanceStatus !== originalAttendanceStatus
+    );
+
+    if (!aliasChanged && !attendanceChanged) {
+      this.closeParticipantDialog();
+      return;
+    }
 
     try {
       this.setData({ participantDialogSaving: true });
-      await updateParticipantManagerAlias(this.data.activityId, member.userOpenId, managerAlias);
+      if (aliasChanged) {
+        await updateParticipantManagerAlias(this.data.activityId, member.userOpenId, managerAlias);
+      }
+      if (attendanceChanged) {
+        await setRegistrationAttendance(this.data.activityId, registrationId, attendanceStatus);
+      }
       wx.showToast({
-        title: translate('toast.managerAliasUpdated'),
+        title: translate('toast.participantSaved'),
         icon: 'success'
       });
       this.closeParticipantDialog();
@@ -618,7 +649,6 @@ Page({
   },
 
   async onParticipantAttendanceChange(event) {
-    const translate = makeTranslator(this.data.locale || getAppLocale());
     const registrationId = String(this.data.participantDialogRegistrationId || '').trim();
     const dataset = (event && event.currentTarget && event.currentTarget.dataset) || {};
     const attendanceStatus = String(dataset.status || '').trim();
@@ -635,19 +665,9 @@ Page({
       return;
     }
 
-    try {
-      this.setData({ participantDialogAttendanceSaving: true });
-      await setRegistrationAttendance(this.data.activityId, registrationId, attendanceStatus);
-      wx.showToast({
-        title: translate('toast.attendanceUpdated'),
-        icon: 'success'
-      });
-      this.closeParticipantDialog();
-      await this.reload();
-    } catch (error) {
-      this.setData({ participantDialogAttendanceSaving: false });
-      wx.showToast({ title: translateErrorMessage(error, translate), icon: 'none' });
-    }
+    this.setData({
+      participantDialogAttendanceStatus: attendanceStatus
+    });
   },
 
   onProxySignup(event) {

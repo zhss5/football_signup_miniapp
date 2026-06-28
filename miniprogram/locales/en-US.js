@@ -285,6 +285,7 @@ module.exports = {
     activityConfirmed: 'Activity confirmed',
     attendanceUpdated: 'Attendance updated',
     managerAliasUpdated: 'Alias updated',
+    participantSaved: 'Saved',
     notificationFailed: 'Notification failed',
     registrationNotificationSubscribed: 'Signup notifications enabled',
     registrationNotificationNotEnabled: 'Signup notifications not enabled',

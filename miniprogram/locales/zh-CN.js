@@ -313,6 +313,7 @@ module.exports.activity.attendance = {
 module.exports.toast.registrationNotificationSubscribed = '\u5df2\u5f00\u542f\u62a5\u540d\u901a\u77e5';
 module.exports.toast.registrationNotificationNotEnabled = '\u672a\u5f00\u542f\u62a5\u540d\u901a\u77e5';
 module.exports.toast.attendanceUpdated = '\u51fa\u52e4\u5df2\u66f4\u65b0';
+module.exports.toast.participantSaved = '\u5df2\u4fdd\u5b58';
 module.exports.activityJoin.preferredPositions = '\u559c\u6b22\u4f4d\u7f6e';
 module.exports.activityJoin.preferredPositionsHint =
   '\u53ef\u4e0d\u9009\uff0c\u6700\u591a\u9009 2 \u4e2a\u3002';
