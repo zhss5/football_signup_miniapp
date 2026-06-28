@@ -463,12 +463,21 @@
   background: #ffffff;
 }
 
+.sheet-handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: 0 auto 16rpx;
+  border-radius: 999rpx;
+  background: #e5e7eb;
+}
+
 .color-palette-title {
   display: block;
   margin-bottom: 18rpx;
   color: #111827;
   font-size: 28rpx;
   font-weight: 700;
+  text-align: center;
 }
 
 .color-palette-grid {
@@ -534,13 +543,15 @@
   color: #111827;
   font-size: 30rpx;
   font-weight: 700;
+  text-align: center;
 }
 
 .proxy-signup-team {
   display: block;
   margin-top: 6rpx;
-  color: #6b7280;
+  color: #15803d;
   font-size: 24rpx;
+  text-align: center;
 }
 
 .proxy-signup-field {
@@ -561,8 +572,9 @@
   line-height: 84rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   background: #f9fafb;
+  border: 2rpx solid #eef0ef;
 }
 
 .proxy-signup-hint {

@@ -104,6 +104,7 @@
 
   <view wx:if="{{colorPaletteVisible}}" class="color-palette-backdrop" catchtap="onColorPaletteCancel">
     <view class="color-palette-panel" catchtap="noop">
+      <view class="sheet-handle"></view>
       <text class="color-palette-title">{{i18n.activity.teamColorTitle || 'Team color'}}</text>
       <view class="color-palette-grid">
         <button
@@ -126,6 +127,7 @@
 
   <view wx:if="{{proxySignupVisible}}" class="proxy-signup-backdrop" catchtap="onProxySignupCancel">
     <view class="proxy-signup-panel" catchtap="noop">
+      <view class="sheet-handle"></view>
       <text class="proxy-signup-title">{{i18n.modal.proxySignup.title}}</text>
       <text wx:if="{{proxySignupTeamName}}" class="proxy-signup-team">{{proxySignupTeamName}}</text>
 
