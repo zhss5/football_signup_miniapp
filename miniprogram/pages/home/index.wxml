@@ -1,5 +1,5 @@
 <view class="page">
-  <button wx:if="{{canCreateActivity}}" class="primary-button" bindtap="goCreate">{{i18n.home.createActivity}}</button>
+  <button wx:if="{{canCreateActivity}}" class="primary-button" bindtap="goCreate"><view class="primary-button-icon"></view><text>{{i18n.home.createActivity}}</text></button>
 
   <view class="list">
     <block wx:for="{{items}}" wx:key="_id">
@@ -8,6 +8,7 @@
   </view>
 
   <view wx:if="{{emptyVisible}}" class="empty-state">
+    <view class="empty-icon"></view>
     <text class="empty-title">{{i18n.home.emptyTitle}}</text>
     <text class="empty-copy">{{i18n.home.emptyCopy}}</text>
   </view>
