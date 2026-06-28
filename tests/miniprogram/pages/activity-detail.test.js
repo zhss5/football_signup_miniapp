@@ -1602,8 +1602,8 @@ describe('activity detail page', () => {
           {
             teamName: 'White',
             members: [
-              { signupName: 'Alex', preferredPositions: ['前锋', '门将'] },
-              { signupName: '  Ben  ' }
+              { signupName: 'Alex', managerAlias: '老张', preferredPositions: ['前锋', '门将'] },
+              { signupName: '  Ben  ', managerAliasText: '小本' }
             ]
           },
           {
@@ -1620,7 +1620,7 @@ describe('activity detail page', () => {
     pageConfig.onCopyParticipantNames.call(ctx);
 
     expect(global.wx.setClipboardData).toHaveBeenCalledWith({
-      data: 'Alex (前锋 / 门将)\nBen\nChris (中场)',
+      data: 'Alex 老张 (前锋 / 门将)\nBen 小本\nChris (中场)',
       success: expect.any(Function)
     });
     expect(global.wx.showToast).toHaveBeenCalledWith({

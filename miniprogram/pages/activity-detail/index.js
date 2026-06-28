@@ -131,14 +131,27 @@ function buildParticipantNameList(teams = []) {
     members.forEach(member => {
       const name = String(member.signupName || member.displayName || '').trim();
 
-      if (name) {
-        const positionsText = buildParticipantPositionsText(member);
-        names.push(positionsText ? `${name} (${positionsText})` : name);
+      if (!name) {
+        return;
       }
+
+      const aliasText = buildParticipantAliasText(member);
+      const positionsText = buildParticipantPositionsText(member);
+      let line = aliasText ? `${name} ${aliasText}` : name;
+
+      if (positionsText) {
+        line += ` (${positionsText})`;
+      }
+
+      names.push(line);
     });
 
     return names;
   }, []);
+}
+
+function buildParticipantAliasText(member = {}) {
+  return String(member.managerAliasText || member.managerAlias || '').trim();
 }
 
 function buildParticipantPositionsText(member = {}) {
