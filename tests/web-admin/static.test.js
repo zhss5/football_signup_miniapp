@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260627-manager-alias-40';
+const WEB_ADMIN_ASSET_VERSION = '20260628-web-admin-polish';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -187,11 +187,11 @@ test('web admin login QR panel is centered instead of pinned to the right column
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
   expect(css).toContain('.login-panel');
-  expect(css).toContain('grid-template-columns: minmax(0, 620px)');
+  expect(css).toContain('grid-template-columns: minmax(0, 1fr) 220px');
   expect(css).toContain('justify-content: center');
-  expect(css).toContain('justify-items: center');
+  expect(css).toContain('width: min(560px, calc(100vw - 64px))');
   expect(css).toContain('.login-qr-card');
-  expect(css).toContain('width: min(100%, 300px)');
+  expect(css).toContain('width: 180px');
   expect(css).not.toContain('grid-template-columns: minmax(0, 1fr) 300px');
 });
 
@@ -265,9 +265,22 @@ test('web admin shell uses a CloudBase-like console layout', () => {
   const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
 
   expect(css).toContain('max-width: none');
-  expect(css).toContain('grid-template-columns: 188px minmax(0, 1fr)');
-  expect(css).toContain('border-right: 1px solid #e5e8ef');
-  expect(css).toContain('box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04)');
+  expect(css).toContain('grid-template-columns: 164px minmax(0, 1fr)');
+  expect(css).toContain('--admin-green: #118a43');
+  expect(css).toContain('background: #123d22');
+  expect(css).toContain('box-shadow: 0 18px 44px rgba(15, 23, 18, 0.08)');
+});
+
+test('web admin visual shell uses generated local icon assets', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('assets/icons/football.svg');
+  expect(css).toContain('assets/icons/users.svg');
+  expect(css).toContain('assets/icons/calendar.svg');
+  expect(css).toContain('assets/icons/chart.svg');
+  expect(css).toContain('assets/icons/search.svg');
+  expect(css).toContain('assets/icons/download.svg');
+  expect(css).toContain('assets/icons/refresh.svg');
 });
 
 test('activity detail dialog splits roster and logs into fixed half-height panes', () => {
