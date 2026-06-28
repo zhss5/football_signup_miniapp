@@ -1198,6 +1198,11 @@
           input.removeAttribute('maxlength');
         }
       }
+
+      const compact = Boolean(edit.maxLength && edit.maxLength <= 60);
+      if (modal.classList && typeof modal.classList.toggle === 'function') {
+        modal.classList.toggle('text-edit-modal-compact', compact);
+      }
     }
 
     function closeTextEditDialog() {

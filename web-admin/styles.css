@@ -1198,6 +1198,14 @@ textarea {
   line-height: 26px;
 }
 
+.text-edit-modal-compact .text-edit-dialog {
+  width: min(400px, calc(100vw - 48px));
+}
+
+.text-edit-modal-compact .text-edit-dialog textarea {
+  min-height: 52px;
+}
+
 .text-edit-dialog textarea {
   width: 100%;
   min-height: 150px;
