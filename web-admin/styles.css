@@ -541,6 +541,41 @@ textarea {
   color: #64748b;
 }
 
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+.status-pill-success {
+  background: #e9f8ef;
+  color: #118a43;
+}
+
+.status-pill-danger {
+  background: #fdecec;
+  color: #c2362f;
+}
+
+.status-pill-warning {
+  background: #fef6e7;
+  color: #b9770b;
+}
+
+.status-pill-muted {
+  background: #f1f3f5;
+  color: #64748b;
+}
+
+.status-pill-type {
+  background: #eef2f7;
+  color: #475569;
+}
+
 .toolbar button[type="submit"]::before,
 .toolbar button[data-stats-load-button]::before {
   width: 14px;

@@ -112,6 +112,56 @@
       .join('');
   }
 
+  const STATUS_PILL_TONE = {
+    published: 'success',
+    confirmed: 'success',
+    present: 'success',
+    cancelled: 'danger',
+    deleted: 'danger',
+    absent: 'danger',
+    pending: 'warning',
+    draft: 'muted'
+  };
+
+  function renderStatusPills(value, labels) {
+    const items = String(value || '')
+      .split('/')
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    return items
+      .map(key => {
+        const tone = STATUS_PILL_TONE[key] || 'muted';
+        const label = (labels && labels[key]) || key;
+        return `<span class="status-pill status-pill-${tone}">${escapeHtml(label)}</span>`;
+      })
+      .join('');
+  }
+
+  function renderTypePill(text) {
+    const label = String(text || '').trim();
+    if (!label) {
+      return '';
+    }
+
+    return `<span class="status-pill status-pill-type">${escapeHtml(label)}</span>`;
+  }
+
+  function renderRatePill(text) {
+    const label = String(text || '').trim();
+    if (!label) {
+      return '';
+    }
+
+    const value = parseFloat(label);
+    let tone = 'muted';
+    if (Number.isFinite(value)) {
+      tone = value >= 80 ? 'success' : value >= 50 ? 'warning' : 'danger';
+    }
+
+    return `<span class="status-pill status-pill-${tone}">${escapeHtml(label)}</span>`;
+  }
+
   function formatDelimitedLabels(value, labels) {
     return String(value || '')
       .split('/')
@@ -732,9 +782,9 @@
             `>` +
             `<td>${index + 1}</td>` +
             `<td>${escapeHtml(row.title)}</td>` +
-            `<td>${escapeHtml(row.activityTypeText)}</td>` +
+            `<td>${renderTypePill(row.activityTypeText)}</td>` +
             `<td>${escapeHtml(row.startAt)}</td>` +
-            `<td>${escapeHtml(formatStatusText(row.statusText))}</td>` +
+            `<td>${renderStatusPills(row.statusText, STATUS_LABELS)}</td>` +
             `<td>${renderPersonCell(row.organizerDisplayName, row.organizerOpenId)}</td>` +
             `<td>${escapeHtml(row.joinedCount)}</td>` +
             `<td>${escapeHtml(row.signupLimitTotal)}</td>` +
@@ -842,7 +892,7 @@
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
           `<td><div class="attendance-status-control">` +
-          `<span>${escapeHtml(formatStatusText(row.attendanceStatus))}</span>` +
+          `<span>${renderStatusPills(row.attendanceStatus, STATUS_LABELS)}</span>` +
           `<button type="button" data-action="toggle-attendance" ` +
           `data-registration-id="${escapeHtml(row.registrationId)}" ` +
           `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
@@ -899,7 +949,7 @@
           `<td>${escapeHtml(row.signupCount)}</td>` +
           `<td>${escapeHtml(row.presentCount)}</td>` +
           `<td>${escapeHtml(row.absentCount)}</td>` +
-          `<td>${escapeHtml(row.attendanceRateText)}</td>` +
+          `<td>${renderRatePill(row.attendanceRateText)}</td>` +
           `</tr>`
         ))
         .join('');
@@ -926,7 +976,7 @@
           `<td>${escapeHtml(row.startAt)}</td>` +
           `<td>${escapeHtml(row.signupName)}</td>` +
           `<td>${escapeHtml(row.managerAlias)}</td>` +
-          `<td>${escapeHtml(formatStatusText(row.attendanceStatus))}</td>` +
+          `<td>${renderStatusPills(row.attendanceStatus, STATUS_LABELS)}</td>` +
           `</tr>`
         ))
         .join('');
