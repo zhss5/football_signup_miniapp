@@ -61,13 +61,13 @@ textarea {
   justify-content: center;
   width: min(560px, calc(100vw - 48px));
   box-sizing: border-box;
-  gap: 52px;
+  gap: 40px;
   margin: 8px auto;
   padding: 40px;
-  border: 1px solid rgba(17, 138, 67, 0.1);
+  border: 1px solid #eef0ef;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 68px rgba(15, 23, 18, 0.08);
+  background: #ffffff;
+  box-shadow: 0 16px 44px rgba(15, 23, 18, 0.08);
 }
 
 .login-copy {
@@ -103,7 +103,7 @@ textarea {
   background: var(--admin-green-soft);
   color: var(--admin-green);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 26px;
 }
 
@@ -117,9 +117,9 @@ textarea {
 
 .login-copy h1 {
   margin: 18px 0 12px;
-  color: #07172f;
+  color: #111827;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 30px;
   letter-spacing: 0;
 }
@@ -127,7 +127,7 @@ textarea {
 .login-copy p {
   max-width: 250px;
   margin: 0;
-  color: #4a5b70;
+  color: #6b7280;
   font-size: 13px;
   line-height: 23px;
 }
@@ -148,7 +148,7 @@ textarea {
   min-height: 22px;
   color: var(--admin-green);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -164,16 +164,15 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
-  padding: 0 13px;
-  border: 1px solid #d9e3de;
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #ffffff;
-  color: #243246;
+  color: #374151;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 1px rgba(15, 23, 18, 0.02);
 }
 
 .login-copy button::before {
@@ -198,10 +197,10 @@ textarea {
   height: 180px;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid #e4e8ea;
+  border: 1px solid #eef0ef;
   border-radius: 14px;
   background: #ffffff url("./assets/icons/qr.svg") center / 98px 98px no-repeat;
-  box-shadow: 0 14px 36px rgba(15, 23, 18, 0.07);
+  box-shadow: 0 8px 22px rgba(15, 23, 18, 0.06);
 }
 
 .login-qr-card canvas {
@@ -227,8 +226,8 @@ textarea {
 }
 
 .login-qr-note {
-  color: #94a3b8;
-  font-size: 12px;
+  color: #9ca3af;
+  font-size: 11px;
   line-height: 18px;
 }
 
