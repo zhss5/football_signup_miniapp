@@ -306,6 +306,7 @@ module.exports.activity.actions.registrationNotificationsSubscribed = '\u5df2\u8
 module.exports.activity.actions.markPresent = '\u8bbe\u4e3a\u51fa\u52e4';
 module.exports.activity.actions.markAbsent = '\u8bbe\u4e3a\u7f3a\u52e4';
 module.exports.activity.attendance = {
+  title: '\u51fa\u52e4\u72b6\u6001',
   present: '\u51fa\u52e4',
   absent: '\u7f3a\u52e4'
 };

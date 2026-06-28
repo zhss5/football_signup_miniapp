@@ -201,14 +201,19 @@
       </view>
 
       <view wx:if="{{participantDialogAttendanceVisible}}" class="participant-dialog-attendance">
-        <text class="participant-dialog-attendance-status">{{participantDialogAttendanceStatusText}}</text>
-        <button
-          class="participant-dialog-attendance-button {{participantDialogAttendanceActionStatus === 'present' ? 'participant-dialog-attendance-present' : 'participant-dialog-attendance-absent'}}"
-          loading="{{participantDialogAttendanceSaving}}"
-          bindtap="onParticipantAttendanceChange"
-        >
-          {{participantDialogAttendanceActionText}}
-        </button>
+        <text class="participant-dialog-attendance-title">{{i18n.activity.attendance.title}}</text>
+        <view class="participant-dialog-attendance-seg">
+          <view
+            class="participant-dialog-attendance-option {{participantDialogAttendanceStatus === 'present' ? 'participant-dialog-attendance-option-present' : ''}}"
+            data-status="present"
+            bindtap="onParticipantAttendanceChange"
+          >{{i18n.activity.attendance.present}}</view>
+          <view
+            class="participant-dialog-attendance-option {{participantDialogAttendanceStatus === 'absent' ? 'participant-dialog-attendance-option-absent' : ''}}"
+            data-status="absent"
+            bindtap="onParticipantAttendanceChange"
+          >{{i18n.activity.attendance.absent}}</view>
+        </view>
       </view>
 
       <view class="participant-dialog-actions">

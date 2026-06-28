@@ -95,6 +95,7 @@ module.exports = {
       proxySignup: 'Proxy'
     },
     attendance: {
+      title: 'Attendance',
       present: 'Present',
       absent: 'Absent'
     },

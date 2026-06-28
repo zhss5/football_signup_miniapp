@@ -617,15 +617,18 @@ Page({
     }
   },
 
-  async onParticipantAttendanceChange() {
+  async onParticipantAttendanceChange(event) {
     const translate = makeTranslator(this.data.locale || getAppLocale());
     const registrationId = String(this.data.participantDialogRegistrationId || '').trim();
-    const attendanceStatus = String(this.data.participantDialogAttendanceActionStatus || '').trim();
+    const dataset = (event && event.currentTarget && event.currentTarget.dataset) || {};
+    const attendanceStatus = String(dataset.status || '').trim();
+    const currentStatus = String(this.data.participantDialogAttendanceStatus || '').trim();
 
     if (
       !this.data.participantDialogAttendanceVisible ||
       !registrationId ||
       !attendanceStatus ||
+      attendanceStatus === currentStatus ||
       this.data.participantDialogSaving ||
       this.data.participantDialogAttendanceSaving
     ) {

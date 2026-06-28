@@ -580,10 +580,11 @@ describe('activity detail page', () => {
 
     expect(wxml).not.toContain('bind:attendancechange="onAttendanceChange"');
     expect(wxml).toContain('wx:if="{{participantDialogAttendanceVisible}}"');
-    expect(wxml).toContain('participantDialogAttendanceStatusText');
-    expect(wxml).toContain('loading="{{participantDialogAttendanceSaving}}"');
+    expect(wxml).toContain('data-status="present"');
+    expect(wxml).toContain('data-status="absent"');
     expect(wxml).toContain('bindtap="onParticipantAttendanceChange"');
     expect(wxss).toContain('.participant-dialog-attendance');
+    expect(wxss).toContain('.participant-dialog-attendance-seg');
   });
 
   test('activity detail template opens a participant dialog from team list member taps', () => {
@@ -622,7 +623,7 @@ describe('activity detail page', () => {
         locale: 'en-US',
         participantDialogRegistrationId: 'registration_1',
         participantDialogAttendanceVisible: true,
-        participantDialogAttendanceActionStatus: 'absent',
+        participantDialogAttendanceStatus: 'present',
         participantDialogAttendanceSaving: false
       },
       reload: jest.fn().mockResolvedValue(),
@@ -635,7 +636,9 @@ describe('activity detail page', () => {
       }
     };
 
-    await pageConfig.onParticipantAttendanceChange.call(ctx);
+    await pageConfig.onParticipantAttendanceChange.call(ctx, {
+      currentTarget: { dataset: { status: 'absent' } }
+    });
 
     expect(setRegistrationAttendance).toHaveBeenCalledWith(
       'activity_123',

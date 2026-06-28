@@ -750,42 +750,46 @@
 }
 
 .participant-dialog-attendance {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
   margin-top: 26rpx;
-  padding: 18rpx 20rpx;
-  box-sizing: border-box;
-  border-radius: 20rpx;
-  background: #f9fafb;
 }
 
-.participant-dialog-attendance-status {
-  min-width: 0;
+.participant-dialog-attendance-title {
+  display: block;
+  margin-bottom: 10rpx;
   color: #374151;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.participant-dialog-attendance-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8rpx;
+  padding: 8rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #eef1f0;
+}
+
+.participant-dialog-attendance-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72rpx;
+  border-radius: 12rpx;
+  color: #6b7280;
   font-size: 26rpx;
   font-weight: 600;
 }
 
-.participant-dialog-attendance-button {
-  flex: 0 0 auto;
-  min-width: 180rpx;
-  height: 64rpx;
-  line-height: 64rpx;
-  margin: 0;
-  border-radius: 999rpx;
-  font-size: 26rpx;
-}
-
-.participant-dialog-attendance-absent {
-  color: #dc2626;
-  background: #fee2e2;
-}
-
-.participant-dialog-attendance-present {
-  color: #166534;
+.participant-dialog-attendance-option-present {
   background: #dcfce7;
+  color: #166534;
+}
+
+.participant-dialog-attendance-option-absent {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .participant-dialog-actions {
