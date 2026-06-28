@@ -841,16 +841,9 @@
 
       selectActivity(activityId);
 
-      const confirmButton = row.canConfirmProceeding
-        ? `<button type="button" role="menuitem" data-action="confirm-activity" ` +
-          `data-activity-id="${escapeHtml(row.activityId)}" ` +
-          `data-confirm-action="true">确认举行</button>`
-        : '';
-
       menu.innerHTML =
         `<button type="button" role="menuitem" data-action="load-activity-detail" ` +
-        `data-activity-id="${escapeHtml(row.activityId)}">打开</button>` +
-        confirmButton;
+        `data-activity-id="${escapeHtml(row.activityId)}">打开</button>`;
       menu.style.left = `${Math.max(0, Number(x) || 0)}px`;
       menu.style.top = `${Math.max(0, Number(y) || 0)}px`;
       setHidden(menu, false);

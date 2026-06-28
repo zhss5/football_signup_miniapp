@@ -790,8 +790,8 @@ test('right-clicking a pending activity shows open and confirm actions in a cont
   expect(elements['[data-activity-context-menu]'].style.left).toBe('160px');
   expect(elements['[data-activity-context-menu]'].style.top).toBe('96px');
   expect(elements['[data-activity-context-menu]'].innerHTML).toContain('data-action="load-activity-detail"');
-  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('data-action="confirm-activity"');
-  expect(elements['[data-activity-context-menu]'].innerHTML).toContain('确认举行');
+  expect(elements['[data-activity-context-menu]'].innerHTML).not.toContain('data-action="confirm-activity"');
+  expect(elements['[data-activity-context-menu]'].innerHTML).not.toContain('确认举行');
 });
 
 test('right-clicking a confirmed activity only shows the open action in the context menu', async () => {
