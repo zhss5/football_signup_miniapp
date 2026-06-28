@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260628-web-admin-polish" />
+    <link rel="stylesheet" href="./styles.css?v=20260628-login-pixel" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -12,16 +12,25 @@
 
       <section data-view="login" class="login-panel" hidden>
         <div class="login-copy">
+          <span class="login-brand-pill">
+            <span class="login-brand-icon" aria-hidden="true"></span>
+            足球报名后台
+          </span>
           <h1>后台管理登录</h1>
           <p>
             打开小程序，进入“我的”，点击“后台登录”，扫描此二维码。
           </p>
-          <p data-login-status class="login-status"></p>
-          <button type="button" data-action="restart-login">重试</button>
+          <div class="login-actions">
+            <p data-login-status class="login-status"></p>
+            <button type="button" data-action="restart-login">重试</button>
+          </div>
         </div>
         <div class="login-qr-card">
-          <canvas data-login-qr width="220" height="220" aria-label="后台登录二维码"></canvas>
+          <div class="login-qr-surface">
+            <canvas data-login-qr width="220" height="220" aria-label="后台登录二维码"></canvas>
+          </div>
           <textarea data-login-payload readonly></textarea>
+          <span class="login-qr-note">二维码 2 分钟内有效</span>
         </div>
       </section>
 
@@ -432,13 +441,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/roles.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/api.js?v=20260628-web-admin-polish"></script>
-    <script src="./vendor/qrcode.min.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/user-management.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/activity-management.js?v=20260628-web-admin-polish"></script>
-    <script src="./src/app.js?v=20260628-web-admin-polish"></script>
+    <script src="./config.test.js?v=20260628-login-pixel"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260628-login-pixel"></script>
+    <script src="./src/roles.js?v=20260628-login-pixel"></script>
+    <script src="./src/api.js?v=20260628-login-pixel"></script>
+    <script src="./vendor/qrcode.min.js?v=20260628-login-pixel"></script>
+    <script src="./src/user-management.js?v=20260628-login-pixel"></script>
+    <script src="./src/activity-management.js?v=20260628-login-pixel"></script>
+    <script src="./src/app.js?v=20260628-login-pixel"></script>
   </body>
 </html>
