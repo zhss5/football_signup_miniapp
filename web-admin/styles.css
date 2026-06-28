@@ -858,17 +858,32 @@ textarea {
   color: #9aa7b8;
 }
 
-.editable-text-action {
+.editable-text-control .editable-text-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
+  width: 30px;
   min-height: 28px;
-  height: 28px;
-  padding: 0 12px;
-  border-color: #e5e7eb;
-  background: #ffffff;
-  color: #475569;
+  height: 30px;
+  padding: 0;
+  border: 0;
   border-radius: 8px;
-  font-size: 13px;
-  line-height: 26px;
+  background: transparent;
+  color: #94a3b8;
+}
+
+.editable-text-control .editable-text-action::before {
+  width: 15px;
+  height: 15px;
+  background: currentColor;
+  content: "";
+  mask: url("./assets/icons/edit.svg") center / contain no-repeat;
+}
+
+.editable-text-control .editable-text-action:hover {
+  background: #eef5f1;
+  color: var(--admin-green);
 }
 
 .attendance-status-control {

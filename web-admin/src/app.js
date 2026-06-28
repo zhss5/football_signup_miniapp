@@ -572,7 +572,7 @@
 
               return (
                 `<label class="role-toggle" title="${escapeHtml(title)}">` +
-                `<input type="checkbox" data-role="${control.role}" ` +
+                `<input type="checkbox" data-action="toggle-role" data-role="${control.role}" ` +
                 `data-openid="${escapeHtml(row.openid)}" ` +
                 `aria-label="${escapeHtml(title)}" ` +
                 `${control.checked ? 'checked ' : ''}` +
@@ -594,8 +594,6 @@
             `<td><div class="role-pills">${renderRolePills(row.rolesText)}</div></td>` +
             `<td><div class="role-management-control">` +
             `<div class="role-toggle-list">${controls}</div>` +
-            `<button type="button" data-action="save-roles" ` +
-            `data-openid="${escapeHtml(row.openid)}" aria-label="保存用户角色">保存</button>` +
             `</div></td>` +
             `</tr>`
           );
@@ -869,7 +867,7 @@
         `<div class="editable-text-control">` +
         `<span class="editable-text-value" title="${escapeHtml(text)}">${display}</span>` +
         `<button type="button" class="editable-text-action" data-action="${escapeHtml(action)}" ${attrs} ` +
-        `${disabled ? 'disabled ' : ''}>编辑</button>` +
+        `aria-label="编辑" ${disabled ? 'disabled ' : ''}></button>` +
         `</div>`
       );
     }
@@ -1825,15 +1823,18 @@
             return;
           }
 
-          if (button.dataset.action === 'save-roles') {
-            return runWithButtonElement(button, '保存中...', async () => {
-              await saveRoles(button.dataset.openid);
-              renderUsersStatus('角色已保存');
-            }).catch(error => {
-              const message = getErrorMessage(error);
-              renderUsersStatus(message);
-              renderIdentity(message);
-            });
+          if (button.dataset.action === 'toggle-role') {
+            renderUsersStatus('正在保存角色...');
+            return saveRoles(button.dataset.openid)
+              .then(() => {
+                renderUsersStatus('角色已保存');
+              })
+              .catch(error => {
+                const message = getErrorMessage(error);
+                renderUsersStatus(message);
+                renderIdentity(message);
+                return searchUsers().catch(() => {});
+              });
           }
 
           if (button.dataset.action === 'preview-user-avatar') {

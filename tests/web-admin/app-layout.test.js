@@ -1121,13 +1121,14 @@ test('user rows render Chinese role labels without changing role values', async 
     /<td><div class="editable-text-control">[\s\S]*Left foot[\s\S]*data-action="edit-user-manager-alias"[\s\S]*<\/div><\/td>/
   );
   expect(html).toMatch(
-    /<td><div class="role-management-control"><div class="role-toggle-list">[\s\S]*data-role="organizer"[\s\S]*data-action="save-roles"[\s\S]*<\/div><\/td>/
+    /<td><div class="role-management-control"><div class="role-toggle-list">[\s\S]*data-action="toggle-role"[\s\S]*data-role="organizer"[\s\S]*<\/div><\/td>/
   );
   expect(html).not.toContain('class="table-actions"');
-  expect(html).toContain('aria-label="保存用户角色"');
+  expect(html).not.toContain('data-action="save-roles"');
+  expect(html).not.toContain('aria-label="保存用户角色"');
   expect(html).not.toContain('aria-label="保存用户备注"');
   expect(html).toContain('组织者');
-  expect(html).toContain('保存');
+  expect(html).toContain('data-action="toggle-role"');
   expect(html).not.toContain('Save');
   expect(elements['[data-users-count]'].textContent).toBe('共 1 行');
 });
@@ -1433,21 +1434,20 @@ test('user role save button shows progress and completion feedback', async () =>
       updateUserRoles
     }
   );
-  const button = createElement({
-    action: 'save-roles',
+  const toggle = createElement({
+    action: 'toggle-role',
+    role: 'organizer',
     openid: 'openid_player'
   });
-  button.textContent = '保存';
   elements['input[data-openid="openid_player"][data-role="organizer"]'] = {
     checked: true
   };
 
   await app.start();
-  const clickResult = appRoot.click(button);
+  const clickResult = appRoot.click(toggle);
 
-  expect(button.disabled).toBe(true);
-  expect(button.textContent).toBe('保存中...');
   expect(updateUserRoles).toHaveBeenCalledWith('openid_player', ['user', 'organizer']);
+  expect(elements['[data-users-status]'].textContent).toContain('正在保存角色...');
 
   deferred.resolve({
     user: {
@@ -1457,7 +1457,6 @@ test('user role save button shows progress and completion feedback', async () =>
   });
   await clickResult;
 
-  expect(button.disabled).toBe(false);
   expect(elements['[data-users-status]'].textContent).toContain('角色已保存');
 });
 
