@@ -475,13 +475,38 @@ textarea {
 .detail-search input {
   height: 36px;
   box-sizing: border-box;
-  padding: 0 12px 0 34px;
+  padding: 0 12px;
   border: 1px solid #eef0ef;
   border-radius: 9px;
-  background:
-    #f7f9f8 url("./assets/icons/search.svg") 12px center / 14px 14px no-repeat;
+  background: #f7f9f8;
   color: var(--admin-text);
   font-size: 13px;
+}
+
+.toolbar input[type="search"],
+.detail-search input[type="search"] {
+  padding-left: 34px;
+  background-image: url("./assets/icons/search.svg");
+  background-position: 12px center;
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+}
+
+.toolbar input[type="date"] {
+  padding-left: 34px;
+  background-image: url("./assets/icons/calendar.svg");
+  background-position: 12px center;
+  background-size: 15px 15px;
+  background-repeat: no-repeat;
+}
+
+.toolbar input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.toolbar input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
 }
 
 .toolbar input:focus,
@@ -1224,14 +1249,22 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 11px;
-  border: 1px solid #d5ded8;
-  border-radius: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
   background: #ffffff;
-  color: #344054;
-  font-weight: 600;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+.activity-summary-header button:hover {
+  border-color: var(--admin-green);
+  color: var(--admin-green);
+  background: #f7faf8;
 }
 
 .activity-summary-header button::before,
@@ -1371,13 +1404,15 @@ textarea {
   align-items: center;
   gap: 7px;
   height: 34px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 1px solid #cbe8d5;
   border-radius: 9px;
   background: #ecfbf2;
   color: var(--admin-green);
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
 }
 
 .detail-subsection-tools button:hover {
