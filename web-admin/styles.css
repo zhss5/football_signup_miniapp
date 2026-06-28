@@ -473,13 +473,15 @@ textarea {
 .toolbar input,
 .toolbar select,
 .detail-search input {
-  height: 38px;
+  height: 36px;
   box-sizing: border-box;
-  padding: 0 12px;
-  border: 1px solid #dce5df;
+  padding: 0 12px 0 34px;
+  border: 1px solid #eef0ef;
   border-radius: 9px;
-  background: #fbfcfb;
+  background:
+    #f7f9f8 url("./assets/icons/search.svg") 12px center / 14px 14px no-repeat;
   color: var(--admin-text);
+  font-size: 13px;
 }
 
 .toolbar input:focus,
@@ -934,6 +936,18 @@ textarea {
 
 .attendance-status-control button {
   min-width: 76px;
+  height: 30px;
+  padding: 0 13px;
+  border-color: #e5e7eb;
+  background: #ffffff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.attendance-status-control button:hover {
+  border-color: var(--admin-green);
+  color: var(--admin-green);
 }
 
 .data-table button.is-loading {
@@ -1004,6 +1018,7 @@ textarea {
 }
 
 .activity-detail-dialog {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: min(1360px, calc(100vw - 48px));
@@ -1018,6 +1033,7 @@ textarea {
 }
 
 .attendance-detail-dialog {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: min(1040px, calc(100vw - 48px));
@@ -1079,7 +1095,16 @@ textarea {
   gap: 16px;
   margin-bottom: 18px;
   padding-bottom: 14px;
+  padding-right: 48px;
   border-bottom: 1px solid #e7eee9;
+}
+
+.activity-detail-modal .modal-close-button,
+.attendance-detail-modal .modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
 }
 
 .detail-eyebrow {

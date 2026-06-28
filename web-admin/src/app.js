@@ -890,7 +890,7 @@
             'registration-id': row.registrationId
           })}</td>` +
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
-          `<td>${row.proxyRegistration ? '是' : '否'}</td>` +
+          `<td>${row.proxyRegistration ? '<span class="status-pill status-pill-success">代报名</span>' : '<span class="status-pill status-pill-muted">本人</span>'}</td>` +
           `<td><div class="attendance-status-control">` +
           `<span>${renderStatusPills(row.attendanceStatus, STATUS_LABELS)}</span>` +
           `<button type="button" data-action="toggle-attendance" ` +
