@@ -162,6 +162,22 @@
     return `<span class="status-pill status-pill-${tone}">${escapeHtml(label)}</span>`;
   }
 
+  function renderAttendanceSeg(row) {
+    const rid = escapeHtml(row.registrationId);
+    const absent = row.attendanceStatus === 'absent';
+
+    return (
+      `<div class="attendance-status-control">` +
+      `<button type="button" class="attendance-seg-option${absent ? '' : ' is-active'}" ` +
+      `data-action="toggle-attendance" data-registration-id="${rid}" data-next-status="present"` +
+      `${absent ? '' : ' disabled'}>出勤</button>` +
+      `<button type="button" class="attendance-seg-option${absent ? ' is-active is-absent' : ''}" ` +
+      `data-action="toggle-attendance" data-registration-id="${rid}" data-next-status="absent"` +
+      `${absent ? ' disabled' : ''}>缺勤</button>` +
+      `</div>`
+    );
+  }
+
   function formatDelimitedLabels(value, labels) {
     return String(value || '')
       .split('/')
@@ -891,14 +907,7 @@
           })}</td>` +
           `<td>${escapeHtml(formatDelimitedLabels(row.preferredPositions, POSITION_LABELS))}</td>` +
           `<td>${row.proxyRegistration ? '<span class="status-pill status-pill-success">代报名</span>' : '<span class="status-pill status-pill-muted">本人</span>'}</td>` +
-          `<td><div class="attendance-status-control">` +
-          `<span>${renderStatusPills(row.attendanceStatus, STATUS_LABELS)}</span>` +
-          `<button type="button" data-action="toggle-attendance" ` +
-          `data-registration-id="${escapeHtml(row.registrationId)}" ` +
-          `data-next-status="${escapeHtml(row.nextAttendanceStatus)}">` +
-          `${escapeHtml(formatAttendanceAction(row.nextAttendanceStatus))}` +
-          `</button>` +
-          `</div></td>` +
+          `<td>${renderAttendanceSeg(row)}</td>` +
           `</tr>`
         ))
         .join('');

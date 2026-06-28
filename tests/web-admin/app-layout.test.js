@@ -1575,7 +1575,8 @@ test('activity detail renders Chinese roster operation labels while keeping enum
   expect(html).toContain('代报名');
   expect(html).toContain('本人');
   expect(html).toContain('data-next-status="absent"');
-  expect(html).toContain('标记缺勤');
+  expect(html).toContain('data-next-status="present"');
+  expect(html).toContain('class="attendance-seg-option');
   expect(html).toContain('编辑');
   expect(html).toContain('class="editable-text-control"');
   expect(html).toContain('class="editable-text-action"');
@@ -1584,7 +1585,7 @@ test('activity detail renders Chinese roster operation labels while keeping enum
     /<td><div class="editable-text-control">[\s\S]*老张[\s\S]*data-action="edit-manager-alias"[\s\S]*<\/div><\/td>/
   );
   expect(html).toMatch(
-    /<td><div class="attendance-status-control">[\s\S]*出勤[\s\S]*data-action="toggle-attendance"[\s\S]*标记缺勤[\s\S]*<\/div><\/td>/
+    /<td><div class="attendance-status-control">[\s\S]*出勤[\s\S]*data-action="toggle-attendance"[\s\S]*缺勤[\s\S]*<\/div><\/td>/
   );
   expect(html).not.toContain('class="table-actions"');
   expect(html).not.toContain('Save Alias');
@@ -1733,7 +1734,7 @@ test('activity detail attendance and alias actions update the current rows witho
 
   expect(getActivityDetail).not.toHaveBeenCalled();
   expect(elements['[data-roster-table]'].innerHTML).toContain('缺勤');
-  expect(elements['[data-roster-table]'].innerHTML).toContain('标记出勤');
+  expect(elements['[data-roster-table]'].innerHTML).toContain('data-next-status="absent" disabled');
 
   await appRoot.click(createElement({
     action: 'edit-manager-alias',

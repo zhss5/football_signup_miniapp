@@ -930,24 +930,46 @@ textarea {
   min-width: 0;
 }
 
-.attendance-status-control span {
-  min-width: 40px;
+.attendance-status-control {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 9px;
+  background: #eef1f0;
 }
 
-.attendance-status-control button {
-  min-width: 76px;
-  height: 30px;
-  padding: 0 13px;
-  border-color: #e5e7eb;
-  background: #ffffff;
-  color: #475569;
+.attendance-status-control .attendance-seg-option {
+  min-width: 52px;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #6b7280;
   font-size: 12px;
   font-weight: 500;
+  cursor: pointer;
 }
 
-.attendance-status-control button:hover {
-  border-color: var(--admin-green);
-  color: var(--admin-green);
+.attendance-status-control .attendance-seg-option.is-active {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+}
+
+.attendance-status-control .attendance-seg-option.is-active.is-absent {
+  background: #fdecec;
+  color: #c2362f;
+}
+
+.attendance-status-control .attendance-seg-option:disabled {
+  cursor: default;
+}
+
+.attendance-status-control .attendance-seg-option:not(:disabled):hover {
+  background: #ffffff;
+  color: #334155;
 }
 
 .data-table button.is-loading {
