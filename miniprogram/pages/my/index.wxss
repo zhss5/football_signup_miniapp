@@ -307,14 +307,14 @@
 }
 
 .load-more-button {
-  min-width: 220rpx;
-  min-height: 58rpx;
+  min-width: 240rpx;
+  height: 68rpx;
+  line-height: 64rpx;
   background: #ffffff;
   color: #374151;
   border: 2rpx solid #d1d5db;
-  border-radius: 14rpx;
-  font-size: 24rpx;
-  line-height: 58rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
 }
 
 .loading-more-text {
