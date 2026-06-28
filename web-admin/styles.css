@@ -85,7 +85,7 @@ textarea {
   color: var(--admin-green);
   content: "足球报名后台";
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .login-copy::before {
@@ -263,6 +263,7 @@ textarea {
   margin: 0 0 8px;
   color: #ffffff;
   font-size: 16px;
+  font-weight: 500;
   line-height: 24px;
 }
 
@@ -300,7 +301,7 @@ textarea {
   border-radius: 9px;
   background: transparent;
   color: rgba(255, 255, 255, 0.84);
-  font-weight: 800;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
@@ -357,8 +358,9 @@ textarea {
 
 .topbar h2 {
   margin: 0;
-  color: #07172f;
+  color: #111827;
   font-size: 22px;
+  font-weight: 500;
   line-height: 30px;
 }
 
@@ -405,7 +407,7 @@ textarea {
   border-radius: 9px;
   background: #ffffff;
   color: #344054;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -428,15 +430,17 @@ textarea {
 
 .panel h3 {
   margin: 0 0 14px;
-  color: #07172f;
+  color: #111827;
   font-size: 20px;
+  font-weight: 600;
   line-height: 28px;
 }
 
 .panel h4 {
   margin: 0;
-  color: #07172f;
+  color: #111827;
   font-size: 17px;
+  font-weight: 600;
   line-height: 24px;
 }
 
@@ -460,7 +464,7 @@ textarea {
   min-width: 210px;
   color: #526070;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .toolbar input,
@@ -498,7 +502,7 @@ textarea {
   border-radius: 9px;
   background: var(--admin-green);
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -589,7 +593,7 @@ textarea {
 .data-table th {
   color: #536171;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0;
   background: #f3f6f4;
 }
@@ -674,7 +678,7 @@ textarea {
   background: #eef8f1;
   color: var(--admin-green);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .data-table .user-avatar-button.is-broken .user-avatar-fallback-text {
@@ -692,7 +696,7 @@ textarea {
   background: #eef8f1;
   color: var(--admin-green);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .inline-status {
@@ -707,7 +711,7 @@ textarea {
   margin: 0 0 10px;
   color: #7d89a0;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 20px;
 }
 
@@ -829,7 +833,7 @@ textarea {
   border-radius: 8px;
   background: transparent;
   color: var(--admin-text);
-  font-weight: 800;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
@@ -953,14 +957,15 @@ textarea {
   margin-bottom: 4px;
   color: var(--admin-green);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 18px;
 }
 
 .detail-header h4 {
   margin: 0;
-  color: #07172f;
+  color: #111827;
   font-size: 22px;
+  font-weight: 500;
   line-height: 30px;
 }
 
@@ -974,7 +979,7 @@ textarea {
   border-radius: 9px;
   background: #ffffff;
   color: #344054;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -991,7 +996,7 @@ textarea {
   gap: 10px;
   color: var(--admin-muted);
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .loading-spinner {
@@ -1030,7 +1035,7 @@ textarea {
   border-radius: 8px;
   background: #ffffff;
   color: #344054;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -1057,8 +1062,9 @@ textarea {
 
 .text-edit-header h4 {
   margin: 0;
-  color: #07172f;
+  color: #111827;
   font-size: 18px;
+  font-weight: 500;
   line-height: 26px;
 }
 
@@ -1089,7 +1095,7 @@ textarea {
   border-radius: 9px;
   background: #ffffff;
   color: #344054;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -1143,8 +1149,9 @@ textarea {
 
 .detail-subsection h4 {
   margin: 0;
-  color: #07172f;
+  color: #111827;
   font-size: 16px;
+  font-weight: 600;
   line-height: 24px;
 }
 
@@ -1164,7 +1171,7 @@ textarea {
   border-radius: 9px;
   background: #ecfbf2;
   color: var(--admin-green);
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -1181,7 +1188,7 @@ textarea {
   min-width: 240px;
   color: #526070;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .detail-table-scroll {
