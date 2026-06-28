@@ -492,16 +492,8 @@ textarea {
   background-repeat: no-repeat;
 }
 
-.toolbar input[type="date"] {
-  padding-left: 34px;
-  background-image: url("./assets/icons/calendar.svg");
-  background-position: 12px center;
-  background-size: 15px 15px;
-  background-repeat: no-repeat;
-}
-
 .toolbar input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: pointer;
 }
 
