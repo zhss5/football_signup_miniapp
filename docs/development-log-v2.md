@@ -4,6 +4,25 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Late Cancellation Organizer Notice
+
+Implemented the third post-V2 change-request milestone.
+
+Delivered behavior:
+
+- `cancelRegistration` now checks `lateCancellationNoticeWindowHours` after a successful cancellation.
+- missing `lateCancellationNoticeWindowHours` defaults to `6` hours before `startAt`.
+- `0` disables the late cancellation notice for an activity.
+- the notification is sent only to the activity creator (`activities.organizerOpenId`), not all managers.
+- notification sending happens after the cancellation transaction and is best-effort; notification failure does not roll back cancellation.
+- notification attempts write `notification_logs` with `notificationType: registration_cancelled` and `templateKey: manager_registration_notice`.
+- accepted organizer subscriptions are consumed after send attempts so the organizer can re-subscribe later.
+
+Verification:
+
+- red tests first failed because `cancelRegistration` did not call the organizer notice and the helper was not exported.
+- targeted test passed: `npm test -- tests/cloudfunctions/cancelRegistration.test.js --runInBand` (`1` suite, `9` tests).
+
 ## 2026-07-20 - Participant Cancellation Statistics
 
 Implemented the second post-V2 change-request milestone.
