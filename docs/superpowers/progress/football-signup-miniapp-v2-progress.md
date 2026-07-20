@@ -110,6 +110,7 @@ Completed:
 - 2026-07-20 milestone 3 implemented: `cancelRegistration` now sends best-effort late cancellation notices to the activity creator inside the configurable cancellation window.
 - 2026-07-20 milestone 4 implemented: create/update activity flows now support explicit API `benchCapacity`, compute `signupLimitTotal` from regular plus bench capacity for new clients, keep old total-capacity behavior for old clients, and backend `joinActivity` auto-assigns stale bench signup requests to the first available regular team.
 - 2026-07-20 milestone 5 implemented: `cancelRegistration` now auto-promotes the earliest joined active bench registration into a cancelled regular slot, keeps activity and team counts consistent, and writes `registration_auto_promoted` activity logs.
+- 2026-07-20 post-V2 change-request implementation closure: full regression passed with `npm test -- --runInBand` (`82` suites, `721` tests), `git diff --check` passed with line-ending warnings only, and the runtime remains CloudBase-only with no MySQL migration, no dual-write, and no self-hosted HTTP API switch.
 
 ## 4. Planned Version 2 Scope
 

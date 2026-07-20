@@ -4,6 +4,28 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Post-V2 Change Request Regression Closure
+
+Completed the implementation pass for the four confirmed post-V2 change-request areas.
+
+Closed scope:
+
+- late cancellation notices to the activity creator.
+- final-outcome participant cancellation statistics and cancellation rates.
+- roster export activity type rows and Web Admin CSV column.
+- explicit bench capacity, stale bench signup reassignment, and automatic bench promotion after regular cancellations.
+
+Regression:
+
+- full regression passed: `npm test -- --runInBand` (`82` suites, `721` tests).
+- `git diff --check` passed with line-ending warnings only.
+
+Runtime boundary:
+
+- no runtime MySQL migration was added.
+- no CloudBase/MySQL dual-write was added.
+- no self-hosted HTTP API switch was added.
+
 ## 2026-07-20 - Bench Auto Promotion After Cancellation
 
 Implemented the fifth post-V2 change-request milestone.
