@@ -100,6 +100,7 @@ Stores the activity master record.
 CREATE TABLE activities (
   activity_id VARCHAR(128) NOT NULL,
   title VARCHAR(200) NOT NULL,
+  activity_type VARCHAR(32) NOT NULL DEFAULT 'internal',
   organizer_openid VARCHAR(128) NOT NULL,
   org_id VARCHAR(128) NOT NULL DEFAULT '',
   start_at DATETIME(3) NOT NULL,
@@ -112,6 +113,7 @@ CREATE TABLE activities (
   insurance_link VARCHAR(512) NOT NULL DEFAULT '',
   notification_hint VARCHAR(512) NOT NULL DEFAULT '',
   registration_notice_threshold INT NOT NULL DEFAULT 0,
+  late_cancellation_notice_window_hours INT NOT NULL DEFAULT 6,
   cover_image VARCHAR(512) NOT NULL DEFAULT '',
   cover_thumb_image VARCHAR(512) NOT NULL DEFAULT '',
   share_image VARCHAR(512) NOT NULL DEFAULT '',
@@ -138,6 +140,8 @@ CREATE TABLE activities (
 
 Allowed `status` values: `draft`, `published`, `closed`, `finished`, `cancelled`, `deleted`.
 
+Allowed `activity_type` values: `internal`, `external`. Historical rows without an activity type are treated as `internal`.
+
 Allowed `confirm_status` values: `pending`, `confirmed`.
 
 `getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. Copy drafts may include API-only `sourceStartAt`, `sourceEndAt`, and `sourceSignupDeadlineAt` fields so clients can reuse the source time-of-day without copying the source date. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
@@ -145,6 +149,8 @@ Allowed `confirm_status` values: `pending`, `confirmed`.
 Mini-program list pagination uses the existing `listActivities` API with stable `scope`, `limit`, and `skip` parameters. `home`, `created`, and `joined` scopes stay API-shaped and can later map to SQL `ORDER BY` plus `LIMIT/OFFSET` or cursor pagination without changing page-level payloads.
 
 The mini-program My page does not show overdue unresolved prompts. V2 adds no CloudBase field or SQL column for that prompt.
+
+Post-V2 bench queue changes keep `signup_limit_total` as a stored compatibility field, but new and edited activities compute it from the sum of active regular-team capacity plus active bench capacity. The post-V2 late cancellation notice uses `late_cancellation_notice_window_hours`; missing CloudBase values default to `6`, and `0` disables the notice.
 
 ### `activity_teams`
 
@@ -249,7 +255,7 @@ CREATE TABLE activity_logs (
 );
 ```
 
-Expected V2 `action` values include: `activity_update`, `signup_joined`, `signup_cancelled`, `signup_rejoined`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, `manager_alias_update`.
+Expected V2 `action` values include: `activity_update`, `signup_joined`, `signup_cancelled`, `signup_rejoined`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, `manager_alias_update`, `registration_auto_promoted`.
 
 ### `user_role_logs`
 
@@ -369,10 +375,12 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `users.updatedAt` | `users.updated_at` | Nullable. |
 | `users.lastActiveAt` | `users.last_active_at` | Parse ISO string to `DATETIME(3)`. |
 | `activities._id` | `activities.activity_id` | Preserve CloudBase ID. |
+| `activities.activityType` | `activities.activity_type` | Stable values: `internal`, `external`; missing values default to `internal`. |
 | `activities.organizerOpenId` | `activities.organizer_openid` | Openid reference. |
 | `activities.startAt` | `activities.start_at` | Parse ISO string to `DATETIME(3)`. |
 | `activities.endAt` | `activities.end_at` | Parse ISO string to `DATETIME(3)`. |
 | `activities.signupDeadlineAt` | `activities.signup_deadline_at` | Parse ISO string to `DATETIME(3)`. |
+| `activities.lateCancellationNoticeWindowHours` | `activities.late_cancellation_notice_window_hours` | Integer hours before `startAt`; missing values default to `6`; `0` disables late-cancellation notice. |
 | `activities.location` | `activities.location` | JSON object. |
 | `activities.imageList` | `activities.image_list` | JSON array. |
 | `activities.detailImages` | `activities.detail_images` | JSON array. |
@@ -395,7 +403,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `activity_logs.operatorOpenId` | `activity_logs.operator_openid` | Actor who performed the operation. |
 | `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `fromTeamId`, `toTeamId`, and attendance status. |
 | `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
-| `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`. |
+| `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`, `registration_cancelled`. |
 | `notification_logs.targetOpenId` / `notification_logs.userOpenId` / `notification_logs.recipientOpenId` | `notification_logs.recipient_openid` | Prefer `targetOpenId`, then `recipientOpenId`, then legacy `userOpenId`. |
 | `notification_logs.operatorOpenId` / `notification_logs.actorOpenId` | `notification_logs.actor_openid` | Actor who triggered the notification where available. |
 | `notification_logs.templateKey` | `notification_logs.template_key` | Stable template category. |
@@ -424,7 +432,14 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 15. Keep mini-program pagination API-shaped with `limit` and `skip`. If SQL cursor pagination replaces offset pagination later, expose it as an additive API parameter and keep `limit`/`skip` compatible until old clients age out.
 16. Keep overdue unresolved prompts out of the mini-program My page unless a later workflow needs assignment, snooze, or resolution tracking.
 17. Run `bootstrapV2Collections` as an explicit CloudBase readiness step for existing environments. It creates missing V2 collections only and does not perform runtime MySQL migration, dual-write, or HTTP API cutover.
-18. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+18. Treat missing `activities.activityType` as `internal`, including roster export and statistics filters.
+19. Treat missing `activities.lateCancellationNoticeWindowHours` as `6`; treat `0` as disabled.
+20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity.
+21. Enforce bench signup rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata.
+22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
+23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a cancelled regular-team slot.
+24. Keep late-cancellation notification best-effort. Notification failure or skipped subscription must not roll back `cancelRegistration`.
+25. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
 ## Migration Validation Checklist
 
@@ -457,19 +472,24 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - No user loses the base `user` role.
 - At least one `super_admin` exists before enabling the self-hosted admin path.
 - Attendance stats in MySQL match CloudBase `getAttendanceStats` for the same date range.
+- Participant cancellation counts and rates in MySQL match CloudBase `getAttendanceStats` for the same role visibility, activity start-date range, activity type filter, and final-outcome rules. Cancellation metrics exclude cancelled/deleted activities but do not require the activity start time to have passed.
 - Web-admin activity filters in SQL match CloudBase `listActivities` with `scope: web-admin` for the same role, date range, status, organizer, keyword, limit, and skip.
 - Mini-program list pagination in SQL matches CloudBase `listActivities` for `home`, `created`, and `joined` scopes with the same `limit`, `skip`, sort order, and visibility rules.
 - The mini-program My page does not show overdue unresolved prompts; SQL-backed list APIs should not introduce that prompt implicitly.
-- Roster export rows in SQL-backed APIs match CloudBase `exportActivityRoster` rows for the same activity and viewer role.
+- Roster export rows in SQL-backed APIs match CloudBase `exportActivityRoster` rows for the same activity and viewer role, including `activityType`.
 - Empty `registrations.attendance_status` is counted as present only for started, non-cancelled, non-deleted activities included in attendance statistics.
 - Cancelled, deleted, and future activities are excluded from attendance statistics.
 - Activity-log and notification-log API responses match CloudBase `listActivityLogs` and `listNotificationLogs` permission boundaries and pagination for organizer, admin, super-admin, and ordinary-user callers.
 - Notification-log status counts match CloudBase for `sent`, `failed`, and `skipped`.
+- New and edited activities keep `activities.signup_limit_total` equal to active regular-team capacity plus active bench capacity.
+- New and edited activities have at most one active `activity_teams.team_type = 'bench'` row.
+- Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
+- Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after cancellation.
 
 ### Spot Checks
 
 - Pick several real users and verify preferred name, avatar, manager alias, roles, and last active time.
-- Pick several activities and verify teams, capacity, cover/detail images, confirmation state, and joined counts.
+- Pick several activities and verify teams, regular capacity, bench capacity, computed total capacity, cover/detail images, confirmation state, activity type, late-cancellation notice window, and joined counts.
 - Pick several registrations and verify signup name, proxy flag, preferred positions, attendance state, and current status.
 - Pick several activity logs and verify operator, target participant, action, timestamp, and payload.
 - Pick several notification subscriptions and logs and verify template key, template ID, recipient, status, and consumed state.

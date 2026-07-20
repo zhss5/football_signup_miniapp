@@ -103,6 +103,8 @@ Completed:
 - 2026-06-28 functional fix: the mini-program proxy (代报名) member settings sheet now exposes present/absent controls; no cloud function change was required (`setRegistrationAttendance` already accepts proxy registration IDs).
 - full regression after the post-V2 UI pass and proxy attendance fix: `82` suites and `709` tests.
 - still deferred after the post-V2 pass (NOT implemented): invite-code signup; gesture-based (drag/zoom) cover crop, which remains slider-based; XLSX roster export, where the Web Admin still generates CSV only.
+- 2026-07-20 post-V2 change-request design completed in `docs/superpowers/specs/2026-07-20-v2-cancellation-stats-roster-bench-design.md`; implementation has not started.
+- SQL migration readiness now covers activity type in roster export, late cancellation notice windows, final-outcome cancellation statistics, computed regular-plus-bench capacity, and bench auto-promotion logging.
 
 ## 4. Planned Version 2 Scope
 
@@ -193,7 +195,15 @@ Version 2 is formally closed for acceptance as of 2026-06-28: the committed Vers
 
 Prepare Version 2 deployment and acceptance using the deployment notes in `docs/superpowers/plans/2026-05-19-version-2-execution-plan.md`.
 
-Recommended first coding task:
+Post-V2 change-request implementation should start from the 2026-07-20 design spec and stay TDD. Recommended coding order:
+
+- add `activityType` to `exportActivityRoster` rows and Web Admin CSV.
+- add final-outcome participant cancellation counts and rates to `getAttendanceStats`.
+- add configurable late-cancellation notice from `cancelRegistration` to the activity creator.
+- add computed total capacity and backend bench signup enforcement.
+- add bench auto-promotion inside `cancelRegistration`.
+
+Deployment readiness tasks remain:
 
 - run `npm run deploy:v2-bootstrap -- -EnvId '<target-cloud-env-id>'` for existing CloudBase environments before V2 smoke testing, or use `-DeployOnly` and invoke `bootstrapV2Collections` manually.
 - review the CloudBase deployment set and deploy only when ready.

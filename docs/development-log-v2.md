@@ -4,6 +4,37 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Post-V2 Cancellation, Statistics, Roster, and Bench Design
+
+Documented the next post-Version 2 change request before implementation.
+
+Delivered documentation:
+
+- added `docs/superpowers/specs/2026-07-20-v2-cancellation-stats-roster-bench-design.md`.
+- recorded configurable late cancellation notices to the activity creator, with a default `6` hour window and `0` as disabled.
+- defined participant cancellation statistics as one final outcome per participant per activity.
+- added the roster export `activityType` row contract and Web Admin CSV `活动类型` column expectation.
+- defined bench capacity as explicit manager input and total capacity as regular-team capacity plus bench capacity.
+- defined stale bench signup auto-assignment to a regular slot and automatic bench promotion after regular self-cancellation.
+- updated SQL migration readiness for `activity_type`, `late_cancellation_notice_window_hours`, `registration_cancelled`, `registration_auto_promoted`, compatibility rules, and migration validation checks.
+
+Runtime scope:
+
+- no business code changed.
+- no runtime MySQL migration, CloudBase/MySQL dual-write, or self-hosted HTTP API switch.
+
+Recommended implementation order:
+
+1. add `activityType` to `exportActivityRoster` rows and Web Admin CSV.
+2. add cancellation counts/rates to `getAttendanceStats`.
+3. add late cancellation notice from `cancelRegistration`.
+4. add computed total capacity and backend bench signup enforcement.
+5. add bench auto-promotion inside `cancelRegistration`.
+
+Verification:
+
+- `git diff --check` passed.
+
 ## 2026-06-28 - Version 2 Acceptance Closure
 
 Formally closed Version 2 for acceptance.
