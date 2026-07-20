@@ -106,6 +106,7 @@ Completed:
 - 2026-07-20 post-V2 change-request design completed in `docs/superpowers/specs/2026-07-20-v2-cancellation-stats-roster-bench-design.md`; implementation is proceeding milestone by milestone.
 - SQL migration readiness now covers activity type in roster export, late cancellation notice windows, final-outcome cancellation statistics, computed regular-plus-bench capacity, and bench auto-promotion logging.
 - 2026-07-20 milestone 1 implemented: `exportActivityRoster` rows and Web Admin roster CSV now include activity type, with missing historical values defaulting to `internal`.
+- 2026-07-20 milestone 2 implemented: `getAttendanceStats` now returns final-outcome cancellation counts/rates, and Web Admin statistics table/CSV show cancellation count and cancellation rate.
 
 ## 4. Planned Version 2 Scope
 
@@ -199,7 +200,7 @@ Prepare Version 2 deployment and acceptance using the deployment notes in `docs/
 Post-V2 change-request implementation should start from the 2026-07-20 design spec and stay TDD. Recommended coding order:
 
 - add `activityType` to `exportActivityRoster` rows and Web Admin CSV. Completed 2026-07-20.
-- add final-outcome participant cancellation counts and rates to `getAttendanceStats`.
+- add final-outcome participant cancellation counts and rates to `getAttendanceStats`. Completed 2026-07-20.
 - add configurable late-cancellation notice from `cancelRegistration` to the activity creator.
 - add computed total capacity and backend bench signup enforcement.
 - add bench auto-promotion inside `cancelRegistration`.

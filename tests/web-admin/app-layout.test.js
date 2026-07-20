@@ -935,6 +935,8 @@ test('attendance stats submit renders rows and hides the empty state', async () 
             presentCount: 1,
             absentCount: 1,
             attendanceRate: 0.5,
+            cancelledActivityCount: 1,
+            cancelRate: 0.3333,
             details: [
               {
                 activityTitle: '测试0618',
@@ -967,6 +969,7 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('酱油仔');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('33.33%');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain(
     'data-attendance-stats-index="0"'
   );
@@ -1049,7 +1052,9 @@ test('attendance stats exports loaded rows as CSV text', async () => {
             signupCount: 2,
             presentCount: 1,
             absentCount: 1,
-            attendanceRate: 0.5
+            attendanceRate: 0.5,
+            cancelledActivityCount: 1,
+            cancelRate: 0.3333
           },
           {
             participantName: '人员1',
@@ -1057,7 +1062,9 @@ test('attendance stats exports loaded rows as CSV text', async () => {
             signupCount: 1,
             presentCount: 1,
             absentCount: 0,
-            attendanceRate: 1
+            attendanceRate: 1,
+            cancelledActivityCount: 0,
+            cancelRate: 0
           }
         ]
       })
@@ -1070,8 +1077,9 @@ test('attendance stats exports loaded rows as CSV text', async () => {
   appRoot.click(elements['[data-stats-export-button]']);
 
   expect(elements['[data-export-output]'].value).toContain('参与者,备注,报名次数,出勤,缺勤,出勤率');
-  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,1,50.00%');
-  expect(elements['[data-export-output]'].value).toContain('人员1,,1,1,0,100.00%');
+  expect(elements['[data-export-output]'].value).toContain('取消次数,取消率');
+  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,1,50.00%,1,33.33%');
+  expect(elements['[data-export-output]'].value).toContain('人员1,,1,1,0,100.00%,0,0.00%');
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {

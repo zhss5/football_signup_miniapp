@@ -228,6 +228,9 @@ test('stats and log row builders keep stable display fields', () => {
         presentCount: 1,
         absentCount: 1,
         attendanceRate: 0.5,
+        effectiveSignupActivityCount: 2,
+        cancelledActivityCount: 1,
+        cancelRate: 0.3333,
         details: [
           {
             activityTitle: 'Sunday Match',
@@ -248,6 +251,9 @@ test('stats and log row builders keep stable display fields', () => {
       presentCount: 1,
       absentCount: 1,
       attendanceRateText: '50.00%',
+      effectiveSignupActivityCount: 2,
+      cancelledActivityCount: 1,
+      cancelRateText: '33.33%',
       details: [
         {
           activityId: '',

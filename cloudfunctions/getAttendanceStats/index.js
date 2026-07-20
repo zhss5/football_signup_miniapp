@@ -45,7 +45,7 @@ function matchesActivityType(activity, activityTypeFilter) {
   return normalizeActivityType(activity.activityType) === activityTypeFilter;
 }
 
-function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activityTypeFilter) {
+function isBaseActivityInRange(activity, rangeStart, rangeEnd, activityTypeFilter) {
   if (!activity) {
     return false;
   }
@@ -71,6 +71,15 @@ function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activ
     return false;
   }
 
+  return true;
+}
+
+function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activityTypeFilter) {
+  if (!isBaseActivityInRange(activity, rangeStart, rangeEnd, activityTypeFilter)) {
+    return false;
+  }
+
+  const startAt = parseTimestamp(activity.startAt);
   return startAt <= nowAt;
 }
 
@@ -112,6 +121,35 @@ function toAttendanceRate(presentCount, signupCount) {
   }
 
   return Number((presentCount / signupCount).toFixed(4));
+}
+
+function toRate(numerator, denominator) {
+  if (denominator <= 0) {
+    return 0;
+  }
+
+  return Number((numerator / denominator).toFixed(4));
+}
+
+function createStatsRow(participantName) {
+  return {
+    participantName,
+    managerAlias: '',
+    signupCount: 0,
+    presentCount: 0,
+    absentCount: 0,
+    effectiveSignupActivityCount: 0,
+    cancelledActivityCount: 0,
+    details: []
+  };
+}
+
+function getOrCreateStatsRow(acc, key, participantName) {
+  if (!acc[key]) {
+    acc[key] = createStatsRow(participantName);
+  }
+
+  return acc[key];
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -156,7 +194,62 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     return acc;
   }, {});
-  const statsByName = registrations.reduce((acc, registration) => {
+  const outcomeActivityById = activities.reduce((acc, activity) => {
+    if (
+      isBaseActivityInRange(activity, rangeStart, rangeEnd, activityTypeFilter) &&
+      (callerIsAdmin || activity.organizerOpenId === openid)
+    ) {
+      acc[activity._id] = activity;
+    }
+
+    return acc;
+  }, {});
+  const statsByName = {};
+  const outcomeByParticipantActivity = registrations.reduce((acc, registration) => {
+    const activity = outcomeActivityById[registration.activityId];
+    if (!activity || (registration.status !== 'joined' && registration.status !== 'cancelled')) {
+      return acc;
+    }
+
+    const participantName = getParticipantName(registration);
+    if (!participantName) {
+      return acc;
+    }
+
+    const participantStatsKey = getParticipantStatsKey(registration, participantName);
+    const outcomeKey = `${participantStatsKey}:${registration.activityId}`;
+    const previous = acc[outcomeKey];
+    const outcome = registration.status === 'joined' ? 'joined' : 'cancelled';
+
+    if (!previous || previous.outcome !== 'joined') {
+      acc[outcomeKey] = {
+        participantStatsKey,
+        participantName,
+        registration,
+        outcome
+      };
+    }
+
+    return acc;
+  }, {});
+
+  Object.values(outcomeByParticipantActivity).forEach(item => {
+    const row = getOrCreateStatsRow(statsByName, item.participantStatsKey, item.participantName);
+    const managerAlias = getManagerAlias(item.registration, userById);
+
+    if (!row.managerAlias && managerAlias) {
+      row.managerAlias = managerAlias;
+    }
+
+    if (item.outcome === 'joined') {
+      row.effectiveSignupActivityCount += 1;
+      return;
+    }
+
+    row.cancelledActivityCount += 1;
+  });
+
+  registrations.reduce((acc, registration) => {
     if (!activityById[registration.activityId] || registration.status !== 'joined') {
       return acc;
     }
@@ -167,18 +260,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }
 
     const participantStatsKey = getParticipantStatsKey(registration, participantName);
-    if (!acc[participantStatsKey]) {
-      acc[participantStatsKey] = {
-        participantName,
-        managerAlias: '',
-        signupCount: 0,
-        presentCount: 0,
-        absentCount: 0,
-        details: []
-      };
-    }
-
-    const row = acc[participantStatsKey];
+    const row = getOrCreateStatsRow(acc, participantStatsKey, participantName);
     const managerAlias = getManagerAlias(registration, userById);
     const activity = activityById[registration.activityId];
     const attendanceStatus = normalizeAttendanceStatus(registration.attendanceStatus);
@@ -205,9 +287,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }
 
     return acc;
-  }, {});
+  }, statsByName);
 
   const items = Object.values(statsByName)
+    .filter(row => row.signupCount > 0 || row.cancelledActivityCount > 0)
     .map(row => ({
       ...row,
       details: row.details.sort((left, right) => {
@@ -219,7 +302,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
         return String(left.activityTitle || '').localeCompare(String(right.activityTitle || ''));
       }),
-      attendanceRate: toAttendanceRate(row.presentCount, row.signupCount)
+      attendanceRate: toAttendanceRate(row.presentCount, row.signupCount),
+      cancelRate: toRate(
+        row.cancelledActivityCount,
+        row.effectiveSignupActivityCount + row.cancelledActivityCount
+      )
     }))
     .sort((left, right) => left.participantName.localeCompare(right.participantName));
 

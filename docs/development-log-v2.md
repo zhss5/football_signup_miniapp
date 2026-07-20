@@ -4,6 +4,25 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Participant Cancellation Statistics
+
+Implemented the second post-V2 change-request milestone.
+
+Delivered behavior:
+
+- `getAttendanceStats` now returns `effectiveSignupActivityCount`, `cancelledActivityCount`, and `cancelRate`.
+- cancellation statistics use the confirmed final-outcome-per-participant-per-activity rule.
+- cancellation-only participants appear in statistics with zero attendance counts.
+- future non-cancelled activities can contribute to cancellation-rate denominator for rows that have attendance or cancellation data, while future-only joined rows remain hidden from the attendance view.
+- Web Admin statistics rows show cancellation count and cancellation rate.
+- Web Admin statistics CSV exports `取消次数` and `取消率`.
+- Web Admin static asset query strings were bumped to `20260720-cancel-stats`.
+
+Verification:
+
+- red tests first failed for missing cancellation fields, missing table/CSV columns, and missing static table headers.
+- targeted tests passed: `npm test -- tests/cloudfunctions/getAttendanceStats.test.js tests/web-admin/activity-management.test.js tests/web-admin/app-layout.test.js tests/web-admin/static.test.js --runInBand` (`4` suites, `78` tests).
+
 ## 2026-07-20 - Roster Export Activity Type
 
 Implemented the first post-V2 change-request milestone.

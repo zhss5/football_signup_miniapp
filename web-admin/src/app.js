@@ -956,6 +956,8 @@
           `<td>${escapeHtml(row.presentCount)}</td>` +
           `<td>${escapeHtml(row.absentCount)}</td>` +
           `<td>${renderRatePill(row.attendanceRateText)}</td>` +
+          `<td>${escapeHtml(row.cancelledActivityCount)}</td>` +
+          `<td>${renderRatePill(row.cancelRateText)}</td>` +
           `</tr>`
         ))
         .join('');
@@ -1650,7 +1652,9 @@
         报名次数: row.signupCount,
         出勤: row.presentCount,
         缺勤: row.absentCount,
-        出勤率: row.attendanceRateText
+        出勤率: row.attendanceRateText,
+        取消次数: row.cancelledActivityCount,
+        取消率: row.cancelRateText
       }));
       const csv = activityUi.rowsToCsv(rows);
       downloadCsv('attendance-stats.csv', csv);

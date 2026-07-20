@@ -136,6 +136,9 @@
       presentCount: Number(row.presentCount) || 0,
       absentCount: Number(row.absentCount) || 0,
       attendanceRateText: toPercent(row.attendanceRate),
+      effectiveSignupActivityCount: Number(row.effectiveSignupActivityCount) || 0,
+      cancelledActivityCount: Number(row.cancelledActivityCount) || 0,
+      cancelRateText: toPercent(row.cancelRate),
       details: (Array.isArray(row.details) ? row.details : []).map(detail => ({
         activityId: detail.activityId || '',
         activityTitle: detail.activityTitle || '',

@@ -111,6 +111,9 @@ test('admin can get date-range attendance stats for started activities', async (
       presentCount: 2,
       absentCount: 1,
       attendanceRate: 0.6667,
+      effectiveSignupActivityCount: 3,
+      cancelledActivityCount: 0,
+      cancelRate: 0,
       details: [
         {
           activityId: 'activity_1',
@@ -151,6 +154,9 @@ test('admin can get date-range attendance stats for started activities', async (
       presentCount: 1,
       absentCount: 0,
       attendanceRate: 1,
+      effectiveSignupActivityCount: 1,
+      cancelledActivityCount: 0,
+      cancelRate: 0,
       details: [
         {
           activityId: 'activity_1',
@@ -180,6 +186,9 @@ test('organizer stats include only their own activities', async () => {
       presentCount: 1,
       absentCount: 1,
       attendanceRate: 0.5,
+      effectiveSignupActivityCount: 2,
+      cancelledActivityCount: 0,
+      cancelRate: 0,
       details: [
         {
           activityId: 'activity_1',
@@ -210,6 +219,9 @@ test('organizer stats include only their own activities', async () => {
       presentCount: 1,
       absentCount: 0,
       attendanceRate: 1,
+      effectiveSignupActivityCount: 1,
+      cancelledActivityCount: 0,
+      cancelRate: 0,
       details: [
         {
           activityId: 'activity_1',
@@ -565,6 +577,127 @@ test('attendance stats can filter by activity type and treats historical missing
   );
   expect(internalResult.items.map(item => item.participantName)).not.toContain('External Player');
   expect(externalResult.items.map(item => item.participantName)).toEqual(['External Player']);
+});
+
+test('cancellation stats count one final outcome per participant activity', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_cancel_final: {
+        _id: 'activity_cancel_final',
+        title: 'Cancelled Signup Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        startAt: '2026-05-09T12:00:00.000Z'
+      },
+      activity_future_cancel: {
+        _id: 'activity_future_cancel',
+        title: 'Future Cancel Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        startAt: '2026-05-20T12:00:00.000Z'
+      },
+      activity_removed: {
+        _id: 'activity_removed',
+        title: 'Removed Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        startAt: '2026-05-10T12:00:00.000Z'
+      },
+      activity_cancelled_event: {
+        _id: 'activity_cancelled_event',
+        title: 'Cancelled Event',
+        organizerOpenId: 'openid_owner',
+        status: 'cancelled',
+        startAt: '2026-05-11T12:00:00.000Z'
+      }
+    },
+    registrations: {
+      reg_alex_cancel_final: {
+        _id: 'reg_alex_cancel_final',
+        activityId: 'activity_cancel_final',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex',
+        status: 'cancelled',
+        cancelCount: 2
+      },
+      reg_alex_future_cancel: {
+        _id: 'reg_alex_future_cancel',
+        activityId: 'activity_future_cancel',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex',
+        status: 'cancelled',
+        cancelCount: 1
+      },
+      reg_alex_removed: {
+        _id: 'reg_alex_removed',
+        activityId: 'activity_removed',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex',
+        status: 'removed',
+        removedCount: 1
+      },
+      reg_alex_cancelled_event: {
+        _id: 'reg_alex_cancelled_event',
+        activityId: 'activity_cancelled_event',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex',
+        status: 'cancelled',
+        cancelCount: 1
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, {
+    db,
+    now: '2026-05-12T00:00:00.000Z'
+  });
+  const alex = result.items.find(item => item.participantName === 'Alex');
+
+  expect(alex).toMatchObject({
+    signupCount: 2,
+    effectiveSignupActivityCount: 2,
+    cancelledActivityCount: 2,
+    cancelRate: 0.5
+  });
+});
+
+test('cancellation stats include cancellation-only participants', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_cancel_only: {
+        _id: 'activity_cancel_only',
+        title: 'Cancel Only Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        startAt: '2026-05-09T12:00:00.000Z'
+      }
+    },
+    registrations: {
+      reg_cancel_only: {
+        _id: 'reg_cancel_only',
+        activityId: 'activity_cancel_only',
+        userOpenId: 'openid_cancel_only',
+        signupName: 'Cancel Only',
+        status: 'cancelled',
+        cancelCount: 1
+      }
+    }
+  });
+
+  const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, {
+    db,
+    now: '2026-05-12T00:00:00.000Z'
+  });
+
+  expect(result.items.find(item => item.participantName === 'Cancel Only')).toMatchObject({
+    signupCount: 0,
+    presentCount: 0,
+    absentCount: 0,
+    attendanceRate: 0,
+    effectiveSignupActivityCount: 0,
+    cancelledActivityCount: 1,
+    cancelRate: 1
+  });
 });
 
 test('real signups with the same display name are grouped by openid instead of name', async () => {
