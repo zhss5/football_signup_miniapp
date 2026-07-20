@@ -4,6 +4,26 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Bench Auto Promotion After Cancellation
+
+Implemented the fifth post-V2 change-request milestone.
+
+Delivered behavior:
+
+- `cancelRegistration` now promotes the earliest joined active bench registration when a regular-team participant cancels.
+- promotion order is `joinedAt` ascending, then registration id ascending.
+- the promoted participant keeps the same registration id and `joinedAt`; only `teamId` and `updatedAt` change.
+- the cancelled participant still records `status: cancelled`, `cancelledAt`, `cancelCount`, and `updatedAt`.
+- activity `joinedCount` decreases by one because the promoted bench participant was already counted.
+- regular-team `joinedCount` stays unchanged when promotion fills the slot; bench-team `joinedCount` decreases by one.
+- promotion writes an `activity_logs` row with `action: registration_auto_promoted`.
+- cancellation responses include additive promotion fields when a promotion occurs.
+
+Verification:
+
+- red test first failed because the earliest bench registration stayed on the bench team.
+- targeted test passed: `npm test -- tests/cloudfunctions/cancelRegistration.test.js --runInBand` (`1` suite, `10` tests).
+
 ## 2026-07-20 - Bench Capacity and Stale Bench Signup Enforcement
 
 Implemented the fourth post-V2 change-request milestone.

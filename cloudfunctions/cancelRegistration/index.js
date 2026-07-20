@@ -16,6 +16,82 @@ function normalizeCount(value) {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
+function isBenchTeam(team) {
+  return team && team.teamType === 'bench';
+}
+
+function isActiveBenchTeam(team) {
+  return isBenchTeam(team) && team.status !== 'inactive' && normalizeCount(team.maxMembers) > 0;
+}
+
+function getRegistrationDocumentId(registration) {
+  if (registration && registration._id) {
+    return registration._id;
+  }
+
+  if (registration && registration.activityId && registration.userOpenId) {
+    return `${registration.activityId}_${registration.userOpenId}`;
+  }
+
+  return '';
+}
+
+function compareBenchQueue(left, right) {
+  const leftJoinedAt = String(left && left.joinedAt ? left.joinedAt : '');
+  const rightJoinedAt = String(right && right.joinedAt ? right.joinedAt : '');
+
+  if (leftJoinedAt !== rightJoinedAt) {
+    return leftJoinedAt.localeCompare(rightJoinedAt);
+  }
+
+  return getRegistrationDocumentId(left).localeCompare(getRegistrationDocumentId(right));
+}
+
+async function queryTransactionCollection(transaction, collectionName, query) {
+  const collection = transaction.collection(collectionName);
+
+  if (!collection || typeof collection.where !== 'function') {
+    return { data: [] };
+  }
+
+  return collection.where(query).get();
+}
+
+async function findBenchPromotionCandidate(transaction, activityId) {
+  const teamsRes = await queryTransactionCollection(transaction, 'activity_teams', { activityId });
+  const benchTeams = (teamsRes.data || []).filter(isActiveBenchTeam);
+  const benchTeamById = benchTeams.reduce((map, team) => {
+    const id = team && team._id ? team._id : '';
+    if (id) {
+      map.set(id, team);
+    }
+    return map;
+  }, new Map());
+
+  if (benchTeamById.size === 0) {
+    return null;
+  }
+
+  const registrationRes = await queryTransactionCollection(transaction, 'registrations', {
+    activityId,
+    status: 'joined'
+  });
+  const promotedRegistration = (registrationRes.data || [])
+    .filter(registration => benchTeamById.has(registration.teamId))
+    .sort(compareBenchQueue)[0] || null;
+  const promotedRegistrationId = getRegistrationDocumentId(promotedRegistration);
+
+  if (!promotedRegistration || !promotedRegistrationId) {
+    return null;
+  }
+
+  return {
+    registration: promotedRegistration,
+    registrationId: promotedRegistrationId,
+    fromTeam: benchTeamById.get(promotedRegistration.teamId)
+  };
+}
+
 async function writeActivityLog(transaction, data) {
   await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
 }
@@ -248,30 +324,49 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('Signup can no longer be cancelled');
     }
 
+    const cancelCount = normalizeCount(registrationRes.data.cancelCount) + 1;
+    const joinedCountAfter = Math.max(activityRes.data.joinedCount - 1, 0);
+    const promotion = !isBenchTeam(teamRes.data)
+      ? await findBenchPromotionCandidate(transaction, event.activityId)
+      : null;
+
     await transaction.collection('registrations').doc(registrationId).update({
       data: {
         status: 'cancelled',
         cancelledAt: stamp,
-        cancelCount: normalizeCount(registrationRes.data.cancelCount) + 1,
+        cancelCount,
         updatedAt: stamp
       }
     });
 
     await transaction.collection('activities').doc(event.activityId).update({
       data: {
-        joinedCount: Math.max(activityRes.data.joinedCount - 1, 0),
+        joinedCount: joinedCountAfter,
         updatedAt: stamp
       }
     });
 
-    await transaction.collection('activity_teams').doc(registrationRes.data.teamId).update({
-      data: {
-        joinedCount: Math.max(teamRes.data.joinedCount - 1, 0)
-      }
-    });
+    if (promotion) {
+      await transaction.collection('registrations').doc(promotion.registrationId).update({
+        data: {
+          teamId: registrationRes.data.teamId,
+          updatedAt: stamp
+        }
+      });
 
-    const cancelCount = normalizeCount(registrationRes.data.cancelCount) + 1;
-    const joinedCountAfter = Math.max(activityRes.data.joinedCount - 1, 0);
+      await transaction.collection('activity_teams').doc(promotion.registration.teamId).update({
+        data: {
+          joinedCount: Math.max(normalizeCount(promotion.fromTeam.joinedCount) - 1, 0)
+        }
+      });
+    } else {
+      await transaction.collection('activity_teams').doc(registrationRes.data.teamId).update({
+        data: {
+          joinedCount: Math.max(teamRes.data.joinedCount - 1, 0)
+        }
+      });
+    }
+
     await writeActivityLog(transaction, {
       activityId: event.activityId,
       action: 'signup_cancelled',
@@ -290,6 +385,30 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       createdAt: stamp
     });
 
+    if (promotion) {
+      await writeActivityLog(transaction, {
+        activityId: event.activityId,
+        action: 'registration_auto_promoted',
+        operatorOpenId: openid,
+        targetOpenId: promotion.registration.userOpenId || '',
+        registrationId: promotion.registrationId,
+        teamId: registrationRes.data.teamId || '',
+        fromTeamId: promotion.registration.teamId || '',
+        toTeamId: registrationRes.data.teamId || '',
+        before: {
+          status: 'joined',
+          teamId: promotion.registration.teamId || ''
+        },
+        after: {
+          status: 'joined',
+          teamId: registrationRes.data.teamId || '',
+          cancelledRegistrationId: registrationId,
+          queueOrder: 1
+        },
+        createdAt: stamp
+      });
+    }
+
     const activity = {
       ...activityRes.data,
       _id: event.activityId
@@ -297,6 +416,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     return {
       registrationId,
       status: 'cancelled',
+      promotedRegistrationId: promotion ? promotion.registrationId : '',
+      promotedTeamId: promotion ? registrationRes.data.teamId || '' : '',
+      promotedFromTeamId: promotion ? promotion.registration.teamId || '' : '',
       lateCancellationNotice: shouldNotifyLateCancellation(activity, stamp)
         ? {
             activity,

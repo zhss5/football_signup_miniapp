@@ -112,6 +112,137 @@ function createNotificationDb(seed = {}) {
   };
 }
 
+function createBenchPromotionHarness() {
+  const writes = {
+    registrationUpdates: [],
+    activityUpdates: [],
+    teamUpdates: [],
+    logs: []
+  };
+  const state = {
+    registrations: {
+      activity_1_openid_player: {
+        _id: 'activity_1_openid_player',
+        activityId: 'activity_1',
+        status: 'joined',
+        teamId: 'team_white',
+        signupName: 'Alex',
+        userOpenId: 'openid_player',
+        cancelCount: 0,
+        joinedAt: '2026-05-01T10:00:00.000Z'
+      },
+      activity_1_openid_late_bench: {
+        _id: 'activity_1_openid_late_bench',
+        activityId: 'activity_1',
+        status: 'joined',
+        teamId: 'team_bench',
+        signupName: 'Later Bench',
+        userOpenId: 'openid_late_bench',
+        joinedAt: '2026-05-01T12:00:00.000Z'
+      },
+      activity_1_openid_early_bench: {
+        _id: 'activity_1_openid_early_bench',
+        activityId: 'activity_1',
+        status: 'joined',
+        teamId: 'team_bench',
+        signupName: 'Early Bench',
+        userOpenId: 'openid_early_bench',
+        joinedAt: '2026-05-01T11:00:00.000Z'
+      }
+    },
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        organizerOpenId: 'openid_owner',
+        title: 'May 9 training',
+        status: 'published',
+        signupDeadlineAt: '2026-05-09T19:30:00.000Z',
+        startAt: '2026-05-09T20:00:00.000Z',
+        joinedCount: 8,
+        signupLimitTotal: 10
+      }
+    },
+    teams: {
+      team_white: {
+        _id: 'team_white',
+        activityId: 'activity_1',
+        teamName: 'White',
+        teamType: 'regular',
+        status: 'active',
+        sort: 0,
+        joinedCount: 5,
+        maxMembers: 5
+      },
+      team_bench: {
+        _id: 'team_bench',
+        activityId: 'activity_1',
+        teamName: '替补',
+        teamType: 'bench',
+        status: 'active',
+        sort: 2,
+        joinedCount: 2,
+        maxMembers: 5
+      }
+    }
+  };
+
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      add: jest.fn(async ({ data }) => {
+        writes.logs.push(data);
+        return { _id: `activity_logs_${writes.logs.length}` };
+      }),
+      where: jest.fn(query => ({
+        get: jest.fn().mockResolvedValue({
+          data: Object.values(
+            collectionName === 'registrations' ? state.registrations : state.teams
+          ).filter(item => Object.keys(query).every(key => item[key] === query[key]))
+        })
+      })),
+      doc: jest.fn(documentId => ({
+        get: jest.fn().mockResolvedValue({
+          data:
+            collectionName === 'registrations'
+              ? state.registrations[documentId]
+              : collectionName === 'activities'
+                ? state.activities[documentId]
+                : state.teams[documentId]
+        }),
+        update: jest.fn(async ({ data }) => {
+          if (collectionName === 'registrations') {
+            writes.registrationUpdates.push({ id: documentId, data });
+            state.registrations[documentId] = {
+              ...state.registrations[documentId],
+              ...data
+            };
+          } else if (collectionName === 'activities') {
+            writes.activityUpdates.push({ id: documentId, data });
+            state.activities[documentId] = {
+              ...state.activities[documentId],
+              ...data
+            };
+          } else if (collectionName === 'activity_teams') {
+            writes.teamUpdates.push({ id: documentId, data });
+            state.teams[documentId] = {
+              ...state.teams[documentId],
+              ...data
+            };
+          }
+          return {};
+        })
+      }))
+    }))
+  };
+
+  return {
+    state,
+    writes,
+    fakeDb: {
+      runTransaction: callback => callback(transaction)
+    }
+  };
+}
+
 test('cancelRegistration returns cancelled status', async () => {
   const result = await cancelRegistration.main(
     { activityId: 'activity_1' },
@@ -415,6 +546,109 @@ test('cancelRegistration does not notify managers when an admin cancels their ow
   );
 
   expect(notifyActivityManagers).not.toHaveBeenCalled();
+
+  jest.dontMock('wx-server-sdk');
+});
+
+test('cancelRegistration promotes the earliest bench registration into a cancelled regular slot', async () => {
+  jest.resetModules();
+
+  const { fakeDb, state, writes } = createBenchPromotionHarness();
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_player' })),
+    database: jest.fn(() => fakeDb)
+  }));
+
+  const isolatedCancelRegistration = require('../../cloudfunctions/cancelRegistration/index');
+
+  const result = await isolatedCancelRegistration.main(
+    { activityId: 'activity_1' },
+    {},
+    { now: '2026-05-09T15:00:00.000Z' }
+  );
+
+  expect(state.registrations.activity_1_openid_player).toMatchObject({
+    status: 'cancelled',
+    teamId: 'team_white',
+    cancelCount: 1
+  });
+  expect(state.registrations.activity_1_openid_early_bench).toMatchObject({
+    status: 'joined',
+    teamId: 'team_white',
+    joinedAt: '2026-05-01T11:00:00.000Z'
+  });
+  expect(state.registrations.activity_1_openid_late_bench).toMatchObject({
+    status: 'joined',
+    teamId: 'team_bench'
+  });
+  expect(writes.activityUpdates).toEqual([
+    {
+      id: 'activity_1',
+      data: {
+        joinedCount: 7,
+        updatedAt: '2026-05-09T15:00:00.000Z'
+      }
+    }
+  ]);
+  expect(writes.teamUpdates).toEqual([
+    {
+      id: 'team_bench',
+      data: {
+        joinedCount: 1
+      }
+    }
+  ]);
+  expect(writes.registrationUpdates).toEqual([
+    expect.objectContaining({
+      id: 'activity_1_openid_player',
+      data: expect.objectContaining({
+        status: 'cancelled',
+        cancelledAt: '2026-05-09T15:00:00.000Z',
+        cancelCount: 1,
+        updatedAt: '2026-05-09T15:00:00.000Z'
+      })
+    }),
+    {
+      id: 'activity_1_openid_early_bench',
+      data: {
+        teamId: 'team_white',
+        updatedAt: '2026-05-09T15:00:00.000Z'
+      }
+    }
+  ]);
+  expect(writes.logs).toEqual([
+    expect.objectContaining({
+      action: 'signup_cancelled',
+      registrationId: 'activity_1_openid_player',
+      teamId: 'team_white'
+    }),
+    expect.objectContaining({
+      action: 'registration_auto_promoted',
+      registrationId: 'activity_1_openid_early_bench',
+      targetOpenId: 'openid_early_bench',
+      teamId: 'team_white',
+      before: {
+        status: 'joined',
+        teamId: 'team_bench'
+      },
+      after: {
+        status: 'joined',
+        teamId: 'team_white',
+        cancelledRegistrationId: 'activity_1_openid_player',
+        queueOrder: 1
+      }
+    })
+  ]);
+  expect(result).toMatchObject({
+    registrationId: 'activity_1_openid_player',
+    status: 'cancelled',
+    promotedRegistrationId: 'activity_1_openid_early_bench',
+    promotedTeamId: 'team_white',
+    promotedFromTeamId: 'team_bench'
+  });
 
   jest.dontMock('wx-server-sdk');
 });
