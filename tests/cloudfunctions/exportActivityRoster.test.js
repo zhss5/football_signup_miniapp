@@ -204,6 +204,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
     {
       activityId: 'activity_1',
       activityTitle: 'Sunday Match',
+      activityType: 'internal',
+      activityTypeLabel: '内战',
       teamId: 'team_green',
       teamName: 'Green',
       registrationId: 'reg_alex',
@@ -218,6 +220,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
     {
       activityId: 'activity_1',
       activityTitle: 'Sunday Match',
+      activityType: 'internal',
+      activityTypeLabel: '内战',
       teamId: 'team_green',
       teamName: 'Green',
       registrationId: 'reg_proxy',
@@ -232,6 +236,8 @@ test('export rows include manager alias preferred positions proxy flag and atten
     {
       activityId: 'activity_1',
       activityTitle: 'Sunday Match',
+      activityType: 'internal',
+      activityTypeLabel: '内战',
       teamId: 'team_red',
       teamName: 'Red',
       registrationId: 'reg_ben',
@@ -244,4 +250,64 @@ test('export rows include manager alias preferred positions proxy flag and atten
       performanceDescription: ''
     }
   ]);
+});
+
+test('export rows include activity type and default historical activities to internal', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Sunday Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        activityType: 'external'
+      },
+      activity_legacy: {
+        _id: 'activity_legacy',
+        title: 'Legacy Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published'
+      }
+    },
+    teams: {
+      team_legacy: {
+        _id: 'team_legacy',
+        activityId: 'activity_legacy',
+        teamName: 'Legacy',
+        sort: 0,
+        status: 'active'
+      }
+    },
+    registrations: {
+      reg_legacy: {
+        _id: 'reg_legacy',
+        activityId: 'activity_legacy',
+        teamId: 'team_legacy',
+        userOpenId: 'openid_ben',
+        status: 'joined',
+        signupName: 'Legacy Ben',
+        joinedAt: '2026-06-03T10:00:00.000Z'
+      }
+    }
+  });
+
+  const externalResult = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const legacyResult = await exportActivityRoster.main(
+    { activityId: 'activity_legacy' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(externalResult.rows[0]).toMatchObject({
+    activityType: 'external',
+    activityTypeLabel: '外战'
+  });
+  expect(legacyResult.rows[0]).toMatchObject({
+    activityType: 'internal',
+    activityTypeLabel: '内战'
+  });
 });

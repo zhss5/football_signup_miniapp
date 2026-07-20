@@ -1658,6 +1658,7 @@
 
     function exportActivityRosterView() {
       const rows = getFilteredRosterRows().map(row => ({
+        活动类型: row.activityTypeText || formatActivityTypeText(row.activityType),
         队伍: row.teamName,
         报名名称: row.signupName,
         备注: row.managerAlias,

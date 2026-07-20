@@ -89,10 +89,14 @@
   }
 
   function buildRosterRows(detail = {}) {
+    const activityType = normalizeActivityType(detail.activity && detail.activity.activityType);
+
     return (Array.isArray(detail.teams) ? detail.teams : []).flatMap(team =>
       (Array.isArray(team.members) ? team.members : []).map(member => ({
         teamId: team._id || '',
         teamName: team.teamName || '',
+        activityType,
+        activityTypeText: formatActivityType(activityType),
         registrationId: member.registrationId || '',
         userOpenId: member.userOpenId || '',
         signupName: member.signupName || '',

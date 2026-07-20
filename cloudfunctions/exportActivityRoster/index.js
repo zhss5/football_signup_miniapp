@@ -24,6 +24,14 @@ function normalizeAttendanceStatus(value) {
   return value === 'absent' ? 'absent' : 'present';
 }
 
+function normalizeActivityType(value) {
+  return value === 'external' ? 'external' : 'internal';
+}
+
+function formatActivityType(value) {
+  return normalizeActivityType(value) === 'external' ? '外战' : '内战';
+}
+
 function getParticipantName(registration) {
   return String(
     registration.signupName ||
@@ -58,6 +66,8 @@ function toExportRow(activity, registration, team, user) {
   return {
     activityId: activity._id || '',
     activityTitle: activity.title || '',
+    activityType: normalizeActivityType(activity.activityType),
+    activityTypeLabel: formatActivityType(activity.activityType),
     teamId: team._id || registration.teamId || '',
     teamName: team.teamName || '',
     registrationId: registration._id || '',

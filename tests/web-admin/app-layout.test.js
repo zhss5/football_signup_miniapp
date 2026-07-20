@@ -1617,7 +1617,8 @@ test('activity detail loads and renders current activity operation logs', async 
     {
       getActivityDetail: jest.fn().mockResolvedValue({
         activity: {
-          title: 'Friday Football'
+          title: 'Friday Football',
+          activityType: 'external'
         },
         teams: []
       }),
@@ -1812,7 +1813,8 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
     {
       getActivityDetail: jest.fn().mockResolvedValue({
         activity: {
-          title: 'Friday Football'
+          title: 'Friday Football',
+          activityType: 'external'
         },
         teams: [
           {
@@ -1878,6 +1880,8 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
   elements['[data-roster-keyword]'].eventHandlers.input();
   appRoot.click(createElement({ action: 'export-activity-roster-view' }));
 
+  expect(elements['[data-export-output]'].value).toContain('活动类型');
+  expect(elements['[data-export-output]'].value).toContain('外战');
   expect(elements['[data-export-output]'].value).toContain('队伍,报名名称,备注,表现描述,位置偏好,代报名,出勤状态');
   expect(elements['[data-export-output]'].value).not.toContain('Alex');
   expect(elements['[data-export-output]'].value).toContain('Ben');

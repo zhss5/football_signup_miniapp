@@ -4,6 +4,23 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Roster Export Activity Type
+
+Implemented the first post-V2 change-request milestone.
+
+Delivered behavior:
+
+- `exportActivityRoster` rows now include stable `activityType` plus `activityTypeLabel`.
+- historical activities without `activityType` export as `internal` / `内战`.
+- Web Admin roster rows carry the activity type from activity detail.
+- Web Admin roster CSV adds the `活动类型` column and displays `内战` / `外战`.
+- backend still returns rows only; CSV generation remains in the browser.
+
+Verification:
+
+- red tests first failed for missing roster activity type fields and CSV column.
+- targeted tests passed: `npm test -- tests/cloudfunctions/exportActivityRoster.test.js tests/web-admin/activity-management.test.js tests/web-admin/app-layout.test.js --runInBand` (`3` suites, `55` tests).
+
 ## 2026-07-20 - Post-V2 Cancellation, Statistics, Roster, and Bench Design
 
 Documented the next post-Version 2 change request before implementation.

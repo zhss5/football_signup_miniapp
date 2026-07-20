@@ -103,8 +103,9 @@ Completed:
 - 2026-06-28 functional fix: the mini-program proxy (代报名) member settings sheet now exposes present/absent controls; no cloud function change was required (`setRegistrationAttendance` already accepts proxy registration IDs).
 - full regression after the post-V2 UI pass and proxy attendance fix: `82` suites and `709` tests.
 - still deferred after the post-V2 pass (NOT implemented): invite-code signup; gesture-based (drag/zoom) cover crop, which remains slider-based; XLSX roster export, where the Web Admin still generates CSV only.
-- 2026-07-20 post-V2 change-request design completed in `docs/superpowers/specs/2026-07-20-v2-cancellation-stats-roster-bench-design.md`; implementation has not started.
+- 2026-07-20 post-V2 change-request design completed in `docs/superpowers/specs/2026-07-20-v2-cancellation-stats-roster-bench-design.md`; implementation is proceeding milestone by milestone.
 - SQL migration readiness now covers activity type in roster export, late cancellation notice windows, final-outcome cancellation statistics, computed regular-plus-bench capacity, and bench auto-promotion logging.
+- 2026-07-20 milestone 1 implemented: `exportActivityRoster` rows and Web Admin roster CSV now include activity type, with missing historical values defaulting to `internal`.
 
 ## 4. Planned Version 2 Scope
 
@@ -197,7 +198,7 @@ Prepare Version 2 deployment and acceptance using the deployment notes in `docs/
 
 Post-V2 change-request implementation should start from the 2026-07-20 design spec and stay TDD. Recommended coding order:
 
-- add `activityType` to `exportActivityRoster` rows and Web Admin CSV.
+- add `activityType` to `exportActivityRoster` rows and Web Admin CSV. Completed 2026-07-20.
 - add final-outcome participant cancellation counts and rates to `getAttendanceStats`.
 - add configurable late-cancellation notice from `cancelRegistration` to the activity creator.
 - add computed total capacity and backend bench signup enforcement.

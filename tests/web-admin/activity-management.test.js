@@ -117,6 +117,9 @@ test('formatBeijingDateTime renders timestamps in Beijing time', () => {
 
 test('buildRosterRows flattens team members with manager aliases and attendance', () => {
   const rows = buildRosterRows({
+    activity: {
+      activityType: 'external'
+    },
     teams: [
       {
         _id: 'team_white',
@@ -150,6 +153,8 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
     {
       teamId: 'team_white',
       teamName: 'White',
+      activityType: 'external',
+      activityTypeText: '外战',
       registrationId: 'reg_1',
       userOpenId: 'openid_player',
       signupName: 'Alex',
@@ -163,6 +168,8 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
     {
       teamId: 'team_white',
       teamName: 'White',
+      activityType: 'external',
+      activityTypeText: '外战',
       registrationId: 'reg_2',
       userOpenId: 'proxy_1',
       signupName: 'Guest',
@@ -174,6 +181,29 @@ test('buildRosterRows flattens team members with manager aliases and attendance'
       performanceDescription: ''
     }
   ]);
+});
+
+test('buildRosterRows defaults missing activity type to internal for roster export', () => {
+  expect(
+    buildRosterRows({
+      teams: [
+        {
+          _id: 'team_white',
+          teamName: 'White',
+          members: [
+            {
+              registrationId: 'reg_1',
+              userOpenId: 'openid_player',
+              signupName: 'Alex'
+            }
+          ]
+        }
+      ]
+    })[0]
+  ).toMatchObject({
+    activityType: 'internal',
+    activityTypeText: '内战'
+  });
 });
 
 test('rowsToCsv produces browser-downloadable CSV text with escaped fields', () => {
