@@ -4,6 +4,24 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-20 - Bench Capacity and Stale Bench Signup Enforcement
+
+Implemented the fourth post-V2 change-request milestone.
+
+Delivered behavior:
+
+- `createActivity` and `updateActivity` now accept explicit API `benchCapacity`.
+- when `benchCapacity` is present, stored `signupLimitTotal` is computed as regular-team capacity plus bench capacity.
+- the generated or updated bench team uses the explicit bench capacity.
+- old clients remain compatible because missing `benchCapacity` keeps the previous total-capacity based behavior.
+- `joinActivity` now handles stale bench signup requests inside the backend transaction.
+- if a user submits a bench `teamId` while a regular slot is available, the backend assigns the user to the first active regular team by `sort` and returns additive assignment metadata.
+
+Verification:
+
+- red tests first failed because create/update persisted the provided `signupLimitTotal` and `joinActivity` kept the stale bench team.
+- targeted tests passed: `npm test -- tests/cloudfunctions/createActivity.test.js tests/cloudfunctions/updateActivity.test.js tests/cloudfunctions/joinActivity.test.js --runInBand` (`3` suites, `33` tests).
+
 ## 2026-07-20 - Late Cancellation Organizer Notice
 
 Implemented the third post-V2 change-request milestone.

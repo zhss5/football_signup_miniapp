@@ -108,6 +108,7 @@ Completed:
 - 2026-07-20 milestone 1 implemented: `exportActivityRoster` rows and Web Admin roster CSV now include activity type, with missing historical values defaulting to `internal`.
 - 2026-07-20 milestone 2 implemented: `getAttendanceStats` now returns final-outcome cancellation counts/rates, and Web Admin statistics table/CSV show cancellation count and cancellation rate.
 - 2026-07-20 milestone 3 implemented: `cancelRegistration` now sends best-effort late cancellation notices to the activity creator inside the configurable cancellation window.
+- 2026-07-20 milestone 4 implemented: create/update activity flows now support explicit API `benchCapacity`, compute `signupLimitTotal` from regular plus bench capacity for new clients, keep old total-capacity behavior for old clients, and backend `joinActivity` auto-assigns stale bench signup requests to the first available regular team.
 
 ## 4. Planned Version 2 Scope
 

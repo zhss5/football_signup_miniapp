@@ -195,6 +195,43 @@ test('createActivity stores map location, deadline, image list, and auto generat
   });
 });
 
+test('createActivity computes total capacity from regular teams and explicit bench capacity', async () => {
+  const writes = [];
+  const fakeDb = createFakeDbWithUserRoles(['organizer'], writes);
+
+  await createActivity.main(
+    {
+      title: 'Saturday 8-10',
+      startAt: '2026-04-26T20:00:00.000Z',
+      endAt: '2026-04-26T22:00:00.000Z',
+      signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+      addressText: 'Half Stone',
+      signupLimitTotal: 99,
+      benchCapacity: 3,
+      imageList: [],
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
+    },
+    { OPENID: 'openid_a' },
+    { db: fakeDb, now: '2026-04-19T10:00:00.000Z' }
+  );
+
+  expect(writes[0].data.signupLimitTotal).toBe(15);
+  expect(writes.filter(item => item.name === 'activity_teams')).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        data: expect.objectContaining({
+          teamName: '替补',
+          maxMembers: 3,
+          teamType: 'bench'
+        })
+      })
+    ])
+  );
+});
+
 test('createActivity rejects more than five detail images', async () => {
   const writes = [];
   const fakeDb = createFakeDbWithUserRoles(['organizer'], writes);

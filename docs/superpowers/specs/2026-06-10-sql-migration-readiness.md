@@ -150,7 +150,7 @@ Mini-program list pagination uses the existing `listActivities` API with stable 
 
 The mini-program My page does not show overdue unresolved prompts. V2 adds no CloudBase field or SQL column for that prompt.
 
-Post-V2 bench queue changes keep `signup_limit_total` as a stored compatibility field, but new and edited activities compute it from the sum of active regular-team capacity plus active bench capacity. The post-V2 late cancellation notice uses `late_cancellation_notice_window_hours`; missing CloudBase values default to `6`, and `0` disables the notice.
+Post-V2 bench queue changes keep `signup_limit_total` as a stored compatibility field, but new and edited activities compute it from the sum of active regular-team capacity plus active bench capacity. New clients may send API-only `benchCapacity`; the backend persists the value through the generated or updated bench `activity_teams.maxMembers` row rather than adding a separate CloudBase activity field. Missing `benchCapacity` keeps legacy `signupLimitTotal` behavior for old clients. The post-V2 late cancellation notice uses `late_cancellation_notice_window_hours`; missing CloudBase values default to `6`, and `0` disables the notice.
 
 ### `activity_teams`
 
@@ -434,7 +434,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 17. Run `bootstrapV2Collections` as an explicit CloudBase readiness step for existing environments. It creates missing V2 collections only and does not perform runtime MySQL migration, dual-write, or HTTP API cutover.
 18. Treat missing `activities.activityType` as `internal`, including roster export and statistics filters.
 19. Treat missing `activities.lateCancellationNoticeWindowHours` as `6`; treat `0` as disabled.
-20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity.
+20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity when API `benchCapacity` is present; missing `benchCapacity` keeps the legacy total-capacity contract.
 21. Enforce bench signup rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata.
 22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
 23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a cancelled regular-team slot.

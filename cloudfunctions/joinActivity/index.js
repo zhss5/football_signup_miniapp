@@ -56,6 +56,38 @@ function shouldNotifyManagersForJoin(activity, joinedCountAfter) {
   return threshold > 0 && normalizeCount(joinedCountAfter) >= threshold;
 }
 
+function isBenchTeam(team) {
+  return team && team.teamType === 'bench';
+}
+
+function isActiveRegularTeam(team) {
+  return team && team.status !== 'inactive' && team.teamType !== 'bench';
+}
+
+function hasTeamCapacity(team) {
+  return normalizeCount(team.joinedCount) < normalizeCount(team.maxMembers);
+}
+
+function compareTeamOrder(left, right) {
+  const leftSort = Number(left && left.sort);
+  const rightSort = Number(right && right.sort);
+  const normalizedLeftSort = Number.isFinite(leftSort) ? leftSort : 0;
+  const normalizedRightSort = Number.isFinite(rightSort) ? rightSort : 0;
+
+  if (normalizedLeftSort !== normalizedRightSort) {
+    return normalizedLeftSort - normalizedRightSort;
+  }
+
+  return String(left && left._id ? left._id : '').localeCompare(String(right && right._id ? right._id : ''));
+}
+
+async function findAvailableRegularTeam(transaction, activityId) {
+  const teamsRes = await transaction.collection('activity_teams').where({ activityId }).get();
+  return (teamsRes.data || [])
+    .filter(team => isActiveRegularTeam(team) && hasTeamCapacity(team))
+    .sort(compareTeamOrder)[0] || null;
+}
+
 function normalizePreferredPositions(value) {
   const seen = new Set();
   const input = Array.isArray(value) ? value : [];
@@ -186,7 +218,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('Activity is full');
     }
 
-    if (teamRes.data.joinedCount >= teamRes.data.maxMembers) {
+    const requestedTeam = teamRes.data;
+    const autoAssignedTeam = isBenchTeam(requestedTeam)
+      ? await findAvailableRegularTeam(transaction, event.activityId)
+      : null;
+    const selectedTeam = autoAssignedTeam || requestedTeam;
+    const selectedTeamId = selectedTeam._id || event.teamId;
+    const autoAssigned = Boolean(autoAssignedTeam);
+
+    if (selectedTeam.joinedCount >= selectedTeam.maxMembers) {
       throw businessError('Team is full');
     }
 
@@ -217,7 +257,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     const registrationData = {
       activityId: event.activityId,
-      teamId: event.teamId,
+      teamId: selectedTeamId,
       userOpenId: openid,
       status: 'joined',
       signupName,
@@ -247,9 +287,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       }
     });
 
-    await transaction.collection('activity_teams').doc(event.teamId).update({
+    await transaction.collection('activity_teams').doc(selectedTeamId).update({
       data: {
-        joinedCount: teamRes.data.joinedCount + 1
+        joinedCount: selectedTeam.joinedCount + 1
       }
     });
 
@@ -261,7 +301,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       operatorOpenId: openid,
       targetOpenId: openid,
       registrationId,
-      teamId: event.teamId,
+      teamId: selectedTeamId,
       before: {
         status: previousRegistration ? previousRegistration.status || '' : '',
         teamId: previousRegistration ? previousRegistration.teamId || '' : '',
@@ -270,10 +310,12 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       },
       after: {
         status: 'joined',
-        teamId: event.teamId,
+        teamId: selectedTeamId,
         signupName,
         preferredPositions,
-        source: event.source || 'direct'
+        source: event.source || 'direct',
+        requestedTeamId: event.teamId,
+        autoAssigned
       },
       createdAt: stamp
     });
@@ -284,8 +326,12 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     return {
       registrationId,
-      teamId: event.teamId,
+      requestedTeamId: event.teamId,
+      teamId: selectedTeamId,
+      teamName: selectedTeam.teamName || '',
       status: 'joined',
+      autoAssigned,
+      autoAssignedReason: autoAssigned ? 'regular_slot_available' : '',
       managerNotification: shouldNotifyManagers
         ? {
             activity: {

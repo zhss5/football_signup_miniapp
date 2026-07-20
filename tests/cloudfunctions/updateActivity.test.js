@@ -331,6 +331,44 @@ test('updateActivity syncs editable regular team names colors capacities and add
   );
 });
 
+test('updateActivity computes total capacity from regular teams and explicit bench capacity', async () => {
+  const db = createFakeDb({
+    teams: {
+      team_bench: {
+        _id: 'team_bench',
+        activityId: 'activity_1',
+        teamName: '替补',
+        sort: 2,
+        maxMembers: 8,
+        joinedCount: 0,
+        teamType: 'bench',
+        status: 'active'
+      }
+    }
+  });
+
+  await updateActivity.main(
+    buildUpdatePayload({
+      signupLimitTotal: 99,
+      benchCapacity: 4,
+      registrationNoticeThreshold: '',
+      teams: [
+        { _id: 'team_white', teamName: 'White', maxMembers: 5, colorKey: 'white' },
+        { _id: 'team_red', teamName: 'Red', maxMembers: 7, colorKey: 'red' }
+      ]
+    }),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1.signupLimitTotal).toBe(16);
+  expect(db.state.activities.activity_1.registrationNoticeThreshold).toBe(13);
+  expect(db.state.teams.team_bench).toMatchObject({
+    maxMembers: 4,
+    status: 'active'
+  });
+});
+
 test('updateActivity marks removed empty teams inactive', async () => {
   const db = createFakeDb();
 

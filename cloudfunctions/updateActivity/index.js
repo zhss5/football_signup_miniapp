@@ -39,6 +39,29 @@ function getRegularTeams(teams) {
     .sort((left, right) => Number(left.sort || 0) - Number(right.sort || 0));
 }
 
+function hasExplicitBenchCapacity(event) {
+  return event.benchCapacity !== undefined && event.benchCapacity !== null && event.benchCapacity !== '';
+}
+
+function normalizeCapacity(value) {
+  const capacity = Number(value || 0);
+  return Number.isFinite(capacity) && capacity > 0 ? Math.floor(capacity) : 0;
+}
+
+function getRegularTeamSlots(teams) {
+  return teams.reduce((sum, team) => sum + normalizeCapacity(team.maxMembers), 0);
+}
+
+function resolveSignupLimitTotal(event, regularTeamDrafts) {
+  const regularSlots = getRegularTeamSlots(regularTeamDrafts);
+
+  if (hasExplicitBenchCapacity(event)) {
+    return regularSlots + normalizeCapacity(event.benchCapacity);
+  }
+
+  return normalizeCapacity(event.signupLimitTotal);
+}
+
 function buildRegularTeamDrafts(event, existingRegularTeams) {
   const sourceTeams = Array.isArray(event.teams) ? event.teams : existingRegularTeams;
 
@@ -96,7 +119,7 @@ function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
   return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
 }
 
-function buildActivityUpdateData(event, activity, stamp) {
+function buildActivityUpdateData(event, activity, stamp, signupLimitTotal) {
   const imageList = normalizeImageList(event);
   const detailImages = normalizeDetailImages(event);
   const title = String(event.title || '').trim();
@@ -116,14 +139,14 @@ function buildActivityUpdateData(event, activity, stamp) {
     notificationHint: String(event.notificationHint || '').trim(),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       event.registrationNoticeThreshold,
-      event.signupLimitTotal
+      signupLimitTotal
     ),
     coverImage: imageList[0] || event.coverImage || '',
     coverThumbImage: event.coverThumbImage || '',
     shareImage: event.shareImage || '',
     imageList,
     detailImages,
-    signupLimitTotal: Number(event.signupLimitTotal) || 0,
+    signupLimitTotal,
     requirePhone: false,
     inviteCode: event.inviteCode || '',
     updatedAt: stamp
@@ -336,7 +359,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const teams = teamsResult.data || [];
   const regularTeams = getRegularTeams(teams);
   const regularTeamDrafts = buildRegularTeamDrafts(event, regularTeams);
-  const updateData = buildActivityUpdateData(event, activity, nowIso(deps.now));
+  const signupLimitTotal = resolveSignupLimitTotal(event, regularTeamDrafts);
+  const updateData = buildActivityUpdateData(event, activity, nowIso(deps.now), signupLimitTotal);
 
   if (Number(updateData.signupLimitTotal) < Number(activity.joinedCount || 0)) {
     throw businessError('Total signup limit cannot be lower than joined players');

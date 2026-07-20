@@ -711,6 +711,154 @@ test('joinActivity rejects more than two preferred positions', async () => {
   ).rejects.toThrow('At most two preferred positions are allowed');
 });
 
+test('joinActivity auto-assigns a stale bench request to the first regular team with capacity', async () => {
+  jest.resetModules();
+
+  const setRegistration = jest.fn().mockResolvedValue({});
+  const updateActivity = jest.fn().mockResolvedValue({});
+  const teamUpdates = [];
+  const updateUser = jest.fn().mockResolvedValue({});
+  const teams = {
+    team_white: {
+      _id: 'team_white',
+      activityId: 'activity_1',
+      teamName: 'White',
+      sort: 0,
+      joinedCount: 5,
+      maxMembers: 6,
+      teamType: 'regular',
+      status: 'active'
+    },
+    team_red: {
+      _id: 'team_red',
+      activityId: 'activity_1',
+      teamName: 'Red',
+      sort: 1,
+      joinedCount: 6,
+      maxMembers: 6,
+      teamType: 'regular',
+      status: 'active'
+    },
+    team_bench: {
+      _id: 'team_bench',
+      activityId: 'activity_1',
+      teamName: '替补',
+      sort: 2,
+      joinedCount: 0,
+      maxMembers: 4,
+      teamType: 'bench',
+      status: 'active'
+    }
+  };
+  const transaction = {
+    collection: jest.fn(collectionName => ({
+      add: jest.fn().mockResolvedValue({}),
+      where: jest.fn(query => ({
+        get: jest.fn().mockResolvedValue({
+          data: Object.values(teams).filter(team => team.activityId === query.activityId)
+        })
+      })),
+      doc: jest.fn(documentId => {
+        if (collectionName === 'activities') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                status: 'published',
+                signupDeadlineAt: '2026-04-20T10:00:00.000Z',
+                joinedCount: 11,
+                signupLimitTotal: 16
+              }
+            }),
+            update: updateActivity
+          };
+        }
+
+        if (collectionName === 'activity_teams') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: teams[documentId]
+            }),
+            update: jest.fn(async ({ data }) => {
+              teamUpdates.push({ id: documentId, data });
+              teams[documentId] = {
+                ...teams[documentId],
+                ...data
+              };
+              return {};
+            })
+          };
+        }
+
+        if (collectionName === 'registrations') {
+          return {
+            get: jest.fn().mockResolvedValue({ data: null }),
+            set: setRegistration
+          };
+        }
+
+        if (collectionName === 'users') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                roles: ['user']
+              }
+            }),
+            update: updateUser
+          };
+        }
+
+        throw new Error(`Unexpected collection ${collectionName}`);
+      })
+    }))
+  };
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_a' })),
+    database: jest.fn(() => ({
+      runTransaction: callback => callback(transaction)
+    }))
+  }));
+
+  const isolatedJoinActivity = require('../../cloudfunctions/joinActivity/index');
+
+  const result = await isolatedJoinActivity.main(
+    {
+      activityId: 'activity_1',
+      teamId: 'team_bench',
+      signupName: 'Alex'
+    },
+    {},
+    { now: '2026-04-19T10:00:00.000Z' }
+  );
+
+  expect(setRegistration).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      teamId: 'team_white'
+    })
+  });
+  expect(teamUpdates).toEqual([
+    {
+      id: 'team_white',
+      data: {
+        joinedCount: 6
+      }
+    }
+  ]);
+  expect(result).toMatchObject({
+    registrationId: 'activity_1_openid_a',
+    status: 'joined',
+    requestedTeamId: 'team_bench',
+    teamId: 'team_white',
+    teamName: 'White',
+    autoAssigned: true,
+    autoAssignedReason: 'regular_slot_available'
+  });
+
+  jest.dontMock('wx-server-sdk');
+});
+
 test('joinActivity preserves optional phone fields when a future signup flow provides them', async () => {
   jest.resetModules();
 
