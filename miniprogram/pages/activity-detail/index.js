@@ -302,7 +302,8 @@ Page({
     participantDialogAttendanceStatusText: '',
     participantDialogAttendanceActionStatus: '',
     participantDialogAttendanceActionText: '',
-    participantDialogAttendanceSaving: false
+    participantDialogAttendanceSaving: false,
+    participantDialogSelfEditVisible: false
   },
 
   async onLoad(query) {
@@ -574,7 +575,8 @@ Page({
       participantDialogAttendanceActionText: attendanceVisible
         ? String(detail.attendanceActionText || '')
         : '',
-      participantDialogAttendanceSaving: false
+      participantDialogAttendanceSaving: false,
+      participantDialogSelfEditVisible: Boolean(detail.selfProfileEditVisible)
     });
   },
 
@@ -599,7 +601,20 @@ Page({
       participantDialogAttendanceStatusText: '',
       participantDialogAttendanceActionStatus: '',
       participantDialogAttendanceActionText: '',
-      participantDialogAttendanceSaving: false
+      participantDialogAttendanceSaving: false,
+      participantDialogSelfEditVisible: false
+    });
+  },
+
+  onParticipantSelfEdit() {
+    if (!this.data.participantDialogSelfEditVisible || !this.data.activityId) {
+      return;
+    }
+
+    const activityId = this.data.activityId;
+    this.closeParticipantDialog();
+    wx.navigateTo({
+      url: `/pages/activity-join/index?mode=edit&activityId=${activityId}`
     });
   },
 

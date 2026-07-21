@@ -216,6 +216,12 @@
         </view>
       </view>
 
+      <button
+        wx:if="{{participantDialogSelfEditVisible}}"
+        class="participant-dialog-self-edit"
+        bindtap="onParticipantSelfEdit"
+      >{{i18n.activity.actions.editRegistrationProfile}}</button>
+
       <view class="participant-dialog-actions">
         <button class="participant-dialog-cancel" bindtap="onParticipantDialogCancel">
           {{participantDialogAliasEditable ? i18n.modal.participant.cancel : i18n.modal.participant.close}}

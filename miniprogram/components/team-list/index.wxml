@@ -63,6 +63,7 @@
               data-attendance-action-visible="{{member.attendanceActionVisible}}"
               data-attendance-action-status="{{member.attendanceActionStatus}}"
               data-attendance-action-text="{{member.attendanceActionText}}"
+              data-self-profile-edit-visible="{{member.selfProfileEditVisible}}"
               bindtap="onMemberTap"
             >
               <image wx:if="{{member.avatarUrl}}" class="member-avatar-image" src="{{member.avatarUrl}}" mode="aspectFill" />
@@ -73,6 +74,11 @@
               <view class="member-info">
                 <view class="member-name-row">
                   <text class="member-name {{member.attendanceStatus === 'absent' ? 'member-name-absent' : ''}}">{{member.signupName}}</text>
+                  <view
+                    wx:if="{{member.selfProfileEditVisible}}"
+                    class="member-self-edit-indicator"
+                    aria-label="{{member.selfProfileEditText}}"
+                  >✎</view>
                   <text wx:if="{{member.managerAliasVisible}}" class="member-manager-alias-inline {{member.attendanceStatus === 'absent' ? 'member-manager-alias-absent' : ''}}">（{{member.managerAliasText}}）</text>
                   <text wx:if="{{member.proxyBadgeVisible}}" class="member-proxy-badge">{{member.proxyBadgeText}}</text>
                   <view wx:if="{{member.attendanceStatus === 'absent'}}" class="member-attendance-badge">

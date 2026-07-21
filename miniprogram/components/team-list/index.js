@@ -79,6 +79,7 @@ Component({
       const dataset = event.currentTarget.dataset;
       const managerAliasEditable = parseDatasetBoolean(dataset.managerAliasEditable);
       const attendanceActionVisible = parseDatasetBoolean(dataset.attendanceActionVisible);
+      const selfProfileEditVisible = parseDatasetBoolean(dataset.selfProfileEditVisible);
 
       this.triggerEvent('membertap', {
         userOpenId: dataset.userOpenId || '',
@@ -92,7 +93,8 @@ Component({
         attendanceStatusText: dataset.attendanceStatusText || '',
         attendanceActionVisible,
         attendanceActionStatus: dataset.attendanceActionStatus || '',
-        attendanceActionText: dataset.attendanceActionText || ''
+        attendanceActionText: dataset.attendanceActionText || '',
+        selfProfileEditVisible
       });
     }
   }

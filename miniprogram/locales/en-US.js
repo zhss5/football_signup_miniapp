@@ -81,6 +81,7 @@ module.exports = {
       confirmProceeding: 'Confirm Activity',
       cancelActivity: 'Cancel Activity',
       cancelSignup: 'Cancel Signup',
+      editRegistrationProfile: 'Edit registration details',
       markPresent: 'Mark present',
       markAbsent: 'Mark absent',
       managerAlias: 'Alias',

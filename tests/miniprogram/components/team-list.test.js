@@ -90,6 +90,17 @@ describe('team list component', () => {
     expect(wxml).not.toContain('data-action="managerAlias"');
   });
 
+  test('renders a compact self-edit cue and passes its permission through member taps', () => {
+    const wxml = fs.readFileSync(
+      path.join(process.cwd(), 'miniprogram/components/team-list/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('wx:if="{{member.selfProfileEditVisible}}"');
+    expect(wxml).toContain('class="member-self-edit-indicator"');
+    expect(wxml).toContain('data-self-profile-edit-visible="{{member.selfProfileEditVisible}}"');
+  });
+
   test('does not emit team color taps for non-editable teams', () => {
     const triggerEvent = jest.fn();
     const ctx = {
@@ -185,7 +196,8 @@ describe('team list component', () => {
           attendanceStatusText: 'Present',
           attendanceActionVisible: true,
           attendanceActionStatus: 'absent',
-          attendanceActionText: 'Mark absent'
+          attendanceActionText: 'Mark absent',
+          selfProfileEditVisible: true
         }
       }
     });
@@ -202,7 +214,8 @@ describe('team list component', () => {
       attendanceStatusText: 'Present',
       attendanceActionVisible: true,
       attendanceActionStatus: 'absent',
-      attendanceActionText: 'Mark absent'
+      attendanceActionText: 'Mark absent',
+      selfProfileEditVisible: true
     });
   });
 });

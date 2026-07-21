@@ -375,6 +375,53 @@ test('buildTeamListVm hides move actions from regular users', () => {
   });
 });
 
+test('buildTeamListVm exposes self profile editing only before activity start', () => {
+  const teams = [
+    {
+      _id: 'team_red',
+      teamName: 'Red',
+      joinedCount: 2,
+      maxMembers: 6,
+      members: [
+        { userOpenId: 'openid_self', signupName: 'Alex', avatarUrl: '' },
+        { userOpenId: 'openid_other', signupName: 'Bob', avatarUrl: '' }
+      ]
+    }
+  ];
+  const registration = {
+    teamId: 'team_red',
+    status: 'joined',
+    userOpenId: 'openid_self',
+    proxyRegistration: false
+  };
+  const activity = {
+    status: 'published',
+    startAt: '2026-07-21T12:00:00.000Z',
+    signupDeadlineAt: '2026-07-21T08:00:00.000Z'
+  };
+
+  const beforeStart = buildTeamListVm(
+    teams,
+    registration,
+    activity,
+    () => Date.parse('2026-07-21T09:00:00.000Z')
+  );
+  const atStart = buildTeamListVm(
+    teams,
+    registration,
+    activity,
+    () => Date.parse('2026-07-21T12:00:00.000Z')
+  );
+
+  expect(beforeStart[0].members[0]).toMatchObject({
+    isCurrentUser: true,
+    selfProfileEditVisible: true,
+    selfProfileEditText: 'Edit registration details'
+  });
+  expect(beforeStart[0].members[1].selfProfileEditVisible).toBe(false);
+  expect(atStart[0].members[0].selfProfileEditVisible).toBe(false);
+});
+
 test('buildTeamListVm hides manual move actions for bench members', () => {
   const teams = buildTeamListVm(
     [

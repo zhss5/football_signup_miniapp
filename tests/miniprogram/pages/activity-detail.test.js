@@ -607,6 +607,9 @@ describe('activity detail page', () => {
     expect(wxml).toContain('maxlength="40"');
     expect(wxml).toContain('bindinput="onParticipantAliasInput"');
     expect(wxml).toContain('bindtap="onParticipantAliasSave"');
+    expect(wxml).toContain('wx:if="{{participantDialogSelfEditVisible}}"');
+    expect(wxml).toContain('bindtap="onParticipantSelfEdit"');
+    expect(wxml).toContain('{{i18n.activity.actions.editRegistrationProfile}}');
     expect(wxss).toContain('.participant-dialog-panel');
   });
 
@@ -667,7 +670,8 @@ describe('activity detail page', () => {
         attendanceStatusText: 'Present',
         attendanceActionVisible: false,
         attendanceActionStatus: '',
-        attendanceActionText: ''
+        attendanceActionText: '',
+        selfProfileEditVisible: true
       }
     });
 
@@ -683,6 +687,41 @@ describe('activity detail page', () => {
     expect(ctx.data.participantDialogAttendanceVisible).toBe(false);
     expect(ctx.data.participantDialogRegistrationId).toBe('');
     expect(ctx.data.participantDialogAttendanceActionStatus).toBe('');
+    expect(ctx.data.participantDialogSelfEditVisible).toBe(true);
+  });
+
+  test('navigates from the current participant dialog to registration edit mode', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        participantDialogSelfEditVisible: true,
+        participantDialogSaving: false,
+        participantDialogAttendanceSaving: false
+      },
+      closeParticipantDialog: jest.fn()
+    };
+
+    pageConfig.onParticipantSelfEdit.call(ctx);
+
+    expect(ctx.closeParticipantDialog).toHaveBeenCalled();
+    expect(global.wx.navigateTo).toHaveBeenCalledWith({
+      url: '/pages/activity-join/index?mode=edit&activityId=activity_123'
+    });
+  });
+
+  test('does not open registration edit mode for another participant', () => {
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        participantDialogSelfEditVisible: false
+      },
+      closeParticipantDialog: jest.fn()
+    };
+
+    pageConfig.onParticipantSelfEdit.call(ctx);
+
+    expect(ctx.closeParticipantDialog).not.toHaveBeenCalled();
+    expect(global.wx.navigateTo).not.toHaveBeenCalled();
   });
 
   test('onMemberTap lets managers set attendance for proxy members without alias editing', () => {

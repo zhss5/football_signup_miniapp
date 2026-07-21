@@ -172,6 +172,12 @@ function buildMemberVm(member, context = {}) {
       !member.proxyRegistration &&
       !String(member.userOpenId).startsWith('proxy_')
   );
+  const selfProfileEditVisible = Boolean(
+    isCurrentUser &&
+      context.canEditSelfProfile &&
+      !member.proxyRegistration &&
+      !String(member.userOpenId || '').startsWith('proxy_')
+  );
 
   return {
     ...member,
@@ -205,6 +211,10 @@ function buildMemberVm(member, context = {}) {
     managerAliasActionVisible,
     managerAliasActionText: managerAliasActionVisible
       ? context.translate('activity.actions.managerAlias')
+      : '',
+    selfProfileEditVisible,
+    selfProfileEditText: selfProfileEditVisible
+      ? context.translate('activity.actions.editRegistrationProfile')
       : ''
   };
 }
@@ -222,10 +232,20 @@ function buildTeamListVm(
   const stableNowProvider = () => now;
   const signupState = getActivitySignupState(activity || {}, stableNowProvider, translate);
   const currentUserOpenId = myRegistration && myRegistration.userOpenId;
+  const startAt = Date.parse((activity && activity.startAt) || '');
+  const canEditSelfProfile = Boolean(
+    hasJoined &&
+      myRegistration.proxyRegistration !== true &&
+      activity &&
+      activity.status === 'published' &&
+      Number.isFinite(startAt) &&
+      now < startAt
+  );
   const memberContext = {
     canCancelSignup: Boolean(options.canCancelSignup),
     canManageRegistrations: Boolean(options.canManageRegistrations),
     canManageAttendance: Boolean(options.canManageRegistrations),
+    canEditSelfProfile,
     currentUserOpenId,
     translate
   };

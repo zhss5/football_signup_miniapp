@@ -69,6 +69,7 @@ module.exports = {
       edit: '编辑活动',
       cancelActivity: '取消活动',
       cancelSignup: '退出报名',
+      editRegistrationProfile: '修改报名信息',
       moveMember: '换队',
       removeMember: '移除',
       delete: '删除'
