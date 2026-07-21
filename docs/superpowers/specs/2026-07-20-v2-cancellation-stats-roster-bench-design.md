@@ -108,6 +108,16 @@ signupLimitTotal = sum(active regular team maxMembers) + active bench maxMembers
 - Generic manager `moveRegistration` is limited to regular-to-regular moves. The mini-program does not show bench teams as move targets and does not show the generic move action on bench members.
 - Regular-to-bench and bench-to-regular manual moves are rejected by the backend. Bench participants enter regular teams only through ordered automatic promotion.
 
+### Proxy Signup Into Bench
+
+- Proxy signup follows the same regular-capacity-first rule when a manager requests the bench team.
+- While any active regular team has capacity, the mini-program does not show the bench team's proxy-signup action.
+- The backend must still recheck capacity inside the `addProxyRegistration` transaction because the page can be stale or the request can be crafted.
+- If a manager requests the bench team while a regular slot exists, the proxy participant is assigned to the first available regular team using the same deterministic `sort` ascending, then team id ascending order as ordinary signup.
+- If all active regular teams are full, the proxy participant remains in the requested bench team, subject to bench capacity.
+- Clicking proxy signup on a specific regular team keeps explicit-team semantics. If that team becomes full, the backend returns `Team is full`; it does not silently move the proxy participant to another regular team or the bench.
+- The response adds `requestedTeamId`, actual `teamId`, `teamName`, `autoAssigned`, and `autoAssignedReason`. Existing clients may ignore these additive fields.
+
 ### Bench Auto Promotion
 
 - When a regular registration is cancelled through `cancelRegistration` or removed by a manager through `removeRegistration`, the earliest joined active bench registration is promoted into the vacated regular team.
@@ -151,6 +161,10 @@ Manager-removal responses use the same additive promotion identifiers as `cancel
 ### `moveRegistration`
 
 `moveRegistration` accepts only active regular source and target teams. A request involving a team with `teamType: bench` fails with `Bench registrations are managed automatically`. Historical teams without `teamType` remain compatible as regular teams.
+
+### `addProxyRegistration`
+
+When the requested team is `bench`, `addProxyRegistration` returns the actual assignment using the same additive fields as `joinActivity`: `requestedTeamId`, `teamId`, `teamName`, `autoAssigned`, and `autoAssignedReason: regular_slot_available`. A request for a specific regular team remains bound to that team.
 
 ### `getAttendanceStats`
 
@@ -217,6 +231,9 @@ Minimum backend tests:
 - `joinActivity` auto-assigns a stale bench request to a regular slot when regular capacity exists.
 - `joinActivity` allows bench signup only when all active regular teams are full.
 - `moveRegistration` rejects regular-to-bench and bench-to-regular manual moves.
+- `addProxyRegistration` auto-assigns a stale bench request to the first regular team with capacity.
+- `addProxyRegistration` keeps a bench request in the bench only when all regular teams are full.
+- `addProxyRegistration` keeps explicit regular-team selection semantics.
 - Mini-program move controls exclude bench targets and hide the action for bench members.
 - `getAttendanceStats` returns final-outcome cancellation counts and rates.
 - `exportActivityRoster` returns `activityType` with default `internal`.
@@ -226,6 +243,8 @@ Minimum mini-program tests:
 - Activity create/edit computes total capacity from regular plus bench capacity.
 - Bench signup is hidden or disabled while regular capacity exists.
 - Stale bench submission displays the actual assigned regular team returned by the backend.
+- Bench proxy signup is hidden while regular capacity exists.
+- Proxy signup displays the actual assigned regular team when a stale bench request is auto-assigned.
 
 Minimum Web Admin tests:
 
