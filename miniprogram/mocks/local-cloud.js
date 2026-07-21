@@ -961,6 +961,94 @@ function createLocalCloudClient(options = {}) {
     };
   }
 
+  function updateMyRegistrationProfile(payload) {
+    const state = readState();
+    const openid = getOpenId();
+    const stamp = now();
+    const activityId = String(payload.activityId || '').trim();
+    const signupName = normalizeSignupName(payload.signupName);
+    const avatarUrl = String(payload.avatarUrl || '').trim();
+    const profileSource = avatarUrl ? normalizeSource(payload.profileSource) : 'manual';
+    const preferredPositions = validatePreferredPositions(payload.preferredPositions);
+    const activity = state.activities[activityId];
+    const registrationId = `${activityId}_${openid}`;
+    const registration = state.registrations[registrationId];
+
+    if (!activityId) {
+      throw new Error('activityId is required');
+    }
+    if (!signupName) {
+      throw new Error('signupName is required');
+    }
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+    if (activity.status !== 'published') {
+      throw new Error('Activity is not open for signup');
+    }
+
+    const startAt = Date.parse(activity.startAt || '');
+    if (!Number.isFinite(startAt)) {
+      throw new Error('Activity start time is invalid');
+    }
+    if (Date.parse(stamp) >= startAt) {
+      throw new Error('Registration profile is locked after activity start');
+    }
+    if (!registration || registration.activityId !== activityId || registration.userOpenId !== openid) {
+      throw new Error('Registration not found');
+    }
+    if (registration.status !== 'joined') {
+      throw new Error('Only joined registrations can be edited');
+    }
+    if (registration.proxyRegistration === true || openid.startsWith('proxy_')) {
+      throw new Error('Proxy registrations cannot be edited');
+    }
+
+    const before = {
+      signupName: registration.signupName || '',
+      avatarUrl: registration.avatarUrl || '',
+      profileSource: registration.profileSource || 'manual',
+      preferredPositions: Array.isArray(registration.preferredPositions)
+        ? registration.preferredPositions.slice()
+        : []
+    };
+    const after = {
+      signupName,
+      avatarUrl,
+      profileSource,
+      preferredPositions
+    };
+
+    Object.assign(registration, after, { updatedAt: stamp });
+    const user = ensureUserInState(state, openid, stamp);
+    Object.assign(user, {
+      preferredName: signupName,
+      avatarUrl,
+      profileSource,
+      preferredPositions,
+      lastActiveAt: stamp,
+      updatedAt: stamp
+    });
+    state.activityLogs.push({
+      activityId,
+      action: 'registration_profile_update',
+      operatorOpenId: openid,
+      targetOpenId: openid,
+      registrationId,
+      before,
+      after,
+      createdAt: stamp
+    });
+
+    writeState(state);
+    return {
+      registrationId,
+      activityId,
+      ...after,
+      updatedAt: stamp
+    };
+  }
+
   function addProxyRegistration(payload) {
     validateSignupPayload(payload);
     const preferredPositions = validatePreferredPositions(payload.preferredPositions);
@@ -1583,6 +1671,7 @@ function createLocalCloudClient(options = {}) {
     listActivities,
     getActivityDetail,
     joinActivity,
+    updateMyRegistrationProfile,
     addProxyRegistration,
     resolvePhoneNumber,
     cancelRegistration,

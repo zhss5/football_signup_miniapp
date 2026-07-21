@@ -61,6 +61,84 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].notificationHint).toBe('Bring both kits');
 });
 
+test('local cloud client updates the current user registration profile before activity start', async () => {
+  const storage = createMemoryStorage();
+  let currentNow = '2026-04-19T10:00:00.000Z';
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => currentNow,
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => currentNow,
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+  const created = await ownerClient.call('createActivity', {
+    title: 'Profile Edit Match',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:00:00.000Z',
+    addressText: 'Half Stone',
+    signupLimitTotal: 2,
+    teams: [{ teamName: 'White', maxMembers: 2 }]
+  });
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detail.teams[0]._id,
+    signupName: 'Old Name',
+    avatarUrl: 'cloud://old-avatar',
+    profileSource: 'wechat',
+    preferredPositions: ['前锋']
+  });
+
+  currentNow = '2026-04-26T19:30:00.000Z';
+  const updated = await participantClient.call('updateMyRegistrationProfile', {
+    activityId: created.activityId,
+    signupName: 'New Name',
+    avatarUrl: '',
+    profileSource: 'wechat',
+    preferredPositions: ['门将']
+  });
+
+  expect(updated).toMatchObject({
+    activityId: created.activityId,
+    signupName: 'New Name',
+    avatarUrl: '',
+    profileSource: 'manual',
+    preferredPositions: ['门将']
+  });
+  const after = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  expect(after.myRegistration).toMatchObject({
+    teamId: detail.teams[0]._id,
+    status: 'joined',
+    signupName: 'New Name',
+    avatarUrl: '',
+    preferredPositions: ['门将']
+  });
+  const state = storage.getItem('football-signup-local-cloud-v1');
+  expect(state.users.openid_player).toMatchObject({
+    preferredName: 'New Name',
+    avatarUrl: '',
+    preferredPositions: ['门将']
+  });
+  expect(state.activityLogs).toContainEqual(
+    expect.objectContaining({
+      activityId: created.activityId,
+      action: 'registration_profile_update',
+      operatorOpenId: 'openid_player',
+      targetOpenId: 'openid_player'
+    })
+  );
+});
+
 test('local cloud client derives total signup limit from explicit bench capacity on create', async () => {
   const client = createLocalCloudClient({
     storage: createMemoryStorage(),
