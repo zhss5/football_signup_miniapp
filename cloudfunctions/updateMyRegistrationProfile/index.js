@@ -44,6 +44,14 @@ function toProfile(registration) {
   };
 }
 
+async function readTransactionDocument(transaction, collectionName, documentId) {
+  try {
+    return await transaction.collection(collectionName).doc(documentId).get();
+  } catch (error) {
+    return { data: null };
+  }
+}
+
 async function main(event = {}, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
   const openid = resolveOpenId(context, deps.getWXContext || (() => cloud.getWXContext()));
@@ -65,10 +73,11 @@ async function main(event = {}, context = cloud.getWXContext(), deps = {}) {
   const registrationId = `${activityId}_${openid}`;
 
   return db.runTransaction(async transaction => {
-    const activityRes = await transaction
-      .collection(COLLECTIONS.ACTIVITIES)
-      .doc(activityId)
-      .get();
+    const activityRes = await readTransactionDocument(
+      transaction,
+      COLLECTIONS.ACTIVITIES,
+      activityId
+    );
     const activity = activityRes && activityRes.data;
 
     if (!activity) {
@@ -91,7 +100,11 @@ async function main(event = {}, context = cloud.getWXContext(), deps = {}) {
     const registrationRef = transaction
       .collection(COLLECTIONS.REGISTRATIONS)
       .doc(registrationId);
-    const registrationRes = await registrationRef.get();
+    const registrationRes = await readTransactionDocument(
+      transaction,
+      COLLECTIONS.REGISTRATIONS,
+      registrationId
+    );
     const registration = registrationRes && registrationRes.data;
 
     if (!registration || registration.activityId !== activityId || registration.userOpenId !== openid) {
@@ -122,7 +135,7 @@ async function main(event = {}, context = cloud.getWXContext(), deps = {}) {
     });
 
     const userRef = transaction.collection(COLLECTIONS.USERS).doc(openid);
-    const userRes = await userRef.get();
+    const userRes = await readTransactionDocument(transaction, COLLECTIONS.USERS, openid);
     const userUpdate = {
       preferredName: signupName,
       avatarUrl,

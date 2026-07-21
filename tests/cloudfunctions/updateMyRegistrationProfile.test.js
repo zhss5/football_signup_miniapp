@@ -50,7 +50,13 @@ function createFakeDb(options = {}) {
       doc(id) {
         return {
           async get() {
-            return { data: state[name] && state[name][id] ? state[name][id] : null };
+            if (state[name] && state[name][id]) {
+              return { data: state[name][id] };
+            }
+            if (options.throwOnMissing) {
+              throw new Error('document not exists');
+            }
+            return { data: null };
           },
           async update({ data }) {
             state[name][id] = { ...state[name][id], ...data };
@@ -279,8 +285,8 @@ test('rejects a non-joined or proxy registration', async () => {
   ).rejects.toThrow('Proxy registrations cannot be edited');
 });
 
-test('derives ownership from trusted context and ignores targetOpenId input', async () => {
-  const db = createFakeDb();
+test('derives ownership from trusted context and normalizes missing-document errors', async () => {
+  const db = createFakeDb({ throwOnMissing: true });
   const updateMyRegistrationProfile = loadSubject();
 
   await expect(
