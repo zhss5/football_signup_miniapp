@@ -1038,6 +1038,82 @@ test('local cloud client lets organizers remove a member and lets the member rej
   });
 });
 
+test('local cloud client promotes the earliest bench registration after removing a regular proxy', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const earlyBenchClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_early_bench',
+    defaultRoles: ['user']
+  });
+  const lateBenchClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T12:00:00.000Z',
+    openid: 'openid_late_bench',
+    defaultRoles: ['user']
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 2,
+    signupLimitTotal: 99,
+    teams: [{ teamName: 'White', maxMembers: 1 }]
+  });
+  const initialDetail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const regularTeam = initialDetail.teams.find(team => team.teamType !== 'bench');
+  const benchTeam = initialDetail.teams.find(team => team.teamType === 'bench');
+  const proxy = await ownerClient.call('addProxyRegistration', {
+    activityId: created.activityId,
+    teamId: regularTeam._id,
+    signupName: 'Guest'
+  });
+
+  await earlyBenchClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: benchTeam._id,
+    signupName: 'Early Bench'
+  });
+  await lateBenchClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: benchTeam._id,
+    signupName: 'Late Bench'
+  });
+
+  const result = await ownerClient.call('removeRegistration', {
+    activityId: created.activityId,
+    userOpenId: proxy.userOpenId
+  });
+  const detail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(result).toMatchObject({
+    promotedRegistrationId: `${created.activityId}_openid_early_bench`,
+    promotedTeamId: regularTeam._id,
+    promotedFromTeamId: benchTeam._id
+  });
+  expect(detail.activity.joinedCount).toBe(2);
+  expect(detail.teams.find(team => team._id === regularTeam._id)).toMatchObject({
+    joinedCount: 1,
+    members: [expect.objectContaining({ userOpenId: 'openid_early_bench' })]
+  });
+  expect(detail.teams.find(team => team._id === benchTeam._id)).toMatchObject({
+    joinedCount: 1,
+    members: [expect.objectContaining({ userOpenId: 'openid_late_bench' })]
+  });
+});
+
 test('local cloud client asks repeat removed or cancelled participants to contact the organizer', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

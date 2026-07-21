@@ -4,6 +4,31 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-21 - Bench Promotion After Manager Removal
+
+Fixed manager removal so it follows the same bench-queue vacancy rule as participant cancellation.
+
+Delivered behavior:
+
+- removing a joined regular-team registration through `removeRegistration` now promotes the earliest joined active bench registration.
+- proxy registrations and real-user registrations use the same vacancy rule.
+- promotion order remains `joinedAt` ascending, then registration id ascending.
+- the activity joined count decreases once, the vacated regular-team count stays unchanged, and the bench-team count decreases once.
+- the removed registration remains cancelled with removal audit fields; promotion writes `activity_logs.action = registration_auto_promoted`.
+- the response adds `promotedRegistrationId`, `promotedTeamId`, and `promotedFromTeamId` without breaking old callers.
+- the local CloudBase mock now matches the deployed cloud-function behavior.
+
+Verification:
+
+- red tests reproduced both the cloud-function and local-mock gaps before implementation.
+- targeted regression passed: `npm test -- tests/cloudfunctions/removeRegistration.test.js tests/cloudfunctions/cancelRegistration.test.js tests/cloudfunctions/activityOperationLogs.test.js tests/miniprogram/mocks/local-cloud.test.js tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/pages/activity-detail-actions.test.js --runInBand` (`6` suites, `114` tests).
+- full regression passed: `npm test -- --runInBand` (`82` suites, `735` tests).
+
+Deployment scope:
+
+- redeploy `removeRegistration` to enable this behavior in a CloudBase environment.
+- no mini-program upload, Web Admin redeployment, collection migration, MySQL migration, dual-write, or HTTP API cutover is required.
+
 ## 2026-07-21 - Explicit Bench Capacity Mini-Program Form
 
 Completed the mini-program UI and API-contract follow-up for explicit bench capacity.

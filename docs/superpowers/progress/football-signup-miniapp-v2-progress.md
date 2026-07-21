@@ -112,6 +112,7 @@ Completed:
 - 2026-07-20 milestone 5 implemented: `cancelRegistration` now auto-promotes the earliest joined active bench registration into a cancelled regular slot, keeps activity and team counts consistent, and writes `registration_auto_promoted` activity logs.
 - 2026-07-20 post-V2 change-request implementation closure: full regression passed with `npm test -- --runInBand` (`82` suites, `721` tests), `git diff --check` passed with line-ending warnings only, and the runtime remains CloudBase-only with no MySQL migration, no dual-write, and no self-hosted HTTP API switch.
 - 2026-07-21 explicit bench-capacity UI follow-up implemented: mini-program create/edit/copy now edits `benchCapacity`, displays computed read-only `signupLimitTotal`, recovers historical bench capacity compatibly, and `getActivityCopyDraft` returns the API-only capacity field. Full regression passed (`82` suites, `733` tests). Deployment requires a mini-program upload and `getActivityCopyDraft` redeployment; no database migration is required.
+- 2026-07-21 manager-removal promotion fix implemented: `removeRegistration` now promotes the earliest active bench registration after a regular-team proxy or real-user registration is removed, keeps activity/team counts consistent, returns additive promotion metadata, and writes `registration_auto_promoted`. Full regression passed (`82` suites, `735` tests). Deployment requires only `removeRegistration`; no database migration is required.
 
 ## 4. Planned Version 2 Scope
 

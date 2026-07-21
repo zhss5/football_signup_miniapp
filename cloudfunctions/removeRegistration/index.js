@@ -12,6 +12,87 @@ function normalizeCount(value) {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
+function isBenchTeam(team) {
+  return team && team.teamType === 'bench';
+}
+
+function isActiveBenchTeam(team) {
+  return isBenchTeam(team) && team.status !== 'inactive' && normalizeCount(team.maxMembers) > 0;
+}
+
+function getRegistrationDocumentId(registration) {
+  if (registration && registration._id) {
+    return registration._id;
+  }
+
+  if (registration && registration.activityId && registration.userOpenId) {
+    return `${registration.activityId}_${registration.userOpenId}`;
+  }
+
+  return '';
+}
+
+function compareBenchQueue(left, right) {
+  const leftJoinedAt = String(left && left.joinedAt ? left.joinedAt : '');
+  const rightJoinedAt = String(right && right.joinedAt ? right.joinedAt : '');
+
+  if (leftJoinedAt !== rightJoinedAt) {
+    return leftJoinedAt.localeCompare(rightJoinedAt);
+  }
+
+  return getRegistrationDocumentId(left).localeCompare(getRegistrationDocumentId(right));
+}
+
+async function queryTransactionCollection(transaction, collectionName, query) {
+  const collection = transaction.collection(collectionName);
+
+  if (!collection || typeof collection.where !== 'function') {
+    return { data: [] };
+  }
+
+  return collection.where(query).get();
+}
+
+async function findBenchPromotionCandidate(transaction, activityId) {
+  const teamsRes = await queryTransactionCollection(
+    transaction,
+    COLLECTIONS.ACTIVITY_TEAMS,
+    { activityId }
+  );
+  const benchTeamById = (teamsRes.data || [])
+    .filter(isActiveBenchTeam)
+    .reduce((map, team) => {
+      if (team && team._id) {
+        map.set(team._id, team);
+      }
+      return map;
+    }, new Map());
+
+  if (benchTeamById.size === 0) {
+    return null;
+  }
+
+  const registrationsRes = await queryTransactionCollection(
+    transaction,
+    COLLECTIONS.REGISTRATIONS,
+    { activityId, status: 'joined' }
+  );
+  const registration = (registrationsRes.data || [])
+    .filter(item => benchTeamById.has(item.teamId))
+    .sort(compareBenchQueue)[0] || null;
+  const registrationId = getRegistrationDocumentId(registration);
+
+  if (!registration || !registrationId) {
+    return null;
+  }
+
+  return {
+    registration,
+    registrationId,
+    fromTeam: benchTeamById.get(registration.teamId)
+  };
+}
+
 async function writeActivityLog(transaction, data) {
   await transaction.collection(COLLECTIONS.ACTIVITY_LOGS).add({ data });
 }
@@ -76,6 +157,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       .doc(registration.teamId)
       .get();
     const team = teamRes.data || {};
+    const promotion = !isBenchTeam(team)
+      ? await findBenchPromotionCandidate(transaction, event.activityId)
+      : null;
 
     await transaction.collection(COLLECTIONS.REGISTRATIONS).doc(registrationId).update({
       data: {
@@ -95,11 +179,29 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       }
     });
 
-    await transaction.collection(COLLECTIONS.ACTIVITY_TEAMS).doc(registration.teamId).update({
-      data: {
-        joinedCount: Math.max(Number(team.joinedCount || 0) - 1, 0)
-      }
-    });
+    if (promotion) {
+      await transaction.collection(COLLECTIONS.REGISTRATIONS).doc(promotion.registrationId).update({
+        data: {
+          teamId: registration.teamId,
+          updatedAt: stamp
+        }
+      });
+
+      await transaction
+        .collection(COLLECTIONS.ACTIVITY_TEAMS)
+        .doc(promotion.registration.teamId)
+        .update({
+          data: {
+            joinedCount: Math.max(normalizeCount(promotion.fromTeam.joinedCount) - 1, 0)
+          }
+        });
+    } else {
+      await transaction.collection(COLLECTIONS.ACTIVITY_TEAMS).doc(registration.teamId).update({
+        data: {
+          joinedCount: Math.max(Number(team.joinedCount || 0) - 1, 0)
+        }
+      });
+    }
 
     const removedCount = normalizeCount(registration.removedCount) + 1;
     await writeActivityLog(transaction, {
@@ -120,13 +222,40 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       createdAt: stamp
     });
 
+    if (promotion) {
+      await writeActivityLog(transaction, {
+        activityId: event.activityId,
+        action: 'registration_auto_promoted',
+        operatorOpenId: openid,
+        targetOpenId: promotion.registration.userOpenId || '',
+        registrationId: promotion.registrationId,
+        teamId: registration.teamId || '',
+        fromTeamId: promotion.registration.teamId || '',
+        toTeamId: registration.teamId || '',
+        before: {
+          status: 'joined',
+          teamId: promotion.registration.teamId || ''
+        },
+        after: {
+          status: 'joined',
+          teamId: registration.teamId || '',
+          cancelledRegistrationId: registrationId,
+          queueOrder: 1
+        },
+        createdAt: stamp
+      });
+    }
+
     return {
       registrationId,
       activityId: event.activityId,
       userOpenId: event.userOpenId,
       teamId: registration.teamId,
       status: 'cancelled',
-      removed: true
+      removed: true,
+      promotedRegistrationId: promotion ? promotion.registrationId : '',
+      promotedTeamId: promotion ? registration.teamId || '' : '',
+      promotedFromTeamId: promotion ? promotion.registration.teamId || '' : ''
     };
   });
 }

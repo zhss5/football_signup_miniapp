@@ -108,10 +108,10 @@ signupLimitTotal = sum(active regular team maxMembers) + active bench maxMembers
 
 ### Bench Auto Promotion
 
-- When a regular registration is cancelled through `cancelRegistration`, the earliest joined active bench registration is promoted into the cancelled regular team.
+- When a regular registration is cancelled through `cancelRegistration` or removed by a manager through `removeRegistration`, the earliest joined active bench registration is promoted into the vacated regular team.
 - Promotion order is `joinedAt` ascending, then registration id ascending for deterministic behavior.
 - The promoted participant keeps the same registration id and `joinedAt`; only `teamId` and `updatedAt` change.
-- The cancelled registration changes to `status: cancelled` and gets `cancelledAt`, `cancelCount`, and `updatedAt`.
+- A self-cancelled registration gets `cancelledAt`, `cancelCount`, and `updatedAt`; a manager-removed registration keeps the existing removal audit fields. Both change to `status: cancelled`.
 - If a bench participant cancels, no promotion is attempted.
 - If no bench participant exists, the regular team vacancy remains open.
 - `activities.joinedCount` decreases by one for the cancelled participant. The promoted bench participant was already counted as joined, so promotion does not add back to activity total.
@@ -141,6 +141,10 @@ The cancellation response remains compatible with old callers. Additive fields a
 ```
 
 Old callers may ignore `promotedRegistrationId`, `promotedTeamId`, and `lateCancellationNotice`.
+
+### `removeRegistration`
+
+Manager-removal responses use the same additive promotion identifiers as `cancelRegistration`: `promotedRegistrationId`, `promotedTeamId`, and `promotedFromTeamId`. Old callers may ignore these fields.
 
 ### `getAttendanceStats`
 
@@ -202,6 +206,8 @@ Minimum backend tests:
 - `cancelRegistration` skips the notice when the window is `0`, when outside the window, or when the action is manager removal.
 - `cancelRegistration` promotes the earliest bench registration into a cancelled regular slot.
 - `cancelRegistration` keeps activity and team counts correct after promotion.
+- `removeRegistration` promotes the earliest bench registration after a regular proxy or real-user registration is removed.
+- `removeRegistration` keeps activity and team counts correct after promotion.
 - `joinActivity` auto-assigns a stale bench request to a regular slot when regular capacity exists.
 - `joinActivity` allows bench signup only when all active regular teams are full.
 - `getAttendanceStats` returns final-outcome cancellation counts and rates.

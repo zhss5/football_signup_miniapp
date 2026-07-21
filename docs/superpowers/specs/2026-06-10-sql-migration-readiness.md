@@ -437,7 +437,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity when API `benchCapacity` is present; missing `benchCapacity` keeps the legacy total-capacity contract.
 21. Enforce bench signup rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata.
 22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
-23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a cancelled regular-team slot.
+23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a regular-team slot vacated by participant cancellation or manager removal.
 24. Keep late-cancellation notification best-effort. Notification failure or skipped subscription must not roll back `cancelRegistration`.
 25. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 
@@ -484,7 +484,7 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - New and edited activities keep `activities.signup_limit_total` equal to active regular-team capacity plus active bench capacity.
 - New and edited activities have at most one active `activity_teams.team_type = 'bench'` row.
 - Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
-- Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after cancellation.
+- Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after participant cancellation or manager removal.
 
 ### Spot Checks
 

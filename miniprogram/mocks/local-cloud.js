@@ -57,6 +57,62 @@ function resolveSignupLimitTotal(payload, regularTeams) {
   return sumRegularTeamCapacity(regularTeams) + (Number(payload.benchCapacity) || 0);
 }
 
+function getRegistrationDocumentId(registration) {
+  if (registration && registration._id) {
+    return registration._id;
+  }
+
+  if (registration && registration.activityId && registration.userOpenId) {
+    return `${registration.activityId}_${registration.userOpenId}`;
+  }
+
+  return '';
+}
+
+function compareBenchQueue(left, right) {
+  const leftJoinedAt = String(left && left.joinedAt ? left.joinedAt : '');
+  const rightJoinedAt = String(right && right.joinedAt ? right.joinedAt : '');
+
+  if (leftJoinedAt !== rightJoinedAt) {
+    return leftJoinedAt.localeCompare(rightJoinedAt);
+  }
+
+  return getRegistrationDocumentId(left).localeCompare(getRegistrationDocumentId(right));
+}
+
+function findBenchPromotionCandidate(state, activityId) {
+  const benchTeamById = Object.values(state.teams)
+    .filter(
+      team =>
+        team.activityId === activityId &&
+        team.teamType === 'bench' &&
+        team.status !== 'inactive' &&
+        normalizeCount(team.maxMembers) > 0
+    )
+    .reduce((map, team) => map.set(team._id, team), new Map());
+
+  if (benchTeamById.size === 0) {
+    return null;
+  }
+
+  const registration = Object.values(state.registrations)
+    .filter(
+      item =>
+        item.activityId === activityId &&
+        item.status === 'joined' &&
+        benchTeamById.has(item.teamId)
+    )
+    .sort(compareBenchQueue)[0] || null;
+
+  return registration
+    ? {
+        registration,
+        registrationId: getRegistrationDocumentId(registration),
+        fromTeam: benchTeamById.get(registration.teamId)
+      }
+    : null;
+}
+
 function normalizeListLimit(value) {
   const limit = Number(value);
   if (!Number.isFinite(limit) || limit <= 0) {
@@ -1063,6 +1119,9 @@ function createLocalCloudClient(options = {}) {
     }
 
     const team = state.teams[current.teamId];
+    const promotion = team && team.teamType !== 'bench'
+      ? findBenchPromotionCandidate(state, payload.activityId)
+      : null;
 
     current.status = 'cancelled';
     current.cancelledAt = stamp;
@@ -1074,7 +1133,14 @@ function createLocalCloudClient(options = {}) {
     activity.joinedCount = Math.max(Number(activity.joinedCount || 0) - 1, 0);
     activity.updatedAt = stamp;
 
-    if (team) {
+    if (promotion) {
+      promotion.registration.teamId = current.teamId;
+      promotion.registration.updatedAt = stamp;
+      promotion.fromTeam.joinedCount = Math.max(
+        Number(promotion.fromTeam.joinedCount || 0) - 1,
+        0
+      );
+    } else if (team) {
       team.joinedCount = Math.max(Number(team.joinedCount || 0) - 1, 0);
     }
 
@@ -1085,7 +1151,10 @@ function createLocalCloudClient(options = {}) {
       userOpenId: payload.userOpenId,
       teamId: current.teamId,
       status: 'cancelled',
-      removed: true
+      removed: true,
+      promotedRegistrationId: promotion ? promotion.registrationId : '',
+      promotedTeamId: promotion ? current.teamId : '',
+      promotedFromTeamId: promotion ? promotion.fromTeam._id : ''
     };
   }
 
