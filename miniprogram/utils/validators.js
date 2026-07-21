@@ -83,6 +83,22 @@ function validateActivityDraft(draft, translate = null) {
   }
 
   const totalSignupLimit = Number(draft.signupLimitTotal) || 0;
+
+  if (
+    draft.benchCapacity !== undefined &&
+    draft.benchCapacity !== null &&
+    draft.benchCapacity !== ''
+  ) {
+    const benchCapacity = Number(draft.benchCapacity);
+    if (
+      !Number.isFinite(benchCapacity) ||
+      benchCapacity < 0 ||
+      Math.floor(benchCapacity) !== benchCapacity
+    ) {
+      throw buildValidationError('benchCapacity', 'errors.benchCapacityInvalid', translate);
+    }
+  }
+
   if (totalSignupLimit <= 0) {
     throw buildValidationError('signupLimitTotal', 'errors.totalSignupLimitRequired', translate);
   }

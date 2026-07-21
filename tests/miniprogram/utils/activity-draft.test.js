@@ -3,7 +3,9 @@ const {
   buildActivityEditForm,
   buildActivityPayload,
   createDefaultActivityForm,
-  normalizeNotificationHint
+  normalizeNotificationHint,
+  summarizeTeamSlots,
+  synchronizeActivityCapacity
 } = require('../../../miniprogram/utils/activity-draft');
 
 test('createDefaultActivityForm defaults activity and signup deadline dates to tomorrow', () => {
@@ -23,6 +25,8 @@ test('createDefaultActivityForm defaults activity and signup deadline dates to t
   expect(form.insuranceLink).toBe('');
   expect(form.notificationHint).toBe('');
   expect(form.activityType).toBe('internal');
+  expect(form.benchCapacity).toBe(0);
+  expect(form.signupLimitTotal).toBe(12);
   expect(form.registrationNoticeThreshold).toBe(10);
   expect(form).not.toHaveProperty('requirePhone');
 });
@@ -85,11 +89,50 @@ test('buildActivityPayload normalizes notification hint for subscription templat
 test('buildActivityPayload defaults the registration notice threshold to 80 percent of capacity', () => {
   const payload = buildActivityPayload({
     ...createDefaultActivityForm(),
-    signupLimitTotal: 20,
+    benchCapacity: 8,
+    signupLimitTotal: 99,
     registrationNoticeThreshold: ''
   });
 
+  expect(payload.benchCapacity).toBe(8);
+  expect(payload.signupLimitTotal).toBe(20);
   expect(payload.registrationNoticeThreshold).toBe(16);
+});
+
+test('summarizeTeamSlots derives total capacity from regular teams and explicit bench capacity', () => {
+  expect(
+    summarizeTeamSlots({
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ],
+      benchCapacity: 4,
+      signupLimitTotal: 99
+    })
+  ).toEqual({
+    namedTeamSlots: 12,
+    benchSlots: 4,
+    signupLimitTotal: 16,
+    overCapacity: false
+  });
+});
+
+test.each([
+  [-1, 11],
+  [1.5, 13.5]
+])('capacity synchronization preserves invalid bench input %s for validation', (benchCapacity, signupLimitTotal) => {
+  expect(
+    synchronizeActivityCapacity({
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ],
+      benchCapacity
+    })
+  ).toMatchObject({
+    benchCapacity,
+    signupLimitTotal
+  });
 });
 
 test('buildActivityPayload preserves a generated cover thumbnail', () => {
@@ -230,6 +273,7 @@ test('buildActivityEditForm maps an existing activity detail into the create for
     coverThumbImage: 'cloud://cover-a-thumb',
     detailImages: ['cloud://detail-a', 'cloud://detail-b'],
     imageList: ['cloud://cover-a'],
+    benchCapacity: 8,
     signupLimitTotal: 20,
     inviteCode: 'ABC',
     teams: [
@@ -268,6 +312,7 @@ test('buildActivityCopyForm maps reusable setup into a new draft without source 
     shareImage: 'cloud://share-a',
     imageList: ['cloud://cover-a'],
     detailImages: ['cloud://detail-a'],
+    benchCapacity: 8,
     signupLimitTotal: 20,
     inviteCode: '',
     status: 'draft',
@@ -318,4 +363,46 @@ test('buildActivityCopyForm maps reusable setup into a new draft without source 
   expect(form).not.toHaveProperty('status');
   expect(form).not.toHaveProperty('confirmStatus');
   expect(form).not.toHaveProperty('requiresTimeReview');
+});
+
+test('buildActivityEditForm falls back to legacy total when an activity has no bench team', () => {
+  const form = buildActivityEditForm(
+    {
+      signupLimitTotal: 16
+    },
+    [
+      { _id: 'team_white', teamName: 'White', maxMembers: 6, teamType: 'regular' },
+      { _id: 'team_red', teamName: 'Red', maxMembers: 6, teamType: 'regular' }
+    ]
+  );
+
+  expect(form.benchCapacity).toBe(4);
+  expect(form.signupLimitTotal).toBe(16);
+});
+
+test('buildActivityCopyForm restores explicit bench capacity and recomputes total', () => {
+  const form = buildActivityCopyForm({
+    benchCapacity: 3,
+    signupLimitTotal: 99,
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  expect(form.benchCapacity).toBe(3);
+  expect(form.signupLimitTotal).toBe(15);
+});
+
+test('buildActivityCopyForm derives bench capacity from a legacy total-only draft', () => {
+  const form = buildActivityCopyForm({
+    signupLimitTotal: 16,
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  expect(form.benchCapacity).toBe(4);
+  expect(form.signupLimitTotal).toBe(16);
 });

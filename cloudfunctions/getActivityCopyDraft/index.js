@@ -36,6 +36,14 @@ function buildReusableTeams(teams = []) {
     }));
 }
 
+function getBenchCapacity(teams = []) {
+  const benchTeam = teams.find(
+    team => team && team.status !== 'inactive' && team.teamType === 'bench'
+  );
+
+  return benchTeam ? Math.max(Number(benchTeam.maxMembers) || 0, 0) : 0;
+}
+
 function buildCopyDraft(activity, teams) {
   const imageList = normalizeArray(activity.imageList);
   const detailImages = normalizeArray(activity.detailImages);
@@ -61,6 +69,7 @@ function buildCopyDraft(activity, teams) {
     shareImage: activity.shareImage || '',
     imageList: imageList.length ? imageList : normalizeArray([activity.coverImage]),
     detailImages,
+    benchCapacity: getBenchCapacity(teams),
     signupLimitTotal: Number(activity.signupLimitTotal) || 0,
     inviteCode: '',
     status: 'draft',
@@ -114,5 +123,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 module.exports = {
   buildCopyDraft,
   buildReusableTeams,
+  getBenchCapacity,
   main
 };

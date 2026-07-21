@@ -150,6 +150,7 @@ test('organizer can start a copy draft from an activity they manage', async () =
     shareImage: 'cloud://share-a',
     imageList: ['cloud://cover-a'],
     detailImages: ['cloud://detail-a', 'cloud://detail-b'],
+    benchCapacity: 8,
     signupLimitTotal: 20,
     inviteCode: '',
     status: 'draft',

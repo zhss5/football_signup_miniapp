@@ -14,7 +14,8 @@ const {
   createDefaultActivityForm,
   getDefaultRegistrationNoticeThreshold,
   normalizeNotificationHint,
-  summarizeTeamSlots
+  summarizeTeamSlots,
+  synchronizeActivityCapacity
 } = require('../../utils/activity-draft');
 const {
   recordActivityNotificationSubscription,
@@ -61,19 +62,6 @@ function getImagePaths(result) {
   }
 
   return [];
-}
-
-function sumTeamCapacity(teams = []) {
-  return teams.reduce((sum, team) => sum + (Number(team.maxMembers) || 0), 0);
-}
-
-function adjustSignupLimitForTeamChange(form, nextTeams) {
-  const currentTotal = Number(form.signupLimitTotal) || 0;
-  const currentTeamSlots = sumTeamCapacity(form.teams);
-  const nextTeamSlots = sumTeamCapacity(nextTeams);
-  const adjustedTotal = currentTotal + nextTeamSlots - currentTeamSlots;
-
-  return Math.max(nextTeamSlots, adjustedTotal);
 }
 
 function adjustRegistrationNoticeThresholdForTotalChange(form, nextTotal) {
@@ -482,16 +470,17 @@ Page({
   },
 
   syncDerivedState(form, translate = makeTranslator(this.data.locale || getAppLocale())) {
-    const { namedTeamSlots, benchSlots, overCapacity } = summarizeTeamSlots(form);
+    const synchronizedForm = synchronizeActivityCapacity(form);
+    const { namedTeamSlots, benchSlots, overCapacity } = summarizeTeamSlots(synchronizedForm);
     this.setData({
-      form,
+      form: synchronizedForm,
       namedTeamSlots,
       benchSlots,
       overCapacity,
       namedTeamsSlotsText: translate('activityCreate.namedTeamsSlots', { count: namedTeamSlots }),
       benchSlotsText: translate('activityCreate.benchSlots', { count: benchSlots }),
-      selectedPinText: form.addressName
-        ? translate('activityCreate.selectedPin', { name: form.addressName })
+      selectedPinText: synchronizedForm.addressName
+        ? translate('activityCreate.selectedPin', { name: synchronizedForm.addressName })
         : ''
     });
   },
@@ -502,7 +491,7 @@ Page({
       field === 'notificationHint'
         ? normalizeNotificationHint(event.detail.value)
         : event.detail.value;
-    const numericFields = new Set(['signupLimitTotal', 'registrationNoticeThreshold']);
+    const numericFields = new Set(['benchCapacity', 'registrationNoticeThreshold']);
     const form = {
       ...this.data.form,
       [field]: numericFields.has(field) ? Number(value) || 0 : value
@@ -513,7 +502,10 @@ Page({
       form.location = null;
     }
 
-    if (field === 'signupLimitTotal') {
+    if (field === 'benchCapacity') {
+      const synchronizedForm = synchronizeActivityCapacity(form);
+      form.benchCapacity = synchronizedForm.benchCapacity;
+      form.signupLimitTotal = synchronizedForm.signupLimitTotal;
       form.registrationNoticeThreshold = adjustRegistrationNoticeThresholdForTotalChange(
         this.data.form,
         form.signupLimitTotal
@@ -568,14 +560,15 @@ Page({
 
   onTeamsChange(event) {
     const teams = Array.isArray(event.detail.teams) ? event.detail.teams : [];
-    const signupLimitTotal = adjustSignupLimitForTeamChange(this.data.form, teams);
-    const form = {
+    const synchronizedForm = synchronizeActivityCapacity({
       ...this.data.form,
-      teams,
-      signupLimitTotal,
+      teams
+    });
+    const form = {
+      ...synchronizedForm,
       registrationNoticeThreshold: adjustRegistrationNoticeThresholdForTotalChange(
         this.data.form,
-        signupLimitTotal
+        synchronizedForm.signupLimitTotal
       )
     };
 

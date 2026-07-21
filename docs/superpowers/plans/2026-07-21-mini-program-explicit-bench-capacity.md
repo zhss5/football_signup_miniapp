@@ -135,21 +135,21 @@ Expected: all targeted suites pass.
 **Interfaces:**
 - Produces: deployment notes identifying the mini-program upload and `getActivityCopyDraft` redeployment requirements.
 
-- [ ] **Step 1: Update implementation records**
+- [x] **Step 1: Update implementation records**
 
 Record the explicit bench-capacity UI, compatibility derivation, copy API field, tests, and deployment scope.
 
-- [ ] **Step 2: Run the full regression**
+- [x] **Step 2: Run the full regression**
 
 Run: `npm test -- --runInBand`
 
 Expected: all suites pass with zero failures.
 
-- [ ] **Step 3: Check the patch**
+- [x] **Step 3: Check the patch**
 
 Run: `git diff --check` and inspect `git status --short` to ensure unrelated configuration files remain unstaged.
 
-- [ ] **Step 4: Commit the milestone**
+- [x] **Step 4: Commit the milestone**
 
 Stage only the plan, mini-program capacity files, copy-draft cloud function, tests, and V2 documentation. Commit with:
 

@@ -52,6 +52,20 @@
   padding: 0 20rpx;
 }
 
+.computed-signup-limit {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 88rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #eef0ef;
+  border-radius: 16rpx;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 28rpx;
+}
+
 .input-error {
   border: 2rpx solid #dc2626;
 }

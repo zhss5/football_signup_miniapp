@@ -4,6 +4,32 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-21 - Explicit Bench Capacity Mini-Program Form
+
+Completed the mini-program UI and API-contract follow-up for explicit bench capacity.
+
+Delivered behavior:
+
+- activity create, edit, and copy forms now edit `benchCapacity` instead of editing `signupLimitTotal` directly.
+- the form displays a read-only total computed from active regular-team capacity plus bench capacity.
+- team or bench-capacity changes recompute the total and update the default registration notice threshold.
+- historical activities recover bench capacity from the active bench team, with a legacy total-minus-regular fallback.
+- `getActivityCopyDraft` now returns API-only `benchCapacity` from the active bench team.
+- the local CloudBase mock follows the same explicit-field contract while retaining the total-only fallback for Version 1 callers.
+- invalid negative or fractional bench capacity remains visible until validation and is rejected instead of being silently normalized.
+
+Verification:
+
+- red tests first failed for the missing form field, editable legacy total, missing copy-draft field, and stale local-mock total handling.
+- targeted regression passed: `npm test -- tests/miniprogram/utils/activity-draft.test.js tests/miniprogram/utils/validators.test.js tests/miniprogram/pages/activity-create-submit.test.js tests/cloudfunctions/getActivityCopyDraft.test.js tests/miniprogram/mocks/local-cloud.test.js --runInBand` (`5` suites, `106` tests).
+- full regression passed: `npm test -- --runInBand` (`82` suites, `733` tests).
+
+Deployment scope:
+
+- upload a new mini-program build for the create/edit/copy form changes.
+- redeploy `getActivityCopyDraft` for copied activities to receive explicit bench capacity.
+- no Web Admin redeployment or database migration is required.
+
 ## 2026-07-20 - Post-V2 Change Request Regression Closure
 
 Completed the implementation pass for the four confirmed post-V2 change-request areas.

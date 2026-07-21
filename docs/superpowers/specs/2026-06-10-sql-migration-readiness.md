@@ -144,7 +144,7 @@ Allowed `activity_type` values: `internal`, `external`. Historical rows without 
 
 Allowed `confirm_status` values: `pending`, `confirmed`.
 
-`getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. Copy drafts may include API-only `sourceStartAt`, `sourceEndAt`, and `sourceSignupDeadlineAt` fields so clients can reuse the source time-of-day without copying the source date. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
+`getActivityCopyDraft` uses `status: draft`, `confirmStatus: pending`, and `requiresTimeReview: true` as an API draft contract. Copy drafts may include API-only `sourceStartAt`, `sourceEndAt`, `sourceSignupDeadlineAt`, and `benchCapacity` fields so clients can reuse the source time-of-day and active bench capacity without copying the source date. V2 does not persist copy drafts until the manager saves through the existing create flow, so activity duplication adds no new CloudBase fields or SQL columns.
 
 Mini-program list pagination uses the existing `listActivities` API with stable `scope`, `limit`, and `skip` parameters. `home`, `created`, and `joined` scopes stay API-shaped and can later map to SQL `ORDER BY` plus `LIMIT/OFFSET` or cursor pagination without changing page-level payloads.
 

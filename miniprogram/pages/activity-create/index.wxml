@@ -117,18 +117,26 @@
     <team-editor teams="{{form.teams}}" labels="{{teamEditorLabels}}" bind:change="onTeamsChange" />
 
     <view class="field">
-      <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
+      <text class="label">{{i18n.activityCreate.benchCapacity}}</text>
       <input
         class="input"
-        placeholder="{{i18n.activityCreate.totalSignupLimitPlaceholder}}"
+        placeholder="{{i18n.activityCreate.benchCapacityPlaceholder}}"
         type="number"
-        data-field="signupLimitTotal"
-        value="{{form.signupLimitTotal}}"
+        min="0"
+        step="1"
+        data-field="benchCapacity"
+        value="{{form.benchCapacity}}"
         bindinput="onFieldInput"
       />
+      <text class="hint">{{i18n.activityCreate.benchCapacityHint}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">{{i18n.activityCreate.totalSignupLimit}}</text>
+      <view class="computed-signup-limit">{{form.signupLimitTotal}}</view>
+      <text class="hint">{{i18n.activityCreate.totalSignupLimitHint}}</text>
       <text class="hint">{{namedTeamsSlotsText}}</text>
-      <text wx:if="{{benchSlots > 0}}" class="hint">{{benchSlotsText}}</text>
-      <text wx:if="{{overCapacity}}" class="error-text">{{i18n.activityCreate.overCapacity}}</text>
+      <text class="hint">{{benchSlotsText}}</text>
     </view>
   </view>
 

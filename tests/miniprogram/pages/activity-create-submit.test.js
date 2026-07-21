@@ -61,8 +61,23 @@ jest.mock('../../../miniprogram/utils/activity-draft', () => {
     summarizeTeamSlots: jest.fn(() => ({
       namedTeamSlots: 12,
       benchSlots: 0,
+      signupLimitTotal: 12,
       overCapacity: false
-    }))
+    })),
+    synchronizeActivityCapacity: jest.fn(form => {
+      const namedTeamSlots = (Array.isArray(form.teams) ? form.teams : []).reduce(
+        (sum, team) => sum + (Number(team.maxMembers) || 0),
+        0
+      );
+      const rawBenchCapacity = Number(form.benchCapacity);
+      const benchCapacity = Number.isFinite(rawBenchCapacity) ? rawBenchCapacity : 0;
+
+      return {
+        ...form,
+        benchCapacity,
+        signupLimitTotal: namedTeamSlots + benchCapacity
+      };
+    })
   };
 });
 
@@ -222,7 +237,8 @@ describe('activity create submit flow', () => {
     );
 
     const teamEditorIndex = wxml.indexOf('<team-editor');
-    const totalSignupIndex = wxml.indexOf('data-field="signupLimitTotal"');
+    const benchCapacityIndex = wxml.indexOf('data-field="benchCapacity"');
+    const totalSignupIndex = wxml.indexOf('class="computed-signup-limit"');
     const notificationSettingsIndex = wxml.indexOf('{{i18n.activityCreate.notificationSettings}}');
     const notificationSettingsHintIndex = wxml.indexOf(
       '{{i18n.activityCreate.notificationSettingsHint}}'
@@ -233,7 +249,8 @@ describe('activity create submit flow', () => {
 
     expect(wxml).toContain('class="notification-settings-group"');
     expect(teamEditorIndex).toBeGreaterThan(-1);
-    expect(totalSignupIndex).toBeGreaterThan(teamEditorIndex);
+    expect(benchCapacityIndex).toBeGreaterThan(teamEditorIndex);
+    expect(totalSignupIndex).toBeGreaterThan(benchCapacityIndex);
     expect(notificationSettingsIndex).toBeGreaterThan(totalSignupIndex);
     expect(notificationSettingsHintIndex).toBeGreaterThan(notificationSettingsIndex);
     expect(registrationNoticeIndex).toBeGreaterThan(notificationSettingsHintIndex);
@@ -241,6 +258,20 @@ describe('activity create submit flow', () => {
     expect(coverImageIndex).toBeGreaterThan(notificationHintIndex);
     expect(wxss).toContain('.notification-settings-group');
     expect(wxss).toContain('.notification-settings-group .input');
+  });
+
+  test('renders explicit bench capacity and a computed read-only total', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('data-field="benchCapacity"');
+    expect(wxml).toContain('value="{{form.benchCapacity}}"');
+    expect(wxml).toContain('{{i18n.activityCreate.benchCapacity}}');
+    expect(wxml).toContain('class="computed-signup-limit"');
+    expect(wxml).toContain('{{form.signupLimitTotal}}');
+    expect(wxml).not.toContain('data-field="signupLimitTotal"');
   });
 
   test('renders the team editor when editing an existing activity', () => {
@@ -441,7 +472,7 @@ describe('activity create submit flow', () => {
     ]);
   });
 
-  test('onTeamsChange increases total signup limit when adding a team', () => {
+  test('onTeamsChange increases computed total when adding a team', () => {
     const nextTeams = [
       { teamName: 'Team 1', maxMembers: 12 },
       { teamName: 'Team 2', maxMembers: 12 }
@@ -450,6 +481,7 @@ describe('activity create submit flow', () => {
     const ctx = {
       data: {
         form: {
+          benchCapacity: 0,
           signupLimitTotal: 12,
           teams: [
             { teamName: 'Team 1', maxMembers: 12 }
@@ -466,13 +498,14 @@ describe('activity create submit flow', () => {
     });
 
     expect(syncDerivedState).toHaveBeenCalledWith({
+      benchCapacity: 0,
       signupLimitTotal: 24,
       registrationNoticeThreshold: 20,
       teams: nextTeams
     });
   });
 
-  test('onTeamsChange decreases total signup limit when removing a team', () => {
+  test('onTeamsChange decreases computed total when removing a team', () => {
     const nextTeams = [
       { teamName: 'Team 1', maxMembers: 12 }
     ];
@@ -480,6 +513,7 @@ describe('activity create submit flow', () => {
     const ctx = {
       data: {
         form: {
+          benchCapacity: 0,
           signupLimitTotal: 24,
           teams: [
             { teamName: 'Team 1', maxMembers: 12 },
@@ -497,6 +531,7 @@ describe('activity create submit flow', () => {
     });
 
     expect(syncDerivedState).toHaveBeenCalledWith({
+      benchCapacity: 0,
       signupLimitTotal: 12,
       registrationNoticeThreshold: 10,
       teams: nextTeams
@@ -512,6 +547,7 @@ describe('activity create submit flow', () => {
     const ctx = {
       data: {
         form: {
+          benchCapacity: 6,
           signupLimitTotal: 18,
           teams: [
             { teamName: 'Team 1', maxMembers: 12 }
@@ -528,9 +564,52 @@ describe('activity create submit flow', () => {
     });
 
     expect(syncDerivedState).toHaveBeenCalledWith({
+      benchCapacity: 6,
       signupLimitTotal: 30,
       registrationNoticeThreshold: 24,
       teams: nextTeams
+    });
+  });
+
+  test('bench capacity input recomputes total and the default notice threshold', () => {
+    const syncDerivedState = jest.fn();
+    const ctx = {
+      data: {
+        form: {
+          benchCapacity: 0,
+          signupLimitTotal: 12,
+          registrationNoticeThreshold: 10,
+          teams: [
+            { teamName: 'White', maxMembers: 6 },
+            { teamName: 'Red', maxMembers: 6 }
+          ]
+        },
+        validationErrors: {},
+        locale: 'zh-CN'
+      },
+      setData: jest.fn(),
+      syncDerivedState
+    };
+
+    pageConfig.onFieldInput.call(ctx, {
+      currentTarget: {
+        dataset: {
+          field: 'benchCapacity'
+        }
+      },
+      detail: {
+        value: '4'
+      }
+    });
+
+    expect(syncDerivedState).toHaveBeenCalledWith({
+      benchCapacity: 4,
+      signupLimitTotal: 16,
+      registrationNoticeThreshold: 13,
+      teams: [
+        { teamName: 'White', maxMembers: 6 },
+        { teamName: 'Red', maxMembers: 6 }
+      ]
     });
   });
 

@@ -61,6 +61,93 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].notificationHint).toBe('Bring both kits');
 });
 
+test('local cloud client derives total signup limit from explicit bench capacity on create', async () => {
+  const client = createLocalCloudClient({
+    storage: createMemoryStorage(),
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await client.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 4,
+    signupLimitTotal: 99,
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+
+  const detail = await client.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(detail.activity.signupLimitTotal).toBe(16);
+  expect(detail.activity.registrationNoticeThreshold).toBe(13);
+  expect(detail.teams.find(team => team.teamType === 'bench')).toMatchObject({
+    maxMembers: 4,
+    status: 'active'
+  });
+});
+
+test('local cloud client derives total signup limit from explicit bench capacity on update', async () => {
+  const client = createLocalCloudClient({
+    storage: createMemoryStorage(),
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await client.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    signupLimitTotal: 12,
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ]
+  });
+  const before = await client.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await client.call('updateActivity', {
+    activityId: created.activityId,
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 2,
+    signupLimitTotal: 99,
+    teams: before.teams
+      .filter(team => team.teamType !== 'bench')
+      .map(team => ({
+        _id: team._id,
+        teamName: team.teamName,
+        maxMembers: team.maxMembers,
+        colorKey: team.colorKey
+      }))
+  });
+
+  const after = await client.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(after.activity.signupLimitTotal).toBe(14);
+  expect(after.activity.registrationNoticeThreshold).toBe(12);
+  expect(after.teams.find(team => team.teamType === 'bench')).toMatchObject({
+    maxMembers: 2,
+    status: 'active'
+  });
+});
+
 test('local cloud client sorts activity lists by newest start time and honors limit', async () => {
   const client = createLocalCloudClient({
     storage: createMemoryStorage(),

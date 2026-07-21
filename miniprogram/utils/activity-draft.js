@@ -69,6 +69,56 @@ function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
   return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
 }
 
+function normalizeCapacity(value) {
+  const capacity = Number(value);
+
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    return 0;
+  }
+
+  return Math.floor(capacity);
+}
+
+function sumRegularTeamCapacity(teams = []) {
+  return (Array.isArray(teams) ? teams : [])
+    .filter(team => team && team.teamType !== 'bench' && team.status !== 'inactive')
+    .reduce((sum, team) => sum + normalizeCapacity(team.maxMembers), 0);
+}
+
+function resolveBenchCapacity(source = {}, teams = []) {
+  if (
+    source.benchCapacity !== undefined &&
+    source.benchCapacity !== null &&
+    source.benchCapacity !== ''
+  ) {
+    return normalizeCapacity(source.benchCapacity);
+  }
+
+  const benchTeam = (Array.isArray(teams) ? teams : []).find(
+    team => team && team.teamType === 'bench' && team.status !== 'inactive'
+  );
+  if (benchTeam) {
+    return normalizeCapacity(benchTeam.maxMembers);
+  }
+
+  return Math.max(
+    normalizeCapacity(source.signupLimitTotal) - sumRegularTeamCapacity(teams),
+    0
+  );
+}
+
+function synchronizeActivityCapacity(form = {}) {
+  const rawBenchCapacity = Number(form.benchCapacity);
+  const benchCapacity = Number.isFinite(rawBenchCapacity) ? rawBenchCapacity : 0;
+  const signupLimitTotal = sumRegularTeamCapacity(form.teams) + benchCapacity;
+
+  return {
+    ...form,
+    benchCapacity,
+    signupLimitTotal
+  };
+}
+
 function createDefaultActivityForm(options = {}) {
   const defaultTeams = Array.isArray(options.defaultTeams) && options.defaultTeams.length
     ? options.defaultTeams
@@ -80,6 +130,7 @@ function createDefaultActivityForm(options = {}) {
     colorKey: normalizeTeamColorKey(team.colorKey, index)
   }));
   const defaultDate = getTomorrowDateInputValue(options.now);
+  const signupLimitTotal = sumRegularTeamCapacity(teams);
 
   return {
     title: '',
@@ -100,21 +151,24 @@ function createDefaultActivityForm(options = {}) {
     shareImage: '',
     imageList: [],
     detailImages: [],
-    signupLimitTotal: 12,
-    registrationNoticeThreshold: getDefaultRegistrationNoticeThreshold(12),
+    benchCapacity: 0,
+    signupLimitTotal,
+    registrationNoticeThreshold: getDefaultRegistrationNoticeThreshold(signupLimitTotal),
     inviteCode: '',
     teams
   };
 }
 
 function summarizeTeamSlots(form) {
-  const namedTeamSlots = form.teams.reduce((sum, team) => sum + (Number(team.maxMembers) || 0), 0);
-  const totalSignupLimit = Number(form.signupLimitTotal) || 0;
+  const namedTeamSlots = sumRegularTeamCapacity(form.teams);
+  const benchSlots = normalizeCapacity(form.benchCapacity);
+  const signupLimitTotal = namedTeamSlots + benchSlots;
 
   return {
     namedTeamSlots,
-    benchSlots: Math.max(totalSignupLimit - namedTeamSlots, 0),
-    overCapacity: totalSignupLimit < namedTeamSlots
+    benchSlots,
+    signupLimitTotal,
+    overCapacity: false
   };
 }
 
@@ -153,11 +207,16 @@ function buildActivityPayload(form) {
     maxMembers: Number(team.maxMembers) || 0,
     colorKey: normalizeTeamColorKey(team.colorKey, index)
   }));
+  const rawBenchCapacity = form.benchCapacity === '' ? 0 : Number(form.benchCapacity);
+  const benchCapacity = Number.isFinite(rawBenchCapacity) ? rawBenchCapacity : 0;
+  const signupLimitTotal = sumRegularTeamCapacity(teams) + benchCapacity;
 
   return {
     ...payloadBase,
     activityType: normalizeActivityType(form.activityType),
     teams,
+    benchCapacity,
+    signupLimitTotal,
     startAt: combineDateAndTime(form.activityDate, form.startTime),
     endAt: combineDateAndTime(form.activityDate, form.endTime),
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
@@ -165,7 +224,7 @@ function buildActivityPayload(form) {
     notificationHint: normalizeNotificationHint(form.notificationHint),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       form.registrationNoticeThreshold,
-      form.signupLimitTotal
+      signupLimitTotal
     ),
     coverImage,
     coverThumbImage,
@@ -196,6 +255,8 @@ function buildActivityEditForm(activity = {}, teams = []) {
       joinedCount: Number(team.joinedCount) || 0,
       colorKey: normalizeTeamColorKey(team.colorKey, index)
     }));
+  const benchCapacity = resolveBenchCapacity(activity, teams);
+  const signupLimitTotal = sumRegularTeamCapacity(editableTeams) + benchCapacity;
 
   return {
     title: activity.title || '',
@@ -216,10 +277,11 @@ function buildActivityEditForm(activity = {}, teams = []) {
     shareImage: activity.shareImage || '',
     imageList,
     detailImages,
-    signupLimitTotal: Number(activity.signupLimitTotal) || 0,
+    benchCapacity,
+    signupLimitTotal,
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       activity.registrationNoticeThreshold,
-      Number(activity.signupLimitTotal) || 0
+      signupLimitTotal
     ),
     inviteCode: activity.inviteCode || '',
     teams: editableTeams
@@ -247,6 +309,8 @@ function buildActivityCopyForm(draft = {}) {
         colorKey: normalizeTeamColorKey(team.colorKey, index)
       }))
     : [];
+  const benchCapacity = resolveBenchCapacity(draft, reusableTeams);
+  const signupLimitTotal = sumRegularTeamCapacity(reusableTeams) + benchCapacity;
 
   return {
     title: draft.title || '',
@@ -267,10 +331,11 @@ function buildActivityCopyForm(draft = {}) {
     shareImage: draft.shareImage || '',
     imageList,
     detailImages,
-    signupLimitTotal: Number(draft.signupLimitTotal) || 0,
+    benchCapacity,
+    signupLimitTotal,
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       draft.registrationNoticeThreshold,
-      Number(draft.signupLimitTotal) || 0
+      signupLimitTotal
     ),
     inviteCode: '',
     teams: reusableTeams
@@ -289,5 +354,8 @@ module.exports = {
   normalizeActivityType,
   normalizeNotificationHint,
   normalizeRegistrationNoticeThreshold,
-  summarizeTeamSlots
+  resolveBenchCapacity,
+  summarizeTeamSlots,
+  sumRegularTeamCapacity,
+  synchronizeActivityCapacity
 };

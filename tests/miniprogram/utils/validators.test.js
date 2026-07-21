@@ -200,4 +200,23 @@ describe('validateActivityDraft', () => {
       })
     ).toBe(true);
   });
+
+  test.each([-1, 1.5])('rejects invalid explicit bench capacity %s', benchCapacity => {
+    expect(() =>
+      validateActivityDraft({
+        title: 'Saturday 8-10',
+        startAt: '2026-04-26T20:00:00.000Z',
+        endAt: '2026-04-26T22:00:00.000Z',
+        signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+        addressText: 'Half Stone',
+        benchCapacity,
+        signupLimitTotal: 12,
+        imageList: [],
+        teams: [
+          { teamName: 'White', maxMembers: 6 },
+          { teamName: 'Red', maxMembers: 6 }
+        ]
+      })
+    ).toThrow('Bench capacity must be a non-negative integer');
+  });
 });
