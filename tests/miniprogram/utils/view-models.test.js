@@ -442,6 +442,88 @@ test('buildTeamListVm enables proxy signup for managers while signup is open', (
   });
 });
 
+test('buildTeamListVm hides bench proxy signup while a regular team has capacity', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_regular',
+        teamName: 'Regular',
+        teamType: 'regular',
+        joinedCount: 1,
+        maxMembers: 2,
+        status: 'active',
+        members: []
+      },
+      {
+        _id: 'team_bench',
+        teamName: 'Bench',
+        teamType: 'bench',
+        joinedCount: 0,
+        maxMembers: 2,
+        status: 'active',
+        members: []
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0]).toMatchObject({
+    canProxySignup: true,
+    proxySignupText: 'Add participant'
+  });
+  expect(teams[1]).toMatchObject({
+    canProxySignup: false,
+    proxySignupText: ''
+  });
+});
+
+test('buildTeamListVm enables bench proxy signup when all regular teams are full', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_regular',
+        teamName: 'Regular',
+        teamType: 'regular',
+        joinedCount: 2,
+        maxMembers: 2,
+        status: 'active',
+        members: []
+      },
+      {
+        _id: 'team_bench',
+        teamName: 'Bench',
+        teamType: 'bench',
+        joinedCount: 0,
+        maxMembers: 2,
+        status: 'active',
+        members: []
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[1]).toMatchObject({
+    canProxySignup: true,
+    proxySignupText: 'Add participant'
+  });
+});
+
 test('buildTeamListVm marks proxy members for managers only', () => {
   const teams = [
     {

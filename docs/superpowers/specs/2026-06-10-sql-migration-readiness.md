@@ -401,7 +401,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `registrations.attendanceMarkedBy` | `registrations.attendance_marked_by` | Empty string allowed. |
 | `activity_logs.targetOpenId` / `activity_logs.userOpenId` | `activity_logs.user_openid` | Prefer `targetOpenId`; fall back to legacy `userOpenId`. |
 | `activity_logs.operatorOpenId` | `activity_logs.operator_openid` | Actor who performed the operation. |
-| `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `fromTeamId`, `toTeamId`, and attendance status. |
+| `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `requestedTeamId`, `autoAssigned`, `fromTeamId`, `toTeamId`, and attendance status. |
 | `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
 | `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`, `registration_cancelled`. |
 | `notification_logs.targetOpenId` / `notification_logs.userOpenId` / `notification_logs.recipientOpenId` | `notification_logs.recipient_openid` | Prefer `targetOpenId`, then `recipientOpenId`, then legacy `userOpenId`. |
@@ -435,7 +435,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 18. Treat missing `activities.activityType` as `internal`, including roster export and statistics filters.
 19. Treat missing `activities.lateCancellationNoticeWindowHours` as `6`; treat `0` as disabled.
 20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity when API `benchCapacity` is present; missing `benchCapacity` keeps the legacy total-capacity contract.
-21. Enforce bench queue rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata. Limit generic `moveRegistration` calls to regular-to-regular moves; reject any source or target with `team_type = 'bench'` so bench-to-regular transitions remain ordered automatic promotions.
+21. Enforce bench queue rules in the backend for both real-user and proxy signup. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata. Keep a proxy request for a specific regular team bound to that team. Limit generic `moveRegistration` calls to regular-to-regular moves; reject any source or target with `team_type = 'bench'` so bench-to-regular transitions remain ordered automatic promotions.
 22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
 23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a regular-team slot vacated by participant cancellation or manager removal.
 24. Keep late-cancellation notification best-effort. Notification failure or skipped subscription must not roll back `cancelRegistration`.
@@ -485,6 +485,7 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - New and edited activities have at most one active `activity_teams.team_type = 'bench'` row.
 - Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
 - Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after participant cancellation or manager removal.
+- Proxy registrations requested for the bench resolve to a regular team whenever regular capacity exists; otherwise they remain in the bench. Their `proxy_signup_created` payload records the actual team and additive request/assignment metadata.
 
 ### Spot Checks
 

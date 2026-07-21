@@ -284,6 +284,7 @@ module.exports = {
     insuranceLinkCopied: 'Insurance link copied',
     noParticipantsToCopy: 'No participants to copy',
     proxySignupSuccess: 'Participant added',
+    proxySignupAutoAssigned: 'Participant added to {{teamName}}',
     moveRegistrationSuccess: 'Participant moved',
     noMoveTargetTeam: 'No available target team',
     activityConfirmed: 'Activity confirmed',

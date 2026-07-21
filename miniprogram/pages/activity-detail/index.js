@@ -774,14 +774,17 @@ Page({
 
     try {
       this.setData({ proxySignupSubmitting: true });
-      await addProxyRegistration(
+      const result = await addProxyRegistration(
         this.data.activityId,
         this.data.proxySignupTeamId,
         signupName,
         preferredPositions
       );
       wx.showToast({
-        title: translate('toast.proxySignupSuccess'),
+        title:
+          result && result.autoAssigned && result.teamName
+            ? translate('toast.proxySignupAutoAssigned', { teamName: result.teamName })
+            : translate('toast.proxySignupSuccess'),
         icon: 'success'
       });
       this.closeProxySignup();

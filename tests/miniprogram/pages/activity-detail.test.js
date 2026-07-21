@@ -1500,6 +1500,44 @@ describe('activity detail page', () => {
     expect(ctx.reload).toHaveBeenCalled();
   });
 
+  test('onProxySignupSubmit shows the actual regular team after bench auto-assignment', async () => {
+    addProxyRegistration.mockResolvedValue({
+      status: 'joined',
+      requestedTeamId: 'team_bench',
+      teamId: 'team_white',
+      teamName: 'White',
+      autoAssigned: true,
+      autoAssignedReason: 'regular_slot_available'
+    });
+
+    const ctx = {
+      data: {
+        activityId: 'activity_123',
+        locale: 'en-US',
+        proxySignupVisible: true,
+        proxySignupTeamId: 'team_bench',
+        proxySignupName: ' Bench Guest ',
+        proxySignupPreferredPositions: []
+      },
+      setData(update) {
+        this.data = {
+          ...this.data,
+          ...update
+        };
+      },
+      closeProxySignup: pageConfig.closeProxySignup,
+      reload: jest.fn().mockResolvedValue()
+    };
+
+    await pageConfig.onProxySignupSubmit.call(ctx);
+
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: 'Participant added to White',
+      icon: 'success'
+    });
+    expect(ctx.reload).toHaveBeenCalled();
+  });
+
   test('onProxySignupSubmit requires a participant name', async () => {
     const ctx = {
       data: {

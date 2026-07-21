@@ -229,6 +229,12 @@ function buildTeamListVm(
     currentUserOpenId,
     translate
   };
+  const hasAvailableRegularTeam = teams.some(team =>
+    team &&
+    team.status !== 'inactive' &&
+    team.teamType !== 'bench' &&
+    Number(team.joinedCount || 0) < Number(team.maxMembers || 0)
+  );
 
   return teams.map((team, index) => {
     const colorOption = getTeamColorOption(team.colorKey, index);
@@ -249,7 +255,10 @@ function buildTeamListVm(
 
     const joinActionVisible = !joinDisabled;
     const canProxySignup = Boolean(
-      options.canManageRegistrations && signupState.joinEnabled && !isFull
+      options.canManageRegistrations &&
+      signupState.joinEnabled &&
+      !isFull &&
+      !(team.teamType === 'bench' && hasAvailableRegularTeam)
     );
 
     return {

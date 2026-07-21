@@ -997,7 +997,24 @@ function createLocalCloudClient(options = {}) {
       throw new Error('Activity is full');
     }
 
-    if (team.joinedCount >= team.maxMembers) {
+    const autoAssignedTeam = team.teamType === 'bench'
+      ? Object.values(state.teams)
+          .filter(candidate =>
+            candidate.activityId === payload.activityId &&
+            candidate.status !== 'inactive' &&
+            candidate.teamType !== 'bench' &&
+            normalizeCount(candidate.joinedCount) < normalizeCount(candidate.maxMembers)
+          )
+          .sort((left, right) => {
+            const sortDifference = normalizeCount(left.sort) - normalizeCount(right.sort);
+            return sortDifference || String(left._id || '').localeCompare(String(right._id || ''));
+          })[0] || null
+      : null;
+    const selectedTeam = autoAssignedTeam || team;
+    const selectedTeamId = selectedTeam._id || payload.teamId;
+    const autoAssigned = Boolean(autoAssignedTeam);
+
+    if (selectedTeam.joinedCount >= selectedTeam.maxMembers) {
       throw new Error('Team is full');
     }
 
@@ -1006,7 +1023,7 @@ function createLocalCloudClient(options = {}) {
     const registrationData = {
       _id: registrationId,
       activityId: payload.activityId,
-      teamId: payload.teamId,
+      teamId: selectedTeamId,
       userOpenId: proxyUserOpenId,
       status: 'joined',
       signupName,
@@ -1024,15 +1041,19 @@ function createLocalCloudClient(options = {}) {
     state.registrations[registrationId] = registrationData;
     activity.joinedCount += 1;
     activity.updatedAt = stamp;
-    team.joinedCount += 1;
+    selectedTeam.joinedCount += 1;
     writeState(state);
 
     return {
       registrationId,
-      teamId: payload.teamId,
+      requestedTeamId: payload.teamId,
+      teamId: selectedTeamId,
+      teamName: selectedTeam.teamName || '',
       userOpenId: proxyUserOpenId,
       status: 'joined',
-      proxyRegistration: true
+      proxyRegistration: true,
+      autoAssigned,
+      autoAssignedReason: autoAssigned ? 'regular_slot_available' : ''
     };
   }
 

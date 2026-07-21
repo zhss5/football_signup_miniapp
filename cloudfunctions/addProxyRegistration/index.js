@@ -15,6 +15,47 @@ function normalizeText(value) {
   return String(value || '').trim();
 }
 
+function normalizeCount(value) {
+  const count = Number(value);
+  return Number.isFinite(count) ? count : 0;
+}
+
+function isBenchTeam(team) {
+  return team && team.teamType === 'bench';
+}
+
+function isActiveRegularTeam(team) {
+  return team && team.status !== 'inactive' && team.teamType !== 'bench';
+}
+
+function hasTeamCapacity(team) {
+  return normalizeCount(team && team.joinedCount) < normalizeCount(team && team.maxMembers);
+}
+
+function compareTeamOrder(left, right) {
+  const leftSort = Number(left && left.sort);
+  const rightSort = Number(right && right.sort);
+  const normalizedLeftSort = Number.isFinite(leftSort) ? leftSort : 0;
+  const normalizedRightSort = Number.isFinite(rightSort) ? rightSort : 0;
+
+  if (normalizedLeftSort !== normalizedRightSort) {
+    return normalizedLeftSort - normalizedRightSort;
+  }
+
+  return String(left && left._id ? left._id : '').localeCompare(String(right && right._id ? right._id : ''));
+}
+
+async function findAvailableRegularTeam(transaction, activityId) {
+  const teamsRes = await transaction
+    .collection(COLLECTIONS.ACTIVITY_TEAMS)
+    .where({ activityId })
+    .get();
+
+  return (teamsRes.data || [])
+    .filter(team => isActiveRegularTeam(team) && hasTeamCapacity(team))
+    .sort(compareTeamOrder)[0] || null;
+}
+
 function normalizePreferredPositions(value) {
   const seen = new Set();
   const input = Array.isArray(value) ? value : [];
@@ -116,13 +157,24 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       .collection(COLLECTIONS.ACTIVITY_TEAMS)
       .doc(event.teamId)
       .get();
-    const team = teamRes.data;
+    const requestedTeam = teamRes.data;
 
-    if (!team || team.activityId !== event.activityId || team.status === 'inactive') {
+    if (
+      !requestedTeam ||
+      requestedTeam.activityId !== event.activityId ||
+      requestedTeam.status === 'inactive'
+    ) {
       throw businessError('Team not found');
     }
 
-    if (Number(team.joinedCount || 0) >= Number(team.maxMembers || 0)) {
+    const autoAssignedTeam = isBenchTeam(requestedTeam)
+      ? await findAvailableRegularTeam(transaction, event.activityId)
+      : null;
+    const selectedTeam = autoAssignedTeam || requestedTeam;
+    const selectedTeamId = selectedTeam._id || event.teamId;
+    const autoAssigned = Boolean(autoAssignedTeam);
+
+    if (!hasTeamCapacity(selectedTeam)) {
       throw businessError('Team is full');
     }
 
@@ -132,7 +184,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     await transaction.collection(COLLECTIONS.REGISTRATIONS).doc(registrationId).set({
       data: {
         activityId: event.activityId,
-        teamId: event.teamId,
+        teamId: selectedTeamId,
         userOpenId: proxyUserOpenId,
         status: 'joined',
         signupName,
@@ -154,9 +206,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       }
     });
 
-    await transaction.collection(COLLECTIONS.ACTIVITY_TEAMS).doc(event.teamId).update({
+    await transaction.collection(COLLECTIONS.ACTIVITY_TEAMS).doc(selectedTeamId).update({
       data: {
-        joinedCount: Number(team.joinedCount || 0) + 1
+        joinedCount: normalizeCount(selectedTeam.joinedCount) + 1
       }
     });
 
@@ -166,13 +218,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       operatorOpenId: openid,
       targetOpenId: proxyUserOpenId,
       registrationId,
-      teamId: event.teamId,
+      teamId: selectedTeamId,
       before: {
         status: ''
       },
       after: {
         status: 'joined',
-        teamId: event.teamId,
+        teamId: selectedTeamId,
+        requestedTeamId: event.teamId,
+        autoAssigned,
         signupName,
         preferredPositions,
         proxyRegistration: true
@@ -182,10 +236,14 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     return {
       registrationId,
-      teamId: event.teamId,
+      requestedTeamId: event.teamId,
+      teamId: selectedTeamId,
+      teamName: selectedTeam.teamName || '',
       userOpenId: proxyUserOpenId,
       status: 'joined',
-      proxyRegistration: true
+      proxyRegistration: true,
+      autoAssigned,
+      autoAssignedReason: autoAssigned ? 'regular_slot_available' : ''
     };
   });
 }

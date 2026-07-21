@@ -4,6 +4,33 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-21 - Proxy Signup Prioritizes Regular Capacity
+
+Aligned manager proxy signup with the regular-capacity-first bench queue rule.
+
+Delivered behavior:
+
+- the mini-program hides the bench proxy-signup action while any active regular team has capacity.
+- a stale or crafted bench proxy request is rechecked inside the `addProxyRegistration` transaction.
+- the proxy participant enters the first available regular team ordered by `sort`, then team id; the bench is used only when all regular teams are full.
+- clicking proxy signup on a specific regular team keeps explicit-team behavior and does not silently switch teams.
+- the response adds `requestedTeamId`, actual `teamId`, `teamName`, `autoAssigned`, and `autoAssignedReason` without breaking old callers.
+- `proxy_signup_created` keeps the existing action and records the actual team plus requested-team and auto-assignment details in its payload.
+- the local CloudBase mock matches production behavior, and stale-page success feedback names the actual regular team.
+
+Verification:
+
+- backend and local-mock red tests first showed the proxy participant being stored directly in the requested bench team.
+- mini-program red tests first showed the bench proxy action while regular capacity existed and the generic success message after auto-assignment.
+- targeted regression passed: `npm test -- tests/cloudfunctions/addProxyRegistration.test.js tests/miniprogram/mocks/local-cloud.test.js tests/miniprogram/utils/view-models.test.js tests/miniprogram/pages/activity-detail.test.js --runInBand` (`4` suites, `129` tests).
+- full regression passed: `npm test -- --runInBand` (`82` suites, `748` tests).
+
+Deployment scope:
+
+- redeploy `addProxyRegistration` for transactional regular-capacity-first assignment.
+- upload a new mini-program build for the bench action visibility and actual-team success message.
+- no Web Admin redeployment, collection or field migration, runtime MySQL migration, dual-write, or HTTP API cutover is required.
+
 ## 2026-07-21 - Bench Queue Excluded From Manual Team Moves
 
 Restricted generic manager team moves to regular teams so the bench remains a system-managed queue.

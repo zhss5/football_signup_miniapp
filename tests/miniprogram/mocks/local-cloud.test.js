@@ -495,6 +495,68 @@ test('local cloud client lets an organizer add a proxy participant', async () =>
   expect(regularDetail.teams[0].members[0]).not.toHaveProperty('proxyRegistration');
 });
 
+test('local proxy signup uses a regular slot before the bench queue', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 2,
+    signupLimitTotal: 99,
+    teams: [{ teamName: 'White', maxMembers: 1 }]
+  });
+  const detailBefore = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const regularTeam = detailBefore.teams.find(team => team.teamType !== 'bench');
+  const benchTeam = detailBefore.teams.find(team => team.teamType === 'bench');
+
+  const autoAssigned = await ownerClient.call('addProxyRegistration', {
+    activityId: created.activityId,
+    teamId: benchTeam._id,
+    signupName: 'Regular Guest'
+  });
+  const queued = await ownerClient.call('addProxyRegistration', {
+    activityId: created.activityId,
+    teamId: benchTeam._id,
+    signupName: 'Bench Guest'
+  });
+  const detailAfter = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  expect(autoAssigned).toMatchObject({
+    requestedTeamId: benchTeam._id,
+    teamId: regularTeam._id,
+    teamName: regularTeam.teamName,
+    autoAssigned: true,
+    autoAssignedReason: 'regular_slot_available'
+  });
+  expect(queued).toMatchObject({
+    requestedTeamId: benchTeam._id,
+    teamId: benchTeam._id,
+    teamName: benchTeam.teamName,
+    autoAssigned: false,
+    autoAssignedReason: ''
+  });
+  expect(detailAfter.teams.find(team => team._id === regularTeam._id)).toMatchObject({
+    joinedCount: 1,
+    members: [expect.objectContaining({ signupName: 'Regular Guest' })]
+  });
+  expect(detailAfter.teams.find(team => team._id === benchTeam._id)).toMatchObject({
+    joinedCount: 1,
+    members: [expect.objectContaining({ signupName: 'Bench Guest' })]
+  });
+});
+
 test('local cloud client rejects proxy preferred positions above the limit', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

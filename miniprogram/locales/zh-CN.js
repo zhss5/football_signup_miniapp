@@ -208,6 +208,7 @@ module.exports = {
     insuranceLinkCopied: '已复制保险链接',
     noParticipantsToCopy: '暂无报名成员',
     proxySignupSuccess: '已添加报名成员',
+    proxySignupAutoAssigned: '已代报名并加入{{teamName}}',
     moveRegistrationSuccess: '已调整队伍',
     noMoveTargetTeam: '暂无可调整的目标队伍',
     chooseLocationFailed: '无法选择地点',
