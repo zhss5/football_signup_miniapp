@@ -4,6 +4,31 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-21 - Bench Queue Excluded From Manual Team Moves
+
+Restricted generic manager team moves to regular teams so the bench remains a system-managed queue.
+
+Delivered behavior:
+
+- the mini-program move target sheet excludes active bench teams.
+- bench members no longer show the generic manager move action.
+- `moveRegistration` rejects regular-to-bench and bench-to-regular moves with a stable business error.
+- regular-to-regular manager moves remain supported.
+- teams without a historical `teamType` remain compatible and are treated as regular teams.
+- the local CloudBase mock and Chinese error translation match the cloud function.
+
+Verification:
+
+- red tests first showed the bench target in the action sheet, exposed the move action on bench members, and allowed both manual move directions through backend calls.
+- targeted regression passed: `npm test -- tests/cloudfunctions/moveRegistration.test.js tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/utils/view-models.test.js tests/miniprogram/utils/i18n.test.js tests/miniprogram/mocks/local-cloud.test.js --runInBand` (`5` suites, `136` tests).
+- full regression passed: `npm test -- --runInBand` (`82` suites, `741` tests).
+
+Deployment scope:
+
+- upload a new mini-program build for the move-action and target-list changes.
+- redeploy `moveRegistration` for backend enforcement.
+- no Web Admin redeployment, collection migration, MySQL migration, dual-write, or HTTP API cutover is required.
+
 ## 2026-07-21 - Bench Promotion After Manager Removal
 
 Fixed manager removal so it follows the same bench-queue vacancy rule as participant cancellation.

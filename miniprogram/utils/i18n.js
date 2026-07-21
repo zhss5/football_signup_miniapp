@@ -274,6 +274,7 @@ function translateErrorMessage(error, translate) {
     'No active registration to move': 'errors.noActiveRegistrationToMove',
     'Activity is not open for roster changes': 'errors.activityRosterClosed',
     'Already in target team': 'errors.alreadyInTargetTeam',
+    'Bench registrations are managed automatically': 'errors.benchQueueManagedAutomatically',
     'Only the organizer can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer or an admin can cancel this activity': 'errors.organizerCancelOnly',
     'Only the organizer can delete this activity': 'errors.organizerDeleteOnly',

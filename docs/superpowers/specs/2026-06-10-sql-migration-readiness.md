@@ -435,7 +435,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 18. Treat missing `activities.activityType` as `internal`, including roster export and statistics filters.
 19. Treat missing `activities.lateCancellationNoticeWindowHours` as `6`; treat `0` as disabled.
 20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity when API `benchCapacity` is present; missing `benchCapacity` keeps the legacy total-capacity contract.
-21. Enforce bench signup rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata.
+21. Enforce bench queue rules in the backend. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata. Limit generic `moveRegistration` calls to regular-to-regular moves; reject any source or target with `team_type = 'bench'` so bench-to-regular transitions remain ordered automatic promotions.
 22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
 23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a regular-team slot vacated by participant cancellation or manager removal.
 24. Keep late-cancellation notification best-effort. Notification failure or skipped subscription must not roll back `cancelRegistration`.

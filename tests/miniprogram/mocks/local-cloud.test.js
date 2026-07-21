@@ -643,6 +643,102 @@ test('local cloud client lets organizers move members between teams', async () =
   });
 });
 
+test('local cloud client rejects moving a regular registration into the bench queue', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 1,
+    signupLimitTotal: 99,
+    teams: [
+      { teamName: 'White', maxMembers: 2 },
+      { teamName: 'Red', maxMembers: 2 }
+    ]
+  });
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const regularTeam = detail.teams.find(team => team.teamType !== 'bench');
+  const benchTeam = detail.teams.find(team => team.teamType === 'bench');
+
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: regularTeam._id,
+    signupName: 'Alex'
+  });
+
+  await expect(
+    ownerClient.call('moveRegistration', {
+      activityId: created.activityId,
+      userOpenId: 'openid_player',
+      targetTeamId: benchTeam._id
+    })
+  ).rejects.toThrow('Bench registrations are managed automatically');
+});
+
+test('local cloud client rejects manually moving a bench registration into a regular team', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T10:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-04-19T11:00:00.000Z',
+    openid: 'openid_bench',
+    defaultRoles: ['user']
+  });
+  const created = await ownerClient.call('createActivity', {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    benchCapacity: 1,
+    signupLimitTotal: 99,
+    teams: [{ teamName: 'White', maxMembers: 1 }]
+  });
+  const detail = await ownerClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+  const regularTeam = detail.teams.find(team => team.teamType !== 'bench');
+  const benchTeam = detail.teams.find(team => team.teamType === 'bench');
+
+  await ownerClient.call('addProxyRegistration', {
+    activityId: created.activityId,
+    teamId: regularTeam._id,
+    signupName: 'Guest'
+  });
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: benchTeam._id,
+    signupName: 'Bench Player'
+  });
+
+  await expect(
+    ownerClient.call('moveRegistration', {
+      activityId: created.activityId,
+      userOpenId: 'openid_bench',
+      targetTeamId: regularTeam._id
+    })
+  ).rejects.toThrow('Bench registrations are managed automatically');
+});
+
 test('local cloud client blocks non-owner activity edits and capacity below joined count', async () => {
   const storage = createMemoryStorage();
   const ownerClient = createLocalCloudClient({

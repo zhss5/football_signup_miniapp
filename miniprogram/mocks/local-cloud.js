@@ -1205,11 +1205,18 @@ function createLocalCloudClient(options = {}) {
       throw new Error('Team not found');
     }
 
+    const sourceTeam = state.teams[current.teamId];
+    if (
+      (sourceTeam && sourceTeam.teamType === 'bench') ||
+      targetTeam.teamType === 'bench'
+    ) {
+      throw new Error('Bench registrations are managed automatically');
+    }
+
     if (Number(targetTeam.joinedCount || 0) >= Number(targetTeam.maxMembers || 0)) {
       throw new Error('Team is full');
     }
 
-    const sourceTeam = state.teams[current.teamId];
     const fromTeamId = current.teamId;
 
     current.teamId = payload.targetTeamId;

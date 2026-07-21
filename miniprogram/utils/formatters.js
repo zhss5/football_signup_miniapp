@@ -153,7 +153,9 @@ function buildMemberVm(member, context = {}) {
     memberActionText = context.translate('activity.actions.removeMember');
   }
 
-  const moveActionVisible = Boolean(context.canManageRegistrations);
+  const moveActionVisible = Boolean(
+    context.canManageRegistrations && context.canMoveRegistration !== false
+  );
   const proxyBadgeVisible = Boolean(context.canManageRegistrations && member.proxyRegistration);
   const preferredPositions = Array.isArray(member.preferredPositions)
     ? member.preferredPositions.filter(Boolean)
@@ -263,7 +265,10 @@ function buildTeamListVm(
       canProxySignup,
       proxySignupText: canProxySignup ? translate('activity.actions.proxySignup') : '',
       members: Array.isArray(team.members)
-        ? team.members.map(member => buildMemberVm(member, memberContext))
+        ? team.members.map(member => buildMemberVm(member, {
+            ...memberContext,
+            canMoveRegistration: team.teamType !== 'bench'
+          }))
         : []
     };
   });

@@ -92,16 +92,20 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       throw businessError('Team not found');
     }
 
-    if (Number(targetTeam.joinedCount || 0) >= Number(targetTeam.maxMembers || 0)) {
-      throw businessError('Team is full');
-    }
-
     const sourceTeamRes = await transaction
       .collection(COLLECTIONS.ACTIVITY_TEAMS)
       .doc(registration.teamId)
       .get()
       .catch(() => ({ data: null }));
     const sourceTeam = sourceTeamRes.data || {};
+
+    if (sourceTeam.teamType === 'bench' || targetTeam.teamType === 'bench') {
+      throw businessError('Bench registrations are managed automatically');
+    }
+
+    if (Number(targetTeam.joinedCount || 0) >= Number(targetTeam.maxMembers || 0)) {
+      throw businessError('Team is full');
+    }
 
     await transaction.collection(COLLECTIONS.REGISTRATIONS).doc(registrationId).update({
       data: {

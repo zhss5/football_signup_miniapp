@@ -105,6 +105,8 @@ signupLimitTotal = sum(active regular team maxMembers) + active bench maxMembers
 ```
 
 - If the user requests a regular team that is full while another regular team has capacity, the existing explicit-team behavior remains unchanged unless a later design approves auto-balancing regular teams.
+- Generic manager `moveRegistration` is limited to regular-to-regular moves. The mini-program does not show bench teams as move targets and does not show the generic move action on bench members.
+- Regular-to-bench and bench-to-regular manual moves are rejected by the backend. Bench participants enter regular teams only through ordered automatic promotion.
 
 ### Bench Auto Promotion
 
@@ -145,6 +147,10 @@ Old callers may ignore `promotedRegistrationId`, `promotedTeamId`, and `lateCanc
 ### `removeRegistration`
 
 Manager-removal responses use the same additive promotion identifiers as `cancelRegistration`: `promotedRegistrationId`, `promotedTeamId`, and `promotedFromTeamId`. Old callers may ignore these fields.
+
+### `moveRegistration`
+
+`moveRegistration` accepts only active regular source and target teams. A request involving a team with `teamType: bench` fails with `Bench registrations are managed automatically`. Historical teams without `teamType` remain compatible as regular teams.
 
 ### `getAttendanceStats`
 
@@ -210,6 +216,8 @@ Minimum backend tests:
 - `removeRegistration` keeps activity and team counts correct after promotion.
 - `joinActivity` auto-assigns a stale bench request to a regular slot when regular capacity exists.
 - `joinActivity` allows bench signup only when all active regular teams are full.
+- `moveRegistration` rejects regular-to-bench and bench-to-regular manual moves.
+- Mini-program move controls exclude bench targets and hide the action for bench members.
 - `getAttendanceStats` returns final-outcome cancellation counts and rates.
 - `exportActivityRoster` returns `activityType` with default `internal`.
 

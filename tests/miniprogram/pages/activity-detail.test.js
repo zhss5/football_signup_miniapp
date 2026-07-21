@@ -1559,6 +1559,13 @@ describe('activity detail page', () => {
             teamName: 'Blue',
             joinedCount: 6,
             maxMembers: 6
+          },
+          {
+            _id: 'team_bench',
+            teamName: 'Bench',
+            teamType: 'bench',
+            joinedCount: 0,
+            maxMembers: 2
           }
         ]
       },

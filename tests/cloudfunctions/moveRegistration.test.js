@@ -139,6 +139,112 @@ test('moveRegistration lets an organizer move a joined member to another team', 
   });
 });
 
+test('moveRegistration rejects moving a regular registration into the bench queue', async () => {
+  const { db, updates } = createDb({
+    activity: {
+      _id: 'activity_1',
+      organizerOpenId: 'openid_owner',
+      status: 'published'
+    },
+    actorUser: {
+      _id: 'openid_owner',
+      roles: ['organizer']
+    },
+    registration: {
+      _id: 'activity_1_openid_player',
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      userOpenId: 'openid_player',
+      status: 'joined'
+    },
+    sourceTeam: {
+      _id: 'team_white',
+      activityId: 'activity_1',
+      teamType: 'regular',
+      joinedCount: 1,
+      maxMembers: 6,
+      status: 'active'
+    },
+    targetTeam: {
+      _id: 'team_bench',
+      activityId: 'activity_1',
+      teamType: 'bench',
+      joinedCount: 0,
+      maxMembers: 2,
+      status: 'active'
+    }
+  });
+
+  await expect(
+    moveRegistration.main(
+      {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        targetTeamId: 'team_bench'
+      },
+      { OPENID: 'openid_owner' },
+      { db, now: '2026-05-01T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Bench registrations are managed automatically');
+
+  expect(updates.registration).not.toHaveBeenCalled();
+  expect(updates.sourceTeam).not.toHaveBeenCalled();
+  expect(updates.targetTeam).not.toHaveBeenCalled();
+});
+
+test('moveRegistration rejects manually moving a bench registration into a regular team', async () => {
+  const { db, updates } = createDb({
+    activity: {
+      _id: 'activity_1',
+      organizerOpenId: 'openid_owner',
+      status: 'published'
+    },
+    actorUser: {
+      _id: 'openid_owner',
+      roles: ['organizer']
+    },
+    registration: {
+      _id: 'activity_1_openid_player',
+      activityId: 'activity_1',
+      teamId: 'team_bench',
+      userOpenId: 'openid_player',
+      status: 'joined'
+    },
+    sourceTeam: {
+      _id: 'team_bench',
+      activityId: 'activity_1',
+      teamType: 'bench',
+      joinedCount: 1,
+      maxMembers: 2,
+      status: 'active'
+    },
+    targetTeam: {
+      _id: 'team_white',
+      activityId: 'activity_1',
+      teamType: 'regular',
+      joinedCount: 0,
+      maxMembers: 6,
+      status: 'active'
+    }
+  });
+
+  await expect(
+    moveRegistration.main(
+      {
+        activityId: 'activity_1',
+        userOpenId: 'openid_player',
+        targetTeamId: 'team_white'
+      },
+      { OPENID: 'openid_owner' },
+      { db, now: '2026-05-01T10:00:00.000Z' }
+    )
+  ).rejects.toThrow('Bench registrations are managed automatically');
+
+  expect(updates.registration).not.toHaveBeenCalled();
+  expect(updates.sourceTeam).not.toHaveBeenCalled();
+  expect(updates.targetTeam).not.toHaveBeenCalled();
+});
+
 test('moveRegistration rejects regular users', async () => {
   const { db } = createDb({
     activity: {

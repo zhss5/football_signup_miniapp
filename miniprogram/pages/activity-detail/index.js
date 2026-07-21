@@ -181,6 +181,10 @@ function buildMoveTargetOptions(teams = [], currentTeamId, translate) {
         return false;
       }
 
+      if (team.teamType === 'bench') {
+        return false;
+      }
+
       return Number(team.joinedCount || 0) < Number(team.maxMembers || 0);
     })
     .map(team => ({

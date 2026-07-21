@@ -375,6 +375,41 @@ test('buildTeamListVm hides move actions from regular users', () => {
   });
 });
 
+test('buildTeamListVm hides manual move actions for bench members', () => {
+  const teams = buildTeamListVm(
+    [
+      {
+        _id: 'team_bench',
+        teamName: 'Bench',
+        teamType: 'bench',
+        joinedCount: 1,
+        maxMembers: 2,
+        members: [
+          {
+            userOpenId: 'openid_bench',
+            signupName: 'Bench Player',
+            avatarUrl: ''
+          }
+        ]
+      }
+    ],
+    null,
+    {
+      status: 'published'
+    },
+    undefined,
+    undefined,
+    {
+      canManageRegistrations: true
+    }
+  );
+
+  expect(teams[0].members[0]).toMatchObject({
+    moveActionVisible: false,
+    moveActionText: ''
+  });
+});
+
 test('buildTeamListVm enables proxy signup for managers while signup is open', () => {
   const teams = buildTeamListVm(
     [

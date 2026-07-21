@@ -129,4 +129,13 @@ describe('i18n utilities', () => {
       )
     ).toBe('队伍人数不能低于已报名人数');
   });
+
+  test('translates automatic bench queue move errors to Chinese', () => {
+    const message = translateErrorMessage(
+      new Error('Bench registrations are managed automatically'),
+      (key, params) => t(key, params, 'zh-CN')
+    );
+
+    expect(message).toBe('替补队列由系统自动管理');
+  });
 });
