@@ -115,6 +115,7 @@ Completed:
 - 2026-07-21 manager-removal promotion fix implemented: `removeRegistration` now promotes the earliest active bench registration after a regular-team proxy or real-user registration is removed, keeps activity/team counts consistent, returns additive promotion metadata, and writes `registration_auto_promoted`. Full regression passed (`82` suites, `735` tests). Deployment requires only `removeRegistration`; no database migration is required.
 - 2026-07-21 strict bench-queue move rule implemented: the mini-program excludes bench teams and bench members from generic move controls, while `moveRegistration` and the local mock reject regular-to-bench and bench-to-regular manual moves. Full regression passed (`82` suites, `741` tests). Deployment requires a mini-program upload and `moveRegistration` redeployment; no database migration is required.
 - 2026-07-21 proxy bench-priority rule implemented: the mini-program hides bench proxy signup while a regular slot exists, while `addProxyRegistration` and the local mock reassign stale bench requests to the first available regular team and return additive actual-assignment metadata. Explicit regular-team proxy signup remains bound to the selected team. Full regression passed (`82` suites, `748` tests). Deployment requires a mini-program upload and `addProxyRegistration` redeployment; no database migration is required.
+- 2026-07-21 self registration profile editing implemented: a joined real user can update their own signup name, avatar, and preferred positions until activity start through `updateMyRegistrationProfile`; the registration snapshot, reusable user defaults, and `registration_profile_update` audit row are written transactionally. Activity Detail keeps the row compact with a pencil cue and places the full edit command in the existing participant dialog. Full regression passed (`83` suites, `770` tests). Deployment requires the new cloud function and a mini-program upload; no Web Admin redeployment or database migration is required.
 
 ## 4. Planned Version 2 Scope
 
@@ -219,4 +220,5 @@ Deployment readiness tasks remain:
 - review the CloudBase deployment set and deploy only when ready.
 - seed the first `super_admin` manually in CloudBase before using role management.
 - upload the mini-program build and host `web-admin/` after CloudBase function deployment.
+- deploy `updateMyRegistrationProfile` and upload the matching mini-program build before testing self registration profile editing.
 - keep invite-code signup, automatic reminders, payments/refunds, and runtime MySQL/self-hosted migration deferred.

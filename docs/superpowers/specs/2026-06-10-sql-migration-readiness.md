@@ -231,6 +231,8 @@ Allowed `status` values: `joined`, `cancelled`, `removed`.
 
 Allowed `attendance_status` values: empty string, `present`, `absent`. Empty string means present for started, non-cancelled, non-deleted activity statistics.
 
+`updateMyRegistrationProfile` keeps the registration row as the activity-specific participant snapshot while also updating the real user's reusable defaults. Before `activities.start_at`, a joined non-proxy user may update only `signup_name`, `avatar_url`, `profile_source`, `preferred_positions`, and `updated_at` on their own registration. The same transaction updates `users.preferred_name`, `avatar_url`, `profile_source`, `preferred_positions`, `last_active_at`, and `updated_at`, then appends an activity log. Team, status, attendance, joined time, cancellation/removal counters, and activity/team counts remain immutable through this API. At or after `start_at`, the snapshot is frozen.
+
 ### `activity_logs`
 
 Stores activity and participant operation history.
@@ -255,7 +257,7 @@ CREATE TABLE activity_logs (
 );
 ```
 
-Expected V2 `action` values include: `activity_update`, `signup_joined`, `signup_cancelled`, `signup_rejoined`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, `manager_alias_update`, `registration_auto_promoted`.
+Expected V2 `action` values include: `activity_update`, `signup_joined`, `signup_cancelled`, `signup_rejoined`, `proxy_signup_created`, `registration_removed`, `registration_moved`, `attendance_update`, `manager_alias_update`, `registration_auto_promoted`, `registration_profile_update`.
 
 ### `user_role_logs`
 
@@ -392,6 +394,9 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `activity_teams.colorKey` | `activity_teams.color_key` | Optional legacy rows may be empty. |
 | `registrations._id` | `registrations.registration_id` | Preserve CloudBase ID. |
 | `registrations.userOpenId` | `registrations.user_openid` | Real openid or generated proxy openid. |
+| `registrations.signupName` | `registrations.signup_name` | Activity-specific display-name snapshot; may differ from the current user default. |
+| `registrations.avatarUrl` | `registrations.avatar_url` | Activity-specific avatar snapshot; empty string is an explicit cleared avatar. |
+| `registrations.profileSource` | `registrations.profile_source` | Stable values are `manual` and `wechat` for real users; historical proxy values remain compatible. |
 | `registrations.preferredPositions` | `registrations.preferred_positions` | JSON array. |
 | `registrations.phoneSnapshot` | `registrations.phone_snapshot` | Dormant compatibility field. |
 | `registrations.proxyRegistration` | `registrations.proxy_registration` | Boolean. |
@@ -401,7 +406,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `registrations.attendanceMarkedBy` | `registrations.attendance_marked_by` | Empty string allowed. |
 | `activity_logs.targetOpenId` / `activity_logs.userOpenId` | `activity_logs.user_openid` | Prefer `targetOpenId`; fall back to legacy `userOpenId`. |
 | `activity_logs.operatorOpenId` | `activity_logs.operator_openid` | Actor who performed the operation. |
-| `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `requestedTeamId`, `autoAssigned`, `fromTeamId`, `toTeamId`, and attendance status. |
+| `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `requestedTeamId`, `autoAssigned`, `fromTeamId`, `toTeamId`, attendance status, and registration profile snapshots. |
 | `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
 | `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`, `registration_cancelled`. |
 | `notification_logs.targetOpenId` / `notification_logs.userOpenId` / `notification_logs.recipientOpenId` | `notification_logs.recipient_openid` | Prefer `targetOpenId`, then `recipientOpenId`, then legacy `userOpenId`. |
@@ -440,6 +445,8 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 23. Write `registration_auto_promoted` activity-log rows when a bench participant is promoted into a regular-team slot vacated by participant cancellation or manager removal.
 24. Keep late-cancellation notification best-effort. Notification failure or skipped subscription must not roll back `cancelRegistration`.
 25. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
+26. Route self registration profile edits through the API-shaped `updateMyRegistrationProfile` mutation. Derive the user identity from trusted auth context, do not accept a target user id, and limit edits to the caller's joined, non-proxy registration before activity start.
+27. Update the registration snapshot, reusable user defaults, and `registration_profile_update` log in one transaction. Do not change team, registration status, attendance, joined time, counters, or aggregate counts. Existing Version 1 clients remain compatible because the API and log action are additive and reuse existing fields.
 
 ## Migration Validation Checklist
 
@@ -486,12 +493,15 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
 - Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after participant cancellation or manager removal.
 - Proxy registrations requested for the bench resolve to a regular team whenever regular capacity exists; otherwise they remain in the bench. Their `proxy_signup_created` payload records the actual team and additive request/assignment metadata.
+- For each `registration_profile_update` log, the target and operator are the same real user, the registration still belongs to that user and activity, and before/after payloads contain only signup name, avatar URL, profile source, and preferred positions.
+- SQL-backed self-profile editing matches CloudBase locking at `activities.start_at` and changes no team, status, attendance, joined time, counters, or aggregate counts.
 
 ### Spot Checks
 
 - Pick several real users and verify preferred name, avatar, manager alias, roles, and last active time.
 - Pick several activities and verify teams, regular capacity, bench capacity, computed total capacity, cover/detail images, confirmation state, activity type, late-cancellation notice window, and joined counts.
 - Pick several registrations and verify signup name, proxy flag, preferred positions, attendance state, and current status.
+- Pick several self-edited registrations and verify the registration snapshot, reusable user defaults, and `registration_profile_update` log were committed together while unrelated registration fields remained unchanged.
 - Pick several activity logs and verify operator, target participant, action, timestamp, and payload.
 - Pick several notification subscriptions and logs and verify template key, template ID, recipient, status, and consumed state.
 

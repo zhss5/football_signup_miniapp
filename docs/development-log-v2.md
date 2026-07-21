@@ -4,6 +4,36 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-21 - Self Registration Profile Editing
+
+Added an activity-scoped self-service profile editor without changing registration lifecycle or roster management behavior.
+
+Delivered behavior:
+
+- a joined real WeChat user can update their own signup name, avatar, and preferred positions until, but not including, activity start.
+- activity start freezes the registration snapshot; the signup deadline does not freeze profile edits.
+- `updateMyRegistrationProfile` derives OpenID from trusted CloudBase context and accepts no target-user field.
+- one transaction updates the current registration snapshot, reusable `users` defaults, and an `activity_logs` row with `action: registration_profile_update` and before/after profile values.
+- empty avatar is an explicit clear operation on both the registration snapshot and user defaults.
+- team, status, attendance, joined time, cancel/remove counters, and activity/team counts are not changed.
+- Activity Detail shows a compact pencil cue only on the current user's row before start; the existing participant dialog contains the full `修改报名信息` command.
+- the existing activity join page is reused in explicit edit mode, loads `myRegistration`, skips notification subscription, and refreshes Activity Detail after save.
+- ordinary users can still inspect participant dialogs, but other participants remain read-only and manager-only alias/attendance controls keep their existing permission boundary.
+- the local CloudBase client and Chinese business-error translation follow the same contract.
+
+Verification:
+
+- backend red tests first failed because `updateMyRegistrationProfile` did not exist.
+- local-client, service, edit-page, view-model, component, dialog navigation, and error-translation tests each failed before their corresponding implementation.
+- combined targeted regression passed: `npm test -- --runInBand tests/cloudfunctions/updateMyRegistrationProfile.test.js tests/miniprogram/mocks/local-cloud.test.js tests/miniprogram/services/registration-service.test.js tests/miniprogram/pages/activity-join.test.js tests/miniprogram/utils/view-models.test.js tests/miniprogram/components/team-list.test.js tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/utils/i18n.test.js` (`8` suites, `175` tests).
+- full regression passed: `npm test -- --runInBand` (`83` suites, `770` tests).
+
+Deployment scope:
+
+- deploy the new `updateMyRegistrationProfile` cloud function.
+- upload a new mini-program build for the edit entry and form mode.
+- no Web Admin redeployment, collection or field migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover is required.
+
 ## 2026-07-21 - Proxy Signup Prioritizes Regular Capacity
 
 Aligned manager proxy signup with the regular-capacity-first bench queue rule.

@@ -24,8 +24,8 @@
 - Create: `tests/cloudfunctions/updateMyRegistrationProfile.test.js`
 - Create: `cloudfunctions/updateMyRegistrationProfile/index.js`
 - Create: `cloudfunctions/updateMyRegistrationProfile/package.json`
-- Create: `cloudfunctions/updateMyRegistrationProfile/config.json`
-- Modify: `tests/helpers/local-cloudbase.js`
+- Modify: `miniprogram/mocks/local-cloud.js`
+- Modify: `tests/miniprogram/mocks/local-cloud.test.js`
 
 **Step 1: Write failing cloud function tests**
 
@@ -56,19 +56,20 @@ Commit: `feat: add self registration profile update api`
 ### Task 2: Reuse the activity join page as an edit form
 
 **Files:**
-- Modify: `tests/miniprogram/activity-join.test.js`
-- Modify: `tests/miniprogram/registration-service.test.js`
+- Modify: `tests/miniprogram/pages/activity-join.test.js`
+- Modify: `tests/miniprogram/services/registration-service.test.js`
 - Modify: `miniprogram/services/registration-service.js`
 - Modify: `miniprogram/pages/activity-join/index.js`
 - Modify: `miniprogram/pages/activity-join/index.wxml`
 - Modify: `miniprogram/pages/activity-join/index.wxss`
-- Modify: `miniprogram/i18n/index.js`
+- Modify: `miniprogram/locales/en-US.js`
+- Modify: `miniprogram/locales/zh-CN.js`
 
 **Step 1: Write failing service and page tests**
 
 Cover the new service call, explicit `mode=edit`, registration-snapshot prefilling, edit-specific copy, avatar clearing, save payload, no subscription request in edit mode, back navigation, and unchanged normal join behavior.
 
-Run: `npm test -- --runInBand tests/miniprogram/registration-service.test.js tests/miniprogram/activity-join.test.js`
+Run: `npm test -- --runInBand tests/miniprogram/services/registration-service.test.js tests/miniprogram/pages/activity-join.test.js`
 
 Expected: FAIL because edit mode and the service mutation are absent.
 
@@ -83,7 +84,7 @@ When opened with `mode=edit&activityId=...`, load `myRegistration` from `getActi
 **Step 4: Verify and commit**
 
 Run:
-- `npm test -- --runInBand tests/miniprogram/registration-service.test.js tests/miniprogram/activity-join.test.js`
+- `npm test -- --runInBand tests/miniprogram/services/registration-service.test.js tests/miniprogram/pages/activity-join.test.js`
 - `git diff --check`
 
 Commit: `feat: add self registration profile edit form`
@@ -93,9 +94,9 @@ Commit: `feat: add self registration profile edit form`
 ### Task 3: Add the activity-detail edit entry
 
 **Files:**
-- Modify: `tests/miniprogram/activity-detail-view-model.test.js`
-- Modify: `tests/miniprogram/team-list-component.test.js`
-- Modify: `tests/miniprogram/activity-detail-page.test.js`
+- Modify: `tests/miniprogram/utils/view-models.test.js`
+- Modify: `tests/miniprogram/components/team-list.test.js`
+- Modify: `tests/miniprogram/pages/activity-detail.test.js`
 - Modify: `miniprogram/utils/formatters.js`
 - Modify: `miniprogram/components/team-list/index.js`
 - Modify: `miniprogram/components/team-list/index.wxml`
@@ -103,13 +104,14 @@ Commit: `feat: add self registration profile edit form`
 - Modify: `miniprogram/pages/activity-detail/index.js`
 - Modify: `miniprogram/pages/activity-detail/index.wxml`
 - Modify: `miniprogram/pages/activity-detail/index.wxss`
-- Modify: `miniprogram/i18n/index.js`
+- Modify: `miniprogram/locales/en-US.js`
+- Modify: `miniprogram/locales/zh-CN.js`
 
 **Step 1: Write failing view and interaction tests**
 
 Cover the pencil cue only on the current user's joined row before start, ordinary-user access to the participant dialog, the full `修改报名信息` dialog action, edit-page navigation, hidden action after activity start, and unchanged read-only behavior for other participants.
 
-Run: `npm test -- --runInBand tests/miniprogram/activity-detail-view-model.test.js tests/miniprogram/team-list-component.test.js tests/miniprogram/activity-detail-page.test.js`
+Run: `npm test -- --runInBand tests/miniprogram/utils/view-models.test.js tests/miniprogram/components/team-list.test.js tests/miniprogram/pages/activity-detail.test.js`
 
 Expected: FAIL because the self-edit view state and navigation action are absent.
 
@@ -124,7 +126,7 @@ Render a compact pencil cue in the current user's row. Keep row tapping as the d
 **Step 4: Verify and commit**
 
 Run:
-- `npm test -- --runInBand tests/miniprogram/activity-detail-view-model.test.js tests/miniprogram/team-list-component.test.js tests/miniprogram/activity-detail-page.test.js`
+- `npm test -- --runInBand tests/miniprogram/utils/view-models.test.js tests/miniprogram/components/team-list.test.js tests/miniprogram/pages/activity-detail.test.js`
 - `git diff --check`
 
 Commit: `feat: expose self registration profile editing`
@@ -145,7 +147,7 @@ Document the reused registration/user fields, `registration_profile_update` acti
 **Step 2: Run targeted and full verification**
 
 Run:
-- `npm test -- --runInBand tests/cloudfunctions/updateMyRegistrationProfile.test.js tests/miniprogram/registration-service.test.js tests/miniprogram/activity-join.test.js tests/miniprogram/activity-detail-view-model.test.js tests/miniprogram/team-list-component.test.js tests/miniprogram/activity-detail-page.test.js`
+- `npm test -- --runInBand tests/cloudfunctions/updateMyRegistrationProfile.test.js tests/miniprogram/mocks/local-cloud.test.js tests/miniprogram/services/registration-service.test.js tests/miniprogram/pages/activity-join.test.js tests/miniprogram/utils/view-models.test.js tests/miniprogram/components/team-list.test.js tests/miniprogram/pages/activity-detail.test.js tests/miniprogram/utils/i18n.test.js`
 - `npm test -- --runInBand`
 - `git diff --check`
 
