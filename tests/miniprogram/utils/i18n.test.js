@@ -138,4 +138,24 @@ describe('i18n utilities', () => {
 
     expect(message).toBe('替补队列由系统自动管理');
   });
+
+  test('translates self registration profile edit errors to Chinese', () => {
+    const translate = (key, params) => t(key, params, 'zh-CN');
+
+    expect(
+      translateErrorMessage(
+        new Error('Registration profile is locked after activity start'),
+        translate
+      )
+    ).toBe('活动开始后不能修改报名信息');
+    expect(translateErrorMessage(new Error('Registration not found'), translate)).toBe(
+      '未找到当前报名记录'
+    );
+    expect(
+      translateErrorMessage(new Error('Only joined registrations can be edited'), translate)
+    ).toBe('只有有效报名可以修改');
+    expect(
+      translateErrorMessage(new Error('Proxy registrations cannot be edited'), translate)
+    ).toBe('代报名不能作为个人报名资料修改');
+  });
 });
