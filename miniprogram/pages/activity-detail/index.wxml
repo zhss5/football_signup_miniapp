@@ -184,6 +184,15 @@
           {{participantDialogMember.avatarText}}
         </view>
         <text class="participant-dialog-name">{{participantDialogMember.signupName}}</text>
+        <button
+          wx:if="{{participantDialogSelfEditVisible}}"
+          class="participant-dialog-self-edit"
+          hover-class="participant-dialog-self-edit-hover"
+          bindtap="onParticipantSelfEdit"
+        >
+          <text>{{i18n.activity.actions.editRegistrationProfile}}</text>
+          <view class="participant-dialog-self-edit-arrow"></view>
+        </button>
       </view>
 
       <view wx:if="{{participantDialogAliasEditable}}" class="participant-dialog-field">
@@ -215,12 +224,6 @@
           >{{i18n.activity.attendance.absent}}</view>
         </view>
       </view>
-
-      <button
-        wx:if="{{participantDialogSelfEditVisible}}"
-        class="participant-dialog-self-edit"
-        bindtap="onParticipantSelfEdit"
-      >{{i18n.activity.actions.editRegistrationProfile}}</button>
 
       <view class="participant-dialog-actions">
         <button class="participant-dialog-cancel" bindtap="onParticipantDialogCancel">
