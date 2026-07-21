@@ -1,7 +1,7 @@
 <view class="page">
   <view class="panel">
-    <text class="title">{{joinTitleText}}</text>
-    <text class="hint">{{i18n.activityJoin.hint}}</text>
+    <text class="title">{{formTitleText}}</text>
+    <text class="hint">{{formHintText}}</text>
 
     <view class="profile-row">
       <button class="avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
@@ -11,6 +11,11 @@
       <view class="profile-copy">
         <text class="label">{{i18n.activityJoin.avatar}}</text>
         <text class="hint small-hint">{{i18n.activityJoin.avatarHint}}</text>
+        <button
+          wx:if="{{isEditMode && avatarUrl}}"
+          class="avatar-remove-button"
+          bindtap="onClearAvatar"
+        >{{i18n.activityJoin.removeAvatar}}</button>
       </view>
     </view>
 
@@ -39,6 +44,6 @@
       </view>
     </view>
 
-    <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{i18n.activityJoin.confirm}}</button>
+    <button class="confirm-button" bindtap="onSubmit" loading="{{submitting}}">{{confirmButtonText}}</button>
   </view>
 </view>

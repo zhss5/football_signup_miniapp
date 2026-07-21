@@ -16,7 +16,8 @@ module.exports = {
     activityDetail: 'Activity Detail',
     myActivities: 'My Activities',
     adjustCover: 'Adjust Cover',
-    joinActivity: 'Join Activity'
+    joinActivity: 'Join Activity',
+    editRegistrationProfile: 'Edit Registration'
   },
   home: {
     createActivity: 'Create Activity',
@@ -171,16 +172,21 @@ module.exports = {
   activityJoin: {
     title: 'Join {{teamName}}',
     hint: 'Use WeChat details when available, or enter them manually.',
+    editTitle: 'Edit registration details',
+    editHint: 'Changes update this registration and your defaults for future signups.',
     avatar: 'Avatar',
     avatarPlaceholder: 'Avatar',
     avatarHint: 'Optional. Tap to use or change your WeChat avatar.',
+    removeAvatar: 'Remove avatar',
     signupName: 'Signup name',
     signupNamePlaceholder: 'Signup name',
     preferredPositions: 'Preferred positions',
     preferredPositionsHint: 'Optional. Choose up to 2 positions.',
     preferredPositionsLimit: 'Choose up to 2 positions',
     confirm: 'Confirm',
-    success: 'Signup successful'
+    saveChanges: 'Save changes',
+    success: 'Signup successful',
+    updateSuccess: 'Registration updated'
   },
   coverCrop: {
     title: 'Adjust Cover',

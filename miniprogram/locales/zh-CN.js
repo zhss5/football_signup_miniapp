@@ -16,7 +16,8 @@ module.exports = {
     myActivities: '我的活动',
     adjustCover: '裁剪封面',
     joinActivity: '填写报名',
-    joinTeam: '报名 {{teamName}}'
+    joinTeam: '报名 {{teamName}}',
+    editRegistrationProfile: '修改报名信息'
   },
   home: {
     emptyTitle: '\u6682\u65e0\u6d3b\u52a8\u5b89\u6392',
@@ -129,9 +130,12 @@ module.exports = {
   activityJoin: {
     title: '报名 {{teamName}}',
     hint: '可以使用微信资料，也可以手动填写报名信息。',
+    editTitle: '修改报名信息',
+    editHint: '修改仅影响本次报名快照，并同步为下次报名的默认资料。',
     avatar: '头像',
     avatarPlaceholder: '头像',
     avatarHint: '可选，点击使用或更换微信头像。',
+    removeAvatar: '移除头像',
     signupName: '报名名称',
     signupNamePlaceholder: '报名名称',
     phone: '手机号',
@@ -141,7 +145,9 @@ module.exports = {
     phoneAuthSkipped: '已跳过手机号授权',
     phoneAuthFailed: '无法获取微信手机号',
     confirm: '确认报名',
-    success: '报名成功'
+    saveChanges: '保存修改',
+    success: '报名成功',
+    updateSuccess: '报名信息已更新'
   },
   coverCrop: {
     title: '裁剪封面',

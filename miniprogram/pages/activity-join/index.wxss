@@ -71,6 +71,25 @@
   min-width: 0;
 }
 
+.avatar-remove-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112rpx;
+  height: 52rpx;
+  margin: 12rpx 0 0;
+  padding: 0 16rpx;
+  border-radius: 10rpx;
+  color: #b42318;
+  background: #fff1f0;
+  font-size: 22rpx;
+  line-height: 52rpx;
+}
+
+.avatar-remove-button::after {
+  border: 0;
+}
+
 .label {
   display: block;
   margin-bottom: 12rpx;

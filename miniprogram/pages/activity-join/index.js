@@ -1,4 +1,8 @@
-const { joinActivity } = require('../../services/registration-service');
+const {
+  joinActivity,
+  updateMyRegistrationProfile
+} = require('../../services/registration-service');
+const { getActivityDetail } = require('../../services/activity-service');
 const { uploadFile } = require('../../services/cloud');
 const {
   recordActivityNotificationSubscription,
@@ -37,16 +41,30 @@ function markActivityDetailForRefresh(activityId) {
   app.globalData.activityDetailRefreshFlags[activityId] = true;
 }
 
-function applyPageI18n(page, teamName) {
+function applyPageI18n(page, teamName, isEditMode = false) {
   const locale = getAppLocale();
   const i18n = getMessages(locale);
-  setPageNavigationTitle(teamName ? 'nav.joinTeam' : 'nav.joinActivity', locale, { teamName });
+  const translate = makeTranslator(locale);
+  setPageNavigationTitle(
+    isEditMode ? 'nav.editRegistrationProfile' : teamName ? 'nav.joinTeam' : 'nav.joinActivity',
+    locale,
+    { teamName }
+  );
   page.setData({
     locale,
     i18n,
-    joinTitleText: makeTranslator(locale)('activityJoin.title', { teamName })
+    joinTitleText: translate('activityJoin.title', { teamName }),
+    formTitleText: isEditMode
+      ? translate('activityJoin.editTitle')
+      : translate('activityJoin.title', { teamName }),
+    formHintText: isEditMode
+      ? translate('activityJoin.editHint')
+      : translate('activityJoin.hint'),
+    confirmButtonText: isEditMode
+      ? translate('activityJoin.saveChanges')
+      : translate('activityJoin.confirm')
   });
-  return makeTranslator(locale);
+  return translate;
 }
 
 function buildAvatarCloudPath() {
@@ -93,14 +111,45 @@ async function prefillUserProfile(page) {
   }
 }
 
+async function prefillRegistrationProfile(page, activityId) {
+  const detail = await getActivityDetail(activityId);
+  const registration = detail && detail.myRegistration;
+
+  if (!registration) {
+    throw new Error('Registration not found');
+  }
+  if (registration.status !== 'joined') {
+    throw new Error('Only joined registrations can be edited');
+  }
+  if (registration.proxyRegistration === true) {
+    throw new Error('Proxy registrations cannot be edited');
+  }
+
+  const preferredPositions = normalizePreferredPositions(registration.preferredPositions);
+  page.setData({
+    teamId: registration.teamId || '',
+    signupName: String(registration.signupName || '').trim(),
+    avatarUrl: String(registration.avatarUrl || '').trim(),
+    avatarTempFilePath: '',
+    profileSource: normalizeProfileSource(registration.profileSource),
+    preferredPositions,
+    positionOptions: buildPositionOptions(preferredPositions)
+  });
+}
+
 Page({
   data: {
     activityId: '',
     teamId: '',
     teamName: '',
+    mode: 'join',
+    isEditMode: false,
     locale: '',
     i18n: {},
     joinTitleText: '',
+    formTitleText: '',
+    formHintText: '',
+    confirmButtonText: '',
     signupName: '',
     nameEdited: false,
     avatarUrl: '',
@@ -114,6 +163,7 @@ Page({
   },
 
   async onLoad(query) {
+    const isEditMode = query.mode === 'edit';
     const teamName = decodeURIComponent(query.teamName || '');
 
     this.openerEventChannel =
@@ -122,10 +172,17 @@ Page({
     this.setData({
       activityId: query.activityId || '',
       teamId: query.teamId || '',
-      teamName
+      teamName,
+      mode: isEditMode ? 'edit' : 'join',
+      isEditMode
     });
 
-    applyPageI18n(this, teamName);
+    applyPageI18n(this, teamName, isEditMode);
+    if (isEditMode) {
+      await prefillRegistrationProfile(this, query.activityId || '');
+      return;
+    }
+
     await prefillUserProfile(this);
   },
 
@@ -148,6 +205,15 @@ Page({
       avatarTempFilePath: avatarUrl,
       avatarEdited: true,
       profileSource: 'wechat'
+    });
+  },
+
+  onClearAvatar() {
+    this.setData({
+      avatarUrl: '',
+      avatarTempFilePath: '',
+      avatarEdited: true,
+      profileSource: 'manual'
     });
   },
 
@@ -195,7 +261,9 @@ Page({
     }
 
     this.setData({ submitting: true });
-    const subscriptionPromise = requestActivityNotificationSubscriptionConsent().catch(() => null);
+    const subscriptionPromise = this.data.isEditMode
+      ? Promise.resolve(null)
+      : requestActivityNotificationSubscriptionConsent().catch(() => null);
 
     try {
       let avatarUrl = this.data.avatarUrl || '';
@@ -204,30 +272,44 @@ Page({
         avatarUrl = await uploadFile(this.data.avatarTempFilePath, buildAvatarCloudPath());
       }
 
-      await joinActivity({
+      const profilePayload = {
         activityId: this.data.activityId,
-        teamId: this.data.teamId,
         signupName,
         avatarUrl,
         profileSource: avatarUrl && this.data.profileSource === 'wechat' ? 'wechat' : 'manual',
-        preferredPositions: normalizePreferredPositions(this.data.preferredPositions),
-        source: 'share'
-      });
+        preferredPositions: normalizePreferredPositions(this.data.preferredPositions)
+      };
+
+      if (this.data.isEditMode) {
+        await updateMyRegistrationProfile(profilePayload);
+      } else {
+        await joinActivity({
+          ...profilePayload,
+          teamId: this.data.teamId,
+          source: 'share'
+        });
+      }
 
       markActivityDetailForRefresh(this.data.activityId);
-      const subscription = await subscriptionPromise;
+      const subscription = this.data.isEditMode ? null : await subscriptionPromise;
       if (subscription) {
         await recordActivityNotificationSubscription(this.data.activityId, subscription).catch(
           () => null
         );
       }
 
-      if (this.openerEventChannel && typeof this.openerEventChannel.emit === 'function') {
+      if (
+        !this.data.isEditMode &&
+        this.openerEventChannel &&
+        typeof this.openerEventChannel.emit === 'function'
+      ) {
         this.openerEventChannel.emit('signupSuccess');
       }
 
       wx.showToast({
-        title: translate('activityJoin.success'),
+        title: translate(
+          this.data.isEditMode ? 'activityJoin.updateSuccess' : 'activityJoin.success'
+        ),
         icon: 'success'
       });
 

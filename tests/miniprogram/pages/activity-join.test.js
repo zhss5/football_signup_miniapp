@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 
 jest.mock('../../../miniprogram/services/registration-service', () => ({
-  joinActivity: jest.fn()
+  joinActivity: jest.fn(),
+  updateMyRegistrationProfile: jest.fn()
+}));
+
+jest.mock('../../../miniprogram/services/activity-service', () => ({
+  getActivityDetail: jest.fn()
 }));
 
 jest.mock('../../../miniprogram/services/cloud', () => ({
@@ -21,6 +26,8 @@ jest.mock('../../../miniprogram/services/notification-service', () => ({
 describe('activity join page', () => {
   let pageConfig;
   let joinActivity;
+  let updateMyRegistrationProfile;
+  let getActivityDetail;
   let uploadFile;
   let ensureUserProfile;
   let recordActivityNotificationSubscription;
@@ -46,7 +53,8 @@ describe('activity join page', () => {
 
     jest.resetModules();
     require('../../../miniprogram/pages/activity-join/index');
-    ({ joinActivity } = require('../../../miniprogram/services/registration-service'));
+    ({ joinActivity, updateMyRegistrationProfile } = require('../../../miniprogram/services/registration-service'));
+    ({ getActivityDetail } = require('../../../miniprogram/services/activity-service'));
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({ ensureUserProfile } = require('../../../miniprogram/services/user-service'));
     ({
@@ -62,6 +70,7 @@ describe('activity join page', () => {
     recordActivityNotificationSubscription.mockResolvedValue({
       ok: true
     });
+    getActivityDetail.mockResolvedValue({ myRegistration: null });
   });
 
   afterEach(() => {
@@ -145,6 +154,128 @@ describe('activity join page', () => {
     expect(global.wx.navigateBack).toHaveBeenCalledWith({
       delta: 1
     });
+  });
+
+  test('loads the current registration snapshot in explicit edit mode', async () => {
+    getActivityDetail.mockResolvedValue({
+      myRegistration: {
+        _id: 'activity_123_openid_player',
+        activityId: 'activity_123',
+        teamId: 'team_red',
+        status: 'joined',
+        signupName: 'Snapshot Name',
+        avatarUrl: 'cloud://snapshot-avatar',
+        profileSource: 'wechat',
+        preferredPositions: ['中场', '门将']
+      }
+    });
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = { ...this.data, ...update };
+      }
+    };
+
+    await pageConfig.onLoad.call(ctx, {
+      mode: 'edit',
+      activityId: 'activity_123'
+    });
+
+    expect(getActivityDetail).toHaveBeenCalledWith('activity_123');
+    expect(ensureUserProfile).not.toHaveBeenCalled();
+    expect(global.wx.setNavigationBarTitle).toHaveBeenCalledWith({ title: '修改报名信息' });
+    expect(ctx.data).toMatchObject({
+      mode: 'edit',
+      isEditMode: true,
+      signupName: 'Snapshot Name',
+      avatarUrl: 'cloud://snapshot-avatar',
+      avatarTempFilePath: '',
+      profileSource: 'wechat',
+      preferredPositions: ['中场', '门将']
+    });
+  });
+
+  test('saves edit mode without requesting notification subscription', async () => {
+    getActivityDetail.mockResolvedValue({
+      myRegistration: {
+        activityId: 'activity_123',
+        status: 'joined',
+        signupName: 'Old Name',
+        avatarUrl: 'cloud://old-avatar',
+        profileSource: 'wechat',
+        preferredPositions: ['前锋']
+      }
+    });
+    updateMyRegistrationProfile.mockResolvedValue({ signupName: 'New Name' });
+    const ctx = {
+      data: {},
+      setData(update) {
+        this.data = { ...this.data, ...update };
+      }
+    };
+    await pageConfig.onLoad.call(ctx, { mode: 'edit', activityId: 'activity_123' });
+    ctx.setData({
+      signupName: ' New Name ',
+      avatarUrl: '',
+      avatarTempFilePath: '',
+      profileSource: 'manual',
+      preferredPositions: ['门将']
+    });
+
+    await pageConfig.onSubmit.call(ctx);
+
+    expect(updateMyRegistrationProfile).toHaveBeenCalledWith({
+      activityId: 'activity_123',
+      signupName: 'New Name',
+      avatarUrl: '',
+      profileSource: 'manual',
+      preferredPositions: ['门将']
+    });
+    expect(joinActivity).not.toHaveBeenCalled();
+    expect(requestActivityNotificationSubscriptionConsent).not.toHaveBeenCalled();
+    expect(recordActivityNotificationSubscription).not.toHaveBeenCalled();
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: '报名信息已更新',
+      icon: 'success'
+    });
+
+    jest.runAllTimers();
+    expect(global.wx.navigateBack).toHaveBeenCalledWith({ delta: 1 });
+  });
+
+  test('can explicitly clear the existing avatar while editing', async () => {
+    const ctx = {
+      data: {
+        isEditMode: true,
+        avatarUrl: 'cloud://old-avatar',
+        avatarTempFilePath: '',
+        profileSource: 'wechat'
+      },
+      setData(update) {
+        this.data = { ...this.data, ...update };
+      }
+    };
+
+    pageConfig.onClearAvatar.call(ctx);
+
+    expect(ctx.data).toMatchObject({
+      avatarUrl: '',
+      avatarTempFilePath: '',
+      avatarEdited: true,
+      profileSource: 'manual'
+    });
+  });
+
+  test('renders edit-specific title, hint, avatar removal, and save command', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-join/index.wxml'),
+      'utf8'
+    );
+
+    expect(wxml).toContain('{{formTitleText}}');
+    expect(wxml).toContain('{{formHintText}}');
+    expect(wxml).toContain('bindtap="onClearAvatar"');
+    expect(wxml).toContain('{{confirmButtonText}}');
   });
 
   test('keeps signup successful when notification subscription request fails', async () => {

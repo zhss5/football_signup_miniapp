@@ -5,7 +5,8 @@ jest.mock('../../../miniprogram/services/cloud', () => ({
 const { call } = require('../../../miniprogram/services/cloud');
 const {
   moveRegistration,
-  resolvePhoneNumber
+  resolvePhoneNumber,
+  updateMyRegistrationProfile
 } = require('../../../miniprogram/services/registration-service');
 
 test('registration service keeps the phone authorization adapter for future extensions', () => {
@@ -28,4 +29,20 @@ test('registration service can move a member to another team', () => {
     targetTeamId: 'team_red'
   });
   expect(result).resolves.toEqual({ moved: true });
+});
+
+test('registration service updates the caller registration profile through a dedicated API', () => {
+  call.mockReturnValue(Promise.resolve({ signupName: 'New Name' }));
+  const payload = {
+    activityId: 'activity_1',
+    signupName: 'New Name',
+    avatarUrl: '',
+    profileSource: 'manual',
+    preferredPositions: ['门将']
+  };
+
+  const result = updateMyRegistrationProfile(payload);
+
+  expect(call).toHaveBeenCalledWith('updateMyRegistrationProfile', payload);
+  expect(result).resolves.toEqual({ signupName: 'New Name' });
 });
