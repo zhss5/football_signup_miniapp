@@ -285,6 +285,21 @@ test('updateActivity persists a validated late cancellation notice window and au
   }
 });
 
+test('updateActivity preserves an existing late cancellation notice window for legacy clients', async () => {
+  const db = createFakeDb({
+    activity: { lateCancellationNoticeWindowHours: 12 }
+  });
+
+  const result = await updateActivity.main(
+    buildUpdatePayload(),
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-04-20T10:00:00.000Z' }
+  );
+
+  expect(db.state.activities.activity_1.lateCancellationNoticeWindowHours).toBe(12);
+  expect(result.changedFields).not.toContain('lateCancellationNoticeWindowHours');
+});
+
 test.each([-1, 1.5, 169, 'six'])(
   'updateActivity rejects invalid late cancellation notice window %p',
   async lateCancellationNoticeWindowHours => {

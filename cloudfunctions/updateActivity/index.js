@@ -121,9 +121,14 @@ function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
   return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
 }
 
-function normalizeLateCancellationNoticeWindowHours(value) {
+function normalizeLateCancellationNoticeWindowHours(value, currentValue) {
   if (value === undefined || value === null || String(value).trim() === '') {
-    return DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+    const currentHours = Number(currentValue);
+    return Number.isInteger(currentHours) &&
+      currentHours >= 0 &&
+      currentHours <= MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS
+      ? currentHours
+      : DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
   }
 
   const hours = Number(value);
@@ -159,7 +164,8 @@ function buildActivityUpdateData(event, activity, stamp, signupLimitTotal) {
     insuranceLink: String(event.insuranceLink || '').trim(),
     notificationHint: String(event.notificationHint || '').trim(),
     lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
-      event.lateCancellationNoticeWindowHours
+      event.lateCancellationNoticeWindowHours,
+      activity.lateCancellationNoticeWindowHours
     ),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       event.registrationNoticeThreshold,
