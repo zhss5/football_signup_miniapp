@@ -140,7 +140,8 @@ function createStatsRow(participantName) {
     absentCount: 0,
     effectiveSignupActivityCount: 0,
     cancelledActivityCount: 0,
-    details: []
+    details: [],
+    cancellationDetails: []
   };
 }
 
@@ -225,6 +226,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       acc[outcomeKey] = {
         participantStatsKey,
         participantName,
+        activity,
         registration,
         outcome
       };
@@ -240,6 +242,18 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     if (!row.managerAlias && managerAlias) {
       row.managerAlias = managerAlias;
     }
+
+    row.cancellationDetails.push({
+      activityId: item.activity._id || item.registration.activityId || '',
+      activityTitle: item.activity.title || '',
+      activityType: normalizeActivityType(item.activity.activityType),
+      startAt: item.activity.startAt || '',
+      registrationId: item.registration._id || '',
+      signupName: item.registration.signupName || item.participantName,
+      managerAlias,
+      outcome: item.outcome,
+      cancelledAt: item.outcome === 'cancelled' ? String(item.registration.cancelledAt || '') : ''
+    });
 
     if (item.outcome === 'joined') {
       row.effectiveSignupActivityCount += 1;
@@ -301,6 +315,22 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         }
 
         return String(left.activityTitle || '').localeCompare(String(right.activityTitle || ''));
+      }),
+      cancellationDetails: row.cancellationDetails.sort((left, right) => {
+        const leftTime = parseTimestamp(left.startAt) || 0;
+        const rightTime = parseTimestamp(right.startAt) || 0;
+        if (leftTime !== rightTime) {
+          return leftTime - rightTime;
+        }
+
+        const titleOrder = String(left.activityTitle || '').localeCompare(
+          String(right.activityTitle || '')
+        );
+        if (titleOrder !== 0) {
+          return titleOrder;
+        }
+
+        return String(left.registrationId || '').localeCompare(String(right.registrationId || ''));
       }),
       attendanceRate: toAttendanceRate(row.presentCount, row.signupCount),
       cancelRate: toRate(

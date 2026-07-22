@@ -447,6 +447,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 25. Remove fields only in a later compatibility cleanup after live, trial, and review builds no longer read them.
 26. Route self registration profile edits through the API-shaped `updateMyRegistrationProfile` mutation. Derive the user identity from trusted auth context, do not accept a target user id, and limit edits to the caller's joined, non-proxy registration before activity start.
 27. Update the registration snapshot, reusable user defaults, and `registration_profile_update` log in one transaction. Do not change team, registration status, attendance, joined time, counters, or aggregate counts. Existing Version 1 clients remain compatible because the API and log action are additive and reuse existing fields.
+28. Keep `getAttendanceStats.cancellationDetails` as an API-derived final-outcome projection rather than a stored UI document. SQL-backed implementations derive one `joined` or `cancelled` detail per participant and activity from registration state, returning stable activity/registration IDs, activity type, signup name, manager alias, start/cancellation timestamps, and the stable outcome enum. The additive field requires no CloudBase or SQL schema migration.
 
 ## Migration Validation Checklist
 
@@ -479,7 +480,7 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - No user loses the base `user` role.
 - At least one `super_admin` exists before enabling the self-hosted admin path.
 - Attendance stats in MySQL match CloudBase `getAttendanceStats` for the same date range.
-- Participant cancellation counts and rates in MySQL match CloudBase `getAttendanceStats` for the same role visibility, activity start-date range, activity type filter, and final-outcome rules. Cancellation metrics exclude cancelled/deleted activities but do not require the activity start time to have passed.
+- Participant cancellation counts, rates, and `cancellationDetails` in MySQL match CloudBase `getAttendanceStats` for the same role visibility, activity start-date range, activity type filter, and final-outcome rules. Detail rows contain one final `joined` or `cancelled` outcome per participant and activity, use deterministic start-time/title/registration ordering, and preserve empty historical cancellation timestamps. Cancellation metrics exclude cancelled/deleted activities but do not require the activity start time to have passed.
 - Web-admin activity filters in SQL match CloudBase `listActivities` with `scope: web-admin` for the same role, date range, status, organizer, keyword, limit, and skip.
 - Mini-program list pagination in SQL matches CloudBase `listActivities` for `home`, `created`, and `joined` scopes with the same `limit`, `skip`, sort order, and visibility rules.
 - The mini-program My page does not show overdue unresolved prompts; SQL-backed list APIs should not introduce that prompt implicitly.

@@ -103,7 +103,7 @@ test('admin can get date-range attendance stats for started activities', async (
 
   const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_admin' }, { db });
 
-  expect(result.items).toEqual([
+  expect(result.items).toMatchObject([
     {
       participantName: 'Alex',
       managerAlias: 'Left foot',
@@ -178,7 +178,7 @@ test('organizer stats include only their own activities', async () => {
 
   const result = await getAttendanceStats.main(dateRange, { OPENID: 'openid_owner' }, { db });
 
-  expect(result.items).toEqual([
+  expect(result.items).toMatchObject([
     {
       participantName: 'Alex',
       managerAlias: 'Left foot',
@@ -587,6 +587,7 @@ test('cancellation stats count one final outcome per participant activity', asyn
         title: 'Cancelled Signup Match',
         organizerOpenId: 'openid_owner',
         status: 'published',
+        activityType: 'external',
         startAt: '2026-05-09T12:00:00.000Z'
       },
       activity_future_cancel: {
@@ -618,7 +619,8 @@ test('cancellation stats count one final outcome per participant activity', asyn
         userOpenId: 'openid_alex',
         signupName: 'Alex',
         status: 'cancelled',
-        cancelCount: 2
+        cancelCount: 2,
+        cancelledAt: '2026-05-08T10:00:00.000Z'
       },
       reg_alex_future_cancel: {
         _id: 'reg_alex_future_cancel',
@@ -627,6 +629,14 @@ test('cancellation stats count one final outcome per participant activity', asyn
         signupName: 'Alex',
         status: 'cancelled',
         cancelCount: 1
+      },
+      reg_alex_old_cancelled_activity_1: {
+        _id: 'reg_alex_old_cancelled_activity_1',
+        activityId: 'activity_1',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex old name',
+        status: 'cancelled',
+        cancelledAt: '2026-04-30T10:00:00.000Z'
       },
       reg_alex_removed: {
         _id: 'reg_alex_removed',
@@ -659,6 +669,52 @@ test('cancellation stats count one final outcome per participant activity', asyn
     cancelledActivityCount: 2,
     cancelRate: 0.5
   });
+  expect(alex.cancellationDetails).toEqual([
+    {
+      activityId: 'activity_1',
+      activityTitle: 'Confirmed Match 1',
+      activityType: 'internal',
+      startAt: '2026-05-01T12:00:00.000Z',
+      registrationId: 'reg_1_alex',
+      signupName: 'Alex',
+      managerAlias: 'Left foot',
+      outcome: 'joined',
+      cancelledAt: ''
+    },
+    {
+      activityId: 'activity_2',
+      activityTitle: 'Confirmed Match 2',
+      activityType: 'internal',
+      startAt: '2026-05-08T12:00:00.000Z',
+      registrationId: 'reg_2_alex',
+      signupName: 'Alex',
+      managerAlias: 'Left foot',
+      outcome: 'joined',
+      cancelledAt: ''
+    },
+    {
+      activityId: 'activity_cancel_final',
+      activityTitle: 'Cancelled Signup Match',
+      activityType: 'external',
+      startAt: '2026-05-09T12:00:00.000Z',
+      registrationId: 'reg_alex_cancel_final',
+      signupName: 'Alex',
+      managerAlias: 'Left foot',
+      outcome: 'cancelled',
+      cancelledAt: '2026-05-08T10:00:00.000Z'
+    },
+    {
+      activityId: 'activity_future_cancel',
+      activityTitle: 'Future Cancel Match',
+      activityType: 'internal',
+      startAt: '2026-05-20T12:00:00.000Z',
+      registrationId: 'reg_alex_future_cancel',
+      signupName: 'Alex',
+      managerAlias: 'Left foot',
+      outcome: 'cancelled',
+      cancelledAt: ''
+    }
+  ]);
 });
 
 test('cancellation stats include cancellation-only participants', async () => {
@@ -698,6 +754,14 @@ test('cancellation stats include cancellation-only participants', async () => {
     cancelledActivityCount: 1,
     cancelRate: 1
   });
+  expect(result.items.find(item => item.participantName === 'Cancel Only').cancellationDetails)
+    .toEqual([
+      expect.objectContaining({
+        activityId: 'activity_cancel_only',
+        registrationId: 'reg_cancel_only',
+        outcome: 'cancelled'
+      })
+    ]);
 });
 
 test('real signups with the same display name are grouped by openid instead of name', async () => {
