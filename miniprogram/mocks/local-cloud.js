@@ -15,6 +15,8 @@ const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 const DEFAULT_ACTIVITY_LIST_LIMIT = 20;
 const MAX_ACTIVITY_LIST_LIMIT = 50;
+const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
+const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
 
 function validateSignupPayload(payload) {
   if (!payload.activityId) {
@@ -39,6 +41,24 @@ function normalizeSource(value) {
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function normalizeLateCancellationNoticeWindowHours(value, currentValue) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    const currentHours = Number(currentValue);
+    return Number.isInteger(currentHours) &&
+      currentHours >= 0 &&
+      currentHours <= MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS
+      ? currentHours
+      : DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+  }
+
+  const hours = Number(value);
+  if (!Number.isInteger(hours) || hours < 0 || hours > MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS) {
+    throw new Error('Late cancellation notice window must be an integer between 0 and 168 hours');
+  }
+
+  return hours;
 }
 
 function hasExplicitBenchCapacity(payload) {
@@ -371,6 +391,9 @@ function createLocalCloudClient(options = {}) {
       description: payload.description || '',
       insuranceLink: String(payload.insuranceLink || '').trim(),
       notificationHint: String(payload.notificationHint || '').trim(),
+      lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+        payload.lateCancellationNoticeWindowHours
+      ),
       coverImage: imageList[0] || payload.coverImage || '',
       coverThumbImage: payload.coverThumbImage || '',
       shareImage: payload.shareImage || '',
@@ -652,6 +675,10 @@ function createLocalCloudClient(options = {}) {
       description: payload.description || '',
       insuranceLink: String(payload.insuranceLink || '').trim(),
       notificationHint: String(payload.notificationHint || '').trim(),
+      lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+        payload.lateCancellationNoticeWindowHours,
+        activity.lateCancellationNoticeWindowHours
+      ),
       coverImage: imageList[0] || payload.coverImage || '',
       coverThumbImage: payload.coverThumbImage || '',
       shareImage: payload.shareImage || '',

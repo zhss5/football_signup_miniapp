@@ -491,7 +491,11 @@ Page({
       field === 'notificationHint'
         ? normalizeNotificationHint(event.detail.value)
         : event.detail.value;
-    const numericFields = new Set(['benchCapacity', 'registrationNoticeThreshold']);
+    const numericFields = new Set([
+      'benchCapacity',
+      'registrationNoticeThreshold',
+      'lateCancellationNoticeWindowHours'
+    ]);
     const form = {
       ...this.data.form,
       [field]: numericFields.has(field) ? Number(value) || 0 : value

@@ -6,6 +6,8 @@ const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
 const ACTIVITY_TYPE_INTERNAL = 'internal';
 const ACTIVITY_TYPE_EXTERNAL = 'external';
 const ACTIVITY_TYPE_VALUES = [ACTIVITY_TYPE_INTERNAL, ACTIVITY_TYPE_EXTERNAL];
+const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
+const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
 
 function limitTextLength(value, maxLength) {
   return Array.from(String(value || '')).slice(0, maxLength).join('');
@@ -24,6 +26,25 @@ function normalizeActivityType(value) {
   }
 
   return ACTIVITY_TYPE_VALUES.includes(type) ? type : ACTIVITY_TYPE_INTERNAL;
+}
+
+function normalizeLateCancellationNoticeWindowHours(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+  }
+
+  const hours = Number(value);
+  return Number.isInteger(hours) && hours >= 0 && hours <= MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS
+    ? hours
+    : DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+}
+
+function buildLateCancellationNoticeWindowHours(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+  }
+
+  return Number(value);
 }
 
 function resolveNow(nowOption) {
@@ -146,6 +167,7 @@ function createDefaultActivityForm(options = {}) {
     description: '',
     insuranceLink: '',
     notificationHint: '',
+    lateCancellationNoticeWindowHours: DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS,
     coverImage: '',
     coverThumbImage: '',
     shareImage: '',
@@ -222,6 +244,9 @@ function buildActivityPayload(form) {
     signupDeadlineAt: combineDateAndTime(form.signupDeadlineDate, form.signupDeadlineTime),
     insuranceLink: String(form.insuranceLink || '').trim(),
     notificationHint: normalizeNotificationHint(form.notificationHint),
+    lateCancellationNoticeWindowHours: buildLateCancellationNoticeWindowHours(
+      form.lateCancellationNoticeWindowHours
+    ),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       form.registrationNoticeThreshold,
       signupLimitTotal
@@ -272,6 +297,9 @@ function buildActivityEditForm(activity = {}, teams = []) {
     description: activity.description || '',
     insuranceLink: activity.insuranceLink || '',
     notificationHint: normalizeNotificationHint(activity.notificationHint),
+    lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+      activity.lateCancellationNoticeWindowHours
+    ),
     coverImage: imageList[0] || activity.coverImage || '',
     coverThumbImage: activity.coverThumbImage || '',
     shareImage: activity.shareImage || '',
@@ -326,6 +354,9 @@ function buildActivityCopyForm(draft = {}) {
     description: draft.description || '',
     insuranceLink: draft.insuranceLink || '',
     notificationHint: normalizeNotificationHint(draft.notificationHint),
+    lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+      draft.lateCancellationNoticeWindowHours
+    ),
     coverImage: imageList[0] || draft.coverImage || '',
     coverThumbImage: draft.coverThumbImage || '',
     shareImage: draft.shareImage || '',

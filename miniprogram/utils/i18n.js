@@ -246,6 +246,8 @@ function translateErrorMessage(error, translate) {
     'Activity end time must be later than start time': 'errors.activityEndTimeOrder',
     'Signup deadline must be earlier than or equal to activity start time': 'errors.signupDeadlineOrder',
     'Activity description supports up to 2000 characters': 'errors.activityDescriptionTooLong',
+    'Late cancellation notice window must be an integer between 0 and 168 hours':
+      'errors.lateCancellationNoticeWindowHoursRange',
     'Total signup limit is required': 'errors.totalSignupLimitRequired',
     'Only one activity image is supported right now': 'errors.onlyOneActivityImage',
     'Up to five detail images are supported': 'errors.tooManyDetailImages',

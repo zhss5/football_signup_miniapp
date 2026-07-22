@@ -49,7 +49,8 @@ jest.mock('../../../miniprogram/utils/activity-draft', () => {
     })),
     buildActivityPayload: jest.fn(form => form),
     createDefaultActivityForm: jest.fn(() => ({
-      title: 'Thursday Match'
+      title: 'Thursday Match',
+      lateCancellationNoticeWindowHours: 6
     })),
     getDefaultRegistrationNoticeThreshold: jest.fn(total =>
       Number(total || 0) > 0 ? Math.ceil(Number(total || 0) * 0.8) : 0
@@ -245,6 +246,9 @@ describe('activity create submit flow', () => {
     );
     const notificationHintIndex = wxml.indexOf('data-field="notificationHint"');
     const registrationNoticeIndex = wxml.indexOf('data-field="registrationNoticeThreshold"');
+    const lateCancellationNoticeIndex = wxml.indexOf(
+      'data-field="lateCancellationNoticeWindowHours"'
+    );
     const coverImageIndex = wxml.indexOf('{{i18n.activityCreate.coverImage}}');
 
     expect(wxml).toContain('class="notification-settings-group"');
@@ -254,7 +258,8 @@ describe('activity create submit flow', () => {
     expect(notificationSettingsIndex).toBeGreaterThan(totalSignupIndex);
     expect(notificationSettingsHintIndex).toBeGreaterThan(notificationSettingsIndex);
     expect(registrationNoticeIndex).toBeGreaterThan(notificationSettingsHintIndex);
-    expect(notificationHintIndex).toBeGreaterThan(registrationNoticeIndex);
+    expect(lateCancellationNoticeIndex).toBeGreaterThan(registrationNoticeIndex);
+    expect(notificationHintIndex).toBeGreaterThan(lateCancellationNoticeIndex);
     expect(coverImageIndex).toBeGreaterThan(notificationHintIndex);
     expect(wxss).toContain('.notification-settings-group');
     expect(wxss).toContain('.notification-settings-group .input');
@@ -646,7 +651,8 @@ describe('activity create submit flow', () => {
     const ctx = {
       data: {
         form: {
-          title: 'Thursday Match'
+          title: 'Thursday Match',
+          lateCancellationNoticeWindowHours: 12
         },
         canCreateActivity: true
       },
@@ -661,6 +667,9 @@ describe('activity create submit flow', () => {
 
     await pageConfig.onSubmit.call(ctx);
 
+    expect(createActivity).toHaveBeenCalledWith(
+      expect.objectContaining({ lateCancellationNoticeWindowHours: 12 })
+    );
     expect(global.wx.redirectTo).toHaveBeenCalledWith({
       url: '/pages/activity-detail/index?activityId=activity_123&fromPublish=1'
     });
@@ -806,6 +815,7 @@ describe('activity create submit flow', () => {
       data: {
         form: {
           title: 'Updated Thursday Match',
+          lateCancellationNoticeWindowHours: 0,
           coverImage: 'cloud://cover-existing',
           imageList: ['cloud://cover-existing']
         },
@@ -829,6 +839,7 @@ describe('activity create submit flow', () => {
       expect.objectContaining({
         activityId: 'activity_123',
         title: 'Updated Thursday Match',
+        lateCancellationNoticeWindowHours: 0,
         coverImage: 'cloud://cover-existing'
       })
     );
@@ -1006,6 +1017,34 @@ describe('activity create submit flow', () => {
     });
 
     expect(ctx.data.form.notificationHint).toBe('12345 67890 12345678');
+  });
+
+  test('renders and updates the late cancellation notice window as a number', () => {
+    const wxml = fs.readFileSync(
+      path.join(__dirname, '../../../miniprogram/pages/activity-create/index.wxml'),
+      'utf8'
+    );
+    expect(wxml).toContain('{{i18n.activityCreate.lateCancellationNoticeWindowHours}}');
+    expect(wxml).toContain('data-field="lateCancellationNoticeWindowHours"');
+    expect(wxml).toContain('value="{{form.lateCancellationNoticeWindowHours}}"');
+
+    const ctx = {
+      data: {
+        form: { lateCancellationNoticeWindowHours: 6 },
+        validationErrors: {},
+        locale: 'zh-CN'
+      },
+      setData(update) {
+        this.data = { ...this.data, ...update };
+      },
+      syncDerivedState: pageConfig.syncDerivedState
+    };
+    pageConfig.onFieldInput.call(ctx, {
+      currentTarget: { dataset: { field: 'lateCancellationNoticeWindowHours' } },
+      detail: { value: '12' }
+    });
+
+    expect(ctx.data.form.lateCancellationNoticeWindowHours).toBe(12);
   });
 
   test('onSubmit uploads a selected cover before creating the activity', async () => {

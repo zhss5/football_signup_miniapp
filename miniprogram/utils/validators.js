@@ -124,6 +124,22 @@ function validateActivityDraft(draft, translate = null) {
     }
   }
 
+  const rawLateCancellationNoticeWindowHours = draft.lateCancellationNoticeWindowHours;
+  if (
+    rawLateCancellationNoticeWindowHours !== undefined &&
+    rawLateCancellationNoticeWindowHours !== null &&
+    rawLateCancellationNoticeWindowHours !== ''
+  ) {
+    const hours = Number(rawLateCancellationNoticeWindowHours);
+    if (!Number.isInteger(hours) || hours < 0 || hours > 168) {
+      throw buildValidationError(
+        'lateCancellationNoticeWindowHours',
+        'errors.lateCancellationNoticeWindowHoursRange',
+        translate
+      );
+    }
+  }
+
   const imageList = Array.isArray(draft.imageList)
     ? draft.imageList.filter(Boolean)
     : draft.coverImage

@@ -66,6 +66,24 @@ describe('i18n utilities', () => {
     expect(messages.activityCreate.notificationHint).toBe(
       '\u6d3b\u52a8\u4e3e\u884c\u901a\u77e5\u6e29\u99a8\u63d0\u793a'
     );
+    expect(messages.activityCreate.lateCancellationNoticeWindowHours).toBe(
+      '\u4e34\u8fd1\u53d6\u6d88\u901a\u77e5\uff08\u5c0f\u65f6\uff09'
+    );
+    expect(messages.activityCreate.lateCancellationNoticeWindowHoursHint).toContain(
+      '\u8bbe\u4e3a 0 \u8868\u793a\u5173\u95ed'
+    );
+    expect(messages.errors.lateCancellationNoticeWindowHoursRange).toBe(
+      '\u4e34\u8fd1\u53d6\u6d88\u901a\u77e5\u5c0f\u65f6\u6570\u5fc5\u987b\u662f 0 \u5230 168 \u4e4b\u95f4\u7684\u6574\u6570'
+    );
+  });
+
+  test('translates the cloud cancellation notice window validation error', () => {
+    const message = translateErrorMessage(
+      new Error('Late cancellation notice window must be an integer between 0 and 168 hours'),
+      (key, params) => t(key, params, 'zh-CN')
+    );
+
+    expect(message).toBe('临近取消通知小时数必须是 0 到 168 之间的整数');
   });
 
   test('provides Chinese copy for expired activities', () => {

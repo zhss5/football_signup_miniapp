@@ -201,6 +201,50 @@ describe('validateActivityDraft', () => {
     ).toBe(true);
   });
 
+  test.each([0, 6, 168])(
+    'accepts late cancellation notice window %s',
+    lateCancellationNoticeWindowHours => {
+      expect(
+        validateActivityDraft({
+          title: 'Saturday 8-10',
+          startAt: '2026-04-26T20:00:00.000Z',
+          endAt: '2026-04-26T22:00:00.000Z',
+          signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+          addressText: 'Half Stone',
+          lateCancellationNoticeWindowHours,
+          signupLimitTotal: 12,
+          imageList: [],
+          teams: [
+            { teamName: 'White', maxMembers: 6 },
+            { teamName: 'Red', maxMembers: 6 }
+          ]
+        })
+      ).toBe(true);
+    }
+  );
+
+  test.each([-1, 1.5, 169, 'six'])(
+    'rejects invalid late cancellation notice window %p',
+    lateCancellationNoticeWindowHours => {
+      expect(() =>
+        validateActivityDraft({
+          title: 'Saturday 8-10',
+          startAt: '2026-04-26T20:00:00.000Z',
+          endAt: '2026-04-26T22:00:00.000Z',
+          signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+          addressText: 'Half Stone',
+          lateCancellationNoticeWindowHours,
+          signupLimitTotal: 12,
+          imageList: [],
+          teams: [
+            { teamName: 'White', maxMembers: 6 },
+            { teamName: 'Red', maxMembers: 6 }
+          ]
+        })
+      ).toThrow('Late cancellation notice window must be an integer between 0 and 168 hours');
+    }
+  );
+
   test.each([-1, 1.5])('rejects invalid explicit bench capacity %s', benchCapacity => {
     expect(() =>
       validateActivityDraft({

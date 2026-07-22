@@ -163,6 +163,22 @@
     </view>
 
     <view class="field notification-settings-field">
+      <text class="label">{{i18n.activityCreate.lateCancellationNoticeWindowHours}}</text>
+      <input
+        class="input"
+        placeholder="{{i18n.activityCreate.lateCancellationNoticeWindowHoursPlaceholder}}"
+        type="number"
+        min="0"
+        max="168"
+        step="1"
+        data-field="lateCancellationNoticeWindowHours"
+        value="{{form.lateCancellationNoticeWindowHours}}"
+        bindinput="onFieldInput"
+      />
+      <text class="hint">{{i18n.activityCreate.lateCancellationNoticeWindowHoursHint}}</text>
+    </view>
+
+    <view class="field notification-settings-field">
       <text class="label">{{i18n.activityCreate.notificationHint}}</text>
       <input
         class="input"

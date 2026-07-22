@@ -36,6 +36,7 @@ test('local cloud client can create an activity and list it on home', async () =
     detailImages: ['wxfile://detail-1.jpg', 'wxfile://detail-2.jpg'],
     insuranceLink: 'https://insurance.example.com/apply',
     notificationHint: 'Bring both kits',
+    lateCancellationNoticeWindowHours: 12,
     signupLimitTotal: 12,
     requirePhone: false,
     inviteCode: '',
@@ -59,6 +60,7 @@ test('local cloud client can create an activity and list it on home', async () =
   expect(list.items[0].coverThumbImage).toBe('wxfile://cover-1-thumb.jpg');
   expect(list.items[0].insuranceLink).toBe('https://insurance.example.com/apply');
   expect(list.items[0].notificationHint).toBe('Bring both kits');
+  expect(list.items[0].lateCancellationNoticeWindowHours).toBe(12);
 });
 
 test('local cloud client updates the current user registration profile before activity start', async () => {
@@ -166,6 +168,7 @@ test('local cloud client derives total signup limit from explicit bench capacity
 
   expect(detail.activity.signupLimitTotal).toBe(16);
   expect(detail.activity.registrationNoticeThreshold).toBe(13);
+  expect(detail.activity.lateCancellationNoticeWindowHours).toBe(6);
   expect(detail.teams.find(team => team.teamType === 'bench')).toMatchObject({
     maxMembers: 4,
     status: 'active'
@@ -202,6 +205,7 @@ test('local cloud client derives total signup limit from explicit bench capacity
     endAt: '2026-04-26T22:00:00.000Z',
     signupDeadlineAt: '2026-04-26T19:30:00.000Z',
     addressText: 'Half Stone',
+    lateCancellationNoticeWindowHours: 0,
     benchCapacity: 2,
     signupLimitTotal: 99,
     teams: before.teams
@@ -220,6 +224,7 @@ test('local cloud client derives total signup limit from explicit bench capacity
 
   expect(after.activity.signupLimitTotal).toBe(14);
   expect(after.activity.registrationNoticeThreshold).toBe(12);
+  expect(after.activity.lateCancellationNoticeWindowHours).toBe(0);
   expect(after.teams.find(team => team.teamType === 'bench')).toMatchObject({
     maxMembers: 2,
     status: 'active'

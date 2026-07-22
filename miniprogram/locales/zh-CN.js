@@ -302,6 +302,12 @@ module.exports.activityCreate.registrationNoticeThreshold = '\u62a5\u540d\u901a\
 module.exports.activityCreate.registrationNoticeThresholdPlaceholder = '\u62a5\u540d\u901a\u77e5\u9608\u503c';
 module.exports.activityCreate.registrationNoticeThresholdHint =
   '\u9ed8\u8ba4\u4e3a\u603b\u62a5\u540d\u4eba\u6570\u7684 80%\uff1b\u666e\u901a\u7528\u6237\u62a5\u540d\u540e\u8fbe\u5230\u8be5\u4eba\u6570\u624d\u901a\u77e5\u7ec4\u7ec7\u8005\u3002';
+module.exports.activityCreate.lateCancellationNoticeWindowHours =
+  '\u4e34\u8fd1\u53d6\u6d88\u901a\u77e5\uff08\u5c0f\u65f6\uff09';
+module.exports.activityCreate.lateCancellationNoticeWindowHoursPlaceholder =
+  '\u6d3b\u52a8\u5f00\u59cb\u524d\u5c0f\u65f6\u6570';
+module.exports.activityCreate.lateCancellationNoticeWindowHoursHint =
+  '\u53c2\u4e0e\u8005\u5728\u6d3b\u52a8\u5f00\u59cb\u524d\u8be5\u5c0f\u65f6\u6570\u5185\u53d6\u6d88\u65f6\uff0c\u901a\u77e5\u6d3b\u52a8\u521b\u5efa\u8005\uff1b\u8bbe\u4e3a 0 \u8868\u793a\u5173\u95ed\u3002';
 module.exports.activityCreate.coverImage = '\u5c01\u9762\u56fe\u7247';
 module.exports.activityCreate.detailImages = '\u8be6\u60c5\u56fe\u7247';
 module.exports.activityCreate.detailImageHint =
@@ -310,6 +316,8 @@ module.exports.activityCreate.addDetailImages = '\u6dfb\u52a0\u8be6\u60c5\u56fe'
 module.exports.errors.tooManyDetailImages = '\u6700\u591a\u652f\u6301 5 \u5f20\u8be6\u60c5\u56fe\u7247';
 module.exports.errors.registrationNoticeThresholdRange =
   '\u62a5\u540d\u901a\u77e5\u9608\u503c\u5fc5\u987b\u5728 1 \u5230\u603b\u62a5\u540d\u4eba\u6570\u4e4b\u95f4';
+module.exports.errors.lateCancellationNoticeWindowHoursRange =
+  '\u4e34\u8fd1\u53d6\u6d88\u901a\u77e5\u5c0f\u65f6\u6570\u5fc5\u987b\u662f 0 \u5230 168 \u4e4b\u95f4\u7684\u6574\u6570';
 module.exports.modal.cancelActivity.content =
   '\u6b64\u64cd\u4f5c\u4f1a\u505c\u6b62\u65b0\u7684\u62a5\u540d\uff0c\u5e76\u901a\u77e5\u5df2\u8ba2\u9605\u7684\u53c2\u4e0e\u8005\u3002';
 module.exports.modal.confirmProceeding = {
