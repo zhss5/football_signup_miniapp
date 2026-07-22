@@ -1,11 +1,11 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-06-18
+- Date: 2026-07-22
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 - Baseline commit before the Web Admin QR-login implementation: `66b12ff Add test web admin CloudBase runtime`
-- Remote sync status before this handoff refresh: `origin/codex/version-2-web-admin...HEAD` = `0 0`
+- Remote sync status after this handoff commit: the local branch is expected to be `5` commits ahead of `origin/codex/version-2-web-admin`; no push was requested for this goal.
 
 ## 1. Current State
 
@@ -40,10 +40,10 @@ Version 2 still does not:
 
 Current uncommitted local changes are intentionally left outside this handoff update:
 
+- `cloudfunctions/updateActivityReview/manager-notifications.js` modified.
+- `cloudfunctions/updateUserManagerAlias/manager-notifications.js` modified.
+- `miniprogram/config/env.local.js.example` deleted.
 - `project.config.json` modified.
-- `miniprogram/config/env.local.js.mock` untracked.
-- `miniprogram/config/env.local.js.old` untracked.
-- `video/` untracked.
 
 Do not stage those files unless there is a separate explicit decision to change local configuration examples or project config.
 
@@ -192,16 +192,18 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260618-user-actions` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260722-stat-tabs` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
-- `tcb hosting deploy web-admin /admin` uploaded `12` files successfully in the test environment.
+- the latest `tcb hosting deploy web-admin /admin` uploaded `24` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry and static assets load `?v=20260618-user-actions`; hosted `app.js` and `styles.css` include the user-row action feedback hooks.
+- the hosted entry and static assets load `?v=20260722-stat-tabs`; hosted `app.js` and `styles.css` include the split statistics views and existing user-row action feedback hooks.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
+- the shared statistics workspace is named `统计分析` and separates `出勤统计` from `取消统计` while reusing one date/activity-type query.
+- the test environment `getAttendanceStats` deployment was verified from remote `CodeInfo` to include additive `cancellationDetails` rows.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
 - hosted `app.js` contains QR payload handling and admin view navigation state.
 - `bootstrapV2Collections` has been deployed and invoked in `cloudbase-miniapp-test-dfc753877`; `web_admin_sessions` exists, and a repeat invocation returned all V2 collections under `existing`.
@@ -232,6 +234,7 @@ Current web-admin capabilities:
 - user management manager alias edit through `updateUserManagerAlias`.
 - attendance edit through `setRegistrationAttendance`.
 - attendance statistics through `getAttendanceStats`.
+- separate attendance and final-outcome cancellation tables, detail dialogs, and CSV exports inside `统计分析`.
 - roster export through `exportActivityRoster`, with CSV generated in the browser.
 - activity operation logs through `listActivityLogs`.
 - notification logs through `listNotificationLogs`.
@@ -262,8 +265,29 @@ npm test
 
 Result:
 
-- `77` test suites passed.
-- `587` tests passed.
+- `83` test suites passed.
+- `774` tests passed.
+
+Additional checks run for the split statistics deployment:
+
+```bash
+npm test -- tests/cloudfunctions/getAttendanceStats.test.js tests/web-admin/activity-management.test.js --runInBand
+npm test -- tests/web-admin --runInBand
+npm test -- --runInBand
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn deploy getAttendanceStats --dir . --force --deployMode zip --json
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn detail getAttendanceStats --json
+npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 hosting deploy web-admin /admin
+git diff --check
+```
+
+Results:
+
+- backend target regression passed with `2` suites and `24` tests.
+- Web Admin regression passed with `9` suites and `96` tests.
+- full regression passed with `83` suites and `774` tests.
+- remote `CodeInfo` contains `cancellationDetails`; deployment from the function directory replaced the stale package successfully.
+- static hosting uploaded `24` files under `/admin/`.
+- authenticated browser smoke loaded `15` attendance rows and `18` cancellation rows; the cancellation detail dialog rendered `8` final-outcome rows, including one cancellation timestamp.
 
 Additional checks run for the test web-admin runtime and hosting work:
 

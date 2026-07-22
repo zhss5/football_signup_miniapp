@@ -33,8 +33,10 @@ TDD and verification:
 
 Deployment scope:
 
-- redeploy `getAttendanceStats` for the additive final-outcome detail contract.
-- redeploy `web-admin/` to the test environment `/admin/` path.
+- redeployed `getAttendanceStats` to `cloudbase-miniapp-test-dfc753877` from the function directory with explicit ZIP deployment.
+- verified the remote function `CodeInfo` contains `cancellationDetails`; the earlier repository-root deploy command updated function metadata but left the previous code package in place.
+- redeployed `web-admin/` to the test environment `/admin/` path with `24` files uploaded successfully.
+- authenticated browser smoke loaded `15` attendance rows and `18` cancellation rows, switched tabs without another login, changed the export command by active tab, and opened an `8`-row cancellation-detail dialog containing final outcomes and cancellation time.
 - no mini-program upload, collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover is required.
 
 ## 2026-07-21 - Self Registration Profile Editing
