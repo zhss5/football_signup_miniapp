@@ -28,6 +28,7 @@ function createFakeDb(options = {}) {
         activityType: 'external',
         insuranceLink: 'https://insurance.example.com/apply',
         notificationHint: 'Bring both kits',
+        lateCancellationNoticeWindowHours: 12,
         registrationNoticeThreshold: 16,
         coverImage: 'cloud://cover-a',
         coverThumbImage: 'cloud://cover-a-thumb',
@@ -144,6 +145,7 @@ test('organizer can start a copy draft from an activity they manage', async () =
     activityType: 'external',
     insuranceLink: 'https://insurance.example.com/apply',
     notificationHint: 'Bring both kits',
+    lateCancellationNoticeWindowHours: 12,
     registrationNoticeThreshold: 16,
     coverImage: 'cloud://cover-a',
     coverThumbImage: 'cloud://cover-a-thumb',
@@ -168,6 +170,42 @@ test('organizer can start a copy draft from an activity they manage', async () =
     { teamName: 'Red', maxMembers: 6, colorKey: 'red' }
   ]);
 });
+
+test.each([0, 168])(
+  'copy draft preserves valid late cancellation notice window %p',
+  async lateCancellationNoticeWindowHours => {
+    const result = await getActivityCopyDraft.main(
+      { activityId: 'activity_1' },
+      { OPENID: 'openid_owner' },
+      {
+        db: createFakeDb({
+          activity: { lateCancellationNoticeWindowHours }
+        })
+      }
+    );
+
+    expect(result.draft.lateCancellationNoticeWindowHours).toBe(
+      lateCancellationNoticeWindowHours
+    );
+  }
+);
+
+test.each([undefined, null, '', -1, 1.5, 169, 'six'])(
+  'copy draft defaults historical late cancellation notice window %p to six hours',
+  async lateCancellationNoticeWindowHours => {
+    const result = await getActivityCopyDraft.main(
+      { activityId: 'activity_1' },
+      { OPENID: 'openid_owner' },
+      {
+        db: createFakeDb({
+          activity: { lateCancellationNoticeWindowHours }
+        })
+      }
+    );
+
+    expect(result.draft.lateCancellationNoticeWindowHours).toBe(6);
+  }
+);
 
 test('copy draft excludes registrations, attendance, logs, subscription state, and source IDs', async () => {
   const db = createFakeDb();

@@ -5,6 +5,9 @@ const { businessError } = require('./errors');
 const { canEditActivity } = require('./roles');
 const { normalizeActivityType } = require('./validators');
 
+const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
+const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
+
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 async function getCurrentUser(db, openid) {
@@ -23,6 +26,17 @@ function normalizeString(value) {
 
 function normalizeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function normalizeLateCancellationNoticeWindowHours(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+  }
+
+  const hours = Number(value);
+  return Number.isInteger(hours) && hours >= 0 && hours <= MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS
+    ? hours
+    : DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
 }
 
 function buildReusableTeams(teams = []) {
@@ -63,6 +77,9 @@ function buildCopyDraft(activity, teams) {
     description: String(activity.description || ''),
     insuranceLink: normalizeString(activity.insuranceLink),
     notificationHint: normalizeString(activity.notificationHint),
+    lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+      activity.lateCancellationNoticeWindowHours
+    ),
     registrationNoticeThreshold: Number(activity.registrationNoticeThreshold) || 0,
     coverImage: imageList[0] || activity.coverImage || '',
     coverThumbImage: activity.coverThumbImage || '',
