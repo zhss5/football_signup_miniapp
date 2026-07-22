@@ -25,7 +25,7 @@ Complete the existing late-cancellation organizer notice by exposing its time wi
 }
 ```
 
-Both cloud functions validate the value independently of the mini-program. Omitted values use `6` for backward compatibility. Values below `0`, above `168`, non-integers, and non-numeric values are rejected.
+Both cloud functions validate the value independently of the mini-program. `createActivity` defaults an omitted value to `6`. `updateActivity` preserves the existing valid value when an older client omits the field; a missing or invalid historical value falls back to `6`. Values below `0`, above `168`, non-integers, and non-numeric values are rejected when explicitly submitted.
 
 Activity copy preserves a valid source value, including `0`. A historical source activity without the field produces a copy draft with `6`.
 
@@ -34,7 +34,7 @@ The mini-program local mock follows the same defaults and validation boundaries 
 ## Compatibility
 
 - Historical CloudBase activity documents are not migrated in place. Readers treat a missing field as `6`.
-- Existing V1 clients may omit the field; backend defaults keep their create and update requests valid.
+- Existing V1 clients may omit the field. Create requests default to `6`, while update requests preserve an existing valid configuration instead of resetting it.
 - The change is additive. Existing clients ignore the new field when reading activities.
 - The target SQL mapping remains `activities.late_cancellation_notice_window_hours INT NOT NULL DEFAULT 6`.
 - A future self-hosted API should expose the same camelCase API field while mapping it to the SQL snake_case column.

@@ -120,6 +120,8 @@ Completed:
 - `getAttendanceStats` now returns additive `cancellationDetails` final-outcome rows with stable IDs, activity type, signup/alias snapshots, `joined` / `cancelled` enum values, and timestamps. Existing attendance fields and attendance-only `details` remain compatible.
 - SQL migration readiness treats cancellation detail rows as an API projection derived from registrations, requiring no CloudBase collection or SQL schema migration.
 - full regression after the split statistics implementation passed with `npm test -- --runInBand` (`83` suites, `774` tests). Deployment requires `getAttendanceStats` and Web Admin static hosting only; no mini-program upload, runtime MySQL migration, dual-write, or self-hosted HTTP API switch is required.
+- 2026-07-22 configurable late-cancellation window follow-up implemented: mini-program activity create/edit/copy now exposes `lateCancellationNoticeWindowHours` as `临近取消通知（小时）`, defaults to `6`, accepts integer `0..168`, and uses `0` to disable the notice. Cloud functions validate and persist the API field, copy drafts preserve it, and legacy update requests preserve an existing valid value.
+- full regression after the configurable window implementation passed with direct Jest execution (`83` suites, `805` tests). `createActivity`, `updateActivity`, and `getActivityCopyDraft` were deployed to `cloudbase-miniapp-test-dfc753877` and verified from remote `CodeInfo`; a new mini-program experience build still needs to be uploaded to expose the field on device. No Web Admin redeployment or database migration is required.
 
 ## 4. Planned Version 2 Scope
 
@@ -225,4 +227,5 @@ Deployment readiness tasks remain:
 - seed the first `super_admin` manually in CloudBase before using role management.
 - upload the mini-program build and host `web-admin/` after CloudBase function deployment.
 - deploy `updateMyRegistrationProfile` and upload the matching mini-program build before testing self registration profile editing.
+- upload a new mini-program experience build to expose the configurable late-cancellation notice window; the matching `createActivity`, `updateActivity`, and `getActivityCopyDraft` functions are already deployed in the test environment.
 - keep invite-code signup, automatic reminders, payments/refunds, and runtime MySQL/self-hosted migration deferred.

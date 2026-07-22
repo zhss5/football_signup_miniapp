@@ -4,6 +4,37 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-22 - Configurable Late Cancellation Notice Window
+
+Completed the create/edit/copy configuration path for the existing late-cancellation organizer notice.
+
+Delivered behavior:
+
+- mini-program notification settings now show `临近取消通知（小时）` with a default of `6`.
+- accepted values are integers from `0` through `168`; `0` disables the notice for that activity.
+- `createActivity` validates and stores the field, defaulting omitted legacy requests to `6`.
+- `updateActivity` validates explicit values and preserves an existing valid value when a V1 client omits the new field; missing or invalid historical values fall back to `6`.
+- `getActivityCopyDraft` and mini-program edit/copy form builders preserve valid values, including `0`, and default missing or invalid historical values to `6`.
+- Chinese and English labels, help text, validation errors, and wrapped cloud-error translation use the same `0..168` contract.
+- the local CloudBase client mirrors create/update persistence and legacy compatibility.
+- the activity creator must still accept the existing manager registration notification subscription; notification sending remains best-effort and does not roll back cancellation.
+
+TDD and verification:
+
+- cloud-function RED tests first failed for missing persistence, validation, copy behavior, and V1 update preservation.
+- mini-program RED tests first failed for missing form mapping, input binding, validation, localization, and local persistence.
+- backend target regression passed with `44` tests across create, update, and copy before the V1 compatibility follow-up; create/update compatibility regression then passed with `31` tests.
+- mini-program target and layout regression passed with `8` suites and `135` tests.
+- full regression passed through direct Jest execution with `83` suites and `805` tests. Direct Jest was used instead of the `npm test` pretest hook to avoid overwriting unrelated uncommitted copied helper files.
+- `git diff --check` passed for the scoped implementation files with line-ending warnings only.
+
+Deployment scope:
+
+- deployed `createActivity`, `updateActivity`, and `getActivityCopyDraft` to `cloudbase-miniapp-test-dfc753877` from their function directories with `--force --deployMode zip`; the CLI reported all three deployments successful.
+- remote function details confirm all three code packages contain `lateCancellationNoticeWindowHours` and the `168` range boundary.
+- upload a new mini-program experience build before device smoke testing the new field; no Web Admin static redeployment is required.
+- no collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover was performed.
+
 ## 2026-07-22 - Cancellation Rate Tone Direction
 
 Corrected the cancellation-rate indicator so its risk direction differs from attendance rate.

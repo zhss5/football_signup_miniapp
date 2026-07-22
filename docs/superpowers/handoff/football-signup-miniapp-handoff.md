@@ -5,7 +5,7 @@
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 - Baseline commit before the Web Admin QR-login implementation: `66b12ff Add test web admin CloudBase runtime`
-- Remote sync status after this handoff commit: the local branch is expected to be `5` commits ahead of `origin/codex/version-2-web-admin`; no push was requested for this goal.
+- Remote sync status after this handoff commit: the local branch is expected to be `12` commits ahead of `origin/codex/version-2-web-admin`; no push was requested for this goal.
 
 ## 1. Current State
 
@@ -28,6 +28,7 @@ Version 2 adds:
 - explicit SQL migration readiness documentation for a future MySQL 8.x and self-hosted server migration.
 - explicit V2 CloudBase collection bootstrap through `bootstrapV2Collections` and `scripts/deploy-v2-bootstrap.ps1`.
 - test-environment web-admin runtime initialization and CloudBase static hosting under `/admin`.
+- configurable activity-level late-cancellation organizer notice windows in mini-program create/edit/copy flows.
 
 Version 2 still does not:
 
@@ -147,6 +148,13 @@ $devtoolsCli = '<path-to-wechat-devtools>\cli.bat'
 
 V2 changed some V1-existing cloud functions. If review, trial, and release builds share the same `CLOUD_ENV_ID`, deploying changed functions affects all builds that call that environment.
 
+Latest test-environment function deployment:
+
+- `createActivity`, `updateActivity`, and `getActivityCopyDraft` were redeployed to `cloudbase-miniapp-test-dfc753877` for the configurable late-cancellation notice window.
+- remote function details confirm each deployed code package contains `lateCancellationNoticeWindowHours` and the `168` validation boundary.
+- `cancelRegistration` was not redeployed because its notification execution logic did not change.
+- upload a new mini-program experience build to expose the new create/edit field on device; no Web Admin static redeployment is required.
+
 ## 5. First Admin Setup
 
 Seed the first `super_admin` manually in CloudBase before using role management:
@@ -260,14 +268,32 @@ Important rules:
 
 Latest verification before this handoff refresh:
 
-```bash
-npm test
+```powershell
+.\node_modules\.bin\jest.cmd --runInBand
 ```
 
 Result:
 
 - `83` test suites passed.
-- `774` tests passed.
+- `805` tests passed.
+
+Additional checks run for the configurable late-cancellation window:
+
+```powershell
+.\node_modules\.bin\jest.cmd --runInBand tests/cloudfunctions/createActivity.test.js tests/cloudfunctions/updateActivity.test.js tests/cloudfunctions/getActivityCopyDraft.test.js
+.\node_modules\.bin\jest.cmd --runInBand tests/miniprogram/utils/activity-draft.test.js tests/miniprogram/utils/validators.test.js tests/miniprogram/pages/activity-create-submit.test.js tests/miniprogram/pages/activity-create-default-teams.test.js tests/miniprogram/styles/activity-create-validation-style.test.js tests/miniprogram/styles/activity-create-layout.test.js tests/miniprogram/utils/i18n.test.js tests/miniprogram/mocks/local-cloud.test.js
+'' | npx -y -p @cloudbase/cli@3.5.6 tcb -e cloudbase-miniapp-test-dfc753877 fn deploy <function-name> --dir . --force --deployMode zip --json
+git diff --check
+```
+
+Results:
+
+- backend create/update/copy regression passed, including V1 update omission compatibility.
+- mini-program target regression passed with `8` suites and `135` tests.
+- full regression passed with `83` suites and `805` tests.
+- deployed functions: `createActivity`, `updateActivity`, `getActivityCopyDraft`.
+- remote `CodeInfo` for all three functions contains the new field and range boundary.
+- `npm test` was not used because its pretest shared-file copy would overwrite unrelated uncommitted helper changes; direct Jest ran the complete suite without altering them.
 
 Additional checks run for the split statistics deployment:
 

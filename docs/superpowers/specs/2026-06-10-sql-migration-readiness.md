@@ -134,7 +134,9 @@ CREATE TABLE activities (
   PRIMARY KEY (activity_id),
   KEY idx_activities_status_start_at (status, start_at),
   KEY idx_activities_organizer_start_at (organizer_openid, start_at),
-  KEY idx_activities_confirm_status_end_at (confirm_status, end_at)
+  KEY idx_activities_confirm_status_end_at (confirm_status, end_at),
+  CONSTRAINT chk_activities_late_cancellation_notice_window_hours
+    CHECK (late_cancellation_notice_window_hours BETWEEN 0 AND 168)
 );
 ```
 
@@ -150,7 +152,7 @@ Mini-program list pagination uses the existing `listActivities` API with stable 
 
 The mini-program My page does not show overdue unresolved prompts. V2 adds no CloudBase field or SQL column for that prompt.
 
-Post-V2 bench queue changes keep `signup_limit_total` as a stored compatibility field, but new and edited activities compute it from the sum of active regular-team capacity plus active bench capacity. New clients may send API-only `benchCapacity`; the backend persists the value through the generated or updated bench `activity_teams.maxMembers` row rather than adding a separate CloudBase activity field. Missing `benchCapacity` keeps legacy `signupLimitTotal` behavior for old clients. The post-V2 late cancellation notice uses `late_cancellation_notice_window_hours`; missing CloudBase values default to `6`, and `0` disables the notice.
+Post-V2 bench queue changes keep `signup_limit_total` as a stored compatibility field, but new and edited activities compute it from the sum of active regular-team capacity plus active bench capacity. New clients may send API-only `benchCapacity`; the backend persists the value through the generated or updated bench `activity_teams.maxMembers` row rather than adding a separate CloudBase activity field. Missing `benchCapacity` keeps legacy `signupLimitTotal` behavior for old clients. The post-V2 late cancellation notice uses `late_cancellation_notice_window_hours`; accepted API and SQL values are integers from `0` through `168`, missing CloudBase values default to `6`, and `0` disables the notice.
 
 ### `activity_teams`
 
@@ -382,7 +384,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `activities.startAt` | `activities.start_at` | Parse ISO string to `DATETIME(3)`. |
 | `activities.endAt` | `activities.end_at` | Parse ISO string to `DATETIME(3)`. |
 | `activities.signupDeadlineAt` | `activities.signup_deadline_at` | Parse ISO string to `DATETIME(3)`. |
-| `activities.lateCancellationNoticeWindowHours` | `activities.late_cancellation_notice_window_hours` | Integer hours before `startAt`; missing values default to `6`; `0` disables late-cancellation notice. |
+| `activities.lateCancellationNoticeWindowHours` | `activities.late_cancellation_notice_window_hours` | Integer `0..168` hours before `startAt`; missing values default to `6`; `0` disables late-cancellation notice. |
 | `activities.location` | `activities.location` | JSON object. |
 | `activities.imageList` | `activities.image_list` | JSON array. |
 | `activities.detailImages` | `activities.detail_images` | JSON array. |
@@ -438,7 +440,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 16. Keep overdue unresolved prompts out of the mini-program My page unless a later workflow needs assignment, snooze, or resolution tracking.
 17. Run `bootstrapV2Collections` as an explicit CloudBase readiness step for existing environments. It creates missing V2 collections only and does not perform runtime MySQL migration, dual-write, or HTTP API cutover.
 18. Treat missing `activities.activityType` as `internal`, including roster export and statistics filters.
-19. Treat missing `activities.lateCancellationNoticeWindowHours` as `6`; treat `0` as disabled.
+19. Accept only integer `activities.lateCancellationNoticeWindowHours` values from `0` through `168`. Treat missing historical values as `6` and `0` as disabled. On API create, omission defaults to `6`; on API update, omission preserves the existing valid value so older clients do not reset V2 configuration.
 20. Keep `activities.signupLimitTotal` for compatibility, but compute it for new and edited activities from active regular-team capacity plus active bench capacity when API `benchCapacity` is present; missing `benchCapacity` keeps the legacy total-capacity contract.
 21. Enforce bench queue rules in the backend for both real-user and proxy signup. If a stale client requests a bench team while a regular slot exists, assign the participant to the first active regular team by `sort` and return additive assignment metadata. Keep a proxy request for a specific regular team bound to that team. Limit generic `moveRegistration` calls to regular-to-regular moves; reject any source or target with `team_type = 'bench'` so bench-to-regular transitions remain ordered automatic promotions.
 22. Keep participant cancellation statistics based on one final outcome per participant per activity. Manager removals are excluded from cancellation rate.
@@ -491,6 +493,7 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - Notification-log status counts match CloudBase for `sent`, `failed`, and `skipped`.
 - New and edited activities keep `activities.signup_limit_total` equal to active regular-team capacity plus active bench capacity.
 - New and edited activities have at most one active `activity_teams.team_type = 'bench'` row.
+- Every `activities.late_cancellation_notice_window_hours` value is an integer from `0` through `168`; source rows without a value import as `6`, and source value `0` remains disabled after migration.
 - Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
 - Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after participant cancellation or manager removal.
 - Proxy registrations requested for the bench resolve to a regular team whenever regular capacity exists; otherwise they remain in the bench. Their `proxy_signup_created` payload records the actual team and additive request/assignment metadata.
