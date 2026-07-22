@@ -8,6 +8,8 @@ const { nowIso } = require('./time');
 const { normalizeActivityType, validateActivityDraft } = require('./validators');
 
 const BENCH_TEAM_NAME = '\u66ff\u8865';
+const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
+const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -78,6 +80,25 @@ function normalizeRegistrationNoticeThreshold(value, signupLimitTotal) {
   return getDefaultRegistrationNoticeThreshold(signupLimitTotal);
 }
 
+function normalizeLateCancellationNoticeWindowHours(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS;
+  }
+
+  const hours = Number(value);
+  if (
+    !Number.isInteger(hours) ||
+    hours < 0 ||
+    hours > MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS
+  ) {
+    throw businessError(
+      'Late cancellation notice window must be an integer between 0 and 168 hours'
+    );
+  }
+
+  return hours;
+}
+
 async function getCurrentUser(db, openid) {
   const result = await db
     .collection(COLLECTIONS.USERS)
@@ -130,6 +151,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     description: event.description || '',
     insuranceLink: String(event.insuranceLink || '').trim(),
     notificationHint: String(event.notificationHint || '').trim(),
+    lateCancellationNoticeWindowHours: normalizeLateCancellationNoticeWindowHours(
+      event.lateCancellationNoticeWindowHours
+    ),
     registrationNoticeThreshold: normalizeRegistrationNoticeThreshold(
       event.registrationNoticeThreshold,
       signupLimitTotal

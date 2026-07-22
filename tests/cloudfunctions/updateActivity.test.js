@@ -263,6 +263,41 @@ test('updateActivity defaults missing activityType to internal and rejects inval
   ).rejects.toThrow('Invalid activity type');
 });
 
+test('updateActivity persists a validated late cancellation notice window and audits the change', async () => {
+  const defaultDb = createFakeDb();
+  const defaultResult = await updateActivity.main(
+    buildUpdatePayload(),
+    { OPENID: 'openid_owner' },
+    { db: defaultDb, now: '2026-04-20T10:00:00.000Z' }
+  );
+  expect(defaultDb.state.activities.activity_1.lateCancellationNoticeWindowHours).toBe(6);
+  expect(defaultResult.changedFields).toContain('lateCancellationNoticeWindowHours');
+
+  for (const hours of [0, 168]) {
+    const db = createFakeDb({ activity: { lateCancellationNoticeWindowHours: 6 } });
+    const result = await updateActivity.main(
+      buildUpdatePayload({ lateCancellationNoticeWindowHours: hours }),
+      { OPENID: 'openid_owner' },
+      { db, now: '2026-04-20T10:00:00.000Z' }
+    );
+    expect(db.state.activities.activity_1.lateCancellationNoticeWindowHours).toBe(hours);
+    expect(result.changedFields).toContain('lateCancellationNoticeWindowHours');
+  }
+});
+
+test.each([-1, 1.5, 169, 'six'])(
+  'updateActivity rejects invalid late cancellation notice window %p',
+  async lateCancellationNoticeWindowHours => {
+    await expect(
+      updateActivity.main(
+        buildUpdatePayload({ lateCancellationNoticeWindowHours }),
+        { OPENID: 'openid_owner' },
+        { db: createFakeDb(), now: '2026-04-20T10:00:00.000Z' }
+      )
+    ).rejects.toThrow('Late cancellation notice window must be an integer between 0 and 168 hours');
+  }
+);
+
 test('updateActivity lets an admin edit another organizer activity', async () => {
   const db = createFakeDb();
 

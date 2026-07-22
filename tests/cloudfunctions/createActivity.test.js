@@ -26,6 +26,23 @@ function createFakeDbWithUserRoles(roles, writes = []) {
   };
 }
 
+function buildCreatePayload(overrides = {}) {
+  return {
+    title: 'Saturday 8-10',
+    startAt: '2026-04-26T20:00:00.000Z',
+    endAt: '2026-04-26T22:00:00.000Z',
+    signupDeadlineAt: '2026-04-26T19:30:00.000Z',
+    addressText: 'Half Stone',
+    signupLimitTotal: 12,
+    imageList: [],
+    teams: [
+      { teamName: 'White', maxMembers: 6 },
+      { teamName: 'Red', maxMembers: 6 }
+    ],
+    ...overrides
+  };
+}
+
 test('createActivity rejects regular users before writing activity data', async () => {
   const writes = [];
   const fakeDb = createFakeDbWithUserRoles(['user'], writes);
@@ -124,6 +141,50 @@ test('createActivity defaults missing activityType to internal and rejects inval
     )
   ).rejects.toThrow('Invalid activity type');
 });
+
+test('createActivity persists a validated late cancellation notice window with a six hour default', async () => {
+  const defaultWrites = [];
+  await createActivity.main(
+    buildCreatePayload(),
+    { OPENID: 'openid_a' },
+    {
+      db: createFakeDbWithUserRoles(['organizer'], defaultWrites),
+      now: '2026-04-19T10:00:00.000Z'
+    }
+  );
+  expect(defaultWrites[0].data.lateCancellationNoticeWindowHours).toBe(6);
+
+  for (const hours of [0, 168]) {
+    const writes = [];
+    await createActivity.main(
+      buildCreatePayload({ lateCancellationNoticeWindowHours: hours }),
+      { OPENID: 'openid_a' },
+      {
+        db: createFakeDbWithUserRoles(['organizer'], writes),
+        now: '2026-04-19T10:00:00.000Z'
+      }
+    );
+    expect(writes[0].data.lateCancellationNoticeWindowHours).toBe(hours);
+  }
+});
+
+test.each([-1, 1.5, 169, 'six'])(
+  'createActivity rejects invalid late cancellation notice window %p',
+  async lateCancellationNoticeWindowHours => {
+    const writes = [];
+    await expect(
+      createActivity.main(
+        buildCreatePayload({ lateCancellationNoticeWindowHours }),
+        { OPENID: 'openid_a' },
+        {
+          db: createFakeDbWithUserRoles(['organizer'], writes),
+          now: '2026-04-19T10:00:00.000Z'
+        }
+      )
+    ).rejects.toThrow('Late cancellation notice window must be an integer between 0 and 168 hours');
+    expect(writes).toEqual([]);
+  }
+);
 
 test('createActivity stores map location, deadline, image list, and auto generates a bench team', async () => {
   const writes = [];
