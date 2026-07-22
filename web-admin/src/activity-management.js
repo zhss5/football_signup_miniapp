@@ -142,11 +142,25 @@
       details: (Array.isArray(row.details) ? row.details : []).map(detail => ({
         activityId: detail.activityId || '',
         activityTitle: detail.activityTitle || '',
+        activityType: normalizeActivityType(detail.activityType),
         teamName: detail.teamName || '',
         signupName: detail.signupName || '',
         managerAlias: detail.managerAlias || '',
         attendanceStatus: detail.attendanceStatus || 'present',
         startAt: formatBeijingDateTime(detail.startAt)
+      })),
+      cancellationDetails: (Array.isArray(row.cancellationDetails)
+        ? row.cancellationDetails
+        : []).map(detail => ({
+          activityId: detail.activityId || '',
+          activityTitle: detail.activityTitle || '',
+          activityType: normalizeActivityType(detail.activityType),
+          startAt: formatBeijingDateTime(detail.startAt),
+          registrationId: detail.registrationId || '',
+          signupName: detail.signupName || '',
+          managerAlias: detail.managerAlias || '',
+          outcome: detail.outcome === 'cancelled' ? 'cancelled' : 'joined',
+          cancelledAt: formatBeijingDateTime(detail.cancelledAt)
       }))
     }));
   }

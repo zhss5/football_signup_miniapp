@@ -639,6 +639,39 @@ textarea {
   cursor: wait;
 }
 
+.statistics-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 4px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #f3f6f4;
+}
+
+.statistics-tabs button {
+  min-width: 104px;
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.statistics-tabs button:hover {
+  color: var(--admin-green);
+}
+
+.statistics-tabs button.is-active {
+  background: #ffffff;
+  color: var(--admin-green);
+  box-shadow: 0 1px 4px rgba(15, 23, 18, 0.1);
+}
+
 .toolbar button.is-loading::before,
 .data-table button.is-loading::before,
 .log-actions button.is-loading::before {
@@ -702,12 +735,14 @@ textarea {
 }
 
 .data-table tr[data-activity-id],
-.data-table tr[data-attendance-stats-index] {
+.data-table tr[data-attendance-stats-index],
+.data-table tr[data-cancellation-stats-index] {
   cursor: pointer;
 }
 
 .data-table tr[data-activity-id]:hover td,
-.data-table tr[data-attendance-stats-index]:hover td {
+.data-table tr[data-attendance-stats-index]:hover td,
+.data-table tr[data-cancellation-stats-index]:hover td {
   background: #f7fbf8;
 }
 

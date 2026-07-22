@@ -39,10 +39,11 @@
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
   const ATTENDANCE_STATS_EMPTY_TEXT = '统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
+  const CANCELLATION_STATS_EMPTY_TEXT = '当前范围内没有最终报名或取消记录。';
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',
-    'attendance-stats': '出勤统计'
+    'attendance-stats': '统计分析'
   };
   const ROLE_LABELS = {
     user: '普通用户',
@@ -55,6 +56,7 @@
     cancelled: '已取消',
     confirmed: '已确认',
     draft: '草稿',
+    joined: '保留报名',
     pending: '待处理',
     present: '出勤',
     published: '已发布'
@@ -304,8 +306,11 @@
       selectedActivityId: '',
       rosterRows: [],
       statsRows: [],
+      activeStatisticsTab: 'attendance',
       attendanceDetailRows: [],
       attendanceDetailTitle: '',
+      cancellationDetailRows: [],
+      cancellationDetailTitle: '',
       activityLogRows: [],
       activityDetailLogRows: [],
       activityDetailRosterKeyword: '',
@@ -604,6 +609,7 @@
 
       renderCurrentUserAccount(user, access.roles);
       renderAdminNavigation(user);
+      renderStatisticsTabs();
 
       return true;
     }
@@ -928,13 +934,60 @@
       );
     }
 
+    function getAttendanceStatsRows() {
+      return state.statsRows.filter(row => Number(row.signupCount) > 0);
+    }
+
+    function getCancellationStatsRows() {
+      return state.statsRows.filter(
+        row => Number(row.effectiveSignupActivityCount) + Number(row.cancelledActivityCount) > 0
+      );
+    }
+
+    function renderStatisticsTabs() {
+      queryAll('[data-statistics-tab]').forEach(button => {
+        const tabId = button && button.dataset ? button.dataset.statisticsTab : '';
+        const active = tabId === state.activeStatisticsTab;
+
+        if (button.classList && typeof button.classList.toggle === 'function') {
+          button.classList.toggle('is-active', active);
+        }
+
+        if (typeof button.setAttribute === 'function') {
+          button.setAttribute('aria-selected', active ? 'true' : 'false');
+        }
+      });
+
+      queryAll('[data-statistics-pane]').forEach(pane => {
+        const paneId = pane && pane.dataset ? pane.dataset.statisticsPane : '';
+        setHidden(pane, paneId !== state.activeStatisticsTab);
+      });
+
+      const exportButton = query('[data-stats-export-button]');
+      if (exportButton) {
+        exportButton.textContent = state.activeStatisticsTab === 'cancellation'
+          ? '导出取消统计 CSV'
+          : '导出出勤统计 CSV';
+      }
+    }
+
+    function setActiveStatisticsTab(tabId) {
+      if (tabId !== 'attendance' && tabId !== 'cancellation') {
+        return;
+      }
+
+      state.activeStatisticsTab = tabId;
+      renderStatisticsTabs();
+    }
+
     function renderStatsRows() {
       const table = query('[data-attendance-stats-table]');
       const empty = query('[data-attendance-stats-empty]');
-      const hasRows = state.statsRows.length > 0;
+      const rows = getAttendanceStatsRows();
+      const hasRows = rows.length > 0;
       const count = query('[data-attendance-stats-count]');
       if (count) {
-        count.textContent = `共 ${state.statsRows.length} 行`;
+        count.textContent = `共 ${rows.length} 行`;
       }
 
       if (empty) {
@@ -942,20 +995,52 @@
         setHidden(empty, hasRows);
       }
 
+      if (table) {
+        table.innerHTML = rows
+          .map((row, index) => (
+            `<tr data-attendance-stats-index="${index}" tabindex="0">` +
+            `<td>${index + 1}</td>` +
+            `<td>${escapeHtml(row.participantName)}</td>` +
+            `<td>${escapeHtml(row.managerAlias)}</td>` +
+            `<td>${escapeHtml(row.signupCount)}</td>` +
+            `<td>${escapeHtml(row.presentCount)}</td>` +
+            `<td>${escapeHtml(row.absentCount)}</td>` +
+            `<td>${renderRatePill(row.attendanceRateText)}</td>` +
+            `</tr>`
+          ))
+          .join('');
+      }
+
+      renderCancellationStatsRows();
+    }
+
+    function renderCancellationStatsRows() {
+      const table = query('[data-cancellation-stats-table]');
+      const empty = query('[data-cancellation-stats-empty]');
+      const rows = getCancellationStatsRows();
+      const hasRows = rows.length > 0;
+      const count = query('[data-cancellation-stats-count]');
+
+      if (count) {
+        count.textContent = `共 ${rows.length} 行`;
+      }
+
+      if (empty) {
+        empty.textContent = hasRows ? '' : CANCELLATION_STATS_EMPTY_TEXT;
+        setHidden(empty, hasRows);
+      }
+
       if (!table) {
         return;
       }
 
-      table.innerHTML = state.statsRows
+      table.innerHTML = rows
         .map((row, index) => (
-          `<tr data-attendance-stats-index="${index}" tabindex="0">` +
+          `<tr data-cancellation-stats-index="${index}" tabindex="0">` +
           `<td>${index + 1}</td>` +
           `<td>${escapeHtml(row.participantName)}</td>` +
           `<td>${escapeHtml(row.managerAlias)}</td>` +
-          `<td>${escapeHtml(row.signupCount)}</td>` +
-          `<td>${escapeHtml(row.presentCount)}</td>` +
-          `<td>${escapeHtml(row.absentCount)}</td>` +
-          `<td>${renderRatePill(row.attendanceRateText)}</td>` +
+          `<td>${escapeHtml(row.effectiveSignupActivityCount)}</td>` +
           `<td>${escapeHtml(row.cancelledActivityCount)}</td>` +
           `<td>${renderRatePill(row.cancelRateText)}</td>` +
           `</tr>`
@@ -992,7 +1077,7 @@
     }
 
     function showAttendanceDetail(index) {
-      const row = state.statsRows[Number(index)];
+      const row = getAttendanceStatsRows()[Number(index)];
       const modal = query('[data-attendance-detail]');
       const title = query('[data-attendance-detail-title]');
       if (!row || !modal) {
@@ -1025,6 +1110,64 @@
       state.attendanceDetailTitle = '';
       renderAttendanceDetailRows();
       setHidden(query('[data-attendance-detail]'), true);
+    }
+
+    function renderCancellationDetailRows() {
+      const table = query('[data-cancellation-detail-table]');
+      const count = query('[data-cancellation-detail-count]');
+      const rows = state.cancellationDetailRows || [];
+
+      if (count) {
+        count.textContent = `共 ${rows.length} 行`;
+      }
+
+      if (!table) {
+        return;
+      }
+
+      table.innerHTML = rows
+        .map((row, index) => (
+          `<tr>` +
+          `<td>${index + 1}</td>` +
+          `<td>${escapeHtml(row.activityTitle || row.activityId)}</td>` +
+          `<td>${renderTypePill(formatActivityTypeText(row.activityType))}</td>` +
+          `<td>${escapeHtml(row.startAt)}</td>` +
+          `<td>${escapeHtml(row.signupName)}</td>` +
+          `<td>${escapeHtml(row.managerAlias)}</td>` +
+          `<td>${renderStatusPills(row.outcome, STATUS_LABELS)}</td>` +
+          `<td>${escapeHtml(row.cancelledAt || '-')}</td>` +
+          `</tr>`
+        ))
+        .join('');
+    }
+
+    function showCancellationDetail(index) {
+      const row = getCancellationStatsRows()[Number(index)];
+      const modal = query('[data-cancellation-detail]');
+      const title = query('[data-cancellation-detail-title]');
+      if (!row || !modal) {
+        return;
+      }
+
+      const name = String(row.managerAlias || row.participantName || '').trim();
+      state.cancellationDetailRows = Array.isArray(row.cancellationDetails)
+        ? row.cancellationDetails.slice()
+        : [];
+      state.cancellationDetailTitle = name ? `${name} 取消明细` : '取消明细';
+
+      if (title) {
+        title.textContent = state.cancellationDetailTitle;
+      }
+
+      renderCancellationDetailRows();
+      setHidden(modal, false);
+    }
+
+    function closeCancellationDetail() {
+      state.cancellationDetailRows = [];
+      state.cancellationDetailTitle = '';
+      renderCancellationDetailRows();
+      setHidden(query('[data-cancellation-detail]'), true);
     }
 
     function renderActivityLogRows() {
@@ -1585,6 +1728,7 @@
       });
       state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
       renderStatsRows();
+      renderStatisticsTabs();
     }
 
     function writeExportOutput(csv) {
@@ -1636,7 +1780,8 @@
     }
 
     function exportAttendanceStats() {
-      if (!state.statsRows.length) {
+      const attendanceRows = getAttendanceStatsRows();
+      if (!attendanceRows.length) {
         const empty = query('[data-attendance-stats-empty]');
         if (empty) {
           empty.textContent = '请先加载出勤统计后再导出。';
@@ -1646,18 +1791,47 @@
         return;
       }
 
-      const rows = state.statsRows.map(row => ({
+      const rows = attendanceRows.map(row => ({
         参与者: row.participantName,
         备注: row.managerAlias,
-        报名次数: row.signupCount,
+        应出勤次数: row.signupCount,
         出勤: row.presentCount,
         缺勤: row.absentCount,
-        出勤率: row.attendanceRateText,
-        取消次数: row.cancelledActivityCount,
-        取消率: row.cancelRateText
+        出勤率: row.attendanceRateText
       }));
       const csv = activityUi.rowsToCsv(rows);
       downloadCsv('attendance-stats.csv', csv);
+    }
+
+    function exportCancellationStats() {
+      const rows = getCancellationStatsRows();
+      if (!rows.length) {
+        const empty = query('[data-cancellation-stats-empty]');
+        if (empty) {
+          empty.textContent = '请先加载取消统计后再导出。';
+          setHidden(empty, false);
+        }
+        writeExportOutput('');
+        return;
+      }
+
+      const csv = activityUi.rowsToCsv(rows.map(row => ({
+        参与者: row.participantName,
+        备注: row.managerAlias,
+        最终保留报名数: row.effectiveSignupActivityCount,
+        最终取消数: row.cancelledActivityCount,
+        取消率: row.cancelRateText
+      })));
+      downloadCsv('cancellation-stats.csv', csv);
+    }
+
+    function exportActiveStatistics() {
+      if (state.activeStatisticsTab === 'cancellation') {
+        exportCancellationStats();
+        return;
+      }
+
+      exportAttendanceStats();
     }
 
     function exportActivityRosterView() {
@@ -1727,6 +1901,9 @@
       state.statsRows = [];
       state.attendanceDetailRows = [];
       state.attendanceDetailTitle = '';
+      state.cancellationDetailRows = [];
+      state.cancellationDetailTitle = '';
+      state.activeStatisticsTab = 'attendance';
       state.activityLogRows = [];
       state.activityDetailLogRows = [];
       state.activityDetailRosterKeyword = '';
@@ -1737,6 +1914,7 @@
       state.exportCsv = '';
       hideActivityContextMenu();
       closeAttendanceDetail();
+      closeCancellationDetail();
 
       if (api && typeof api.setWebAdminSessionToken === 'function') {
         api.setWebAdminSessionToken('');
@@ -1882,6 +2060,12 @@
             return;
           }
 
+          const statisticsTab = event.target.closest('[data-statistics-tab]');
+          if (statisticsTab) {
+            setActiveStatisticsTab(statisticsTab.dataset.statisticsTab);
+            return;
+          }
+
           const button = event.target.closest('[data-action]');
           if (!button) {
             const row = event.target.closest('[data-activity-id]');
@@ -1925,6 +2109,11 @@
 
           if (button.dataset.action === 'close-attendance-detail') {
             closeAttendanceDetail();
+            return;
+          }
+
+          if (button.dataset.action === 'close-cancellation-detail') {
+            closeCancellationDetail();
             return;
           }
 
@@ -1984,7 +2173,7 @@
           }
 
           if (button.dataset.action === 'export-attendance-stats') {
-            exportAttendanceStats();
+            exportActiveStatistics();
             return;
           }
 
@@ -2046,6 +2235,12 @@
         });
 
         appRoot.addEventListener('dblclick', event => {
+          const cancellationStatsRow = event.target.closest('[data-cancellation-stats-index]');
+          if (cancellationStatsRow) {
+            showCancellationDetail(cancellationStatsRow.dataset.cancellationStatsIndex);
+            return;
+          }
+
           const statsRow = event.target.closest('[data-attendance-stats-index]');
           if (statsRow) {
             showAttendanceDetail(statsRow.dataset.attendanceStatsIndex);

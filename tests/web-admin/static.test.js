@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260720-cancel-stats';
+const WEB_ADMIN_ASSET_VERSION = '20260722-stat-tabs';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -42,11 +42,29 @@ test('web admin workspace uses a Chinese sidebar plus independent content views'
   expect(html).toContain('data-admin-view="attendance-stats"');
   expect(html).toContain('用户管理');
   expect(html).toContain('活动管理');
+  expect(html).toContain('统计分析');
   expect(html).toContain('出勤统计');
+  expect(html).toContain('取消统计');
   expect(html).not.toContain('全局日志');
   expect(html).not.toContain('data-nav-target="exports"');
   expect(html).not.toContain('data-admin-view="exports"');
   expect(html).not.toContain('名单导出');
+});
+
+test('statistics workspace separates attendance and cancellation into focused tabs', () => {
+  const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+
+  expect(html).toContain('data-nav-target="attendance-stats">统计分析</button>');
+  expect(html).toContain('data-statistics-tab="attendance"');
+  expect(html).toContain('data-statistics-tab="cancellation"');
+  expect(html).toContain('data-statistics-pane="attendance"');
+  expect(html).toContain('data-statistics-pane="cancellation"');
+  expect(html).toContain('data-cancellation-stats-table');
+  expect(html).toContain('data-cancellation-stats-empty');
+  expect(html).toContain('data-cancellation-detail');
+  expect(html).toContain('data-cancellation-detail-table');
+  expect(html).toContain('<th>最终保留报名数</th>');
+  expect(html).toContain('<th>最终取消数</th>');
 });
 
 test('web admin static shell keeps existing forms and action hooks with Chinese labels', () => {
@@ -134,8 +152,10 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
     ? html.slice(statsStart, statsEnd)
     : '';
   expect(statsBlock).toContain('<th>备注</th>');
-  expect(statsBlock).toContain('<th>取消次数</th>');
-  expect(statsBlock).toContain('<th>取消率</th>');
+  expect(statsBlock).toContain('<th>应出勤次数</th>');
+  expect(statsBlock).not.toContain('<th>最终取消数</th>');
+  expect(html).toContain('<th>最终保留报名数</th>');
+  expect(html).toContain('<th>最终取消数</th>');
   expect(html).not.toContain('data-action="export-roster"');
   expect(html).not.toContain('data-action="load-activity-logs"');
   expect(html).not.toContain('data-action="load-notification-logs"');

@@ -233,12 +233,26 @@ test('stats and log row builders keep stable display fields', () => {
         cancelRate: 0.3333,
         details: [
           {
+            activityType: 'external',
             activityTitle: 'Sunday Match',
             teamName: 'White',
             signupName: 'Alex',
             managerAlias: 'Left foot',
             attendanceStatus: 'absent',
             startAt: '2026-06-10T12:00:00.000Z'
+          }
+        ],
+        cancellationDetails: [
+          {
+            activityId: 'activity_2',
+            activityTitle: 'Wednesday Match',
+            activityType: 'internal',
+            startAt: '2026-06-12T12:00:00.000Z',
+            registrationId: 'registration_2',
+            signupName: 'Alex',
+            managerAlias: 'Left foot',
+            outcome: 'cancelled',
+            cancelledAt: '2026-06-11T10:00:00.000Z'
           }
         ]
       }
@@ -258,11 +272,25 @@ test('stats and log row builders keep stable display fields', () => {
         {
           activityId: '',
           activityTitle: 'Sunday Match',
+          activityType: 'external',
           teamName: 'White',
           signupName: 'Alex',
           managerAlias: 'Left foot',
           attendanceStatus: 'absent',
           startAt: '2026-06-10 20:00'
+        }
+      ],
+      cancellationDetails: [
+        {
+          activityId: 'activity_2',
+          activityTitle: 'Wednesday Match',
+          activityType: 'internal',
+          startAt: '2026-06-12 20:00',
+          registrationId: 'registration_2',
+          signupName: 'Alex',
+          managerAlias: 'Left foot',
+          outcome: 'cancelled',
+          cancelledAt: '2026-06-11 18:00'
         }
       ]
     }

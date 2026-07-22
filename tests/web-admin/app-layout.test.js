@@ -37,6 +37,10 @@ function createTarget(element) {
         return element;
       }
 
+      if (selector === '[data-statistics-tab]' && element.dataset.statisticsTab) {
+        return element;
+      }
+
       if (selector === '[data-activity-id]' && element.dataset.activityId) {
         return element;
       }
@@ -44,6 +48,13 @@ function createTarget(element) {
       if (
         selector === '[data-attendance-stats-index]' &&
         Object.prototype.hasOwnProperty.call(element.dataset, 'attendanceStatsIndex')
+      ) {
+        return element;
+      }
+
+      if (
+        selector === '[data-cancellation-stats-index]' &&
+        Object.prototype.hasOwnProperty.call(element.dataset, 'cancellationStatsIndex')
       ) {
         return element;
       }
@@ -158,6 +169,14 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     attendanceStats: createElement({ adminView: 'attendance-stats' }),
     logs: createElement({ adminView: 'logs' })
   };
+  const statisticsTabs = {
+    attendance: createElement({ statisticsTab: 'attendance' }),
+    cancellation: createElement({ statisticsTab: 'cancellation' })
+  };
+  const statisticsPanes = {
+    attendance: createElement({ statisticsPane: 'attendance' }),
+    cancellation: createElement({ statisticsPane: 'cancellation' })
+  };
   const elements = {
     '[data-view="identity"]': createElement(),
     '[data-view="login"]': createElement(),
@@ -189,10 +208,17 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-attendance-stats-table]': createElement(),
     '[data-attendance-stats-count]': createElement(),
     '[data-attendance-stats-empty]': createElement(),
+    '[data-cancellation-stats-table]': createElement(),
+    '[data-cancellation-stats-count]': createElement(),
+    '[data-cancellation-stats-empty]': createElement(),
     '[data-attendance-detail]': createElement(),
     '[data-attendance-detail-title]': createElement(),
     '[data-attendance-detail-table]': createElement(),
     '[data-attendance-detail-count]': createElement(),
+    '[data-cancellation-detail]': createElement(),
+    '[data-cancellation-detail-title]': createElement(),
+    '[data-cancellation-detail-table]': createElement(),
+    '[data-cancellation-detail-count]': createElement(),
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-activity-detail-loading]': createElement(),
@@ -235,7 +261,9 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       views.activities,
       views.attendanceStats,
       views.logs
-    ]
+    ],
+    '[data-statistics-tab]': [statisticsTabs.attendance, statisticsTabs.cancellation],
+    '[data-statistics-pane]': [statisticsPanes.attendance, statisticsPanes.cancellation]
   });
   const api = {
     setWebAdminSessionToken: jest.fn(),
@@ -285,6 +313,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     appRoot,
     elements,
     nav,
+    statisticsPanes,
+    statisticsTabs,
     views
   };
 }
@@ -969,12 +999,150 @@ test('attendance stats submit renders rows and hides the empty state', async () 
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('张虹生');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('酱油仔');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
-  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('33.33%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('33.33%');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('33.33%');
   expect(elements['[data-attendance-stats-table]'].innerHTML).toContain(
     'data-attendance-stats-index="0"'
   );
   expect(elements['[data-attendance-stats-count]'].textContent).toBe('共 1 行');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(true);
+});
+
+test('statistics tabs render focused tables and switch without another API request', async () => {
+  const getAttendanceStats = jest.fn().mockResolvedValue({
+    items: [
+      {
+        participantName: '张虹生',
+        managerAlias: '虹生',
+        signupCount: 2,
+        presentCount: 1,
+        absentCount: 1,
+        attendanceRate: 0.5,
+        effectiveSignupActivityCount: 2,
+        cancelledActivityCount: 1,
+        cancelRate: 0.3333,
+        details: [],
+        cancellationDetails: [
+          {
+            activityId: 'activity_cancelled',
+            activityTitle: '周三内战',
+            activityType: 'internal',
+            startAt: '2026-06-24T12:00:00.000Z',
+            registrationId: 'registration_cancelled',
+            signupName: '张虹生',
+            managerAlias: '虹生',
+            outcome: 'cancelled',
+            cancelledAt: '2026-06-23T10:00:00.000Z'
+          }
+        ]
+      },
+      {
+        participantName: '只取消人员',
+        managerAlias: '',
+        signupCount: 0,
+        presentCount: 0,
+        absentCount: 0,
+        attendanceRate: 0,
+        effectiveSignupActivityCount: 0,
+        cancelledActivityCount: 1,
+        cancelRate: 1,
+        details: [],
+        cancellationDetails: []
+      }
+    ]
+  });
+  const { app, appRoot, elements, statisticsPanes, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+
+  expect(app.state.activeStatisticsTab).toBe('attendance');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('50.00%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('33.33%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('只取消人员');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('33.33%');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('只取消人员');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain(
+    'data-cancellation-stats-index="0"'
+  );
+
+  appRoot.click(statisticsTabs.cancellation);
+
+  expect(app.state.activeStatisticsTab).toBe('cancellation');
+  expect(statisticsPanes.attendance.hidden).toBe(true);
+  expect(statisticsPanes.cancellation.hidden).toBe(false);
+  expect(elements['[data-stats-export-button]'].textContent).toBe('导出取消统计 CSV');
+  expect(getAttendanceStats).toHaveBeenCalledTimes(1);
+});
+
+test('double-clicking a cancellation stats row opens final-outcome details', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            managerAlias: '虹生',
+            effectiveSignupActivityCount: 1,
+            cancelledActivityCount: 1,
+            cancelRate: 0.5,
+            cancellationDetails: [
+              {
+                activityId: 'activity_joined',
+                activityTitle: '周一内战',
+                activityType: 'internal',
+                startAt: '2026-06-22T12:00:00.000Z',
+                registrationId: 'registration_joined',
+                signupName: '张虹生',
+                managerAlias: '虹生',
+                outcome: 'joined',
+                cancelledAt: ''
+              },
+              {
+                activityId: 'activity_cancelled',
+                activityTitle: '周三外战',
+                activityType: 'external',
+                startAt: '2026-06-24T12:00:00.000Z',
+                registrationId: 'registration_cancelled',
+                signupName: '张虹生',
+                managerAlias: '虹生',
+                outcome: 'cancelled',
+                cancelledAt: '2026-06-23T10:00:00.000Z'
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  appRoot.dblclick(createElement({ cancellationStatsIndex: '0' }));
+
+  expect(elements['[data-cancellation-detail]'].hidden).toBe(false);
+  expect(elements['[data-cancellation-detail-title]'].textContent).toContain('虹生');
+  expect(elements['[data-cancellation-detail-table]'].innerHTML).toContain('周一内战');
+  expect(elements['[data-cancellation-detail-table]'].innerHTML).toContain('保留报名');
+  expect(elements['[data-cancellation-detail-table]'].innerHTML).toContain('周三外战');
+  expect(elements['[data-cancellation-detail-table]'].innerHTML).toContain('已取消');
+  expect(elements['[data-cancellation-detail-table]'].innerHTML).toContain('2026-06-23 18:00');
+  expect(elements['[data-cancellation-detail-count]'].textContent).toBe('共 2 行');
+
+  appRoot.click(createElement({ action: 'close-cancellation-detail' }));
+  expect(elements['[data-cancellation-detail]'].hidden).toBe(true);
 });
 
 test('double-clicking an attendance stats row opens activity-level details', async () => {
@@ -1076,10 +1244,44 @@ test('attendance stats exports loaded rows as CSV text', async () => {
   await result;
   appRoot.click(elements['[data-stats-export-button]']);
 
-  expect(elements['[data-export-output]'].value).toContain('参与者,备注,报名次数,出勤,缺勤,出勤率');
-  expect(elements['[data-export-output]'].value).toContain('取消次数,取消率');
-  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,1,50.00%,1,33.33%');
-  expect(elements['[data-export-output]'].value).toContain('人员1,,1,1,0,100.00%,0,0.00%');
+  expect(elements['[data-export-output]'].value).toContain('参与者,备注,应出勤次数,出勤,缺勤,出勤率');
+  expect(elements['[data-export-output]'].value).not.toContain('最终取消数');
+  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,1,50.00%');
+  expect(elements['[data-export-output]'].value).toContain('人员1,,1,1,0,100.00%');
+});
+
+test('cancellation statistics export uses only final-outcome columns', async () => {
+  const { app, appRoot, elements, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            managerAlias: '酱油2',
+            effectiveSignupActivityCount: 2,
+            cancelledActivityCount: 1,
+            cancelRate: 0.3333
+          }
+        ]
+      })
+    }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  appRoot.click(statisticsTabs.cancellation);
+  appRoot.click(elements['[data-stats-export-button]']);
+
+  expect(elements['[data-export-output]'].value).toContain(
+    '参与者,备注,最终保留报名数,最终取消数,取消率'
+  );
+  expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,33.33%');
+  expect(elements['[data-export-output]'].value).not.toContain('出勤率');
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {

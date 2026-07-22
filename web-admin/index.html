@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260720-cancel-stats" />
+    <link rel="stylesheet" href="./styles.css?v=20260722-stat-tabs" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -49,7 +49,7 @@
             <nav class="admin-nav" aria-label="后台导航">
               <button type="button" data-nav-target="users">用户管理</button>
               <button type="button" data-nav-target="activities">活动管理</button>
-              <button type="button" data-nav-target="attendance-stats">出勤统计</button>
+              <button type="button" data-nav-target="attendance-stats">统计分析</button>
             </nav>
           </aside>
 
@@ -291,7 +291,7 @@
             </section>
 
             <section data-admin-view="attendance-stats" class="panel" hidden>
-              <h3>出勤统计</h3>
+              <h3>统计分析</h3>
 
               <form data-action="load-attendance-stats" class="toolbar">
                 <label>
@@ -320,28 +320,66 @@
                 </button>
               </form>
 
-              <p data-attendance-stats-empty class="inline-status" aria-live="polite" hidden>
-                统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。
-              </p>
+              <div class="statistics-tabs" role="tablist" aria-label="统计类型">
+                <button
+                  type="button"
+                  role="tab"
+                  class="is-active"
+                  data-statistics-tab="attendance"
+                  aria-selected="true"
+                >出勤统计</button>
+                <button
+                  type="button"
+                  role="tab"
+                  data-statistics-tab="cancellation"
+                  aria-selected="false"
+                >取消统计</button>
+              </div>
 
-              <p data-attendance-stats-count class="table-summary">共 0 行</p>
+              <section data-statistics-pane="attendance">
+                <p data-attendance-stats-empty class="inline-status" aria-live="polite" hidden>
+                  统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。
+                </p>
 
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>序号</th>
-                    <th>参与者</th>
-                    <th>备注</th>
-                    <th>报名次数</th>
-                    <th>出勤</th>
-                    <th>缺勤</th>
-                    <th>出勤率</th>
-                    <th>取消次数</th>
-                    <th>取消率</th>
-                  </tr>
-                </thead>
-                <tbody data-attendance-stats-table></tbody>
-              </table>
+                <p data-attendance-stats-count class="table-summary">共 0 行</p>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>参与者</th>
+                      <th>备注</th>
+                      <th>应出勤次数</th>
+                      <th>出勤</th>
+                      <th>缺勤</th>
+                      <th>出勤率</th>
+                    </tr>
+                  </thead>
+                  <tbody data-attendance-stats-table></tbody>
+                </table>
+              </section>
+
+              <section data-statistics-pane="cancellation" hidden>
+                <p data-cancellation-stats-empty class="inline-status" aria-live="polite" hidden>
+                  当前范围内没有最终报名或取消记录。
+                </p>
+
+                <p data-cancellation-stats-count class="table-summary">共 0 行</p>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>参与者</th>
+                      <th>备注</th>
+                      <th>最终保留报名数</th>
+                      <th>最终取消数</th>
+                      <th>取消率</th>
+                    </tr>
+                  </thead>
+                  <tbody data-cancellation-stats-table></tbody>
+                </table>
+              </section>
             </section>
             </main>
 
@@ -410,6 +448,50 @@
           </div>
 
           <div
+            data-cancellation-detail
+            class="attendance-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancellation-detail-title"
+            hidden
+          >
+            <div class="attendance-detail-dialog">
+              <div class="detail-header">
+                <div>
+                  <span class="detail-eyebrow">取消明细</span>
+                  <h4 id="cancellation-detail-title" data-cancellation-detail-title></h4>
+                </div>
+                <button
+                  type="button"
+                  class="modal-close-button"
+                  data-action="close-cancellation-detail"
+                  aria-label="关闭取消明细"
+                >
+                  关闭
+                </button>
+              </div>
+              <p data-cancellation-detail-count class="table-summary">共 0 行</p>
+              <div class="detail-table-scroll">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>活动</th>
+                      <th>活动类型</th>
+                      <th>开始时间</th>
+                      <th>报名名称</th>
+                      <th>备注</th>
+                      <th>最终状态</th>
+                      <th>取消时间</th>
+                    </tr>
+                  </thead>
+                  <tbody data-cancellation-detail-table></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div
             data-user-avatar-preview
             class="avatar-preview-modal"
             role="dialog"
@@ -444,13 +526,13 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260720-cancel-stats"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260720-cancel-stats"></script>
-    <script src="./src/roles.js?v=20260720-cancel-stats"></script>
-    <script src="./src/api.js?v=20260720-cancel-stats"></script>
-    <script src="./vendor/qrcode.min.js?v=20260720-cancel-stats"></script>
-    <script src="./src/user-management.js?v=20260720-cancel-stats"></script>
-    <script src="./src/activity-management.js?v=20260720-cancel-stats"></script>
-    <script src="./src/app.js?v=20260720-cancel-stats"></script>
+    <script src="./config.test.js?v=20260722-stat-tabs"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260722-stat-tabs"></script>
+    <script src="./src/roles.js?v=20260722-stat-tabs"></script>
+    <script src="./src/api.js?v=20260722-stat-tabs"></script>
+    <script src="./vendor/qrcode.min.js?v=20260722-stat-tabs"></script>
+    <script src="./src/user-management.js?v=20260722-stat-tabs"></script>
+    <script src="./src/activity-management.js?v=20260722-stat-tabs"></script>
+    <script src="./src/app.js?v=20260722-stat-tabs"></script>
   </body>
 </html>
