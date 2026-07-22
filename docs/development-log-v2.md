@@ -4,6 +4,39 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-22 - Split Attendance And Cancellation Statistics
+
+Separated two different operational metrics without duplicating Web Admin navigation or backend requests.
+
+Delivered behavior:
+
+- the Web Admin sidebar now names the shared workspace `统计分析`.
+- the workspace uses focused `出勤统计` and `取消统计` tabs with shared date-range and activity-type filters.
+- one `getAttendanceStats` request loads both tab models; switching tabs does not issue another request.
+- attendance rows include only participants with attendance-eligible started activities and no longer mix cancellation columns into the attendance table.
+- cancellation rows show `最终保留报名数`, `最终取消数`, and the final-outcome cancellation rate.
+- cancellation-only participants appear only in the cancellation table.
+- `getAttendanceStats` now returns additive `cancellationDetails` rows with stable activity/registration IDs, activity type, signup name, manager alias, final `joined` / `cancelled` outcome, and timestamps.
+- attendance and cancellation rows open separate detail dialogs.
+- attendance and cancellation CSV exports use independent columns and filenames based on the active tab.
+- historical missing activity types still normalize to `internal`; missing cancellation timestamps remain empty.
+- SQL readiness records `cancellationDetails` as an API-derived projection that requires no new stored field or migration.
+
+TDD and verification:
+
+- backend red tests first failed because `cancellationDetails` was absent.
+- Web Admin static/model red tests first failed because the tab structure and cancellation-detail mapping were absent.
+- Web Admin interaction red tests first failed because tab state, cancellation detail rendering, and tab-specific exports were absent.
+- backend targeted regression passed: `npm test -- tests/cloudfunctions/getAttendanceStats.test.js tests/web-admin/activity-management.test.js --runInBand` (`2` suites, `24` tests).
+- Web Admin regression passed: `npm test -- tests/web-admin --runInBand` (`9` suites, `96` tests).
+- full regression passed: `npm test -- --runInBand` (`83` suites, `774` tests).
+
+Deployment scope:
+
+- redeploy `getAttendanceStats` for the additive final-outcome detail contract.
+- redeploy `web-admin/` to the test environment `/admin/` path.
+- no mini-program upload, collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover is required.
+
 ## 2026-07-21 - Self Registration Profile Editing
 
 Added an activity-scoped self-service profile editor without changing registration lifecycle or roster management behavior.
