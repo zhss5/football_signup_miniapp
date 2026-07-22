@@ -192,17 +192,18 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260722-stat-tabs` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260722-cancel-rate-tone` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
 - CloudBase static hosting is online and `/admin/` returns HTTP `200`.
 - the latest `tcb hosting deploy web-admin /admin` uploaded `24` files successfully in the test environment.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry and static assets load `?v=20260722-stat-tabs`; hosted `app.js` and `styles.css` include the split statistics views and existing user-row action feedback hooks.
+- the hosted entry and static assets load `?v=20260722-cancel-rate-tone`; hosted `app.js` and `styles.css` include the split statistics views and existing user-row action feedback hooks.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - the shared statistics workspace is named `统计分析` and separates `出勤统计` from `取消统计` while reusing one date/activity-type query.
+- cancellation-rate tones are lower-is-better: `0%-20%` green, above `20%-50%` yellow, and above `50%` red; attendance-rate tones remain higher-is-better.
 - the test environment `getAttendanceStats` deployment was verified from remote `CodeInfo` to include additive `cancellationDetails` rows.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
 - hosted `app.js` contains QR payload handling and admin view navigation state.

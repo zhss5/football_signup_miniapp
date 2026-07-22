@@ -4,6 +4,26 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-22 - Cancellation Rate Tone Direction
+
+Corrected the cancellation-rate indicator so its risk direction differs from attendance rate.
+
+Delivered behavior:
+
+- attendance rate keeps the existing higher-is-better thresholds: `80%+` green, `50%-79.99%` yellow, and below `50%` red.
+- cancellation rate now uses lower-is-better thresholds: `0%-20%` green, above `20%` through `50%` yellow, and above `50%` red.
+- the change is presentation-only and does not alter cancellation counts, rate calculation, API fields, CloudBase data, or future SQL mapping.
+- static asset query strings were bumped to `20260722-cancel-rate-tone` so hosted browsers fetch the corrected script.
+
+TDD, deployment, and verification:
+
+- the regression test first showed `0%` as red and `100%` as green because both metrics shared the higher-is-better renderer.
+- focused Web Admin tests passed with `2` suites and `58` tests.
+- Web Admin regression passed with `9` suites and `96` tests.
+- full regression passed with `83` suites and `774` tests.
+- CloudBase static hosting uploaded `24` files successfully under `/admin/`.
+- authenticated browser smoke confirmed `0%` and `12.5%` are green, `50%` is yellow, and `100%` is red.
+
 ## 2026-07-22 - Split Attendance And Cancellation Statistics
 
 Separated two different operational metrics without duplicating Web Admin navigation or backend requests.

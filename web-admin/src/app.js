@@ -153,7 +153,7 @@
     return String(value || '').trim() === 'external' ? '外战' : '内战';
   }
 
-  function renderRatePill(text) {
+  function renderRatePill(text, lowerIsBetter = false) {
     const label = String(text || '').trim();
     if (!label) {
       return '';
@@ -162,7 +162,17 @@
     const value = parseFloat(label);
     let tone = 'muted';
     if (Number.isFinite(value)) {
-      tone = value >= 80 ? 'success' : value >= 50 ? 'warning' : 'danger';
+      tone = lowerIsBetter
+        ? value <= 20
+          ? 'success'
+          : value <= 50
+            ? 'warning'
+            : 'danger'
+        : value >= 80
+          ? 'success'
+          : value >= 50
+            ? 'warning'
+            : 'danger';
     }
 
     return `<span class="status-pill status-pill-${tone}">${escapeHtml(label)}</span>`;
@@ -1042,7 +1052,7 @@
           `<td>${escapeHtml(row.managerAlias)}</td>` +
           `<td>${escapeHtml(row.effectiveSignupActivityCount)}</td>` +
           `<td>${escapeHtml(row.cancelledActivityCount)}</td>` +
-          `<td>${renderRatePill(row.cancelRateText)}</td>` +
+          `<td>${renderRatePill(row.cancelRateText, true)}</td>` +
           `</tr>`
         ))
         .join('');

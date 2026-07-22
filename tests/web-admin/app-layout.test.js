@@ -1048,6 +1048,19 @@ test('statistics tabs render focused tables and switch without another API reque
         cancelRate: 1,
         details: [],
         cancellationDetails: []
+      },
+      {
+        participantName: '从未取消人员',
+        managerAlias: '',
+        signupCount: 1,
+        presentCount: 1,
+        absentCount: 0,
+        attendanceRate: 1,
+        effectiveSignupActivityCount: 1,
+        cancelledActivityCount: 0,
+        cancelRate: 0,
+        details: [],
+        cancellationDetails: []
       }
     ]
   });
@@ -1069,6 +1082,15 @@ test('statistics tabs render focused tables and switch without another API reque
   expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('只取消人员');
   expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('33.33%');
   expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('只取消人员');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain(
+    'status-pill-success">0.00%</span>'
+  );
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain(
+    'status-pill-warning">33.33%</span>'
+  );
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain(
+    'status-pill-danger">100.00%</span>'
+  );
   expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain(
     'data-cancellation-stats-index="0"'
   );
