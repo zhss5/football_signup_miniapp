@@ -25,6 +25,8 @@ TDD and verification:
 - Activity Detail/API RED tests first failed because the second state and missing-purpose request were absent; the API/page/localization run passed with `3` suites and `80` tests.
 - cancellation RED tests first showed the old threshold template and payload being consumed; cancellation, join, and manager-threshold regression passed with `3` suites and `28` tests.
 - local mock RED tests first failed for missing template IDs and cancellation notice behavior; the local mock suite passed with `38` tests.
+- full regression passed through direct Jest execution with `83` suites and `810` tests. Direct Jest avoided the `npm test` shared-file copy hook so unrelated local helper changes remained untouched.
+- final `git diff --check` reported only line-ending warnings in the pre-existing unrelated helper changes.
 - implementation commits: `e2121b3`, `86dd4dc`, `bc76c62`, and `f64fddf`.
 
 Deployment scope:

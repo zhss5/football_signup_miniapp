@@ -125,6 +125,7 @@ Completed:
 - 2026-07-23 manager-notification template split implemented: activity creation requests the configured registration-threshold and late-cancellation templates together, stores independent subscription rows, and Activity Detail exposes and repairs each subscription state independently.
 - `cancelRegistration` now reads and consumes only `manager_late_cancellation_notice`, sends the selected `预约取消通知` field contract, and resolves the participant display name from current `users.managerAlias` before falling back to the registration `signupName` snapshot.
 - targeted TDD regression passed across notification service/create flow (`3` suites, `53` tests), Activity Detail/API/localization (`3` suites, `80` tests), cancellation and threshold regressions (`3` suites, `28` tests), and local mock parity (`1` suite, `38` tests).
+- final full regression passed with direct Jest execution (`83` suites, `810` tests); `git diff --check` reported only line-ending warnings in pre-existing unrelated files.
 - deployment requires `getActivityDetail`, `cancelRegistration`, and a mini-program upload. It requires no Web Admin redeployment, collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API switch.
 
 ## 4. Planned Version 2 Scope

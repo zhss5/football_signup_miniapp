@@ -157,6 +157,7 @@ Latest test-environment function deployment:
 - redeploy `getActivityDetail` and `cancelRegistration`, then upload a new mini-program experience build before testing the split manager subscriptions and cancellation template on device.
 - `recordNotificationSubscription` remains API-compatible and does not require a code redeployment if the target environment already has the current V2 version.
 - no Web Admin static redeployment or collection migration is required for this notification change.
+- full local regression for the dedicated template split passed with `83` suites and `810` tests.
 
 ## 5. First Admin Setup
 
