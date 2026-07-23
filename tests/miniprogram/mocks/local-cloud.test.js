@@ -1924,7 +1924,13 @@ test('local cloud client exposes manager registration notification subscription 
   await ownerClient.call('recordNotificationSubscription', {
     activityId: created.activityId,
     templateKey: 'manager_registration_notice',
-    templateId: 'tmpl_123',
+    templateId: 'tmpl_threshold',
+    status: 'accepted'
+  });
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'manager_late_cancellation_notice',
+    templateId: 'tmpl_late_cancel',
     status: 'accepted'
   });
   await participantClient.call('recordNotificationSubscription', {
@@ -1942,7 +1948,130 @@ test('local cloud client exposes manager registration notification subscription 
 
   expect(beforeSubscribe.viewer.registrationNotificationSubscribed).toBe(false);
   expect(ownerDetail.viewer.registrationNotificationSubscribed).toBe(true);
+  expect(ownerDetail.viewer.registrationNotificationSubscriptionTemplateId).toBe(
+    'tmpl_threshold'
+  );
+  expect(ownerDetail.viewer.lateCancellationNotificationSubscribed).toBe(true);
+  expect(ownerDetail.viewer.lateCancellationNotificationSubscriptionTemplateId).toBe(
+    'tmpl_late_cancel'
+  );
   expect(participantDetail.viewer.registrationNotificationSubscribed).toBe(false);
+  expect(participantDetail.viewer.lateCancellationNotificationSubscribed).toBe(false);
+});
+
+test('local cloud client sends a dedicated late cancellation notice to the creator', async () => {
+  const storage = createMemoryStorage();
+  const ownerClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T09:00:00.000Z',
+    openid: 'openid_owner'
+  });
+  const participantClient = createLocalCloudClient({
+    storage,
+    now: () => '2026-05-09T10:00:00.000Z',
+    openid: 'openid_player',
+    defaultRoles: ['user']
+  });
+  const created = await ownerClient.call('createActivity', {
+    title: 'May 9 training',
+    startAt: '2026-05-09T15:00:00.000Z',
+    endAt: '2026-05-09T17:00:00.000Z',
+    signupDeadlineAt: '2026-05-09T14:30:00.000Z',
+    addressText: 'Half Stone',
+    description: '',
+    coverImage: '',
+    imageList: [],
+    signupLimitTotal: 12,
+    registrationNoticeThreshold: 12,
+    lateCancellationNoticeWindowHours: 6,
+    requirePhone: false,
+    inviteCode: '',
+    teams: [{ teamName: 'White', maxMembers: 12 }]
+  });
+  const detail = await participantClient.call('getActivityDetail', {
+    activityId: created.activityId
+  });
+
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'manager_registration_notice',
+    templateId: 'tmpl_threshold',
+    status: 'accepted'
+  });
+  await ownerClient.call('recordNotificationSubscription', {
+    activityId: created.activityId,
+    templateKey: 'manager_late_cancellation_notice',
+    templateId: 'tmpl_late_cancel',
+    status: 'accepted'
+  });
+  await participantClient.call('joinActivity', {
+    activityId: created.activityId,
+    teamId: detail.teams[0]._id,
+    signupName: 'Alex',
+    source: 'share'
+  });
+  const stateWithAlias = storage.getItem('football-signup-local-cloud-v1');
+  stateWithAlias.users.openid_player.managerAlias = '虹生';
+  storage.setItem('football-signup-local-cloud-v1', stateWithAlias);
+
+  await expect(
+    participantClient.call('cancelRegistration', {
+      activityId: created.activityId
+    })
+  ).resolves.toMatchObject({
+    status: 'cancelled',
+    lateCancellationNotice: {
+      attempted: true,
+      recipientOpenId: 'openid_owner',
+      status: 'sent'
+    }
+  });
+
+  const state = storage.getItem('football-signup-local-cloud-v1');
+  expect(
+    state.notificationLogs.filter(item => item.notificationType === 'registration_cancelled')
+  ).toEqual([
+    expect.objectContaining({
+      activityId: created.activityId,
+      actorOpenId: 'openid_player',
+      actorName: 'Alex',
+      recipientOpenId: 'openid_owner',
+      templateKey: 'manager_late_cancellation_notice',
+      templateId: 'tmpl_late_cancel',
+      status: 'sent',
+      data: {
+        time2: {
+          value: '2026-05-09 23:00'
+        },
+        thing3: {
+          value: 'May 9 training'
+        },
+        thing6: {
+          value: '取消后剩余 0/12 人'
+        },
+        thing8: {
+          value: '虹生'
+        }
+      }
+    })
+  ]);
+  expect(
+    state.notificationSubscriptions[
+      `${created.activityId}_openid_owner_manager_registration_notice`
+    ]
+  ).toMatchObject({
+    status: 'accepted',
+    subscribed: true
+  });
+  expect(
+    state.notificationSubscriptions[
+      `${created.activityId}_openid_owner_manager_late_cancellation_notice`
+    ]
+  ).toMatchObject({
+    status: 'consumed',
+    subscribed: false,
+    lastSendStatus: 'sent'
+  });
 });
 
 test('local cloud client records subscriptions and lets organizers confirm or cancel with notification summaries', async () => {

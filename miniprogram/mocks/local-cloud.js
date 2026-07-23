@@ -13,10 +13,14 @@ const MAX_REPEAT_EXIT_COUNT = 3;
 const REPEAT_SIGNUP_LIMIT_MESSAGE = 'Too many repeat signups. Please contact the organizer';
 const ACTIVITY_NOTICE_TEMPLATE_KEY = 'activity_notice';
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
+const MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY =
+  'manager_late_cancellation_notice';
 const DEFAULT_ACTIVITY_LIST_LIMIT = 20;
 const MAX_ACTIVITY_LIST_LIMIT = 50;
 const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
 const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
+const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
 
 function validateSignupPayload(payload) {
   if (!payload.activityId) {
@@ -41,6 +45,58 @@ function normalizeSource(value) {
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function clipTemplateValue(value, maxLength) {
+  const text = String(value || '')
+    .replace(CONTROL_CHARACTER_PATTERN, ' ')
+    .trim();
+  return Array.from(text).slice(0, maxLength).join('');
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatChinaDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const chinaTime = new Date(date.getTime() + CHINA_TIME_OFFSET_MS);
+  return `${chinaTime.getUTCFullYear()}-${pad(chinaTime.getUTCMonth() + 1)}-${pad(
+    chinaTime.getUTCDate()
+  )} ${pad(chinaTime.getUTCHours())}:${pad(chinaTime.getUTCMinutes())}`;
+}
+
+function buildLateCancellationMessageData(activity, registration, actorName) {
+  const joinedCount = normalizeCount(activity && activity.joinedCount);
+  const signupLimitTotal = normalizeCount(activity && activity.signupLimitTotal);
+  const remainingText = signupLimitTotal > 0
+    ? `\u53d6\u6d88\u540e\u5269\u4f59 ${joinedCount}/${signupLimitTotal} \u4eba`
+    : `\u53d6\u6d88\u540e\u5269\u4f59 ${joinedCount} \u4eba`;
+
+  return {
+    time2: {
+      value: formatChinaDateTime(activity && activity.startAt)
+    },
+    thing3: {
+      value: clipTemplateValue(
+        (activity && activity.title) || '\u8db3\u7403\u6d3b\u52a8',
+        20
+      )
+    },
+    thing6: {
+      value: clipTemplateValue(remainingText, 20)
+    },
+    thing8: {
+      value: clipTemplateValue(
+        actorName || (registration && registration.signupName) || '\u961f\u5458',
+        20
+      )
+    }
+  };
 }
 
 function normalizeLateCancellationNoticeWindowHours(value, currentValue) {
@@ -193,6 +249,24 @@ function getRegistrationNoticeThreshold(activity) {
 function shouldNotifyManagersForJoin(activity, joinedCountAfter) {
   const threshold = getRegistrationNoticeThreshold(activity);
   return threshold > 0 && normalizeCount(joinedCountAfter) >= threshold;
+}
+
+function shouldNotifyLateCancellation(activity, stamp) {
+  const windowHours = normalizeLateCancellationNoticeWindowHours(
+    activity && activity.lateCancellationNoticeWindowHours
+  );
+  if (windowHours <= 0) {
+    return false;
+  }
+
+  const startAt = Date.parse(activity && activity.startAt);
+  const cancelledAt = Date.parse(stamp);
+  if (!Number.isFinite(startAt) || !Number.isFinite(cancelledAt)) {
+    return false;
+  }
+
+  const diffMs = startAt - cancelledAt;
+  return diffMs >= 0 && diffMs <= windowHours * 60 * 60 * 1000;
 }
 
 function getRepeatExitCount(registration) {
@@ -848,15 +922,22 @@ function createLocalCloudClient(options = {}) {
         activity.status === 'published' &&
         (!Number.isFinite(deadline) || Date.parse(now()) <= deadline)
     );
-    const registrationNotificationSubscribed = canManageRegistrations
-      ? Object.values(state.notificationSubscriptions).some(
+    const managerSubscriptions = canManageRegistrations
+      ? Object.values(state.notificationSubscriptions).filter(
           item =>
             item.activityId === payload.activityId &&
             item.userOpenId === openid &&
-            item.templateKey === MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY &&
             item.status === 'accepted'
         )
-      : false;
+      : [];
+    const registrationNotificationSubscription =
+      managerSubscriptions.find(
+        item => item.templateKey === MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY
+      ) || null;
+    const lateCancellationNotificationSubscription =
+      managerSubscriptions.find(
+        item => item.templateKey === MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY
+      ) || null;
 
     return {
       activity: clone(activity),
@@ -869,7 +950,18 @@ function createLocalCloudClient(options = {}) {
         canCancelActivity: canManageRegistrations && activity.status === 'published',
         canDeleteActivity: activity.organizerOpenId === openid && Number(activity.joinedCount) === 0,
         canCancelSignup,
-        registrationNotificationSubscribed
+        registrationNotificationSubscribed: Boolean(registrationNotificationSubscription),
+        registrationNotificationSubscriptionTemplateId:
+          (registrationNotificationSubscription &&
+            registrationNotificationSubscription.templateId) ||
+          '',
+        lateCancellationNotificationSubscribed: Boolean(
+          lateCancellationNotificationSubscription
+        ),
+        lateCancellationNotificationSubscriptionTemplateId:
+          (lateCancellationNotificationSubscription &&
+            lateCancellationNotificationSubscription.templateId) ||
+          ''
       }
     };
   }
@@ -1217,10 +1309,18 @@ function createLocalCloudClient(options = {}) {
     activity.updatedAt = stamp;
     team.joinedCount = Math.max(team.joinedCount - 1, 0);
 
+    const lateCancellationNotice = recordLateCancellationNotification(
+      state,
+      activity,
+      current,
+      openid,
+      stamp
+    );
     writeState(state);
     return {
       registrationId,
-      status: 'cancelled'
+      status: 'cancelled',
+      ...(lateCancellationNotice ? { lateCancellationNotice } : {})
     };
   }
 
@@ -1521,6 +1621,89 @@ function createLocalCloudClient(options = {}) {
       subscription.updatedAt = stamp;
       subscription.lastSendStatus = 'sent';
     });
+  }
+
+  function recordLateCancellationNotification(
+    state,
+    activity,
+    registration,
+    actorOpenId,
+    stamp
+  ) {
+    if (!shouldNotifyLateCancellation(activity, stamp)) {
+      return null;
+    }
+
+    const recipientOpenId = String(activity.organizerOpenId || '').trim();
+    const baseLog = {
+      _id: nextId(state, 'notification_log'),
+      activityId: activity._id,
+      actorOpenId,
+      actorName: registration.signupName || '',
+      recipientOpenId,
+      notificationType: 'registration_cancelled',
+      templateKey: MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY,
+      createdAt: stamp
+    };
+
+    if (!recipientOpenId || recipientOpenId === actorOpenId) {
+      state.notificationLogs.push({
+        ...baseLog,
+        status: 'skipped',
+        reason: recipientOpenId ? 'actor-is-organizer' : 'missing-organizer'
+      });
+      return {
+        attempted: true,
+        recipientOpenId,
+        status: 'skipped'
+      };
+    }
+
+    const subscription = Object.values(state.notificationSubscriptions).find(
+      item =>
+        item.activityId === activity._id &&
+        item.userOpenId === recipientOpenId &&
+        item.templateKey === MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY &&
+        item.status === 'accepted' &&
+        item.templateId
+    );
+    if (!subscription) {
+      state.notificationLogs.push({
+        ...baseLog,
+        status: 'skipped',
+        reason: 'no-accepted-subscription'
+      });
+      return {
+        attempted: true,
+        recipientOpenId,
+        status: 'skipped'
+      };
+    }
+
+    const actor = state.users[actorOpenId] || {};
+    const actorDisplayName =
+      String(actor.managerAlias || '').trim() || registration.signupName || '';
+    state.notificationLogs.push({
+      ...baseLog,
+      templateId: subscription.templateId,
+      data: buildLateCancellationMessageData(
+        activity,
+        registration,
+        actorDisplayName
+      ),
+      status: 'sent'
+    });
+    subscription.status = 'consumed';
+    subscription.subscribed = false;
+    subscription.consumedAt = stamp;
+    subscription.updatedAt = stamp;
+    subscription.lastSendStatus = 'sent';
+
+    return {
+      attempted: true,
+      recipientOpenId,
+      status: 'sent'
+    };
   }
 
   function notifyActivityParticipants(payload) {
