@@ -122,6 +122,10 @@ Completed:
 - full regression after the split statistics implementation passed with `npm test -- --runInBand` (`83` suites, `774` tests). Deployment requires `getAttendanceStats` and Web Admin static hosting only; no mini-program upload, runtime MySQL migration, dual-write, or self-hosted HTTP API switch is required.
 - 2026-07-22 configurable late-cancellation window follow-up implemented: mini-program activity create/edit/copy now exposes `lateCancellationNoticeWindowHours` as `临近取消通知（小时）`, defaults to `6`, accepts integer `0..168`, and uses `0` to disable the notice. Cloud functions validate and persist the API field, copy drafts preserve it, and legacy update requests preserve an existing valid value.
 - full regression after the configurable window implementation passed with direct Jest execution (`83` suites, `805` tests). `createActivity`, `updateActivity`, and `getActivityCopyDraft` were deployed to `cloudbase-miniapp-test-dfc753877` and verified from remote `CodeInfo`; a new mini-program experience build still needs to be uploaded to expose the field on device. No Web Admin redeployment or database migration is required.
+- 2026-07-23 manager-notification template split implemented: activity creation requests the configured registration-threshold and late-cancellation templates together, stores independent subscription rows, and Activity Detail exposes and repairs each subscription state independently.
+- `cancelRegistration` now reads and consumes only `manager_late_cancellation_notice`, sends the selected `预约取消通知` field contract, and resolves the participant display name from current `users.managerAlias` before falling back to the registration `signupName` snapshot.
+- targeted TDD regression passed across notification service/create flow (`3` suites, `53` tests), Activity Detail/API/localization (`3` suites, `80` tests), cancellation and threshold regressions (`3` suites, `28` tests), and local mock parity (`1` suite, `38` tests).
+- deployment requires `getActivityDetail`, `cancelRegistration`, and a mini-program upload. It requires no Web Admin redeployment, collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API switch.
 
 ## 4. Planned Version 2 Scope
 
@@ -228,4 +232,5 @@ Deployment readiness tasks remain:
 - upload the mini-program build and host `web-admin/` after CloudBase function deployment.
 - deploy `updateMyRegistrationProfile` and upload the matching mini-program build before testing self registration profile editing.
 - upload a new mini-program experience build to expose the configurable late-cancellation notice window; the matching `createActivity`, `updateActivity`, and `getActivityCopyDraft` functions are already deployed in the test environment.
+- redeploy `getActivityDetail` and `cancelRegistration`, then upload the matching mini-program build before smoke testing separate manager subscriptions and the late-cancellation template.
 - keep invite-code signup, automatic reminders, payments/refunds, and runtime MySQL/self-hosted migration deferred.

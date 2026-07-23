@@ -1,11 +1,11 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-07-22
+- Date: 2026-07-23
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 - Baseline commit before the Web Admin QR-login implementation: `66b12ff Add test web admin CloudBase runtime`
-- Remote sync status after this handoff commit: the local branch is expected to be `12` commits ahead of `origin/codex/version-2-web-admin`; no push was requested for this goal.
+- Remote sync status: this goal creates local commits only; no push was requested. Run `git status --short --branch` before rollout or publishing.
 
 ## 1. Current State
 
@@ -29,6 +29,7 @@ Version 2 adds:
 - explicit V2 CloudBase collection bootstrap through `bootstrapV2Collections` and `scripts/deploy-v2-bootstrap.ps1`.
 - test-environment web-admin runtime initialization and CloudBase static hosting under `/admin`.
 - configurable activity-level late-cancellation organizer notice windows in mini-program create/edit/copy flows.
+- separate one-time manager subscriptions for registration-threshold and late-cancellation notices, with alias-first participant naming in the cancellation template.
 
 Version 2 still does not:
 
@@ -152,8 +153,10 @@ Latest test-environment function deployment:
 
 - `createActivity`, `updateActivity`, and `getActivityCopyDraft` were redeployed to `cloudbase-miniapp-test-dfc753877` for the configurable late-cancellation notice window.
 - remote function details confirm each deployed code package contains `lateCancellationNoticeWindowHours` and the `168` validation boundary.
-- `cancelRegistration` was not redeployed because its notification execution logic did not change.
-- upload a new mini-program experience build to expose the new create/edit field on device; no Web Admin static redeployment is required.
+- the dedicated late-cancellation template split is committed locally but not deployed by this goal.
+- redeploy `getActivityDetail` and `cancelRegistration`, then upload a new mini-program experience build before testing the split manager subscriptions and cancellation template on device.
+- `recordNotificationSubscription` remains API-compatible and does not require a code redeployment if the target environment already has the current V2 version.
+- no Web Admin static redeployment or collection migration is required for this notification change.
 
 ## 5. First Admin Setup
 

@@ -37,7 +37,8 @@ module.exports = {
   LOCAL_STORAGE_KEY: 'football-signup-local-cloud-v1',
   SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
     activityNotice: 'your-activity-confirm-cancel-template-id',
-    managerRegistrationNotice: 'your-manager-signup-change-template-id'
+    managerRegistrationNotice: 'your-manager-registration-threshold-template-id',
+    managerLateCancellationNotice: 'your-manager-late-cancellation-template-id'
   }
 };
 ```
@@ -146,7 +147,7 @@ Current deployment notes:
 - Deploy `listActivities` for the preview-build first-batch performance fix. The mini program already sends `limit: 20`, so this cloud-function deployment is enough for the first-batch speedup.
 - `createActivity`, `updateActivity`, and `updateTeamColor` must be deployed together after running `npm run copy:cloud-shared`; they share the ten-color team palette: green, white, red, blue, black, yellow, orange, purple, gray, and pink.
 - The mini program now crops and displays activity covers in a shared `5:4` frame so the same image works for Home, Activity Detail, thumbnails, and WeChat share cards.
-- Notification configuration uses two template IDs: `activityNotice` for participant proceeding/cancellation notices, and `managerRegistrationNotice` for organizer/admin signup-change notices.
+- Notification configuration uses three template IDs: `activityNotice` for participant proceeding/cancellation notices, `managerRegistrationNotice` for manager registration-threshold notices, and `managerLateCancellationNotice` for activity-creator late-cancellation notices.
 - Web Admin QR login requires `web_admin_sessions`, the three Web Admin login cloud functions, the hosted `web-admin/` static files, and a mini-program build that includes the `My` page scan-and-confirm action.
 
 ## Web Admin QR Login Smoke Test
@@ -179,21 +180,33 @@ Organizer/admin signup-change notices:
 - cloud sends use `templateKey: manager_registration_notice`
 - `notification_logs.notificationType` should be `registration_joined`
 - activity documents store `registrationNoticeThreshold`; regular participant self-join sends only when the post-join total reaches that threshold
-- participant self-cancel, organizer/admin removal, and organizer/admin proxy signup do not send manager signup-change notices
+- organizer/admin removal and organizer/admin proxy signup do not send manager registration-threshold notices
+
+Activity-creator late-cancellation notices:
+
+- the same Activity Detail manager action also requests `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerLateCancellationNotice`
+- consent is stored independently with `templateKey: manager_late_cancellation_notice`
+- `cancelRegistration` sends only inside `lateCancellationNoticeWindowHours`; missing historical values use `6`, and `0` disables the notice
+- only the activity creator receives the notice; the creator's own self-cancel is skipped
+- the selected template receives `time2` as China-local activity start time, `thing3` as activity title, `thing6` as `取消后剩余 current/total 人`, and `thing8` as current `managerAlias` with `signupName` fallback
+- sending consumes only the `manager_late_cancellation_notice` row; the registration-threshold subscription remains unchanged
 
 Real-device verification steps:
 
 1. Open the uploaded experience build as the activity organizer or an admin.
-2. Tap the signup-notification subscribe action on Activity Detail.
-3. Confirm the WeChat consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template.
-4. In CloudBase, inspect `notification_subscriptions` for the current activity and manager user. The row should use `templateKey: manager_registration_notice` and a `templateId` matching the local-only `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice` value.
+2. Tap the manager-notification subscribe action on Activity Detail.
+3. Confirm the WeChat consent prompt includes both configured manager templates, not the participant activity confirmation/cancellation template.
+4. In CloudBase, inspect `notification_subscriptions` for the current activity and manager user. Separate rows should use `templateKey: manager_registration_notice` and `templateKey: manager_late_cancellation_notice`, with template IDs matching the corresponding local-only config values.
 5. Have regular participants join until the post-join total reaches the activity's `registrationNoticeThreshold`.
 6. Inspect `notification_logs`; the manager notification row should use `templateKey: manager_registration_notice`, `notificationType: registration_joined`, and the same manager template ID.
-7. Have a regular participant cancel their signup and confirm no new manager signup-change row is created.
+7. Renew the consumed manager subscriptions if necessary, then have a non-creator participant cancel inside the configured late-cancellation window.
+8. Confirm the creator receives the cancellation template and the log uses `templateKey: manager_late_cancellation_notice` with `notificationType: registration_cancelled`.
+9. Confirm the cancellation message shows the participant's manager alias when present, otherwise the signup name, and displays the post-cancel current/total count.
+10. Confirm the late-cancellation subscription becomes `consumed` while any accepted registration-threshold subscription remains unchanged.
 
 Do not commit real template IDs. Keep them in `miniprogram/config/env.local.js` or other local/secret deployment configuration only.
 
-If an organizer previously subscribed with the wrong template, deploy the latest `getActivityDetail`, upload the latest mini program frontend build, then have that organizer tap the signup-notification subscribe action again. The current frontend re-enables the action when the stored manager subscription template ID does not match the configured manager template ID.
+If an organizer previously subscribed with a missing or stale manager template, deploy the latest `getActivityDetail`, upload the latest mini program frontend build, then have that organizer tap the manager-notification subscribe action again. The current frontend requests only configured purposes that are missing or whose stored template ID is stale.
 
 ## Database Setup
 

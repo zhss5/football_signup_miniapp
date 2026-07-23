@@ -4,6 +4,35 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-23 - Dedicated Manager Late Cancellation Template
+
+Separated the manager registration-threshold and late-cancellation notification purposes.
+
+Delivered behavior:
+
+- mini-program configuration adds local-only `managerLateCancellationNotice` beside the existing manager threshold template.
+- activity creation requests all configured manager templates in one WeChat consent call, then records one `notification_subscriptions` row per stable template key.
+- Activity Detail receives independent threshold/cancellation subscription state, detects stale template IDs, and requests only missing purposes.
+- the manager action is labelled as an operations-notification subscription instead of implying that it covers signup thresholds only.
+- `cancelRegistration` queries and consumes only `manager_late_cancellation_notice`; an accepted `manager_registration_notice` row remains available for the registration threshold.
+- the late-cancellation message maps `time2` to China-local activity start time, `thing3` to activity title, `thing6` to `取消后剩余 current/total 人`, and `thing8` to current `users.managerAlias` with registration `signupName` fallback.
+- notification failure remains best-effort and does not roll back cancellation.
+- the local CloudBase client mirrors the two subscription states, late-window decision, template payload, alias fallback, notification log, and one-time consumption.
+
+TDD and verification:
+
+- notification service and create-flow RED tests first failed because the aggregate manager APIs and late-cancellation template config did not exist; the focused run passed with `3` suites and `53` tests.
+- Activity Detail/API RED tests first failed because the second state and missing-purpose request were absent; the API/page/localization run passed with `3` suites and `80` tests.
+- cancellation RED tests first showed the old threshold template and payload being consumed; cancellation, join, and manager-threshold regression passed with `3` suites and `28` tests.
+- local mock RED tests first failed for missing template IDs and cancellation notice behavior; the local mock suite passed with `38` tests.
+- implementation commits: `e2121b3`, `86dd4dc`, `bc76c62`, and `f64fddf`.
+
+Deployment scope:
+
+- real template IDs remain only in ignored `miniprogram/config/env.local.js`; committed defaults and documentation contain no real template ID.
+- redeploy `getActivityDetail` and `cancelRegistration`, then upload a matching mini-program build.
+- no Web Admin redeployment, collection migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover is required.
+
 ## 2026-07-22 - Configurable Late Cancellation Notice Window
 
 Completed the create/edit/copy configuration path for the existing late-cancellation organizer notice.

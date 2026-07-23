@@ -308,6 +308,14 @@ CREATE TABLE notification_subscriptions (
 
 Allowed `status` values: `accepted`, `declined`, `consumed`.
 
+Stable `template_key` values are:
+
+- `activity_notice` for participant activity confirmation/cancellation notices.
+- `manager_registration_notice` for manager registration-threshold notices.
+- `manager_late_cancellation_notice` for activity-creator late-cancellation notices.
+
+The two manager keys are separate one-time subscription purposes. Sending or consuming one key must not change the other row.
+
 ### `notification_logs`
 
 Stores notification send attempts.
@@ -409,7 +417,7 @@ Allowed `status` values: `sent`, `failed`, `skipped`.
 | `activity_logs.targetOpenId` / `activity_logs.userOpenId` | `activity_logs.user_openid` | Prefer `targetOpenId`; fall back to legacy `userOpenId`. |
 | `activity_logs.operatorOpenId` | `activity_logs.operator_openid` | Actor who performed the operation. |
 | `activity_logs.before`, `activity_logs.after`, and operation-specific fields | `activity_logs.payload` | JSON object for before/after details plus fields such as `teamId`, `requestedTeamId`, `autoAssigned`, `fromTeamId`, `toTeamId`, attendance status, and registration profile snapshots. |
-| `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Example: `activity_notice`, `manager_registration_notice`. |
+| `notification_subscriptions.templateKey` | `notification_subscriptions.template_key` | Stable values: `activity_notice`, `manager_registration_notice`, `manager_late_cancellation_notice`. |
 | `notification_logs.notificationType` | `notification_logs.notification_type` | Example: `proceeding`, `cancelled`, `registration_joined`, `registration_cancelled`. |
 | `notification_logs.targetOpenId` / `notification_logs.userOpenId` / `notification_logs.recipientOpenId` | `notification_logs.recipient_openid` | Prefer `targetOpenId`, then `recipientOpenId`, then legacy `userOpenId`. |
 | `notification_logs.operatorOpenId` / `notification_logs.actorOpenId` | `notification_logs.actor_openid` | Actor who triggered the notification where available. |
@@ -450,6 +458,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 26. Route self registration profile edits through the API-shaped `updateMyRegistrationProfile` mutation. Derive the user identity from trusted auth context, do not accept a target user id, and limit edits to the caller's joined, non-proxy registration before activity start.
 27. Update the registration snapshot, reusable user defaults, and `registration_profile_update` log in one transaction. Do not change team, registration status, attendance, joined time, counters, or aggregate counts. Existing Version 1 clients remain compatible because the API and log action are additive and reuse existing fields.
 28. Keep `getAttendanceStats.cancellationDetails` as an API-derived final-outcome projection rather than a stored UI document. SQL-backed implementations derive one `joined` or `cancelled` detail per participant and activity from registration state, returning stable activity/registration IDs, activity type, signup name, manager alias, start/cancellation timestamps, and the stable outcome enum. The additive field requires no CloudBase or SQL schema migration.
+29. Keep manager registration-threshold and late-cancellation subscriptions independent. `getActivityDetail.viewer` returns additive `lateCancellationNotificationSubscribed` and `lateCancellationNotificationSubscriptionTemplateId` fields alongside the existing registration-notification fields. A late cancellation reads and consumes only `manager_late_cancellation_notice`; it never consumes `manager_registration_notice`. The late-cancellation payload maps activity start time, title, remaining/total signup count, and participant display name to the selected WeChat template. Participant display name uses current `users.managerAlias` first, then the registration `signupName` snapshot, then a stable generic fallback. This adds no CloudBase collection or SQL column.
 
 ## Migration Validation Checklist
 
@@ -495,6 +504,8 @@ Run these checks during a future rehearsal after exporting CloudBase data and im
 - New and edited activities have at most one active `activity_teams.team_type = 'bench'` row.
 - Every `activities.late_cancellation_notice_window_hours` value is an integer from `0` through `168`; source rows without a value import as `6`, and source value `0` remains disabled after migration.
 - Late cancellation notification logs with `notification_type = 'registration_cancelled'` match CloudBase send attempts and skipped-subscription behavior.
+- For each late cancellation, only the activity creator's accepted `manager_late_cancellation_notice` row is consumed; any `manager_registration_notice` row remains unchanged.
+- SQL-backed late-cancellation payloads match CloudBase for China-local activity time, clipped activity title, `取消后剩余 current/total 人`, and participant name resolution (`users.manager_alias`, then `registrations.signup_name`, then the generic fallback).
 - Bench auto-promotion logs with `action = 'registration_auto_promoted'` match the current registration team assignment after participant cancellation or manager removal.
 - Proxy registrations requested for the bench resolve to a regular team whenever regular capacity exists; otherwise they remain in the bench. Their `proxy_signup_created` payload records the actual team and additive request/assignment metadata.
 - For each `registration_profile_update` log, the target and operator are the same real user, the registration still belongs to that user and activity, and before/after payloads contain only signup name, avatar URL, profile source, and preferred positions.

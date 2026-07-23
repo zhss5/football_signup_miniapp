@@ -75,15 +75,17 @@
 - Confirm organizer/admin can remove a proxy participant after adding them
 - Confirm organizer/admin can copy all active participant names, including preferred positions when available
 - Confirm organizer actions are ordered copy participant names, edit activity, confirm activity, cancel activity
-- Confirm organizer/admin can subscribe to signup-change notices for the current activity
-- Confirm organizer/admin signup-change notices use `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
-- Confirm the signup-notification subscription button greys out after accepted consent and remains grey after reopening Activity Detail
-- In the uploaded experience build, confirm the manager signup-notification consent prompt shows the manager signup-change template, not the participant activity confirmation/cancellation template
-- In `notification_subscriptions`, confirm the manager row uses `templateKey: manager_registration_notice` and a `templateId` matching local-only config `SUBSCRIBE_MESSAGE_TEMPLATE_IDS.managerRegistrationNotice`
-- If a manager row still uses the participant activity template ID, redeploy `getActivityDetail`, upload the latest mini program frontend build, and have the organizer tap the signup-notification subscribe action again
+- Confirm organizer/admin can subscribe to manager notices for the current activity
+- Confirm the consent prompt includes the configured registration-threshold and late-cancellation templates in one request
+- Confirm the manager-notification subscription button greys out only after every configured manager purpose is accepted and remains grey after reopening Activity Detail
+- In `notification_subscriptions`, confirm separate rows use `templateKey: manager_registration_notice` and `templateKey: manager_late_cancellation_notice` with their corresponding local-only template IDs
+- If either manager row has a stale template ID, redeploy `getActivityDetail`, upload the latest mini program frontend build, and confirm the action requests only the missing/stale purpose
 - Confirm the activity has a `registrationNoticeThreshold`; Create/Edit defaults it to 80% of the total signup limit and lets organizer/admin users change it.
 - After a regular participant joins and the post-join total reaches the threshold, confirm `notification_logs` records `registration_joined` with `templateKey: manager_registration_notice`.
-- Confirm participant self-cancel does not create a manager signup-change notification.
+- Confirm a non-creator participant cancelling inside `lateCancellationNoticeWindowHours` sends the activity creator a `registration_cancelled` notice with `templateKey: manager_late_cancellation_notice`.
+- Confirm the late-cancellation message shows China-local activity time, activity title, `取消后剩余 current/total 人`, and `managerAlias` with `signupName` fallback.
+- Confirm the late-cancellation send consumes only `manager_late_cancellation_notice`; the threshold subscription remains unchanged.
+- Confirm cancellation outside the configured window, a disabled value of `0`, and the creator's own self-cancel do not send the late-cancellation notice.
 - Confirm organizer/admin can tap `Confirm Activity` on a published activity
 - Confirm the confirmed state appears on Activity Detail after confirmation
 - Confirm a cancelled activity does not show the confirmed-state banner, even if it was confirmed before cancellation
