@@ -3,17 +3,70 @@ const { resolveOpenId } = require('./auth');
 const { COLLECTIONS } = require('./collections');
 const { businessError } = require('./errors');
 const { nowIso } = require('./time');
-const { buildManagerRegistrationMessageData } = require('./manager-notifications');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-const MANAGER_REGISTRATION_TEMPLATE_KEY = 'manager_registration_notice';
+const MANAGER_LATE_CANCELLATION_TEMPLATE_KEY = 'manager_late_cancellation_notice';
 const REGISTRATION_CANCELLED_NOTIFICATION = 'registration_cancelled';
 const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
+const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
 
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function clip(value, maxLength) {
+  const text = String(value || '')
+    .replace(CONTROL_CHARACTER_PATTERN, ' ')
+    .trim();
+  return Array.from(text).slice(0, maxLength).join('');
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const chinaTime = new Date(date.getTime() + CHINA_TIME_OFFSET_MS);
+  return `${chinaTime.getUTCFullYear()}-${pad(chinaTime.getUTCMonth() + 1)}-${pad(
+    chinaTime.getUTCDate()
+  )} ${pad(chinaTime.getUTCHours())}:${pad(chinaTime.getUTCMinutes())}`;
+}
+
+function buildLateCancellationMessageData(activity = {}, change = {}, managerAlias = '') {
+  const joinedCount = normalizeCount(
+    change.joinedCountAfter !== undefined ? change.joinedCountAfter : activity.joinedCount
+  );
+  const signupLimitTotal = normalizeCount(
+    change.signupLimitTotal !== undefined
+      ? change.signupLimitTotal
+      : activity.signupLimitTotal
+  );
+  const remainingText = signupLimitTotal > 0
+    ? `\u53d6\u6d88\u540e\u5269\u4f59 ${joinedCount}/${signupLimitTotal} \u4eba`
+    : `\u53d6\u6d88\u540e\u5269\u4f59 ${joinedCount} \u4eba`;
+
+  return {
+    time2: {
+      value: formatDateTime(activity.startAt)
+    },
+    thing3: {
+      value: clip(activity.title || '\u8db3\u7403\u6d3b\u52a8', 20)
+    },
+    thing6: {
+      value: clip(remainingText, 20)
+    },
+    thing8: {
+      value: clip(managerAlias || change.actorName || '\u961f\u5458', 20)
+    }
+  };
 }
 
 function isBenchTeam(team) {
@@ -185,6 +238,20 @@ async function consumeSubscription(db, subscription, stamp, status, errorMessage
     .catch(() => null);
 }
 
+async function getCancellationActorManagerAlias(db, actorOpenId) {
+  if (!actorOpenId) {
+    return '';
+  }
+
+  const result = await db
+    .collection(COLLECTIONS.USERS)
+    .doc(actorOpenId)
+    .get()
+    .catch(() => ({ data: null }));
+
+  return clip(result.data && result.data.managerAlias, 20);
+}
+
 async function notifyActivityOrganizerCancellation(db, payload, deps = {}) {
   const activity = payload && payload.activity ? payload.activity : {};
   const recipientOpenId = String(activity.organizerOpenId || '').trim();
@@ -194,7 +261,7 @@ async function notifyActivityOrganizerCancellation(db, payload, deps = {}) {
     actorName: payload.actorName || '',
     recipientOpenId,
     notificationType: REGISTRATION_CANCELLED_NOTIFICATION,
-    templateKey: MANAGER_REGISTRATION_TEMPLATE_KEY,
+    templateKey: MANAGER_LATE_CANCELLATION_TEMPLATE_KEY,
     createdAt: payload.stamp
   };
 
@@ -224,7 +291,7 @@ async function notifyActivityOrganizerCancellation(db, payload, deps = {}) {
     .where({
       activityId: activity._id,
       userOpenId: recipientOpenId,
-      templateKey: MANAGER_REGISTRATION_TEMPLATE_KEY,
+      templateKey: MANAGER_LATE_CANCELLATION_TEMPLATE_KEY,
       status: 'accepted'
     })
     .get();
@@ -259,11 +326,12 @@ async function notifyActivityOrganizerCancellation(db, payload, deps = {}) {
   }
 
   try {
+    const managerAlias = await getCancellationActorManagerAlias(db, payload.actorOpenId);
     await sendSubscribeMessage({
       touser: recipientOpenId,
       templateId: subscription.templateId,
       page: `pages/activity-detail/index?activityId=${activity._id}`,
-      data: buildManagerRegistrationMessageData(activity, payload),
+      data: buildLateCancellationMessageData(activity, payload, managerAlias),
       miniprogramState: 'formal',
       lang: 'zh_CN'
     });
@@ -457,6 +525,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 }
 
 module.exports = {
+  buildLateCancellationMessageData,
   main,
   notifyActivityOrganizerCancellation,
   shouldNotifyLateCancellation

@@ -77,7 +77,8 @@ function createNotificationDb(seed = {}) {
     updates: []
   };
   const data = {
-    notification_subscriptions: seed.notificationSubscriptions || {}
+    notification_subscriptions: seed.notificationSubscriptions || {},
+    users: seed.users || {}
   };
 
   return {
@@ -97,6 +98,11 @@ function createNotificationDb(seed = {}) {
         },
         doc(id) {
           return {
+            async get() {
+              return {
+                data: data[name] && data[name][id] ? data[name][id] : null
+              };
+            },
             async update({ data: updateData }) {
               writes.updates.push({ collection: name, id, data: updateData });
               return {};
@@ -746,21 +752,35 @@ test('cancelRegistration skips organizer notice when the late window is disabled
 test('notifyActivityOrganizerCancellation sends only to the activity creator and writes a cancellation log', async () => {
   const db = createNotificationDb({
     notificationSubscriptions: {
-      owner_sub: {
-        _id: 'owner_sub',
+      owner_threshold_sub: {
+        _id: 'owner_threshold_sub',
         activityId: 'activity_1',
         userOpenId: 'openid_owner',
         templateKey: 'manager_registration_notice',
-        templateId: 'tmpl_manager',
+        templateId: 'tmpl_threshold',
         status: 'accepted'
       },
-      admin_sub: {
-        _id: 'admin_sub',
+      owner_late_sub: {
+        _id: 'owner_late_sub',
+        activityId: 'activity_1',
+        userOpenId: 'openid_owner',
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
+        status: 'accepted'
+      },
+      admin_late_sub: {
+        _id: 'admin_late_sub',
         activityId: 'activity_1',
         userOpenId: 'openid_admin',
-        templateKey: 'manager_registration_notice',
-        templateId: 'tmpl_manager',
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
         status: 'accepted'
+      }
+    },
+    users: {
+      openid_player: {
+        _id: 'openid_player',
+        managerAlias: '虹生'
       }
     }
   });
@@ -772,6 +792,7 @@ test('notifyActivityOrganizerCancellation sends only to the activity creator and
       activity: {
         _id: 'activity_1',
         title: 'May 9 training',
+        startAt: '2026-05-09T12:00:00.000Z',
         organizerOpenId: 'openid_owner',
         joinedCount: 1,
         signupLimitTotal: 12
@@ -794,21 +815,80 @@ test('notifyActivityOrganizerCancellation sends only to the activity creator and
   expect(sendSubscribeMessage).toHaveBeenCalledWith(
     expect.objectContaining({
       touser: 'openid_owner',
-      templateId: 'tmpl_manager'
+      templateId: 'tmpl_late_cancel',
+      page: 'pages/activity-detail/index?activityId=activity_1',
+      data: {
+        time2: {
+          value: '2026-05-09 20:00'
+        },
+        thing3: {
+          value: 'May 9 training'
+        },
+        thing6: {
+          value: '取消后剩余 0/12 人'
+        },
+        thing8: {
+          value: '虹生'
+        }
+      },
+      miniprogramState: 'formal',
+      lang: 'zh_CN'
     })
   );
+  expect(db.writes.updates).toEqual([
+    expect.objectContaining({
+      collection: 'notification_subscriptions',
+      id: 'owner_late_sub',
+      data: expect.objectContaining({
+        status: 'consumed',
+        lastSendStatus: 'sent'
+      })
+    })
+  ]);
   expect(db.writes.adds).toEqual([
     expect.objectContaining({
       collection: 'notification_logs',
       data: expect.objectContaining({
         activityId: 'activity_1',
         actorOpenId: 'openid_player',
+        actorName: 'Alex',
         recipientOpenId: 'openid_owner',
         notificationType: 'registration_cancelled',
-        templateKey: 'manager_registration_notice',
-        templateId: 'tmpl_manager',
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
         status: 'sent'
       })
     })
   ]);
+});
+
+test('buildLateCancellationMessageData falls back to the signup name and clips template fields', () => {
+  expect(
+    cancelRegistration.buildLateCancellationMessageData(
+      {
+        title: 'A very long football activity title',
+        startAt: '2026-05-09T12:00:00.000Z',
+        signupLimitTotal: 15
+      },
+      {
+        actorName: 'Alex',
+        joinedCountAfter: 12,
+        signupLimitTotal: 15
+      },
+      ''
+    )
+  ).toEqual({
+    time2: {
+      value: '2026-05-09 20:00'
+    },
+    thing3: {
+      value: 'A very long football'
+    },
+    thing6: {
+      value: '取消后剩余 12/15 人'
+    },
+    thing8: {
+      value: 'Alex'
+    }
+  });
 });
