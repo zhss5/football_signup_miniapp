@@ -486,6 +486,14 @@ test('getActivityDetail exposes manager registration notification subscription s
       status: 'accepted'
     },
     {
+      _id: 'activity_1_openid_owner_manager_late_cancellation_notice',
+      activityId: 'activity_1',
+      userOpenId: 'openid_owner',
+      templateKey: 'manager_late_cancellation_notice',
+      templateId: 'tmpl_late_cancel',
+      status: 'accepted'
+    },
+    {
       _id: 'activity_1_openid_regular_activity_notice',
       activityId: 'activity_1',
       userOpenId: 'openid_regular',
@@ -562,6 +570,12 @@ test('getActivityDetail exposes manager registration notification subscription s
   expect(organizerResult.viewer.registrationNotificationSubscriptionTemplateId).toBe(
     'tmpl_manager'
   );
+  expect(organizerResult.viewer.lateCancellationNotificationSubscribed).toBe(true);
+  expect(organizerResult.viewer.lateCancellationNotificationSubscriptionTemplateId).toBe(
+    'tmpl_late_cancel'
+  );
   expect(regularResult.viewer.registrationNotificationSubscribed).toBe(false);
   expect(regularResult.viewer.registrationNotificationSubscriptionTemplateId).toBe('');
+  expect(regularResult.viewer.lateCancellationNotificationSubscribed).toBe(false);
+  expect(regularResult.viewer.lateCancellationNotificationSubscriptionTemplateId).toBe('');
 });

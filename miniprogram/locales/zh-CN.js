@@ -327,8 +327,8 @@ module.exports.modal.confirmProceeding = {
 };
 module.exports.toast.activityConfirmed = '\u6d3b\u52a8\u5df2\u786e\u8ba4';
 module.exports.toast.notificationFailed = '\u901a\u77e5\u53d1\u9001\u5931\u8d25';
-module.exports.activity.actions.subscribeRegistrationNotifications = '\u8ba2\u9605\u62a5\u540d\u901a\u77e5';
-module.exports.activity.actions.registrationNotificationsSubscribed = '\u5df2\u8ba2\u9605\u62a5\u540d\u901a\u77e5';
+module.exports.activity.actions.subscribeRegistrationNotifications = '\u8ba2\u9605\u8fd0\u8425\u901a\u77e5';
+module.exports.activity.actions.registrationNotificationsSubscribed = '\u5df2\u8ba2\u9605\u8fd0\u8425\u901a\u77e5';
 module.exports.activity.actions.markPresent = '\u8bbe\u4e3a\u51fa\u52e4';
 module.exports.activity.actions.markAbsent = '\u8bbe\u4e3a\u7f3a\u52e4';
 module.exports.activity.attendance = {
@@ -336,8 +336,8 @@ module.exports.activity.attendance = {
   present: '\u51fa\u52e4',
   absent: '\u7f3a\u52e4'
 };
-module.exports.toast.registrationNotificationSubscribed = '\u5df2\u5f00\u542f\u62a5\u540d\u901a\u77e5';
-module.exports.toast.registrationNotificationNotEnabled = '\u672a\u5f00\u542f\u62a5\u540d\u901a\u77e5';
+module.exports.toast.registrationNotificationSubscribed = '\u5df2\u5f00\u542f\u8fd0\u8425\u901a\u77e5';
+module.exports.toast.registrationNotificationNotEnabled = '\u672a\u5f00\u542f\u8fd0\u8425\u901a\u77e5';
 module.exports.toast.attendanceUpdated = '\u51fa\u52e4\u5df2\u66f4\u65b0';
 module.exports.toast.participantSaved = '\u5df2\u4fdd\u5b58';
 module.exports.activityJoin.preferredPositions = '\u559c\u6b22\u4f4d\u7f6e';

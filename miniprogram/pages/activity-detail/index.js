@@ -13,9 +13,12 @@ const {
   removeRegistration
 } = require('../../services/registration-service');
 const {
+  MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY,
+  MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
+  getManagerLateCancellationNoticeTemplateId,
   getManagerRegistrationNoticeTemplateId,
   notifyActivityParticipants,
-  requestManagerRegistrationNotificationSubscription
+  requestManagerNotificationSubscriptions
 } = require('../../services/notification-service');
 const { downloadFile } = require('../../services/cloud');
 const {
@@ -228,24 +231,44 @@ function isCloudFileId(value) {
 }
 
 function normalizeViewerRegistrationNotificationState(viewer = {}) {
-  const expectedTemplateId = getManagerRegistrationNoticeTemplateId();
-
-  if (!viewer || !viewer.registrationNotificationSubscribed || !expectedTemplateId) {
-    return viewer;
-  }
-
-  const savedTemplateId = String(
+  const registrationTemplateId = getManagerRegistrationNoticeTemplateId();
+  const lateCancellationTemplateId = getManagerLateCancellationNoticeTemplateId();
+  const normalizedViewer = {
+    ...viewer
+  };
+  const savedRegistrationTemplateId = String(
     viewer.registrationNotificationSubscriptionTemplateId || ''
   ).trim();
+  const savedLateCancellationTemplateId = String(
+    viewer.lateCancellationNotificationSubscriptionTemplateId || ''
+  ).trim();
 
-  if (savedTemplateId === expectedTemplateId) {
-    return viewer;
+  if (
+    viewer.registrationNotificationSubscribed &&
+    registrationTemplateId &&
+    savedRegistrationTemplateId !== registrationTemplateId
+  ) {
+    normalizedViewer.registrationNotificationSubscribed = false;
+  }
+  if (
+    viewer.lateCancellationNotificationSubscribed &&
+    lateCancellationTemplateId &&
+    savedLateCancellationTemplateId !== lateCancellationTemplateId
+  ) {
+    normalizedViewer.lateCancellationNotificationSubscribed = false;
   }
 
-  return {
-    ...viewer,
-    registrationNotificationSubscribed: false
-  };
+  const hasConfiguredManagerTemplate = Boolean(
+    registrationTemplateId || lateCancellationTemplateId
+  );
+  normalizedViewer.managerNotificationsSubscribed = Boolean(
+    hasConfiguredManagerTemplate &&
+      (!registrationTemplateId || normalizedViewer.registrationNotificationSubscribed) &&
+      (!lateCancellationTemplateId ||
+        normalizedViewer.lateCancellationNotificationSubscribed)
+  );
+
+  return normalizedViewer;
 }
 
 async function resolveCoverCandidate(candidate) {
@@ -902,26 +925,62 @@ Page({
 
   async onSubscribeRegistrationNotifications() {
     const translate = makeTranslator(this.data.locale || getAppLocale());
-    const viewer = this.data.viewer || {};
+    const viewer = normalizeViewerRegistrationNotificationState(this.data.viewer || {});
 
-    if (viewer.registrationNotificationSubscribed) {
+    if (viewer.managerNotificationsSubscribed) {
       return;
     }
 
     try {
-      const result = await requestManagerRegistrationNotificationSubscription(this.data.activityId);
-      const accepted = result && (result.status === 'accepted' || result.subscribed);
-
-      if (accepted) {
-        this.setData({
-          viewer: {
-            ...viewer,
-            registrationNotificationSubscribed: true,
-            registrationNotificationSubscriptionTemplateId:
-              result.templateId || viewer.registrationNotificationSubscriptionTemplateId || ''
-          }
-        });
+      const missingTemplateKeys = [];
+      if (
+        getManagerRegistrationNoticeTemplateId() &&
+        !viewer.registrationNotificationSubscribed
+      ) {
+        missingTemplateKeys.push(MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY);
       }
+      if (
+        getManagerLateCancellationNoticeTemplateId() &&
+        !viewer.lateCancellationNotificationSubscribed
+      ) {
+        missingTemplateKeys.push(MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY);
+      }
+      const results = missingTemplateKeys.length
+        ? await requestManagerNotificationSubscriptions(
+            this.data.activityId,
+            missingTemplateKeys
+          )
+        : [];
+      const updatedViewer = {
+        ...viewer
+      };
+
+      results.forEach(result => {
+        const resultAccepted =
+          result && (result.status === 'accepted' || result.subscribed);
+        if (!resultAccepted) {
+          return;
+        }
+
+        if (result.templateKey === MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY) {
+          updatedViewer.registrationNotificationSubscribed = true;
+          updatedViewer.registrationNotificationSubscriptionTemplateId =
+            result.templateId || '';
+        }
+        if (result.templateKey === MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY) {
+          updatedViewer.lateCancellationNotificationSubscribed = true;
+          updatedViewer.lateCancellationNotificationSubscriptionTemplateId =
+            result.templateId || '';
+        }
+      });
+
+      const normalizedViewer = normalizeViewerRegistrationNotificationState(updatedViewer);
+      const accepted = results.some(
+        result => result && (result.status === 'accepted' || result.subscribed)
+      );
+      this.setData({
+        viewer: normalizedViewer
+      });
 
       wx.showToast({
         title: accepted

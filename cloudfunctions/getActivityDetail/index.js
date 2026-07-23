@@ -9,6 +9,8 @@ const { normalizeActivityType } = require('./validators');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
+const MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY =
+  'manager_late_cancellation_notice';
 
 async function getCurrentUser(db, openid) {
   const result = await db
@@ -20,13 +22,13 @@ async function getCurrentUser(db, openid) {
   return result.data || null;
 }
 
-async function getRegistrationNotificationSubscriptionState(db, activityId, openid) {
+async function getNotificationSubscriptionState(db, activityId, openid, templateKey) {
   const result = await db
     .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
     .where({
       activityId,
       userOpenId: openid,
-      templateKey: MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY,
+      templateKey,
       status: 'accepted'
     })
     .get()
@@ -111,12 +113,29 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     delete activityPayload.activitySummaryUpdatedAt;
     delete activityPayload.activitySummaryUpdatedBy;
   }
-  const registrationNotificationSubscription = canManageRegistrations
-    ? await getRegistrationNotificationSubscriptionState(db, event.activityId, openid)
-    : {
-        subscribed: false,
-        templateId: ''
-      };
+  const emptyNotificationSubscription = {
+    subscribed: false,
+    templateId: ''
+  };
+  const [
+    registrationNotificationSubscription,
+    lateCancellationNotificationSubscription
+  ] = canManageRegistrations
+    ? await Promise.all([
+        getNotificationSubscriptionState(
+          db,
+          event.activityId,
+          openid,
+          MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY
+        ),
+        getNotificationSubscriptionState(
+          db,
+          event.activityId,
+          openid,
+          MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY
+        )
+      ])
+    : [emptyNotificationSubscription, emptyNotificationSubscription];
 
   const userOpenIds = Array.from(new Set(joinedRes.data.map(item => item.userOpenId)));
   let usersById = {};
@@ -187,7 +206,11 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       canCancelSignup,
       registrationNotificationSubscribed: registrationNotificationSubscription.subscribed,
       registrationNotificationSubscriptionTemplateId:
-        registrationNotificationSubscription.templateId
+        registrationNotificationSubscription.templateId,
+      lateCancellationNotificationSubscribed:
+        lateCancellationNotificationSubscription.subscribed,
+      lateCancellationNotificationSubscriptionTemplateId:
+        lateCancellationNotificationSubscription.templateId
     }
   };
 }

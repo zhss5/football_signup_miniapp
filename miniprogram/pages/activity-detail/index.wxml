@@ -250,11 +250,11 @@
 
       <button
         wx:if="{{viewer.canManageRegistrations}}"
-        class="action-button {{viewer.registrationNotificationSubscribed ? 'action-button-disabled' : ''}}"
-        disabled="{{viewer.registrationNotificationSubscribed}}"
+        class="action-button {{viewer.managerNotificationsSubscribed ? 'action-button-disabled' : ''}}"
+        disabled="{{viewer.managerNotificationsSubscribed}}"
         bindtap="onSubscribeRegistrationNotifications"
       >
-        {{viewer.registrationNotificationSubscribed ? i18n.activity.actions.registrationNotificationsSubscribed : i18n.activity.actions.subscribeRegistrationNotifications}}
+        {{viewer.managerNotificationsSubscribed ? i18n.activity.actions.registrationNotificationsSubscribed : i18n.activity.actions.subscribeRegistrationNotifications}}
       </button>
 
       <button wx:if="{{viewer.canEditActivity}}" class="action-button" bindtap="openEditActivity">

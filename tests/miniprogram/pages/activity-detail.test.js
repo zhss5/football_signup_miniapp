@@ -36,10 +36,13 @@ jest.mock('../../../miniprogram/utils/formatters', () => ({
 }));
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
+  MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY: 'manager_late_cancellation_notice',
+  MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY: 'manager_registration_notice',
+  getManagerLateCancellationNoticeTemplateId: jest.fn(() => 'tmpl_late_current'),
   getManagerRegistrationNoticeTemplateId: jest.fn(() => 'tmpl_manager_current'),
   notifyActivityParticipants: jest.fn(),
   requestActivityNotificationSubscription: jest.fn(),
-  requestManagerRegistrationNotificationSubscription: jest.fn()
+  requestManagerNotificationSubscriptions: jest.fn()
 }));
 
 const fs = require('fs');
@@ -61,9 +64,10 @@ describe('activity detail page', () => {
   let getActivitySignupState;
   let resolveActivityCoverImage;
   let notifyActivityParticipants;
+  let getManagerLateCancellationNoticeTemplateId;
   let getManagerRegistrationNoticeTemplateId;
   let requestActivityNotificationSubscription;
-  let requestManagerRegistrationNotificationSubscription;
+  let requestManagerNotificationSubscriptions;
 
   beforeEach(() => {
     pageConfig = null;
@@ -99,10 +103,11 @@ describe('activity detail page', () => {
     ({ formatDateTime } = require('../../../miniprogram/utils/formatters'));
     ({ getActivitySignupState } = require('../../../miniprogram/utils/formatters'));
     ({
+      getManagerLateCancellationNoticeTemplateId,
       getManagerRegistrationNoticeTemplateId,
       notifyActivityParticipants,
       requestActivityNotificationSubscription,
-      requestManagerRegistrationNotificationSubscription
+      requestManagerNotificationSubscriptions
     } = require('../../../miniprogram/services/notification-service'));
     notifyActivityParticipants.mockResolvedValue({
       sent: 0,
@@ -112,16 +117,26 @@ describe('activity detail page', () => {
       configured: true,
       status: 'accepted'
     });
-    requestManagerRegistrationNotificationSubscription.mockResolvedValue({
-      configured: true,
-      templateId: 'tmpl_manager_current',
-      status: 'accepted'
-    });
+    requestManagerNotificationSubscriptions.mockResolvedValue([
+      {
+        configured: true,
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager_current',
+        status: 'accepted'
+      },
+      {
+        configured: true,
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_current',
+        status: 'accepted'
+      }
+    ]);
     getActivitySignupState.mockReturnValue({
       statusText: 'Joinable',
       joinEnabled: true,
       isExpired: false
     });
+    getManagerLateCancellationNoticeTemplateId.mockReturnValue('tmpl_late_current');
     getManagerRegistrationNoticeTemplateId.mockReturnValue('tmpl_manager_current');
   });
 
@@ -903,7 +918,9 @@ describe('activity detail page', () => {
       viewer: {
         canManageRegistrations: true,
         registrationNotificationSubscribed: true,
-        registrationNotificationSubscriptionTemplateId: 'tmpl_activity_notice'
+        registrationNotificationSubscriptionTemplateId: 'tmpl_activity_notice',
+        lateCancellationNotificationSubscribed: true,
+        lateCancellationNotificationSubscriptionTemplateId: 'tmpl_late_current'
       }
     });
 
@@ -923,10 +940,13 @@ describe('activity detail page', () => {
     await pageConfig.reload.call(ctx);
 
     expect(getManagerRegistrationNoticeTemplateId).toHaveBeenCalled();
+    expect(getManagerLateCancellationNoticeTemplateId).toHaveBeenCalled();
     expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(false);
     expect(ctx.data.viewer.registrationNotificationSubscriptionTemplateId).toBe(
       'tmpl_activity_notice'
     );
+    expect(ctx.data.viewer.lateCancellationNotificationSubscribed).toBe(true);
+    expect(ctx.data.viewer.managerNotificationsSubscribed).toBe(false);
   });
 
   test('reload hides the map preview when the activity has no coordinates', async () => {
@@ -1204,19 +1224,31 @@ describe('activity detail page', () => {
 
     expect(wxml).toContain('bindtap="onSubscribeRegistrationNotifications"');
     expect(wxml).toContain('i18n.activity.actions.subscribeRegistrationNotifications');
-    expect(wxml).toContain('disabled="{{viewer.registrationNotificationSubscribed}}"');
+    expect(wxml).toContain('disabled="{{viewer.managerNotificationsSubscribed}}"');
     expect(wxml).toContain('action-button-disabled');
     expect(wxml).toContain('i18n.activity.actions.registrationNotificationsSubscribed');
   });
 
-  test('onSubscribeRegistrationNotifications records manager notification consent', async () => {
+  test('onSubscribeRegistrationNotifications requests only missing manager notification consent', async () => {
+    requestManagerNotificationSubscriptions.mockResolvedValue([
+      {
+        configured: true,
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_current',
+        status: 'accepted'
+      }
+    ]);
     const ctx = {
       data: {
         activityId: 'activity_123',
         locale: 'en-US',
         viewer: {
           canManageRegistrations: true,
-          registrationNotificationSubscribed: false
+          registrationNotificationSubscribed: true,
+          registrationNotificationSubscriptionTemplateId: 'tmpl_manager_current',
+          lateCancellationNotificationSubscribed: false,
+          lateCancellationNotificationSubscriptionTemplateId: '',
+          managerNotificationsSubscribed: false
         }
       },
       setData(update) {
@@ -1229,14 +1261,21 @@ describe('activity detail page', () => {
 
     await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
 
-    expect(requestManagerRegistrationNotificationSubscription).toHaveBeenCalledWith('activity_123');
+    expect(requestManagerNotificationSubscriptions).toHaveBeenCalledWith('activity_123', [
+      'manager_late_cancellation_notice'
+    ]);
     expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
     expect(ctx.data.viewer.registrationNotificationSubscribed).toBe(true);
     expect(ctx.data.viewer.registrationNotificationSubscriptionTemplateId).toBe(
       'tmpl_manager_current'
     );
+    expect(ctx.data.viewer.lateCancellationNotificationSubscribed).toBe(true);
+    expect(ctx.data.viewer.lateCancellationNotificationSubscriptionTemplateId).toBe(
+      'tmpl_late_current'
+    );
+    expect(ctx.data.viewer.managerNotificationsSubscribed).toBe(true);
     expect(global.wx.showToast).toHaveBeenCalledWith({
-      title: 'Signup notifications enabled',
+      title: 'Manager notifications enabled',
       icon: 'success'
     });
   });
@@ -1248,14 +1287,18 @@ describe('activity detail page', () => {
         locale: 'en-US',
         viewer: {
           canManageRegistrations: true,
-          registrationNotificationSubscribed: true
+          registrationNotificationSubscribed: true,
+          registrationNotificationSubscriptionTemplateId: 'tmpl_manager_current',
+          lateCancellationNotificationSubscribed: true,
+          lateCancellationNotificationSubscriptionTemplateId: 'tmpl_late_current',
+          managerNotificationsSubscribed: true
         }
       }
     };
 
     await pageConfig.onSubscribeRegistrationNotifications.call(ctx);
 
-    expect(requestManagerRegistrationNotificationSubscription).not.toHaveBeenCalled();
+    expect(requestManagerNotificationSubscriptions).not.toHaveBeenCalled();
     expect(requestActivityNotificationSubscription).not.toHaveBeenCalled();
   });
 
