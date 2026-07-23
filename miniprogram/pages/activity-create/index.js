@@ -19,7 +19,7 @@ const {
 } = require('../../utils/activity-draft');
 const {
   recordActivityNotificationSubscription,
-  requestManagerRegistrationNotificationSubscriptionConsent
+  requestManagerNotificationSubscriptionsConsent
 } = require('../../services/notification-service');
 const { validateActivityDraft } = require('../../utils/validators');
 const { TEAM_COLOR_OPTIONS } = require('../../utils/team-colors');
@@ -790,9 +790,9 @@ Page({
       }
 
       this.setData({ submitting: true });
-      const managerSubscription = this.data.isEditMode
-        ? null
-        : await requestManagerRegistrationNotificationSubscriptionConsent().catch(() => null);
+      const managerSubscriptions = this.data.isEditMode
+        ? []
+        : await requestManagerNotificationSubscriptionsConsent().catch(() => []);
       const uploadedPayload = await uploadActivityCover(payload);
       const { activityId } = this.data.isEditMode
         ? await updateActivity({
@@ -800,8 +800,12 @@ Page({
             activityId: this.data.editActivityId
           })
         : await createActivity(uploadedPayload);
-      if (!this.data.isEditMode && managerSubscription) {
-        await recordActivityNotificationSubscription(activityId, managerSubscription).catch(() => null);
+      if (!this.data.isEditMode) {
+        for (const managerSubscription of managerSubscriptions) {
+          await recordActivityNotificationSubscription(activityId, managerSubscription).catch(
+            () => null
+          );
+        }
       }
       if (this.data.isEditMode) {
         returnToEditedActivityDetail(activityId);

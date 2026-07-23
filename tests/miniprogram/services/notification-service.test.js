@@ -83,6 +83,109 @@ describe('notification service', () => {
     });
   });
 
+  test('requests configured manager notice templates together and records each result separately', async () => {
+    global.wx.requestSubscribeMessage = jest.fn(({ success }) => {
+      success({
+        tmpl_threshold: 'accept',
+        tmpl_late_cancel: 'reject'
+      });
+    });
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        managerRegistrationNotice: 'tmpl_threshold',
+        managerLateCancellationNotice: 'tmpl_late_cancel'
+      }
+    }));
+
+    const {
+      requestManagerNotificationSubscriptions
+    } = require('../../../miniprogram/services/notification-service');
+
+    await expect(
+      requestManagerNotificationSubscriptions('activity_1')
+    ).resolves.toEqual([
+      {
+        configured: true,
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_threshold',
+        status: 'accepted'
+      },
+      {
+        configured: true,
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
+        status: 'declined'
+      }
+    ]);
+
+    expect(global.wx.requestSubscribeMessage).toHaveBeenCalledWith({
+      tmplIds: ['tmpl_threshold', 'tmpl_late_cancel'],
+      success: expect.any(Function),
+      fail: expect.any(Function)
+    });
+    expect(call).toHaveBeenNthCalledWith(1, 'recordNotificationSubscription', {
+      activityId: 'activity_1',
+      templateKey: 'manager_registration_notice',
+      templateId: 'tmpl_threshold',
+      status: 'accepted'
+    });
+    expect(call).toHaveBeenNthCalledWith(2, 'recordNotificationSubscription', {
+      activityId: 'activity_1',
+      templateKey: 'manager_late_cancellation_notice',
+      templateId: 'tmpl_late_cancel',
+      status: 'declined'
+    });
+  });
+
+  test('requests only selected missing manager notice templates', async () => {
+    global.wx.requestSubscribeMessage = jest.fn(({ success }) => {
+      success({
+        tmpl_late_cancel: 'accept'
+      });
+    });
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
+        managerRegistrationNotice: 'tmpl_threshold',
+        managerLateCancellationNotice: 'tmpl_late_cancel'
+      }
+    }));
+
+    const {
+      requestManagerNotificationSubscriptionsConsent
+    } = require('../../../miniprogram/services/notification-service');
+
+    await expect(
+      requestManagerNotificationSubscriptionsConsent(['manager_late_cancellation_notice'])
+    ).resolves.toEqual([
+      {
+        configured: true,
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
+        status: 'accepted'
+      }
+    ]);
+    expect(global.wx.requestSubscribeMessage).toHaveBeenCalledWith({
+      tmplIds: ['tmpl_late_cancel'],
+      success: expect.any(Function),
+      fail: expect.any(Function)
+    });
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  test('returns no manager subscriptions when no manager template is configured', async () => {
+    jest.doMock('../../../miniprogram/config/env', () => ({
+      SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {}
+    }));
+
+    const {
+      requestManagerNotificationSubscriptionsConsent
+    } = require('../../../miniprogram/services/notification-service');
+
+    await expect(requestManagerNotificationSubscriptionsConsent()).resolves.toEqual([]);
+    expect(global.wx.requestSubscribeMessage).not.toHaveBeenCalled();
+    expect(call).not.toHaveBeenCalled();
+  });
+
   test('can request subscription consent before recording it', async () => {
     jest.doMock('../../../miniprogram/config/env', () => ({
       SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {

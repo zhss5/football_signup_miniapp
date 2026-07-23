@@ -61,7 +61,8 @@ const defaults = {
   ENABLE_CLOUD_DIAGNOSTICS: false,
   SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
     activityNotice: '',
-    managerRegistrationNotice: ''
+    managerRegistrationNotice: '',
+    managerLateCancellationNotice: ''
   }
 };
 

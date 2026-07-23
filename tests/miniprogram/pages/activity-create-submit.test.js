@@ -18,7 +18,7 @@ jest.mock('../../../miniprogram/services/user-service', () => ({
 
 jest.mock('../../../miniprogram/services/notification-service', () => ({
   recordActivityNotificationSubscription: jest.fn(),
-  requestManagerRegistrationNotificationSubscriptionConsent: jest.fn()
+  requestManagerNotificationSubscriptionsConsent: jest.fn()
 }));
 
 jest.mock('../../../miniprogram/utils/activity-draft', () => {
@@ -102,7 +102,7 @@ describe('activity create submit flow', () => {
   let uploadFile;
   let validateActivityDraft;
   let recordActivityNotificationSubscription;
-  let requestManagerRegistrationNotificationSubscriptionConsent;
+  let requestManagerNotificationSubscriptionsConsent;
   let app;
 
   beforeEach(() => {
@@ -132,13 +132,10 @@ describe('activity create submit flow', () => {
     ({ uploadFile } = require('../../../miniprogram/services/cloud'));
     ({
       recordActivityNotificationSubscription,
-      requestManagerRegistrationNotificationSubscriptionConsent
+      requestManagerNotificationSubscriptionsConsent
     } = require('../../../miniprogram/services/notification-service'));
     ({ validateActivityDraft } = require('../../../miniprogram/utils/validators'));
-    requestManagerRegistrationNotificationSubscriptionConsent.mockResolvedValue({
-      configured: false,
-      skipped: true
-    });
+    requestManagerNotificationSubscriptionsConsent.mockResolvedValue([]);
     recordActivityNotificationSubscription.mockResolvedValue({ skipped: true });
   });
 
@@ -1105,13 +1102,21 @@ describe('activity create submit flow', () => {
     );
   });
 
-  test('onSubmit requests manager registration notification consent before creating and records it after creation', async () => {
-    requestManagerRegistrationNotificationSubscriptionConsent.mockResolvedValue({
-      configured: true,
-      templateKey: 'manager_registration_notice',
-      templateId: 'tmpl_manager',
-      status: 'accepted'
-    });
+  test('onSubmit requests manager notification consent before creating and records each result after creation', async () => {
+    requestManagerNotificationSubscriptionsConsent.mockResolvedValue([
+      {
+        configured: true,
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_threshold',
+        status: 'accepted'
+      },
+      {
+        configured: true,
+        templateKey: 'manager_late_cancellation_notice',
+        templateId: 'tmpl_late_cancel',
+        status: 'accepted'
+      }
+    ]);
     createActivity.mockResolvedValue({ activityId: 'activity_123' });
 
     const ctx = {
@@ -1132,14 +1137,20 @@ describe('activity create submit flow', () => {
 
     await pageConfig.onSubmit.call(ctx);
 
-    expect(requestManagerRegistrationNotificationSubscriptionConsent).toHaveBeenCalled();
+    expect(requestManagerNotificationSubscriptionsConsent).toHaveBeenCalled();
     expect(
-      requestManagerRegistrationNotificationSubscriptionConsent.mock.invocationCallOrder[0]
+      requestManagerNotificationSubscriptionsConsent.mock.invocationCallOrder[0]
     ).toBeLessThan(createActivity.mock.invocationCallOrder[0]);
-    expect(recordActivityNotificationSubscription).toHaveBeenCalledWith('activity_123', {
+    expect(recordActivityNotificationSubscription).toHaveBeenNthCalledWith(1, 'activity_123', {
       configured: true,
       templateKey: 'manager_registration_notice',
-      templateId: 'tmpl_manager',
+      templateId: 'tmpl_threshold',
+      status: 'accepted'
+    });
+    expect(recordActivityNotificationSubscription).toHaveBeenNthCalledWith(2, 'activity_123', {
+      configured: true,
+      templateKey: 'manager_late_cancellation_notice',
+      templateId: 'tmpl_late_cancel',
       status: 'accepted'
     });
   });

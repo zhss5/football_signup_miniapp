@@ -25,7 +25,8 @@ describe('env config', () => {
       ENABLE_CLOUD_DIAGNOSTICS: false,
       SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
         activityNotice: '',
-        managerRegistrationNotice: ''
+        managerRegistrationNotice: '',
+        managerLateCancellationNotice: ''
       }
     });
     expect(env.getRuntimeEnv('develop')).toBe('test');
@@ -97,7 +98,8 @@ describe('env config', () => {
       ENABLE_CLOUD_DIAGNOSTICS: true,
       SUBSCRIBE_MESSAGE_TEMPLATE_IDS: {
         activityNotice: '',
-        managerRegistrationNotice: ''
+        managerRegistrationNotice: '',
+        managerLateCancellationNotice: ''
       }
     });
   });
