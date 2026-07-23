@@ -73,6 +73,7 @@ function createFakeDb(options = {}) {
       ...(options.registrations || {})
     },
     activity_logs: [
+      ...(options.activity_logs_prefix || []),
       {
         _id: 'log_1',
         activityId: 'activity_1',
@@ -108,25 +109,47 @@ function createFakeDb(options = {}) {
     ]
   };
 
+  const queryCalls = [];
+
+  function createCollectionQuery(name, criteria = null, querySkip = 0, queryLimit = 100) {
+    return {
+      doc(id) {
+        return {
+          async get() {
+            return { data: state[name][id] || null };
+          }
+        };
+      },
+      where(nextCriteria) {
+        queryCalls.push({ collection: name, criteria: nextCriteria });
+        return createCollectionQuery(name, nextCriteria, querySkip, queryLimit);
+      },
+      skip(value) {
+        return createCollectionQuery(name, criteria, value, queryLimit);
+      },
+      limit(value) {
+        return createCollectionQuery(name, criteria, querySkip, value);
+      },
+      async get() {
+        const source = Array.isArray(state[name])
+          ? state[name]
+          : Object.values(state[name] || {});
+        const filtered = criteria
+          ? source.filter(item =>
+              Object.entries(criteria).every(([key, value]) => item && item[key] === value)
+            )
+          : source;
+
+        return { data: filtered.slice(querySkip, querySkip + queryLimit) };
+      }
+    };
+  }
+
   return {
     state,
+    queryCalls,
     collection(name) {
-      return {
-        doc(id) {
-          return {
-            async get() {
-              return { data: state[name][id] || null };
-            }
-          };
-        },
-        async get() {
-          if (Array.isArray(state[name])) {
-            return { data: state[name] };
-          }
-
-          return { data: Object.values(state[name] || {}) };
-        }
-      };
+      return createCollectionQuery(name);
     }
   };
 }
@@ -230,6 +253,10 @@ test('super_admin can filter activity logs by action', async () => {
       after: { managerAlias: 'Zhang San' }
     })
   ]);
+  expect(db.queryCalls).toContainEqual({
+    collection: 'activity_logs',
+    criteria: { action: 'manager_alias_update' }
+  });
 });
 
 test('organizer can list logs only for their own activities', async () => {
@@ -275,4 +302,76 @@ test('listActivityLogs supports pagination with hasMore', async () => {
 
   expect(result.items.map(item => item._id)).toEqual(['log_2']);
   expect(result.hasMore).toBe(true);
+});
+
+test('activity detail filters logs in the database before the collection read limit', async () => {
+  const olderOtherActivityLogs = Array.from({ length: 100 }, (_, index) => ({
+    _id: `old_other_${index}`,
+    activityId: 'activity_other',
+    action: 'signup_joined',
+    operatorOpenId: 'openid_other_owner',
+    targetOpenId: `openid_other_${index}`,
+    createdAt: `2026-06-01T00:${String(index % 60).padStart(2, '0')}:00.000Z`
+  }));
+  const db = createFakeDb({
+    activity_logs_prefix: olderOtherActivityLogs
+  });
+
+  const result = await listActivityLogs.main(
+    { activityId: 'activity_1', limit: 10 },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(result.items.map(item => item._id)).toEqual(['log_2', 'log_1']);
+  expect(db.queryCalls).toContainEqual({
+    collection: 'activity_logs',
+    criteria: { activityId: 'activity_1' }
+  });
+});
+
+test('target filtering queries current and legacy activity log identity fields', async () => {
+  const db = createFakeDb({
+    activity_logs: [
+      {
+        _id: 'log_legacy_target',
+        activityId: 'activity_1',
+        action: 'attendance_update',
+        operatorOpenId: 'openid_owner',
+        userOpenId: 'openid_player',
+        registrationId: 'reg_1',
+        createdAt: '2026-06-10T13:00:00.000Z'
+      }
+    ]
+  });
+
+  const result = await listActivityLogs.main(
+    { activityId: 'activity_1', targetOpenId: 'openid_player' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(result.items.map(item => item._id)).toEqual([
+    'log_legacy_target',
+    'log_2',
+    'log_1'
+  ]);
+  expect(db.queryCalls).toEqual(
+    expect.arrayContaining([
+      {
+        collection: 'activity_logs',
+        criteria: {
+          activityId: 'activity_1',
+          targetOpenId: 'openid_player'
+        }
+      },
+      {
+        collection: 'activity_logs',
+        criteria: {
+          activityId: 'activity_1',
+          userOpenId: 'openid_player'
+        }
+      }
+    ])
+  );
 });

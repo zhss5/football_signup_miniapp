@@ -8,15 +8,33 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const COLLECTION_BATCH_SIZE = 100;
 
 async function loadDoc(db, collectionName, id) {
   const res = await db.collection(collectionName).doc(id).get();
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName) {
-  const res = await db.collection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
+async function loadCollection(db, collectionName, criteria = null) {
+  const items = [];
+  let offset = 0;
+
+  while (true) {
+    let query = db.collection(collectionName);
+    if (criteria && Object.keys(criteria).length) {
+      query = query.where(criteria);
+    }
+
+    const res = await query.skip(offset).limit(COLLECTION_BATCH_SIZE).get();
+    const batch = Array.isArray(res.data) ? res.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return items;
+    }
+
+    offset += batch.length;
+  }
 }
 
 function normalizeLimit(value) {
@@ -78,6 +96,53 @@ function getUserManagerAlias(user) {
   return normalizeText(user && user.managerAlias);
 }
 
+function deduplicateLogs(logGroups) {
+  const logsById = new Map();
+
+  logGroups.flat().forEach(log => {
+    if (!log) {
+      return;
+    }
+
+    const key = log._id || [
+      log.activityId,
+      log.action,
+      log.registrationId,
+      log.createdAt
+    ].join(':');
+    logsById.set(key, log);
+  });
+
+  return Array.from(logsById.values());
+}
+
+async function loadActivityLogs(db, filters) {
+  const criteria = {};
+  if (filters.activityId) {
+    criteria.activityId = filters.activityId;
+  }
+  if (filters.action) {
+    criteria.action = filters.action;
+  }
+
+  if (!filters.targetOpenId) {
+    return loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, criteria);
+  }
+
+  const [currentLogs, legacyLogs] = await Promise.all([
+    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, {
+      ...criteria,
+      targetOpenId: filters.targetOpenId
+    }),
+    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, {
+      ...criteria,
+      userOpenId: filters.targetOpenId
+    })
+  ]);
+
+  return deduplicateLogs([currentLogs, legacyLogs]);
+}
+
 function toSafeLog(log, activityById, registrationById, teamById, userById) {
   const activity = activityById[log.activityId] || {};
   const registration = registrationById[log.registrationId] || {};
@@ -137,7 +202,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const [caller, activities, logs, registrations, teams, users] = await Promise.all([
     loadDoc(db, COLLECTIONS.USERS, openid),
     loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS),
+    loadActivityLogs(db, { activityId, action, targetOpenId }),
     loadCollection(db, COLLECTIONS.REGISTRATIONS),
     loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
     loadCollection(db, COLLECTIONS.USERS)

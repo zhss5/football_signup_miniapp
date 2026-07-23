@@ -4,6 +4,29 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-23 - Recent Activity Log Query Repair
+
+Fixed an activity-detail log query that incorrectly displayed zero rows once `activity_logs` exceeded the CloudBase collection read limit.
+
+Root cause and behavior:
+
+- `listActivityLogs` previously loaded one unfiltered collection page and only then filtered by `activityId`, so recent activity rows outside that page were invisible.
+- the test environment had `168` total activity-log rows, while the affected activity already had `22` persisted rows; no data was lost and no backfill is required.
+- `activityId` and `action` filters are now applied before reading collection pages.
+- target-user filtering queries both the current `targetOpenId` field and the legacy `userOpenId` field, then deduplicates matching rows.
+- collection reads continue in bounded batches, so global admin and organizer log views no longer stop at the first CloudBase page.
+- response fields, role boundaries, Web Admin calls, and future SQL mappings remain unchanged.
+
+TDD and deployment scope:
+
+- the regression first returned no rows when the target activity logs appeared after `100` unrelated rows.
+- focused `listActivityLogs` regression passed with `10` tests.
+- cloud-function and Web Admin API/view regression passed with `3` suites and `60` tests.
+- full regression passed through direct Jest execution with `83` suites and `812` tests.
+- deployed only `listActivityLogs` to `cloudbase-miniapp-test-dfc753877`.
+- authenticated Web Admin smoke reopened `测试07221933` and rendered all `22` persisted activity-log rows instead of zero.
+- no Web Admin static redeployment, data migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover was required.
+
 ## 2026-07-23 - Dedicated Manager Late Cancellation Template
 
 Separated the manager registration-threshold and late-cancellation notification purposes.
