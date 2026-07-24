@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_ADMIN_ASSET_VERSION = '20260722-cancel-rate-tone';
+const WEB_ADMIN_ASSET_VERSION = '20260724-unified-export';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -283,14 +283,31 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const qrIndex = html.indexOf(`src="./vendor/qrcode.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+  const xlsxIndex = html.indexOf(
+    `src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`
+  );
+  const exportFilesIndex = html.indexOf(
+    `src="./src/export-files.js?v=${WEB_ADMIN_ASSET_VERSION}"`
+  );
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
   expect(runtimeIndex).toBeGreaterThan(configIndex);
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
   expect(qrIndex).toBeGreaterThan(apiIndex);
-  expect(appIndex).toBeGreaterThan(qrIndex);
-  expect(html).not.toContain('vendor/xlsx.full.min.js');
+  expect(xlsxIndex).toBeGreaterThan(qrIndex);
+  expect(exportFilesIndex).toBeGreaterThan(xlsxIndex);
+  expect(appIndex).toBeGreaterThan(exportFilesIndex);
+  expect(html).not.toContain('cdn.sheetjs.com');
+});
+
+test('web admin vendors the fixed SheetJS browser runtime', () => {
+  const vendorPath = path.join(process.cwd(), 'web-admin/vendor/xlsx.full.min.js');
+  const noticePath = path.join(process.cwd(), 'web-admin/vendor/SHEETJS.md');
+
+  expect(fs.existsSync(vendorPath)).toBe(true);
+  expect(fs.statSync(vendorPath).size).toBeGreaterThan(500000);
+  expect(fs.readFileSync(noticePath, 'utf8')).toContain('SheetJS Community Edition 0.20.3');
 });
 
 test('web admin static shell vendors the QR renderer for hosted login smoke', () => {
