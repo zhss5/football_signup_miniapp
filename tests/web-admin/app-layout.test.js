@@ -288,6 +288,18 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       exportFormat: 'xlsx'
     })
   };
+  const rosterExportOptions = {
+    csv: createElement({
+      action: 'export-file',
+      exportSource: 'activity-roster',
+      exportFormat: 'csv'
+    }),
+    xlsx: createElement({
+      action: 'export-file',
+      exportSource: 'activity-roster',
+      exportFormat: 'xlsx'
+    })
+  };
   const elements = {
     '[data-view="identity"]': createElement(),
     '[data-view="login"]': createElement(),
@@ -394,6 +406,11 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       exportTriggers.statistics,
       statisticsExportOptions.csv,
       statisticsExportOptions.xlsx
+    ],
+    '[data-export-source="activity-roster"]': [
+      exportTriggers.roster,
+      rosterExportOptions.csv,
+      rosterExportOptions.xlsx
     ]
   });
   const api = {
@@ -468,6 +485,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     exportTriggers,
     nav,
     pagination,
+    rosterExportOptions,
     statisticsExportOptions,
     statisticsPanes,
     statisticsTabs,
@@ -3591,6 +3609,100 @@ test.each([
   if (!xlsxError) {
     expect(writeFile).not.toHaveBeenCalled();
   }
+});
+
+test('activity roster export snapshots activity and keyword while blocking duplicate downloads', async () => {
+  const pendingExport = createDeferred();
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const exportActivityRoster = jest.fn().mockReturnValue(pendingExport.promise);
+  const {
+    app,
+    elements,
+    exportTriggers,
+    rosterExportOptions
+  } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      exportActivityRoster,
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: { title: 'Friday Football', activityType: 'external' },
+        teams: []
+      })
+    },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  elements['[data-roster-keyword]'].value = 'Goalkeeper';
+  elements['[data-roster-keyword]'].eventHandlers.input();
+
+  const firstExport = app.exportFile('activity-roster', 'xlsx');
+  const duplicateExport = app.exportFile('activity-roster', 'xlsx');
+
+  expect(exportActivityRoster).toHaveBeenCalledTimes(1);
+  expect(exportTriggers.roster.disabled).toBe(true);
+  expect(rosterExportOptions.csv.disabled).toBe(true);
+  expect(rosterExportOptions.xlsx.disabled).toBe(true);
+
+  app.state.selectedActivityId = 'activity_2';
+  app.state.activityDetailRosterKeyword = 'Alex';
+  pendingExport.resolve({
+    rows: [
+      {
+        activityId: 'activity_1',
+        activityType: 'external',
+        activityTypeLabel: '外战',
+        teamId: 'team_red',
+        teamName: 'Red',
+        registrationId: 'reg_ben',
+        userOpenId: 'openid_ben',
+        participantName: 'Ben',
+        managerAlias: 'Goalkeeper',
+        preferredPositions: ['goalkeeper'],
+        proxyRegistration: false,
+        attendanceStatus: 'present'
+      },
+      {
+        activityId: 'activity_1',
+        activityType: 'external',
+        activityTypeLabel: '外战',
+        teamId: 'team_red',
+        teamName: 'Red',
+        registrationId: 'reg_alex',
+        userOpenId: 'openid_alex',
+        participantName: 'Alex',
+        managerAlias: 'Forward',
+        preferredPositions: ['forward'],
+        proxyRegistration: false,
+        attendanceStatus: 'present'
+      }
+    ]
+  });
+
+  await firstExport;
+  await duplicateExport;
+
+  expect(writeFile).toHaveBeenCalledTimes(1);
+  expect(writeFile.mock.calls[0][1]).toBe('activity-roster-activity_1.xlsx');
+  expect(XLSX.utils.sheet_to_json(writeFile.mock.calls[0][0].Sheets['报名名单'])).toEqual([
+    expect.objectContaining({
+      报名名称: 'Ben',
+      备注: 'Goalkeeper'
+    })
+  ]);
+  expect(exportTriggers.roster.disabled).toBe(false);
+  expect(rosterExportOptions.csv.disabled).toBe(false);
+  expect(rosterExportOptions.xlsx.disabled).toBe(false);
 });
 
 test('activity detail close action hides the modal', async () => {

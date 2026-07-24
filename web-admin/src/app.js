@@ -361,6 +361,7 @@
       exportCsv: '',
       openExportMenu: '',
       statisticsExportLoading: false,
+      rosterExportLoading: false,
       activeView: DEFAULT_ADMIN_VIEW
     };
 
@@ -1200,6 +1201,18 @@
         if (control !== query('[data-stats-export-button]')) {
           control.disabled = loading;
         }
+      });
+    }
+
+    function setRosterExportLoading(loading) {
+      state.rosterExportLoading = loading;
+      queryAll('[data-export-source="activity-roster"]').forEach(control => {
+        if (control && control.dataset && control.dataset.exportFormat) {
+          control.disabled = loading;
+          return;
+        }
+
+        setLoadingButton(control, loading, '导出中...');
       });
     }
 
@@ -2164,9 +2177,12 @@
       };
     }
 
-    function buildRosterExportDescriptor(rows = getFilteredRosterRows()) {
+    function buildRosterExportDescriptor(
+      rows = getFilteredRosterRows(),
+      activityId = getSelectedActivityId()
+    ) {
       return {
-        baseFilename: `activity-roster-${getSelectedActivityId() || 'selected'}`,
+        baseFilename: `activity-roster-${activityId || 'selected'}`,
         sheetName: '报名名单',
         rows: rows.map(row => ({
           活动类型: row.activityTypeText || formatActivityTypeText(row.activityType),
@@ -2297,7 +2313,12 @@
     }
 
     async function exportRosterFile(format) {
+      if (state.rosterExportLoading) {
+        return;
+      }
+
       const activityId = getSelectedActivityId();
+      const rosterKeyword = state.activityDetailRosterKeyword;
       if (!activityId) {
         throw new Error('请先选择活动。');
       }
@@ -2309,6 +2330,7 @@
       closeExportMenus();
       renderExportStatus('');
       writeExportOutput('');
+      setRosterExportLoading(true);
 
       try {
         const result = await api.exportActivityRoster(activityId);
@@ -2318,12 +2340,14 @@
 
         const rows = filterRosterRows(
           buildRosterExportRows(result.rows),
-          state.activityDetailRosterKeyword
+          rosterKeyword
         );
-        downloadExportDescriptor(format, buildRosterExportDescriptor(rows));
+        downloadExportDescriptor(format, buildRosterExportDescriptor(rows, activityId));
       } catch (error) {
         writeExportOutput('');
         throw new Error('报名名单导出失败，请重试。');
+      } finally {
+        setRosterExportLoading(false);
       }
     }
 
