@@ -182,6 +182,7 @@ test('api client delegates activity operations to existing cloud functions', asy
     startAt: '2026-06-01',
     endAt: '2026-06-30',
     activityType: 'external',
+    statisticsType: 'attendance',
     limit: 20,
     skip: 20
   });
@@ -223,6 +224,7 @@ test('api client delegates activity operations to existing cloud functions', asy
     startAt: '2026-06-01',
     endAt: '2026-06-30',
     activityType: 'external',
+    statisticsType: 'attendance',
     limit: 20,
     skip: 20
   });

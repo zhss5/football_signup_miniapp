@@ -1992,7 +1992,22 @@
       };
     }
 
-    async function loadAttendanceStats(target = state.activeStatisticsTab, skip, options = {}) {
+    async function requestStatisticsPage(target, requestedSkip, filters = getStatisticsFilters()) {
+      const result = await api.getAttendanceStats({
+        ...filters,
+        statisticsType: target,
+        limit: PAGE_LIMIT,
+        skip: requestedSkip
+      });
+
+      return {
+        result,
+        metadata: getPaginationMetadata(result, requestedSkip),
+        rows: activityUi.buildStatsRows(result.items || result.rows || [])
+      };
+    }
+
+    async function loadAttendanceStats(target = state.activeStatisticsTab, skip) {
       const pageState = getPaginationState(target);
       const requestedSkip = Number.isFinite(Number(skip))
         ? Math.max(0, Number(skip))
@@ -2000,44 +2015,11 @@
       beginPageRequest(target);
 
       try {
-        const result = await api.getAttendanceStats({
-          ...getStatisticsFilters(),
-          limit: PAGE_LIMIT,
-          skip: requestedSkip
-        });
-        const metadata = getPaginationMetadata(result, requestedSkip);
-        const rows = activityUi.buildStatsRows(result.items || result.rows || []);
-        completePageRequest(target, result, requestedSkip, metadata);
-
-        if (options.resetForFilters) {
-          const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
-          state.statisticsRows.attendance = rows;
-          state.statisticsRows.cancellation = rows;
-          state.statsRows = rows;
-          state.pagination[siblingTarget] = {
-            total: metadata.total,
-            limit: metadata.limit,
-            skip: metadata.skip,
-            hasMore: metadata.hasMore,
-            loading: false
-          };
-          renderPagination(siblingTarget);
-        } else {
-          state.statisticsRows[target] = rows;
-          if (target === 'attendance') {
-            state.statsRows = rows;
-          }
-        }
-
-        if (!options.resetForFilters && requestedSkip === 0) {
-          const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
-          const siblingPage = getPaginationState(siblingTarget);
-          if (siblingPage && siblingPage.skip === 0 && !siblingPage.loading) {
-            const currentPage = getPaginationState(target);
-            siblingPage.total = currentPage.total;
-            siblingPage.hasMore = currentPage.hasMore;
-            renderPagination(siblingTarget);
-          }
+        const page = await requestStatisticsPage(target, requestedSkip);
+        completePageRequest(target, page.result, requestedSkip, page.metadata);
+        state.statisticsRows[target] = page.rows;
+        if (target === 'attendance') {
+          state.statsRows = page.rows;
         }
         renderStatsRows();
         renderStatisticsTabs();
@@ -2048,7 +2030,28 @@
     }
 
     async function reloadStatisticsForFilters() {
-      return loadAttendanceStats(state.activeStatisticsTab, 0, { resetForFilters: true });
+      const filters = getStatisticsFilters();
+      beginPageRequest('attendance');
+      beginPageRequest('cancellation');
+
+      try {
+        const [attendancePage, cancellationPage] = await Promise.all([
+          requestStatisticsPage('attendance', 0, filters),
+          requestStatisticsPage('cancellation', 0, filters)
+        ]);
+
+        completePageRequest('attendance', attendancePage.result, 0, attendancePage.metadata);
+        completePageRequest('cancellation', cancellationPage.result, 0, cancellationPage.metadata);
+        state.statisticsRows.attendance = attendancePage.rows;
+        state.statisticsRows.cancellation = cancellationPage.rows;
+        state.statsRows = attendancePage.rows;
+        renderStatsRows();
+        renderStatisticsTabs();
+      } catch (error) {
+        failPageRequest('attendance');
+        failPageRequest('cancellation');
+        throw error;
+      }
     }
 
     function writeExportOutput(csv) {
@@ -2070,7 +2073,7 @@
       setHidden(status, !status.textContent);
     }
 
-    async function loadAllStatisticsRows(filters) {
+    async function loadAllStatisticsRows(filters, statisticsType) {
       const items = [];
       let expectedTotal = null;
       let skip = 0;
@@ -2078,6 +2081,7 @@
       while (true) {
         const result = await api.getAttendanceStats({
           ...filters,
+          statisticsType,
           limit: PAGE_LIMIT,
           skip
         });
@@ -2273,7 +2277,9 @@
       let rows;
 
       try {
-        rows = activityUi.buildStatsRows(await loadAllStatisticsRows(getStatisticsFilters()));
+        rows = activityUi.buildStatsRows(
+          await loadAllStatisticsRows(getStatisticsFilters(), activeTab)
+        );
       } catch (error) {
         writeExportOutput('');
         throw new Error('统计数据导出失败，请重试。');

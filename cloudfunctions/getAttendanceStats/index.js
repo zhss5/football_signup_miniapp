@@ -80,6 +80,11 @@ function normalizeActivityTypeFilter(value) {
   return normalizeActivityType(type);
 }
 
+function normalizeStatisticsType(value) {
+  const type = String(value || '').trim();
+  return type === 'attendance' || type === 'cancellation' ? type : 'all';
+}
+
 function matchesActivityType(activity, activityTypeFilter) {
   if (activityTypeFilter === 'all') {
     return true;
@@ -215,6 +220,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const rangeStart = parseTimestamp(payload.startAt);
   const rangeEnd = parseTimestamp(payload.endAt);
   const activityTypeFilter = normalizeActivityTypeFilter(payload.activityType);
+  const statisticsType = normalizeStatisticsType(payload.statisticsType);
   const nowAt = getNowTimestamp(deps);
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
@@ -349,7 +355,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     return acc;
   }, statsByName);
 
-  const items = Object.values(statsByName)
+  const combinedItems = Object.values(statsByName)
     .filter(row => row.signupCount > 0 || row.cancelledActivityCount > 0)
     .map(row => ({
       ...row,
@@ -385,6 +391,17 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       )
     }))
     .sort((left, right) => left.participantName.localeCompare(right.participantName));
+  const items = combinedItems.filter(row => {
+    if (statisticsType === 'attendance') {
+      return row.signupCount > 0;
+    }
+
+    if (statisticsType === 'cancellation') {
+      return row.effectiveSignupActivityCount + row.cancelledActivityCount > 0;
+    }
+
+    return true;
+  });
 
   const total = items.length;
   return {

@@ -933,6 +933,80 @@ test('attendance stats load all cursor batches before aggregating and paging sor
   });
 });
 
+test('statisticsType filters attendance and cancellation rows before pagination', async () => {
+  const activities = {
+    stats_activity: {
+      _id: 'stats_activity',
+      organizerOpenId: 'openid_owner',
+      status: 'published',
+      startAt: '2026-07-02T12:00:00.000Z'
+    }
+  };
+  const registrations = Object.fromEntries([
+    ...Array.from({ length: 25 }, (_, index) => {
+      const suffix = String(index).padStart(2, '0');
+      return [`joined_${suffix}`, {
+        _id: `joined_${suffix}`,
+        activityId: 'stats_activity',
+        signupName: `Attendee ${suffix}`,
+        status: 'joined',
+        attendanceStatus: 'present'
+      }];
+    }),
+    ...Array.from({ length: 5 }, (_, index) => {
+      const suffix = String(index).padStart(2, '0');
+      return [`cancelled_${suffix}`, {
+        _id: `cancelled_${suffix}`,
+        activityId: 'stats_activity',
+        signupName: `Cancelled ${suffix}`,
+        status: 'cancelled',
+        cancelledAt: '2026-07-01T12:00:00.000Z'
+      }];
+    })
+  ]);
+  const db = createFakeDb({ activities, registrations });
+  const input = {
+    startAt: '2026-07-01T00:00:00.000Z',
+    endAt: '2026-07-31T23:59:59.999Z',
+    limit: 20,
+    skip: 0
+  };
+  const deps = { db, now: '2026-08-01T00:00:00.000Z' };
+
+  const attendance = await getAttendanceStats.main(
+    { ...input, statisticsType: 'attendance' },
+    { OPENID: 'openid_owner' },
+    deps
+  );
+  const cancellation = await getAttendanceStats.main(
+    { ...input, statisticsType: 'cancellation' },
+    { OPENID: 'openid_owner' },
+    deps
+  );
+
+  expect(attendance).toMatchObject({
+    total: 25,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  });
+  expect(attendance.items).toHaveLength(20);
+  expect(attendance.items.every(item => item.signupCount > 0)).toBe(true);
+
+  expect(cancellation).toMatchObject({
+    total: 30,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  });
+  expect(cancellation.items).toHaveLength(20);
+  expect(
+    cancellation.items.every(
+      item => item.effectiveSignupActivityCount + item.cancelledActivityCount > 0
+    )
+  ).toBe(true);
+});
+
 test('regular user cannot get attendance stats', async () => {
   const db = createFakeDb();
 

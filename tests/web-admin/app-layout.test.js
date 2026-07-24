@@ -586,7 +586,7 @@ test('statistics tabs retain independent pagination skips', async () => {
     skip: params.skip,
     hasMore: true
   }));
-  const { app, appRoot, pagination, statisticsTabs } = buildHarness(
+  const { app, appRoot, elements, pagination, statisticsTabs } = buildHarness(
     {
       _id: 'openid_admin',
       roles: ['user', 'admin']
@@ -595,7 +595,7 @@ test('statistics tabs retain independent pagination skips', async () => {
   );
 
   await app.start();
-  await app.loadAttendanceStats();
+  await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
   getAttendanceStats.mockClear();
 
   await appRoot.click(pagination.attendance.next);
@@ -608,6 +608,7 @@ test('statistics tabs retain independent pagination skips', async () => {
     startAt: '',
     endAt: '',
     activityType: 'all',
+    statisticsType: 'attendance',
     limit: 20,
     skip: 20
   });
@@ -615,6 +616,7 @@ test('statistics tabs retain independent pagination skips', async () => {
     startAt: '',
     endAt: '',
     activityType: 'all',
+    statisticsType: 'attendance',
     limit: 20,
     skip: 40
   });
@@ -622,6 +624,7 @@ test('statistics tabs retain independent pagination skips', async () => {
     startAt: '',
     endAt: '',
     activityType: 'all',
+    statisticsType: 'cancellation',
     limit: 20,
     skip: 20
   });
@@ -629,6 +632,62 @@ test('statistics tabs retain independent pagination skips', async () => {
   expect(app.state.pagination.cancellation.skip).toBe(20);
   expect(pagination.attendance.previous.disabled).toBe(false);
   expect(pagination.cancellation.previous.disabled).toBe(false);
+});
+
+test('loading statistics requests independently filtered attendance and cancellation pages', async () => {
+  const getAttendanceStats = jest.fn(params => {
+    const total = params.statisticsType === 'attendance' ? 21 : 42;
+    return Promise.resolve({
+      items: createCompletePageItems({
+        participantName: params.statisticsType,
+        signupCount: params.statisticsType === 'attendance' ? 1 : 0,
+        presentCount: params.statisticsType === 'attendance' ? 1 : 0,
+        absentCount: 0,
+        attendanceRate: params.statisticsType === 'attendance' ? 1 : 0,
+        effectiveSignupActivityCount: params.statisticsType === 'cancellation' ? 1 : 0,
+        cancelledActivityCount: params.statisticsType === 'cancellation' ? 1 : 0,
+        cancelRate: params.statisticsType === 'cancellation' ? 0.5 : 0,
+        details: [],
+        cancellationDetails: []
+      }, total, params.skip),
+      total,
+      limit: 20,
+      skip: params.skip,
+      hasMore: total > params.skip + 20
+    });
+  });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  getAttendanceStats.mockClear();
+  await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
+
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(1, {
+    startAt: '',
+    endAt: '',
+    activityType: 'all',
+    statisticsType: 'attendance',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
+    startAt: '',
+    endAt: '',
+    activityType: 'all',
+    statisticsType: 'cancellation',
+    limit: 20,
+    skip: 0
+  });
+  expect(app.state.pagination.attendance.total).toBe(21);
+  expect(app.state.pagination.cancellation.total).toBe(42);
+  expect(app.state.statisticsRows.attendance[0].participantName).toBe('attendance');
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('cancellation');
 });
 
 test.each([
@@ -681,10 +740,19 @@ test.each([
   waitForFilter = true;
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
 
-  expect(getAttendanceStats).toHaveBeenLastCalledWith({
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
     startAt: '',
     endAt: '',
     activityType: 'external',
+    statisticsType: 'attendance',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
+    startAt: '',
+    endAt: '',
+    activityType: 'external',
+    statisticsType: 'cancellation',
     limit: 20,
     skip: 0
   });
@@ -761,7 +829,7 @@ test('statistics filter failure preserves both tab rows and pagination positions
   );
 
   await app.start();
-  await app.loadAttendanceStats();
+  await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
   await appRoot.click(pagination.attendance.next);
   await appRoot.click(pagination.attendance.next);
   appRoot.click(statisticsTabs.cancellation);
@@ -771,10 +839,19 @@ test('statistics filter failure preserves both tab rows and pagination positions
   elements['[name="statsActivityType"]'].value = 'external';
   await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
 
-  expect(getAttendanceStats).toHaveBeenLastCalledWith({
+  expect(getAttendanceStats).toHaveBeenCalledWith({
     startAt: '',
     endAt: '',
     activityType: 'external',
+    statisticsType: 'attendance',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenCalledWith({
+    startAt: '',
+    endAt: '',
+    activityType: 'external',
+    statisticsType: 'cancellation',
     limit: 20,
     skip: 0
   });
@@ -1656,6 +1733,15 @@ test('attendance stats submit shows eligible-activity empty state for blank resu
     startAt: '2026-06-01',
     endAt: '2026-06-30',
     activityType: 'all',
+    statisticsType: 'attendance',
+    limit: 20,
+    skip: 0
+  });
+  expect(api.getAttendanceStats).toHaveBeenCalledWith({
+    startAt: '2026-06-01',
+    endAt: '2026-06-30',
+    activityType: 'all',
+    statisticsType: 'cancellation',
     limit: 20,
     skip: 0
   });
@@ -1816,7 +1902,7 @@ test('statistics tabs render focused tables and switch without another API reque
   expect(statisticsPanes.attendance.hidden).toBe(true);
   expect(statisticsPanes.cancellation.hidden).toBe(false);
   expect(elements['[data-stats-export-button]'].textContent).toBe('导出');
-  expect(getAttendanceStats).toHaveBeenCalledTimes(1);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
 });
 
 test('export menus keep one source open and close on outside click or Escape', async () => {
@@ -2252,31 +2338,35 @@ test('statistics CSV and XLSX exports collect every fixed statistics page withou
     最终取消数: 1,
     取消率: '33.33%'
   });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
-    startAt: '2026-07-01',
-    endAt: '2026-07-24',
-    activityType: 'external',
-    limit: 20,
-    skip: 0
-  });
   expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
+    statisticsType: 'attendance',
     limit: 20,
-    skip: 20
+    skip: 0
   });
   expect(getAttendanceStats).toHaveBeenNthCalledWith(4, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
+    statisticsType: 'attendance',
     limit: 20,
-    skip: 0
+    skip: 20
   });
   expect(getAttendanceStats).toHaveBeenNthCalledWith(5, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
+    statisticsType: 'cancellation',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(6, {
+    startAt: '2026-07-01',
+    endAt: '2026-07-24',
+    activityType: 'external',
+    statisticsType: 'cancellation',
     limit: 20,
     skip: 20
   });
@@ -2348,6 +2438,7 @@ test('statistics export rejects an oversized page with contradictory hasMore wit
   const getAttendanceStats = jest
     .fn()
     .mockResolvedValueOnce({ items: visiblePage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({ items: visiblePage, total: 25, limit: 20, skip: 0, hasMore: true })
     .mockResolvedValueOnce({
       items: invalidExportPage,
       total: 25,
@@ -2397,6 +2488,7 @@ test('statistics export rejects a full page with false hasMore when rows remain'
   const getAttendanceStats = jest
     .fn()
     .mockResolvedValueOnce({ items: page, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({ items: page, total: 25, limit: 20, skip: 0, hasMore: true })
     .mockResolvedValueOnce({ items: page, total: 25, limit: 20, skip: 0, hasMore: false });
   const { app, appRoot, elements } = buildHarness(
     {
@@ -2431,6 +2523,7 @@ test('statistics export disables every control and ignores a concurrent export u
   const getAttendanceStats = jest
     .fn()
     .mockResolvedValueOnce({ items: page, total: 20, limit: 20, skip: 0, hasMore: false })
+    .mockResolvedValueOnce({ items: page, total: 20, limit: 20, skip: 0, hasMore: false })
     .mockImplementationOnce(() => pendingExportPage.promise);
   const {
     app,
@@ -2454,12 +2547,12 @@ test('statistics export disables every control and ignores a concurrent export u
   expect(statisticsExportOptions.csv.disabled).toBe(true);
   expect(statisticsExportOptions.xlsx.disabled).toBe(true);
   const secondExport = appRoot.click(statisticsExportOptions.xlsx);
-  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(3);
 
   pendingExportPage.resolve({ items: page, total: 20, limit: 20, skip: 0, hasMore: false });
   await Promise.all([firstExport, secondExport]);
 
-  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(3);
   expect(elements['[data-export-output]'].value).toContain('人员20');
   expect(elements['[data-stats-export-button]'].disabled).toBe(false);
   expect(statisticsExportOptions.csv.disabled).toBe(false);
@@ -2591,7 +2684,7 @@ test('statistics exports project every page for attendance and cancellation in C
     最终取消数: 1,
     取消率: '33.33%'
   });
-  expect(getAttendanceStats).toHaveBeenCalledTimes(9);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(10);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {
