@@ -252,3 +252,15 @@ Deployment readiness tasks remain:
 - upload a new mini-program experience build to expose the configurable late-cancellation notice window; the matching `createActivity`, `updateActivity`, and `getActivityCopyDraft` functions are already deployed in the test environment.
 - redeploy `getActivityDetail` and `cancelRegistration`, then upload the matching mini-program build before smoke testing separate manager subscriptions and the late-cancellation template.
 - keep invite-code signup, automatic reminders, payments/refunds, and runtime MySQL/self-hosted migration deferred.
+
+## 2026-07-24 Post-V2 Statistics Loading Repair
+
+- Completed: replaced the Web Admin's concurrent attendance/cancellation filter requests with one `statisticsType = both` CloudBase call.
+- Completed: kept attendance and cancellation pagination metadata independent within the combined response.
+- Completed: added a 20-second Web Admin request timeout so failed or unavailable statistics calls cannot leave the page loading indefinitely.
+- Completed: documented the additive API contract and future SQL equivalence requirement in the SQL migration readiness specification.
+- Verification: `85` suites and `874` tests passed; `git diff --check` passed.
+- Deployment: `getAttendanceStats` and all `29` Web Admin static files were deployed to `cloudbase-miniapp-test-dfc753877`.
+- Smoke: `内战统计` returned `14` attendance rows in about 6 seconds and the already-loaded cancellation projection showed `17` rows immediately.
+- Commit: `0d79ae9`.
+- Architecture boundary: CloudBase remains the only runtime store; no MySQL runtime migration, dual-write, or self-hosted HTTP API cutover was made.

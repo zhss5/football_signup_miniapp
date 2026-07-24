@@ -551,3 +551,17 @@ Recommended V2 rollout order:
 6. Verify live Web Admin `listUsers`, `listActivities`, `updateUserRoles`, and `updateUserManagerAlias` calls after QR confirmation issues `webAdminSessionToken`.
 7. Decide whether to deploy V2 into the current shared CloudBase environment or wait until V1 review/release risk is acceptable.
 8. Run real-device mini-program smoke tests after any shared-environment deployment.
+
+## 12. 2026-07-24 Statistics Loading Repair
+
+The test Web Admin statistics page no longer starts two concurrent full statistics scans for one filter submission.
+
+- implementation commit: `0d79ae9`
+- API: `getAttendanceStats` accepts additive `statisticsType = both` and returns `projections.attendance` plus `projections.cancellation`, each with independent `{ items, total, limit, skip, hasMore }`.
+- frontend: filter loading uses the combined response; later pagination and export continue to use typed projection calls.
+- resilience: Web Admin restores the loading button after a 20-second statistics timeout and shows `统计请求超时，请重试。`.
+- tests: `85` suites, `874` tests passed; `git diff --check` passed.
+- cloud function: deployed to `cloudbase-miniapp-test-dfc753877`, remote `ModTime` `2026-07-24 18:27:11`.
+- static hosting: deployed `29/29` files to `/admin/` with asset version `20260724-statistics-single-request`.
+- live smoke: the previously affected `内战统计` load completed in about 6 seconds with `14` attendance rows; switching tabs immediately showed `17` cancellation rows.
+- runtime boundary: no MySQL migration, dual-write, or self-hosted HTTP API switch.

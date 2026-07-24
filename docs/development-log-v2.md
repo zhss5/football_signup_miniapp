@@ -1745,3 +1745,32 @@ Verification:
 - target confirmation tests passed: `5` test suites, `45` tests.
 - Web Admin regression passed: `9` test suites, `55` tests.
 - full regression passed: `81` test suites, `639` tests.
+
+## 2026-07-24 - Web Admin Statistics Loading Stall
+
+Fixed the statistics page remaining in `加载中...` when attendance and cancellation data were loaded together.
+
+Root cause:
+
+- the Web Admin started two concurrent `getAttendanceStats` calls for each filter submission.
+- each call independently scanned the same activities, registrations, and users collections.
+- the browser had no bounded request timeout, so a pending CloudBase request kept the loading state active indefinitely.
+
+Delivered behavior:
+
+- `getAttendanceStats.statisticsType = both` performs one shared source scan and returns independently paginated attendance and cancellation projections.
+- typed `attendance` and `cancellation` requests remain available for independent page navigation and full export collection.
+- the Web Admin now times out a statistics request after 20 seconds and restores the load button with a retryable error.
+- the hosted asset version is `20260724-statistics-single-request`.
+- the change adds no stored field and does not change the CloudBase runtime storage model.
+
+Verification and deployment:
+
+- focused regression passed: `4` suites, `114` tests.
+- full regression passed: `85` suites, `874` tests.
+- `git diff --check` passed.
+- implementation commit: `0d79ae9`.
+- `getAttendanceStats` was deployed to `cloudbase-miniapp-test-dfc753877`; remote `ModTime` is `2026-07-24 18:27:11` and `CodeInfo` contains the `both` projection response.
+- CloudBase static hosting uploaded `29/29` files under `/admin/`.
+- browser smoke with `内战统计` completed in about 6 seconds, restored the load button, displayed `14` attendance rows, and switched immediately to `17` cancellation rows.
+- no runtime MySQL migration, dual-write, or self-hosted HTTP API switch was introduced.
