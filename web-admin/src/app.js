@@ -1793,6 +1793,16 @@
       }
     }
 
+    function renderExportStatus(message) {
+      const status = query('[data-export-status]');
+      if (!status) {
+        return;
+      }
+
+      status.textContent = String(message || '');
+      setHidden(status, !status.textContent);
+    }
+
     function buildAttendanceExportDescriptor() {
       const attendanceRows = getAttendanceStatsRows();
       if (!attendanceRows.length) {
@@ -1893,6 +1903,7 @@
 
     function exportFile(source, format) {
       closeExportMenus();
+      renderExportStatus('');
       const descriptor = getExportDescriptor(source);
       if (!descriptor) {
         return;
@@ -2189,7 +2200,7 @@
             try {
               exportFile(button.dataset.exportSource, button.dataset.exportFormat);
             } catch (error) {
-              renderIdentity(getErrorMessage(error));
+              renderExportStatus(getErrorMessage(error));
             }
             return;
           }

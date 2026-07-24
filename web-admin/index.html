@@ -53,8 +53,8 @@
             </nav>
           </aside>
 
-          <main data-admin-content class="admin-content">
-            <header class="topbar">
+              <main data-admin-content class="admin-content">
+                <header class="topbar">
               <h2 data-current-view-title>活动管理</h2>
               <div class="topbar-account">
                 <div class="account-copy">
@@ -62,10 +62,17 @@
                   <code data-current-user-openid></code>
                 </div>
                 <button type="button" data-action="logout">退出登录</button>
-              </div>
-            </header>
+                  </div>
+                </header>
 
-            <section data-view="users" data-admin-view="users" class="panel" hidden>
+                <p
+                  data-export-status
+                  class="export-status"
+                  role="alert"
+                  hidden
+                ></p>
+
+                <section data-view="users" data-admin-view="users" class="panel" hidden>
               <h3>用户角色</h3>
 
               <form data-action="search-users" class="toolbar">

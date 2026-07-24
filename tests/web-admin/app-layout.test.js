@@ -218,6 +218,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-current-user-summary]': createElement(),
     '[data-current-user-openid]': createElement(),
     '[data-current-view-title]': createElement(),
+    '[data-export-status]': createElement(),
     '[data-users-status]': createElement(),
     '[data-user-avatar-preview]': createElement(),
     '[data-user-avatar-preview-image]': createElement(),
@@ -1178,6 +1179,41 @@ test('export menus keep one source open and close on outside click or Escape', a
   appRoot.keydown('Escape');
   expect(exportMenus.logs.hidden).toBe(true);
   expect(app.state.openExportMenu).toBe('');
+});
+
+test('XLSX runtime failures are visible inside the active workspace', async () => {
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            signupCount: 1,
+            presentCount: 1,
+            attendanceRate: 1
+          }
+        ]
+      })
+    },
+    { runtimeRoot: {} }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+
+  expect(elements['[data-export-status]'].hidden).toBe(false);
+  expect(elements['[data-export-status]'].textContent)
+    .toBe('Excel 导出组件未加载，请刷新页面后重试。');
 });
 
 test('double-clicking a cancellation stats row opens final-outcome details', async () => {

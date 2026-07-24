@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const WEB_ADMIN_ASSET_VERSION = '20260724-unified-export';
 
@@ -321,10 +322,18 @@ test('web admin export controls use a compact anchored format menu', () => {
 test('web admin vendors the fixed SheetJS browser runtime', () => {
   const vendorPath = path.join(process.cwd(), 'web-admin/vendor/xlsx.full.min.js');
   const noticePath = path.join(process.cwd(), 'web-admin/vendor/SHEETJS.md');
+  const licensePath = path.join(process.cwd(), 'web-admin/vendor/LICENSE.sheetjs.txt');
+  const digest = crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(vendorPath))
+    .digest('hex')
+    .toUpperCase();
 
   expect(fs.existsSync(vendorPath)).toBe(true);
   expect(fs.statSync(vendorPath).size).toBeGreaterThan(500000);
   expect(fs.readFileSync(noticePath, 'utf8')).toContain('SheetJS Community Edition 0.20.3');
+  expect(digest).toBe('CC015130AA8521E7F088F88898EBA949CCDCBFB38DF0BD129B44B7273C3A6F41');
+  expect(fs.readFileSync(licensePath, 'utf8')).toContain('Apache License');
 });
 
 test('web admin static shell vendors the QR renderer for hosted login smoke', () => {

@@ -18,11 +18,14 @@
 
   function escapeCsvValue(value) {
     const text = stringifyCell(value);
-    if (/[",\r\n]/.test(text)) {
-      return `"${text.replace(/"/g, '""')}"`;
+    const formulaLike = typeof value === 'string' &&
+      /^[\u0000-\u0020]*[=+\-@]/.test(text);
+    const safeText = formulaLike ? `'${text}` : text;
+    if (formulaLike || /[",\r\n]/.test(safeText)) {
+      return `"${safeText.replace(/"/g, '""')}"`;
     }
 
-    return text;
+    return safeText;
   }
 
   function rowsToCsv(rows = []) {
@@ -32,7 +35,7 @@
 
     const headers = Object.keys(rows[0]);
     return [
-      headers.join(','),
+      headers.map(escapeCsvValue).join(','),
       ...rows.map(row => headers.map(header => escapeCsvValue(row[header])).join(','))
     ].join('\r\n');
   }

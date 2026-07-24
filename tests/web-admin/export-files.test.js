@@ -44,12 +44,23 @@ test('rowsToCsv serializes stable headers and escapes spreadsheet values', () =>
   expect(
     exportFiles.rowsToCsv([
       {
-        姓名: 'Alex, Jr',
+        '姓名,报名名': 'Alex, Jr',
         备注: '他说"会来"',
         状态: '出勤'
       }
     ])
-  ).toBe('姓名,备注,状态\r\n"Alex, Jr","他说""会来""",出勤');
+  ).toBe('"姓名,报名名",备注,状态\r\n"Alex, Jr","他说""会来""",出勤');
+});
+
+test.each([
+  '=HYPERLINK("https://example.com")',
+  '+SUM(1,1)',
+  '-2+3',
+  '@SUM(1,1)',
+  '\t=SUM(1,1)'
+])('rowsToCsv neutralizes spreadsheet formula strings: %s', value => {
+  expect(exportFiles.rowsToCsv([{ 报名名称: value }]))
+    .toBe(`报名名称\r\n"'${value.replace(/"/g, '""')}"`);
 });
 
 test('downloadCsv writes a UTF-8 BOM file and returns the generated text', () => {
