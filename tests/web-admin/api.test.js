@@ -178,7 +178,13 @@ test('api client delegates activity operations to existing cloud functions', asy
     registrationId: 'reg_1',
     performanceDescription: 'Pressed high'
   });
-  await api.getAttendanceStats({ startAt: '2026-06-01', endAt: '2026-06-30', activityType: 'external' });
+  await api.getAttendanceStats({
+    startAt: '2026-06-01',
+    endAt: '2026-06-30',
+    activityType: 'external',
+    limit: 20,
+    skip: 20
+  });
   await api.exportActivityRoster('activity_1');
   await api.listActivityLogs({ activityId: 'activity_1' });
   await api.listNotificationLogs({ activityId: 'activity_1' });
@@ -216,7 +222,9 @@ test('api client delegates activity operations to existing cloud functions', asy
   expect(callFunction).toHaveBeenCalledWith('getAttendanceStats', {
     startAt: '2026-06-01',
     endAt: '2026-06-30',
-    activityType: 'external'
+    activityType: 'external',
+    limit: 20,
+    skip: 20
   });
   expect(callFunction).toHaveBeenCalledWith('exportActivityRoster', {
     activityId: 'activity_1'

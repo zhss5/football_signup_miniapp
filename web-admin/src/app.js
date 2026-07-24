@@ -360,6 +360,7 @@
       logStatus: '',
       exportCsv: '',
       openExportMenu: '',
+      statisticsExportLoading: false,
       activeView: DEFAULT_ADMIN_VIEW
     };
 
@@ -1129,7 +1130,7 @@
       });
 
       const exportButton = query('[data-stats-export-button]');
-      if (exportButton) {
+      if (exportButton && !state.statisticsExportLoading) {
         exportButton.textContent = '导出';
       }
     }
@@ -1167,6 +1168,16 @@
         ? ''
         : normalizedSource;
       renderExportMenus();
+    }
+
+    function setStatisticsExportLoading(loading) {
+      state.statisticsExportLoading = loading;
+      setLoadingButton(query('[data-stats-export-button]'), loading, '导出中...');
+      queryAll('[data-export-source="statistics"]').forEach(control => {
+        if (control !== query('[data-stats-export-button]')) {
+          control.disabled = loading;
+        }
+      });
     }
 
     function setActiveStatisticsTab(tabId) {
@@ -1933,21 +1944,28 @@
       await searchUsers();
     }
 
+    function getStatisticsFilters() {
+      const startAt = query('[name="statsStartAt"]');
+      const endAt = query('[name="statsEndAt"]');
+      const activityType = query('[name="statsActivityType"]');
+
+      return {
+        startAt: startAt ? startAt.value : '',
+        endAt: endAt ? endAt.value : '',
+        activityType: activityType && activityType.value ? activityType.value : 'all'
+      };
+    }
+
     async function loadAttendanceStats(target = state.activeStatisticsTab, skip, options = {}) {
       const pageState = getPaginationState(target);
       const requestedSkip = Number.isFinite(Number(skip))
         ? Math.max(0, Number(skip))
         : pageState.skip;
-      const startAt = query('[name="statsStartAt"]');
-      const endAt = query('[name="statsEndAt"]');
-      const activityType = query('[name="statsActivityType"]');
       beginPageRequest(target);
 
       try {
         const result = await api.getAttendanceStats({
-          startAt: startAt ? startAt.value : '',
-          endAt: endAt ? endAt.value : '',
-          activityType: activityType && activityType.value ? activityType.value : 'all',
+          ...getStatisticsFilters(),
           limit: PAGE_LIMIT,
           skip: requestedSkip
         });
@@ -2016,8 +2034,50 @@
       setHidden(status, !status.textContent);
     }
 
-    function buildAttendanceExportDescriptor() {
-      const attendanceRows = getAttendanceStatsRows();
+    async function loadAllStatisticsRows(filters) {
+      const items = [];
+      let expectedTotal = null;
+      let skip = 0;
+
+      while (true) {
+        const result = await api.getAttendanceStats({
+          ...filters,
+          limit: PAGE_LIMIT,
+          skip
+        });
+        const metadata = getPaginationMetadata(result, skip);
+        const pageItems = Array.isArray(result.items)
+          ? result.items
+          : Array.isArray(result.rows)
+            ? result.rows
+            : [];
+
+        if (expectedTotal === null) {
+          expectedTotal = metadata.total;
+        } else if (metadata.total !== expectedTotal) {
+          throw new Error('Inconsistent pagination total.');
+        }
+
+        items.push(...pageItems);
+
+        if (!metadata.hasMore) {
+          if (items.length !== expectedTotal) {
+            throw new Error('Incomplete pagination result.');
+          }
+          return items;
+        }
+
+        const nextSkip = metadata.skip + metadata.limit;
+        if (!pageItems.length || nextSkip <= skip || nextSkip >= metadata.total) {
+          throw new Error('Pagination did not progress.');
+        }
+
+        skip = nextSkip;
+      }
+    }
+
+    function buildAttendanceExportDescriptor(rows = getAttendanceStatsRows()) {
+      const attendanceRows = rows.filter(row => Number(row.signupCount) > 0);
       if (!attendanceRows.length) {
         const empty = query('[data-attendance-stats-empty]');
         if (empty) {
@@ -2042,8 +2102,10 @@
       };
     }
 
-    function buildCancellationExportDescriptor() {
-      const rows = getCancellationStatsRows();
+    function buildCancellationExportDescriptor(statisticsRows = getCancellationStatsRows()) {
+      const rows = statisticsRows.filter(
+        row => Number(row.effectiveSignupActivityCount) + Number(row.cancelledActivityCount) > 0
+      );
       if (!rows.length) {
         const empty = query('[data-cancellation-stats-empty]');
         if (empty) {
@@ -2114,18 +2176,7 @@
       throw new Error('不支持的导出内容。');
     }
 
-    function exportFile(source, format) {
-      closeExportMenus();
-      renderExportStatus('');
-      const descriptor = getExportDescriptor(source);
-      if (!descriptor) {
-        return;
-      }
-
-      if (!exportFiles) {
-        throw new Error('导出组件未加载，请刷新页面后重试。');
-      }
-
+    function downloadExportDescriptor(format, descriptor) {
       if (format === 'xlsx') {
         writeExportOutput('');
         exportFiles.downloadXlsx({
@@ -2147,6 +2198,66 @@
         rows: descriptor.rows
       });
       writeExportOutput(csv);
+    }
+
+    async function exportStatisticsFile(format) {
+      if (state.statisticsExportLoading) {
+        return;
+      }
+
+      const currentDescriptor = getExportDescriptor('statistics');
+      if (!currentDescriptor) {
+        return;
+      }
+
+      if (!exportFiles) {
+        throw new Error('导出组件未加载，请刷新页面后重试。');
+      }
+
+      closeExportMenus();
+      renderExportStatus('');
+      writeExportOutput('');
+      const activeTab = state.activeStatisticsTab;
+      setStatisticsExportLoading(true);
+      let rows;
+
+      try {
+        rows = activityUi.buildStatsRows(await loadAllStatisticsRows(getStatisticsFilters()));
+      } catch (error) {
+        writeExportOutput('');
+        throw new Error('统计数据导出失败，请重试。');
+      } finally {
+        setStatisticsExportLoading(false);
+      }
+
+      const descriptor = activeTab === 'cancellation'
+        ? buildCancellationExportDescriptor(rows)
+        : buildAttendanceExportDescriptor(rows);
+
+      if (!descriptor) {
+        return;
+      }
+
+      downloadExportDescriptor(format, descriptor);
+    }
+
+    function exportFile(source, format) {
+      if (source === 'statistics') {
+        return exportStatisticsFile(format);
+      }
+
+      closeExportMenus();
+      renderExportStatus('');
+      const descriptor = getExportDescriptor(source);
+      if (!descriptor) {
+        return;
+      }
+
+      if (!exportFiles) {
+        throw new Error('导出组件未加载，请刷新页面后重试。');
+      }
+
+      downloadExportDescriptor(format, descriptor);
     }
 
     async function loadActivityLogs() {
@@ -2472,7 +2583,12 @@
 
           if (button.dataset.action === 'export-file') {
             try {
-              exportFile(button.dataset.exportSource, button.dataset.exportFormat);
+              const exportTask = exportFile(button.dataset.exportSource, button.dataset.exportFormat);
+              if (exportTask && typeof exportTask.catch === 'function') {
+                return exportTask.catch(error => {
+                  renderExportStatus(getErrorMessage(error));
+                });
+              }
             } catch (error) {
               renderExportStatus(getErrorMessage(error));
             }

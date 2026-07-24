@@ -1713,7 +1713,7 @@ test('XLSX runtime failures are visible inside the active workspace', async () =
   await app.start();
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
-  appRoot.click(createElement({
+  await appRoot.click(createElement({
     action: 'export-file',
     exportFormat: 'xlsx',
     exportSource: 'statistics'
@@ -1884,7 +1884,7 @@ test('attendance stats exports loaded rows as CSV text', async () => {
   await app.start();
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
-  appRoot.click(createElement({
+  await appRoot.click(createElement({
     action: 'export-file',
     exportFormat: 'csv',
     exportSource: 'statistics'
@@ -1921,7 +1921,7 @@ test('cancellation statistics export uses only final-outcome columns', async () 
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
   appRoot.click(statisticsTabs.cancellation);
-  appRoot.click(createElement({
+  await appRoot.click(createElement({
     action: 'export-file',
     exportFormat: 'csv',
     exportSource: 'statistics'
@@ -1971,7 +1971,7 @@ test('statistics XLSX export follows the active attendance or cancellation tab',
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
 
-  appRoot.click(createElement({
+  await appRoot.click(createElement({
     action: 'export-file',
     exportFormat: 'xlsx',
     exportSource: 'statistics'
@@ -1990,7 +1990,7 @@ test('statistics XLSX export follows the active attendance or cancellation tab',
   ]);
 
   appRoot.click(statisticsTabs.cancellation);
-  appRoot.click(createElement({
+  await appRoot.click(createElement({
     action: 'export-file',
     exportFormat: 'xlsx',
     exportSource: 'statistics'
@@ -2006,6 +2006,159 @@ test('statistics XLSX export follows the active attendance or cancellation tab',
       取消率: '33.33%'
     }
   ]);
+});
+
+test('statistics CSV and XLSX exports collect every fixed statistics page without changing the visible page', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const firstPage = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    managerAlias: `备注${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    absentCount: 0,
+    attendanceRate: 1,
+    effectiveSignupActivityCount: 1,
+    cancelledActivityCount: index === 0 ? 1 : 0,
+    cancelRate: index === 0 ? 0.5 : 0
+  }));
+  const secondPage = Array.from({ length: 5 }, (_, index) => ({
+    participantName: `人员${index + 21}`,
+    managerAlias: `备注${index + 21}`,
+    signupCount: 2,
+    presentCount: 1,
+    absentCount: 1,
+    attendanceRate: 0.5,
+    effectiveSignupActivityCount: 2,
+    cancelledActivityCount: 1,
+    cancelRate: 1 / 3
+  }));
+  const getAttendanceStats = jest.fn(params => Promise.resolve(
+    params.skip === 20
+      ? { items: secondPage, total: 25, limit: 20, skip: 20, hasMore: false }
+      : { items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true }
+  ));
+  const { app, appRoot, elements, pagination, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    { runtimeRoot }
+  );
+  elements['[name="statsStartAt"]'].value = '2026-07-01';
+  elements['[name="statsEndAt"]'].value = '2026-07-24';
+  elements['[name="statsActivityType"]'].value = 'external';
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  const visibleRows = elements['[data-attendance-stats-table]'].innerHTML;
+
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'csv',
+    exportSource: 'statistics'
+  }));
+
+  expect(elements['[data-export-output]'].value).toContain('人员25,备注25,2,1,1,50.00%');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toBe(visibleRows);
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('人员25');
+  expect(pagination.attendance.page.textContent).toBe('第 1 / 2 页');
+
+  appRoot.click(statisticsTabs.cancellation);
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+
+  const workbook = writeFile.mock.calls[0][0];
+  expect(writeFile.mock.calls[0][1]).toBe('cancellation-stats.xlsx');
+  expect(XLSX.utils.sheet_to_json(workbook.Sheets['取消统计'])).toHaveLength(25);
+  expect(XLSX.utils.sheet_to_json(workbook.Sheets['取消统计'])[24]).toEqual({
+    参与者: '人员25',
+    备注: '备注25',
+    最终保留报名数: 2,
+    最终取消数: 1,
+    取消率: '33.33%'
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
+    startAt: '2026-07-01',
+    endAt: '2026-07-24',
+    activityType: 'external',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
+    startAt: '2026-07-01',
+    endAt: '2026-07-24',
+    activityType: 'external',
+    limit: 20,
+    skip: 20
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(4, {
+    startAt: '2026-07-01',
+    endAt: '2026-07-24',
+    activityType: 'external',
+    limit: 20,
+    skip: 0
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(5, {
+    startAt: '2026-07-01',
+    endAt: '2026-07-24',
+    activityType: 'external',
+    limit: 20,
+    skip: 20
+  });
+});
+
+test('statistics export aborts without a file when a later page fails', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const firstPage = [{
+    participantName: '人员1',
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }];
+  const getAttendanceStats = jest
+    .fn()
+    .mockResolvedValueOnce({ items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({ items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockRejectedValueOnce(new Error('network failed'));
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+
+  expect(writeFile).not.toHaveBeenCalled();
+  expect(elements['[data-export-output]'].value).toBe('');
+  expect(elements['[data-export-status]'].textContent).toBe('统计数据导出失败，请重试。');
+  expect(elements['[data-stats-export-button]'].disabled).toBe(false);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {
