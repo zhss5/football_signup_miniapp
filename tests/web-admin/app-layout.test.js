@@ -573,27 +573,35 @@ test('statistics tabs retain independent pagination skips', async () => {
   expect(pagination.cancellation.previous.disabled).toBe(false);
 });
 
-test('statistics filter submission resets both tabs and invalidates stale rows', async () => {
-  const getAttendanceStats = jest.fn(params => Promise.resolve({
-    items: [
-      {
-        participantName: `${params.activityType}-${params.skip}`,
-        signupCount: 1,
-        presentCount: 1,
-        absentCount: 0,
-        attendanceRate: 1,
-        effectiveSignupActivityCount: 1,
-        cancelledActivityCount: 0,
-        cancelRate: 0,
-        details: [],
-        cancellationDetails: []
-      }
-    ],
-    total: 101,
-    limit: 20,
-    skip: params.skip,
-    hasMore: true
-  }));
+test('statistics filter submission commits both-tab reset only after the active page succeeds', async () => {
+  const filterResponse = createDeferred();
+  let waitForFilter = false;
+  const getAttendanceStats = jest.fn(params => {
+    if (waitForFilter) {
+      return filterResponse.promise;
+    }
+
+    return Promise.resolve({
+      items: [
+        {
+          participantName: `${params.activityType}-${params.skip}`,
+          signupCount: 1,
+          presentCount: 1,
+          absentCount: 0,
+          attendanceRate: 1,
+          effectiveSignupActivityCount: 1,
+          cancelledActivityCount: 0,
+          cancelRate: 0,
+          details: [],
+          cancellationDetails: []
+        }
+      ],
+      total: 101,
+      limit: 20,
+      skip: params.skip,
+      hasMore: true
+    });
+  });
   const { app, appRoot, elements, pagination, statisticsTabs } = buildHarness(
     {
       _id: 'openid_admin',
@@ -615,6 +623,97 @@ test('statistics filter submission resets both tabs and invalidates stale rows',
   expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
 
   elements['[name="statsActivityType"]'].value = 'external';
+  waitForFilter = true;
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+
+  expect(getAttendanceStats).toHaveBeenLastCalledWith({
+    startAt: '',
+    endAt: '',
+    activityType: 'external',
+    limit: 20,
+    skip: 0
+  });
+  expect(app.state.pagination.attendance.skip).toBe(40);
+  expect(app.state.pagination.cancellation.skip).toBe(20);
+  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-40');
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
+
+  filterResponse.resolve({
+    items: [
+      {
+        participantName: 'external-0',
+        signupCount: 1,
+        presentCount: 1,
+        absentCount: 0,
+        attendanceRate: 1,
+        effectiveSignupActivityCount: 1,
+        cancelledActivityCount: 0,
+        cancelRate: 0,
+        details: [],
+        cancellationDetails: []
+      }
+    ],
+    total: 101,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  });
+  await result;
+
+  expect(app.state.pagination.attendance.skip).toBe(0);
+  expect(app.state.pagination.cancellation.skip).toBe(0);
+  expect(app.state.statisticsRows.attendance).toEqual([]);
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('external-0');
+
+  appRoot.click(statisticsTabs.attendance);
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('all-40');
+});
+
+test('statistics filter failure preserves both tab rows and pagination positions', async () => {
+  let failFilter = false;
+  const getAttendanceStats = jest.fn(params => {
+    if (failFilter) {
+      return Promise.reject(new Error('statistics filter unavailable'));
+    }
+
+    return Promise.resolve({
+      items: [
+        {
+          participantName: `${params.activityType}-${params.skip}`,
+          signupCount: 1,
+          presentCount: 1,
+          absentCount: 0,
+          attendanceRate: 1,
+          effectiveSignupActivityCount: 1,
+          cancelledActivityCount: 0,
+          cancelRate: 0,
+          details: [],
+          cancellationDetails: []
+        }
+      ],
+      total: 101,
+      limit: 20,
+      skip: params.skip,
+      hasMore: true
+    });
+  });
+  const { app, appRoot, elements, pagination, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  await app.loadAttendanceStats();
+  await appRoot.click(pagination.attendance.next);
+  await appRoot.click(pagination.attendance.next);
+  appRoot.click(statisticsTabs.cancellation);
+  await appRoot.click(pagination.cancellation.next);
+
+  failFilter = true;
+  elements['[name="statsActivityType"]'].value = 'external';
   await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
 
   expect(getAttendanceStats).toHaveBeenLastCalledWith({
@@ -624,13 +723,12 @@ test('statistics filter submission resets both tabs and invalidates stale rows',
     limit: 20,
     skip: 0
   });
-  expect(app.state.pagination.attendance.skip).toBe(0);
-  expect(app.state.pagination.cancellation.skip).toBe(0);
-  expect(app.state.statisticsRows.attendance).toEqual([]);
-  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('external-0');
-
-  appRoot.click(statisticsTabs.attendance);
-  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('all-40');
+  expect(app.state.pagination.attendance).toMatchObject({ skip: 40, loading: false });
+  expect(app.state.pagination.cancellation).toMatchObject({ skip: 20, loading: false });
+  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-40');
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
+  expect(pagination.cancellation.previous.disabled).toBe(false);
+  expect(elements['[data-view="identity"]'].textContent).toContain('statistics filter unavailable');
 });
 
 test('missing pagination metadata preserves user rows and restores controls', async () => {
@@ -661,6 +759,63 @@ test('missing pagination metadata preserves user rows and restores controls', as
   expect(elements['[data-users-table]'].innerHTML).not.toContain('Ben');
   expect(app.state.pagination.users).toMatchObject({
     total: 41,
+    skip: 0,
+    hasMore: true,
+    loading: false
+  });
+  expect(pagination.users.next.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('pagination metadata');
+});
+
+test.each([
+  {
+    label: 'limit',
+    response: {
+      __rawPaginationResponse: true,
+      items: [{ _id: 'openid_ben', preferredName: 'Ben', roles: ['user'] }],
+      total: 41,
+      limit: 10,
+      skip: 20,
+      hasMore: true
+    }
+  },
+  {
+    label: 'skip',
+    response: {
+      __rawPaginationResponse: true,
+      items: [{ _id: 'openid_ben', preferredName: 'Ben', roles: ['user'] }],
+      total: 41,
+      limit: 20,
+      skip: 0,
+      hasMore: true
+    }
+  }
+])('mismatched pagination $label preserves user rows and state', async ({ response }) => {
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      total: 41,
+      limit: 20,
+      skip: 0,
+      hasMore: true
+    })
+    .mockResolvedValueOnce(response);
+  const { app, appRoot, elements, pagination } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listUsers }
+  );
+
+  await app.start();
+  await appRoot.click(pagination.users.next);
+
+  expect(elements['[data-users-table]'].innerHTML).toContain('Alex');
+  expect(elements['[data-users-table]'].innerHTML).not.toContain('Ben');
+  expect(app.state.pagination.users).toMatchObject({
+    total: 41,
+    limit: 20,
     skip: 0,
     hasMore: true,
     loading: false

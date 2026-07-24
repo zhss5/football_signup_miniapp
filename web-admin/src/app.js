@@ -499,12 +499,13 @@
       renderPagination(target);
     }
 
-    function getPaginationMetadata(result) {
+    function getPaginationMetadata(result, requestedSkip) {
       const response = result || {};
       const valid =
         Number.isInteger(response.total) && response.total >= 0 &&
-        Number.isInteger(response.limit) && response.limit > 0 &&
+        Number.isInteger(response.limit) && response.limit === PAGE_LIMIT &&
         Number.isInteger(response.skip) && response.skip >= 0 &&
+        response.skip === requestedSkip &&
         typeof response.hasMore === 'boolean';
 
       if (!valid) {
@@ -513,26 +514,26 @@
 
       return {
         total: response.total,
-        limit: response.limit,
-        skip: response.skip,
+        limit: PAGE_LIMIT,
+        skip: requestedSkip,
         hasMore: response.hasMore
       };
     }
 
-    function completePageRequest(target, result, requestedSkip) {
+    function completePageRequest(target, result, requestedSkip, metadata) {
       const pageState = getPaginationState(target);
       if (!pageState) {
         return;
       }
 
-      const metadata = getPaginationMetadata(result);
-      pageState.total = metadata.total;
-      pageState.limit = metadata.limit;
-      pageState.skip = metadata.skip;
-      pageState.hasMore = metadata.hasMore;
+      const pageMetadata = metadata || getPaginationMetadata(result, requestedSkip);
+      pageState.total = pageMetadata.total;
+      pageState.limit = pageMetadata.limit;
+      pageState.skip = pageMetadata.skip;
+      pageState.hasMore = pageMetadata.hasMore;
       pageState.loading = false;
       renderPagination(target);
-      return metadata;
+      return pageMetadata;
     }
 
     function failPageRequest(target) {
@@ -1931,30 +1932,7 @@
       await searchUsers();
     }
 
-    function resetStatisticsForFilters() {
-      state.statsRows = [];
-      state.statisticsRows = {
-        attendance: [],
-        cancellation: []
-      };
-      state.pagination.attendance = {
-        total: 0,
-        limit: PAGE_LIMIT,
-        skip: 0,
-        hasMore: false,
-        loading: false
-      };
-      state.pagination.cancellation = {
-        total: 0,
-        limit: PAGE_LIMIT,
-        skip: 0,
-        hasMore: false,
-        loading: false
-      };
-      renderStatsRows();
-    }
-
-    async function loadAttendanceStats(target = state.activeStatisticsTab, skip) {
+    async function loadAttendanceStats(target = state.activeStatisticsTab, skip, options = {}) {
       const pageState = getPaginationState(target);
       const requestedSkip = Number.isFinite(Number(skip))
         ? Math.max(0, Number(skip))
@@ -1972,13 +1950,31 @@
           limit: PAGE_LIMIT,
           skip: requestedSkip
         });
-        completePageRequest(target, result, requestedSkip);
+        const metadata = getPaginationMetadata(result, requestedSkip);
         const rows = activityUi.buildStatsRows(result.items || result.rows || []);
-        state.statisticsRows[target] = rows;
-        if (target === 'attendance') {
-          state.statsRows = rows;
+        completePageRequest(target, result, requestedSkip, metadata);
+
+        if (options.resetForFilters) {
+          const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
+          state.statisticsRows[target] = rows;
+          state.statisticsRows[siblingTarget] = [];
+          state.statsRows = target === 'attendance' ? rows : [];
+          state.pagination[siblingTarget] = {
+            total: 0,
+            limit: PAGE_LIMIT,
+            skip: 0,
+            hasMore: false,
+            loading: false
+          };
+          renderPagination(siblingTarget);
+        } else {
+          state.statisticsRows[target] = rows;
+          if (target === 'attendance') {
+            state.statsRows = rows;
+          }
         }
-        if (requestedSkip === 0) {
+
+        if (!options.resetForFilters && requestedSkip === 0) {
           const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
           const siblingPage = getPaginationState(siblingTarget);
           if (siblingPage && siblingPage.skip === 0 && !siblingPage.loading) {
@@ -1997,8 +1993,7 @@
     }
 
     async function reloadStatisticsForFilters() {
-      resetStatisticsForFilters();
-      return loadAttendanceStats(state.activeStatisticsTab, 0);
+      return loadAttendanceStats(state.activeStatisticsTab, 0, { resetForFilters: true });
     }
 
     function writeExportOutput(csv) {

@@ -67,6 +67,22 @@ test('buildPaginationModel supports a first loaded page with a non-zero skip', (
   });
 });
 
+test('buildPaginationModel enables next for a populated first page', () => {
+  expect(buildPaginationModel({
+    total: 21,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  })).toMatchObject({
+    page: 1,
+    pageCount: 2,
+    canPrevious: false,
+    canNext: true,
+    previousSkip: 0,
+    nextSkip: 20
+  });
+});
+
 test('buildPaginationModel disables controls while loading', () => {
   expect(buildPaginationModel({
     total: 86,
