@@ -22,6 +22,10 @@ function matchesQuery(item, query) {
       return expected.values.includes(item[key]);
     }
 
+    if (expected && expected.gt !== undefined) {
+      return String(item[key] || '') > String(expected.gt);
+    }
+
     return item[key] === expected;
   });
 }
@@ -78,9 +82,7 @@ function createCollectionQuery(source, state = {}) {
         data = data.slice(queryState.skip);
       }
 
-      if (Number.isFinite(queryState.limit) && queryState.limit !== null) {
-        data = data.slice(0, queryState.limit);
-      }
+      data = data.slice(0, queryState.limit === null ? 100 : queryState.limit);
 
       return { data: clone(data) };
     }
@@ -92,6 +94,9 @@ function createFakeDb(collections) {
     command: {
       in(values) {
         return { values };
+      },
+      gt(value) {
+        return { gt: value };
       }
     },
     collection(name) {
@@ -423,4 +428,66 @@ test('web-admin scope limits organizers to their own activities and rejects regu
   await expect(
     listActivities.main({ scope: 'web-admin' }, { OPENID: 'openid_player' })
   ).rejects.toThrow('Only organizers or admins can list web admin activities');
+});
+
+test('web-admin scope reads all cursor batches before filtering and paginating with exact metadata', async () => {
+  const activities = Array.from({ length: 125 }, (_, index) => ({
+    _id: `bulk_activity_${String(index).padStart(3, '0')}`,
+    title: `League Match ${index}`,
+    organizerOpenId: 'openid_owner',
+    startAt: '2026-06-10T20:00:00.000Z',
+    createdAt: '2026-06-01T00:00:00.000Z',
+    status: 'published'
+  }));
+  cloud.database.mockReturnValue(
+    createFakeDb({
+      users: [
+        { _id: 'openid_admin', roles: ['user', 'admin'] },
+        { _id: 'openid_owner', preferredName: 'Owner', roles: ['user', 'organizer'] }
+      ],
+      activities
+    })
+  );
+
+  const result = await listActivities.main(
+    {
+      scope: 'web-admin',
+      keyword: 'league',
+      status: 'published',
+      organizerOpenId: 'openid_owner',
+      limit: 20,
+      skip: 20
+    },
+    { OPENID: 'openid_admin' }
+  );
+
+  expect(result).toMatchObject({
+    total: 125,
+    limit: 20,
+    skip: 20,
+    hasMore: true
+  });
+  expect(result.items).toHaveLength(20);
+  expect(result.items.map(item => item._id)).toEqual([
+    'bulk_activity_104',
+    'bulk_activity_103',
+    'bulk_activity_102',
+    'bulk_activity_101',
+    'bulk_activity_100',
+    'bulk_activity_099',
+    'bulk_activity_098',
+    'bulk_activity_097',
+    'bulk_activity_096',
+    'bulk_activity_095',
+    'bulk_activity_094',
+    'bulk_activity_093',
+    'bulk_activity_092',
+    'bulk_activity_091',
+    'bulk_activity_090',
+    'bulk_activity_089',
+    'bulk_activity_088',
+    'bulk_activity_087',
+    'bulk_activity_086',
+    'bulk_activity_085'
+  ]);
 });

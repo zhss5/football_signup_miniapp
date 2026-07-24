@@ -8,6 +8,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const COLLECTION_BATCH_SIZE = 100;
 
 function normalizeLimit(value) {
   const limit = Number(value);
@@ -34,7 +35,12 @@ function sortActivitiesByStartDesc(items) {
       return startCompare;
     }
 
-    return String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+    const createdCompare = String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+    if (createdCompare !== 0) {
+      return createdCompare;
+    }
+
+    return String(right._id || '').localeCompare(String(left._id || ''));
   });
 }
 
@@ -47,6 +53,32 @@ function pageActivities(items, event) {
 async function loadUser(db, openid) {
   const res = await db.collection(COLLECTIONS.USERS).doc(openid).get();
   return res && res.data ? res.data : null;
+}
+
+async function loadCollection(db, command, collectionName) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const criteria = lastId ? { _id: command.gt(lastId) } : {};
+    const result = await db
+      .collection(collectionName)
+      .where(criteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    lastId = batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
 }
 
 function getUserProfileName(user = {}) {
@@ -139,7 +171,7 @@ function matchesDateRange(activity, startAtFrom, startAtTo) {
   return true;
 }
 
-async function listWebAdminActivities(db, payload, openid, limit, skip) {
+async function listWebAdminActivities(db, command, payload, openid, limit, skip) {
   const caller = await loadUser(db, openid);
   const callerIsAdmin = isAdmin(caller);
 
@@ -147,12 +179,12 @@ async function listWebAdminActivities(db, payload, openid, limit, skip) {
     throw businessError('Only organizers or admins can list web admin activities');
   }
 
-  const res = await db.collection(COLLECTIONS.ACTIVITIES).get();
+  const activities = await loadCollection(db, command, COLLECTIONS.ACTIVITIES);
   const keyword = String(payload.keyword || '').trim().toLowerCase();
   const status = String(payload.status || '').trim();
   const organizerOpenId = String(payload.organizerOpenId || '').trim();
   const organizerKeyword = String(payload.organizerKeyword || '').trim().toLowerCase();
-  const filtered = (Array.isArray(res.data) ? res.data : [])
+  const filtered = activities
     .filter(activity => (status ? activity.status === status : activity.status !== 'deleted'))
     .filter(activity => (callerIsAdmin ? true : activity.organizerOpenId === openid))
     .filter(activity =>
@@ -170,6 +202,9 @@ async function listWebAdminActivities(db, payload, openid, limit, skip) {
 
   return {
     items: pageItems,
+    total: sorted.length,
+    limit,
+    skip,
     hasMore: sorted.length > skip + limit
   };
 }
@@ -185,9 +220,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   );
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
+  const command = deps.command || db.command;
 
   if (payload.scope === 'web-admin') {
-    return listWebAdminActivities(db, payload, openid, limit, skip);
+    return listWebAdminActivities(db, command, payload, openid, limit, skip);
   }
 
   if (payload.scope === 'home') {

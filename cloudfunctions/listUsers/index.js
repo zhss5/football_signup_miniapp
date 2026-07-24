@@ -8,6 +8,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const COLLECTION_BATCH_SIZE = 100;
 
 function normalizeLimit(value) {
   const limit = Number(value);
@@ -32,6 +33,32 @@ async function loadUser(db, openid) {
   return res && res.data ? res.data : null;
 }
 
+async function loadCollection(db, command, collectionName) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const criteria = lastId ? { _id: command.gt(lastId) } : {};
+    const result = await db
+      .collection(collectionName)
+      .where(criteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    lastId = batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
+}
+
 function pickAvatarUrl(user, registrationAvatarUrl) {
   return (
     user.avatarUrl ||
@@ -53,10 +80,9 @@ function getRegistrationAvatarTimestamp(registration) {
   );
 }
 
-async function loadRegistrationAvatarUrlsByUser(db) {
+async function loadRegistrationAvatarUrlsByUser(db, command) {
   try {
-    const res = await db.collection(COLLECTIONS.REGISTRATIONS).get();
-    const registrations = Array.isArray(res.data) ? res.data : [];
+    const registrations = await loadCollection(db, command, COLLECTIONS.REGISTRATIONS);
     return registrations.reduce((acc, registration) => {
       const userOpenId = String(registration.userOpenId || '').trim();
       const avatarUrl = String(registration.avatarUrl || '').trim();
@@ -116,7 +142,12 @@ function compareUsers(left, right) {
     return createdCompare;
   }
 
-  return String(left.lastActiveAt || '').localeCompare(String(right.lastActiveAt || ''));
+  const activeCompare = String(left.lastActiveAt || '').localeCompare(String(right.lastActiveAt || ''));
+  if (activeCompare !== 0) {
+    return activeCompare;
+  }
+
+  return String(left._id || '').localeCompare(String(right._id || ''));
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -138,9 +169,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const role = String(payload.role || '').trim();
   const skip = normalizeSkip(payload.skip);
   const limit = normalizeLimit(payload.limit);
-  const res = await db.collection(COLLECTIONS.USERS).get();
-  const users = Array.isArray(res.data) ? res.data : [];
-  const registrationAvatarsByUser = await loadRegistrationAvatarUrlsByUser(db);
+  const command = deps.command || db.command;
+  const users = await loadCollection(db, command, COLLECTIONS.USERS);
+  const registrationAvatarsByUser = await loadRegistrationAvatarUrlsByUser(db, command);
   const filtered = users
     .map(user => toSafeUser(user, registrationAvatarsByUser))
     .filter(user => userMatchesKeyword(user, keyword))
@@ -149,6 +180,9 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   return {
     items: filtered.slice(skip, skip + limit),
+    total: filtered.length,
+    limit,
+    skip,
     hasMore: filtered.length > skip + limit
   };
 }
