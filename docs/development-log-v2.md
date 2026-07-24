@@ -18,14 +18,17 @@ Delivered behavior:
 - XLSX files use dedicated `报名名单`, `活动流水`, `出勤统计`, or `取消统计` worksheets with conservative column widths.
 - opening a different menu closes the previous menu; selection, outside click, statistics-tab switching, and `Escape` close the active menu.
 - SheetJS Community Edition 0.20.3 is pinned and vendored under `web-admin/vendor/`; the hosted page does not fetch it from a third-party CDN at runtime.
+- CSV serialization escapes headers and neutralizes formula-like user strings before Excel can interpret them as formulas.
+- XLSX runtime failures are rendered inside the active workspace instead of the hidden login identity panel.
+- the vendored SheetJS SHA-256 is enforced by tests and its Apache 2.0 license is distributed beside the bundle.
 
 TDD and verification:
 
 - export utility RED tests first failed because the CSV/XLSX module, local SheetJS asset, and script tags did not exist.
 - UI RED tests then failed against the old CSV-only buttons and missing menu/format routing.
-- focused export tests passed with `3` suites and `68` tests.
-- Web Admin regression passed with `10` suites and `105` tests.
-- full direct Jest regression passed with `84` suites and `821` tests.
+- focused export tests passed with `3` suites and `74` tests.
+- Web Admin regression passed with `10` suites and `111` tests.
+- full direct Jest regression passed with `84` suites and `827` tests.
 - direct Jest was used instead of the `npm test` pretest copy hook so unrelated uncommitted notification helper changes remained untouched.
 - scoped `git diff --check` passed with line-ending warnings only.
 

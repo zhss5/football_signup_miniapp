@@ -83,6 +83,7 @@ Completed:
 - web-admin roster export calls `exportActivityRoster`; Web Admin generates CSV or XLSX files in the browser while the backend still returns rows only.
 - every existing Web Admin export control now uses the same `导出` format menu for CSV and XLSX across roster, activity-log, attendance-statistics, and cancellation-statistics datasets.
 - Web Admin vendors the fixed SheetJS Community Edition 0.20.3 browser runtime locally, and CSV/XLSX exports use identical filtered rows and Chinese field order.
+- Web Admin export hardening neutralizes CSV formula-like strings, visibly reports XLSX runtime failures, verifies the vendored bundle SHA-256, and includes the Apache 2.0 license copy.
 - `listNotificationLogs` cloud function provides notification-log review with admin/global and organizer/own-activity boundaries.
 - web-admin activity-log review calls `listActivityLogs`; notification-log review calls `listNotificationLogs`.
 - SQL migration readiness mapping now documents web-admin activity/log API boundaries and notification-log field mapping.
