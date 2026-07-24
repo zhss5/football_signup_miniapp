@@ -13,7 +13,7 @@ Delivered behavior:
 - `listUsers`, Web Admin `listActivities`, `getAttendanceStats`, and `listNotificationLogs` return additive `{ items, total, limit, skip, hasMore }` responses. The Web Admin requests a fixed `20` rows and strictly validates the returned metadata before replacing a visible page.
 - user management, activity management, attendance statistics, cancellation statistics, and notification logs show exact filtered totals with previous/next navigation. Filter changes reset to the first page; attendance and cancellation retain independent page positions.
 - CloudBase collection reads that can exceed one response page traverse complete `_id` cursor batches, apply supported filters before aggregation, deduplicate by `_id`, and retain deterministic `_id` tie-breakers after their business sort.
-- `getActivityDetail` and `exportActivityRoster` read every joined registration for the selected activity. Roster detail and roster CSV/XLSX remain complete single-activity views with team, join-time, participant-name, and registration-ID ordering.
+- `getActivityDetail` and `exportActivityRoster` read every joined registration for the selected activity. Roster detail and roster CSV/XLSX remain complete single-activity views with one exact flattened order: numeric team `sort`, team ID, `joinedAt`, participant display-name fallback (`signupName`, `displayName`, `preferredName`, `userOpenId`), then registration ID. Flattened activity-detail members exactly match roster-export rows.
 - attendance and cancellation CSV/XLSX export re-reads all validated pages for the active filters. A metadata mismatch, inconsistent total, incorrect page size, incorrect `hasMore`, or stalled page progression aborts the export rather than creating a partial file.
 - server role boundaries are unchanged: only admins/super admins list users; organizers are limited to their own activities, statistics, and notification logs; admins/super admins have global scope; ordinary users remain denied management reads and roster export.
 - the static HTML asset query version is a deployment requirement. Advance all versioned CSS and JavaScript queries together before uploading `/admin/` so stale CloudBase/CDN assets cannot bypass the stricter client contract.
@@ -25,8 +25,9 @@ Compatibility and deployment:
 
 Verification:
 
-- focused direct Jest passed with `10` suites and `138` tests.
-- test-only follow-up commit `31f1a95` updated `tests/web-admin/app-login.test.js` to return valid `{ items, total, limit, skip, hasMore }` pagination metadata. Its targeted direct Jest run passed with `1` suite and `3` tests; final `npx jest --runInBand` passed with `85` suites and `857` tests.
+- roster-order follow-up commit `580fe15` passed independent review and added explicit detail/export ordering parity coverage.
+- focused direct Jest passed with `10` suites and `141` tests.
+- test-only follow-up commit `31f1a95` updated `tests/web-admin/app-login.test.js` to return valid `{ items, total, limit, skip, hasMore }` pagination metadata. Final `npx jest --runInBand` passed with `85` suites and `860` tests.
 
 ## 2026-07-24 - Unified Web Admin CSV And XLSX Exports
 

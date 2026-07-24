@@ -265,7 +265,7 @@ Current web-admin capabilities:
 - activity operation logs through `listActivityLogs`.
 - notification logs through `listNotificationLogs`.
 - fixed 20-row pagination for user management, activity management, attendance statistics, cancellation statistics, and notification logs. List APIs return `{ items, total, limit, skip, hasMore }`; the client rejects malformed metadata without replacing the visible page.
-- complete activity detail and roster-export reads for every joined registration in the selected activity. Roster detail remains unpaginated, while attendance/cancellation CSV/XLSX exports read all validated pages for the active filters and fail rather than emit partial results.
+- complete activity detail and roster-export reads for every joined registration in the selected activity. Roster detail remains unpaginated and uses the exact flattened order shared with roster export: numeric team `sort`, team ID, `joinedAt`, participant display-name fallback (`signupName`, `displayName`, `preferredName`, `userOpenId`), then registration ID. Attendance/cancellation CSV/XLSX exports read all validated pages for the active filters and fail rather than emit partial results.
 - role boundaries remain server enforced: admins/super admins list users and have global review scope; organizers have own-activity scope for activities, statistics, and notification logs; ordinary users cannot use these management reads or roster export.
 
 ## 7. SQL And Self-Hosted Readiness
@@ -283,7 +283,7 @@ Important rules:
 - keep cloud function inputs/outputs API-shaped.
 - do not couple backend contracts directly to mini-program or web-admin UI structure.
 - V2 prepares schema compatibility only; it does not run MySQL, dual-write, or cut over to a self-hosted API.
-- The pagination response remains API-shaped for a future SQL implementation: `{ items, total, limit, skip, hasMore }`. CloudBase uses complete `_id` cursor reads and final stable `_id` tie-breakers before filtering, aggregation, and public offset pagination. Future SQL validation must prove identical filtered totals, terminal-page `hasMore`, roster order/completeness, and complete multi-page export behavior. `limit`/`skip` map to SQL `LIMIT/OFFSET` today but do not commit the future implementation to permanent offset pagination.
+- The pagination response remains API-shaped for a future SQL implementation: `{ items, total, limit, skip, hasMore }`. CloudBase uses complete `_id` cursor reads and final stable `_id` tie-breakers before filtering, aggregation, and public offset pagination. Future SQL validation must prove identical filtered totals, terminal-page `hasMore`, complete multi-page export behavior, and the shared flattened roster order: numeric team `sort`, team ID, `joinedAt`, participant display-name fallback (`signupName`, `displayName`, `preferredName`, `userOpenId`), then registration ID. `limit`/`skip` map to SQL `LIMIT/OFFSET` today but do not commit the future implementation to permanent offset pagination.
 
 ## 8. Verification Snapshot
 
@@ -297,11 +297,12 @@ npx jest --runInBand
 git diff --check
 ```
 
-Results, including test-only follow-up commit `31f1a95`:
+Results, including test-only follow-up `31f1a95` and roster-order follow-up `580fe15`:
 
-- focused direct Jest passed with `10` suites and `138` tests.
+- focused direct Jest passed with `10` suites and `141` tests.
 - the targeted direct Jest run for `tests/web-admin/app-login.test.js` passed with `1` suite and `3` tests after its pagination mocks were updated to return valid `{ items, total, limit, skip, hasMore }` metadata.
-- final direct Jest passed with `85` suites and `857` tests.
+- `580fe15` passed independent review and proves flattened `getActivityDetail` roster order exactly matches `exportActivityRoster`.
+- final direct Jest passed with `85` suites and `860` tests.
 - `git diff --check` must be rerun after the documentation edits and before staging.
 
 Latest verification before this handoff refresh:
