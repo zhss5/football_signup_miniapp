@@ -1,4 +1,5 @@
 const getActivityDetail = require('../../cloudfunctions/getActivityDetail/index');
+const exportActivityRoster = require('../../cloudfunctions/exportActivityRoster/index');
 
 test('getActivityDetail returns teams and my registration', async () => {
   const result = await getActivityDetail.main(
@@ -120,6 +121,12 @@ test('getActivityDetail groups joined members under each team', async () => {
         },
         where(query) {
           return {
+            orderBy() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             async get() {
               if (name === 'activity_teams') {
                 return { data: teams.filter(item => item.activityId === query.activityId) };
@@ -249,6 +256,12 @@ test('getActivityDetail uses registration avatar when user profile avatar is una
         },
         where(query) {
           return {
+            orderBy() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             async get() {
               if (name === 'activity_teams') {
                 return { data: teams.filter(item => item.activityId === query.activityId) };
@@ -348,6 +361,12 @@ test('getActivityDetail returns viewer permissions for organizer and signup canc
         },
         where(query) {
           return {
+            orderBy() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             async get() {
               if (name === 'activity_teams') {
                 return { data: teams.filter(item => item.activityId === query.activityId) };
@@ -441,6 +460,12 @@ test('getActivityDetail exposes edit permission for admins', async () => {
         },
         where(query) {
           return {
+            orderBy() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             async get() {
               if (name === 'activity_teams' || name === 'registrations' || name === 'users') {
                 return { data: [] };
@@ -531,6 +556,12 @@ test('getActivityDetail exposes manager registration notification subscription s
         },
         where(query) {
           return {
+            orderBy() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             async get() {
               if (name === 'activity_teams' || name === 'registrations' || name === 'users') {
                 return { data: [] };
@@ -621,16 +652,21 @@ test('getActivityDetail returns every joined member for a large activity', async
     .filter(registration => registration.activityId === 'activity_1')
     .map(registration => ({ _id: registration.userOpenId }));
 
-  function createQuery(items, criteria = null, offset = 0, count = 100) {
+  const queryHistory = [];
+
+  function createQuery(items, criteria = null, offset = 0, count = 100, order = null) {
     return {
       where(nextCriteria) {
-        return createQuery(items, nextCriteria, offset, count);
+        return createQuery(items, nextCriteria, offset, count, order);
+      },
+      orderBy(field, direction) {
+        return createQuery(items, criteria, offset, count, { field, direction });
       },
       skip(nextOffset) {
-        return createQuery(items, criteria, nextOffset, count);
+        return createQuery(items, criteria, nextOffset, count, order);
       },
       limit(nextCount) {
-        return createQuery(items, criteria, offset, nextCount);
+        return createQuery(items, criteria, offset, nextCount, order);
       },
       async get() {
         const filtered = items.filter(item =>
@@ -639,11 +675,23 @@ test('getActivityDetail returns every joined member for a large activity', async
               return value.values.includes(item[key]);
             }
 
+            if (value && value.operator === 'gt') {
+              return String(item[key]) > String(value.value);
+            }
+
             return item[key] === value;
           })
         );
+        const ordered = order
+          ? [...filtered].sort((left, right) => {
+              const comparison = String(left[order.field]).localeCompare(String(right[order.field]));
+              return order.direction === 'desc' ? -comparison : comparison;
+            })
+          : filtered;
 
-        return { data: filtered.slice(offset, offset + count) };
+        queryHistory.push({ criteria, order });
+
+        return { data: ordered.slice(offset, offset + count) };
       }
     };
   }
@@ -652,6 +700,9 @@ test('getActivityDetail returns every joined member for a large activity', async
     command: {
       in(values) {
         return { values };
+      },
+      gt(value) {
+        return { operator: 'gt', value };
       }
     },
     collection(name) {
@@ -688,6 +739,7 @@ test('getActivityDetail returns every joined member for a large activity', async
           };
         },
         where: query.where,
+        orderBy: query.orderBy,
         skip: query.skip,
         limit: query.limit,
         get: query.get
@@ -702,4 +754,134 @@ test('getActivityDetail returns every joined member for a large activity', async
   );
 
   expect(detail.teams.flatMap(team => team.members)).toHaveLength(105);
+  const registrationQueries = queryHistory.filter(
+    query => query.criteria.activityId === 'activity_1' && query.criteria.status === 'joined'
+  );
+
+  expect(registrationQueries).toHaveLength(2);
+  expect(registrationQueries.every(query => query.order)).toBe(true);
+  expect(registrationQueries.every(query => query.order.field === '_id')).toBe(true);
+  expect(registrationQueries.every(query => query.order.direction === 'asc')).toBe(true);
+  expect(registrationQueries[1].criteria._id).toMatchObject({ operator: 'gt' });
+});
+
+test('getActivityDetail keeps joined members on inactive teams in parity with roster export', async () => {
+  const state = {
+    users: {
+      openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] },
+      openid_player: { _id: 'openid_player', roles: ['user'] }
+    },
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Saturday 8-10',
+        organizerOpenId: 'openid_owner',
+        status: 'published'
+      }
+    },
+    activity_teams: {
+      team_inactive: {
+        _id: 'team_inactive',
+        activityId: 'activity_1',
+        teamName: 'Inactive',
+        sort: 1,
+        status: 'inactive'
+      }
+    },
+    registrations: {
+      reg_inactive: {
+        _id: 'reg_inactive',
+        activityId: 'activity_1',
+        teamId: 'team_inactive',
+        userOpenId: 'openid_player',
+        status: 'joined',
+        signupName: 'Player',
+        joinedAt: '2026-06-01T10:00:00.000Z'
+      }
+    }
+  };
+
+  function createQuery(items, criteria = null, offset = 0, count = 100, order = null) {
+    return {
+      where(nextCriteria) {
+        return createQuery(items, nextCriteria, offset, count, order);
+      },
+      orderBy(field, direction) {
+        return createQuery(items, criteria, offset, count, { field, direction });
+      },
+      skip(nextOffset) {
+        return createQuery(items, criteria, nextOffset, count, order);
+      },
+      limit(nextCount) {
+        return createQuery(items, criteria, offset, nextCount, order);
+      },
+      async get() {
+        const filtered = Object.values(items || {}).filter(item =>
+          Object.entries(criteria || {}).every(([key, value]) => {
+            if (value && Array.isArray(value.values)) {
+              return value.values.includes(item[key]);
+            }
+
+            if (value && value.operator === 'gt') {
+              return String(item[key]) > String(value.value);
+            }
+
+            return item[key] === value;
+          })
+        );
+        const ordered = order
+          ? [...filtered].sort((left, right) => {
+              const comparison = String(left[order.field]).localeCompare(String(right[order.field]));
+              return order.direction === 'desc' ? -comparison : comparison;
+            })
+          : filtered;
+
+        return { data: ordered.slice(offset, offset + count) };
+      }
+    };
+  }
+
+  const db = {
+    command: {
+      in(values) {
+        return { values };
+      },
+      gt(value) {
+        return { operator: 'gt', value };
+      }
+    },
+    collection(name) {
+      const query = createQuery(state[name]);
+
+      return {
+        doc(id) {
+          return {
+            async get() {
+              return { data: state[name][id] || null };
+            }
+          };
+        },
+        where: query.where,
+        orderBy: query.orderBy,
+        skip: query.skip,
+        limit: query.limit,
+        get: query.get
+      };
+    }
+  };
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(detail.teams.flatMap(team => team.members).map(member => member.registrationId)).toEqual(
+    exported.rows.map(row => row.registrationId)
+  );
 });

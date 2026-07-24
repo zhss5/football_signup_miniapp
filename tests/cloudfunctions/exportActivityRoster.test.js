@@ -105,16 +105,28 @@ function createFakeDb(options = {}) {
     }
   };
 
-  function createQuery(items, criteria = null, offset = 0, count = 100) {
+  const queryHistory = [];
+
+  function createQuery(
+    collectionName,
+    items,
+    criteria = null,
+    offset = 0,
+    count = 100,
+    order = null
+  ) {
     return {
       where(nextCriteria) {
-        return createQuery(items, nextCriteria, offset, count);
+        return createQuery(collectionName, items, nextCriteria, offset, count, order);
+      },
+      orderBy(field, direction) {
+        return createQuery(collectionName, items, criteria, offset, count, { field, direction });
       },
       skip(nextOffset) {
-        return createQuery(items, criteria, nextOffset, count);
+        return createQuery(collectionName, items, criteria, nextOffset, count, order);
       },
       limit(nextCount) {
-        return createQuery(items, criteria, offset, nextCount);
+        return createQuery(collectionName, items, criteria, offset, nextCount, order);
       },
       async get() {
         const filtered = Object.values(items || {}).filter(item =>
@@ -123,24 +135,40 @@ function createFakeDb(options = {}) {
               return value.values.includes(item[key]);
             }
 
+            if (value && value.operator === 'gt') {
+              return String(item[key]) > String(value.value);
+            }
+
             return item[key] === value;
           })
         );
+        const ordered = order
+          ? [...filtered].sort((left, right) => {
+              const comparison = String(left[order.field]).localeCompare(String(right[order.field]));
+              return order.direction === 'desc' ? -comparison : comparison;
+            })
+          : filtered;
 
-        return { data: filtered.slice(offset, offset + count) };
+        queryHistory.push({ collectionName, criteria, order });
+
+        return { data: ordered.slice(offset, offset + count) };
       }
     };
   }
 
   return {
     state,
+    queryHistory,
     command: {
       in(values) {
         return { values };
+      },
+      gt(value) {
+        return { operator: 'gt', value };
       }
     },
     collection(name) {
-      const query = createQuery(state[name]);
+      const query = createQuery(name, state[name]);
 
       return {
         doc(id) {
@@ -151,6 +179,7 @@ function createFakeDb(options = {}) {
           };
         },
         where: query.where,
+        orderBy: query.orderBy,
         skip: query.skip,
         limit: query.limit,
         get: query.get
@@ -391,4 +420,13 @@ test('exportActivityRoster returns every joined registration for a large activit
   expect(exported.rows).toHaveLength(105);
   expect(exported.total).toBe(105);
   expect(exported.rows.every(row => row.activityId === 'activity_1')).toBe(true);
+  const registrationQueries = db.queryHistory.filter(
+    query => query.collectionName === 'registrations' && query.criteria.activityId === 'activity_1'
+  );
+
+  expect(registrationQueries).toHaveLength(2);
+  expect(registrationQueries.every(query => query.order)).toBe(true);
+  expect(registrationQueries.every(query => query.order.field === '_id')).toBe(true);
+  expect(registrationQueries.every(query => query.order.direction === 'asc')).toBe(true);
+  expect(registrationQueries[1].criteria._id).toMatchObject({ operator: 'gt' });
 });

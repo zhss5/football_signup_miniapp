@@ -7,23 +7,29 @@ const { canEditActivity } = require('./roles');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const COLLECTION_BATCH_SIZE = 100;
+const USER_PROFILE_BATCH_SIZE = COLLECTION_BATCH_SIZE - 1;
 
 async function loadDoc(db, collectionName, id) {
   const res = await db.collection(collectionName).doc(id).get();
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName, criteria = null) {
+async function loadCollection(db, command, collectionName, criteria = null) {
   const items = [];
-  let offset = 0;
+  let lastId = '';
 
   while (true) {
-    let query = db.collection(collectionName);
-    if (criteria) {
-      query = query.where(criteria);
+    const pageCriteria = { ...(criteria || {}) };
+    if (lastId) {
+      pageCriteria._id = command.gt(lastId);
     }
 
-    const result = await query.skip(offset).limit(COLLECTION_BATCH_SIZE).get();
+    const result = await db
+      .collection(collectionName)
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
     const batch = Array.isArray(result.data) ? result.data : [];
     items.push(...batch);
 
@@ -31,7 +37,10 @@ async function loadCollection(db, collectionName, criteria = null) {
       return Array.from(new Map(items.map(item => [item._id, item])).values());
     }
 
-    offset += batch.length;
+    lastId = batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
   }
 }
 
@@ -59,10 +68,10 @@ async function loadRosterUsers(db, command, registrations) {
     return [];
   }
 
-  const userGroups = groupValues(userOpenIds, COLLECTION_BATCH_SIZE);
+  const userGroups = groupValues(userOpenIds, USER_PROFILE_BATCH_SIZE);
   const userBatches = await Promise.all(
     userGroups.map(userOpenIds =>
-      loadCollection(db, COLLECTIONS.USERS, { _id: command.in(userOpenIds) })
+      loadCollection(db, command, COLLECTIONS.USERS, { _id: command.in(userOpenIds) })
     )
   );
 
@@ -167,8 +176,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const [activity, caller, teams, registrations] = await Promise.all([
     loadDoc(db, COLLECTIONS.ACTIVITIES, activityId),
     loadDoc(db, COLLECTIONS.USERS, openid),
-    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS, { activityId }),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS, { activityId, status: 'joined' })
+    loadCollection(db, command, COLLECTIONS.ACTIVITY_TEAMS, { activityId }),
+    loadCollection(db, command, COLLECTIONS.REGISTRATIONS, { activityId, status: 'joined' })
   ]);
 
   if (!activity) {
