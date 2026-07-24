@@ -565,3 +565,16 @@ The test Web Admin statistics page no longer starts two concurrent full statisti
 - static hosting: deployed `29/29` files to `/admin/` with asset version `20260724-statistics-single-request`.
 - live smoke: the previously affected `内战统计` load completed in about 6 seconds with `14` attendance rows; switching tabs immediately showed `17` cancellation rows.
 - runtime boundary: no MySQL migration, dual-write, or self-hosted HTTP API switch.
+
+## 13. 2026-07-24 Activity Detail Loading Repair
+
+The activity detail no longer waits on table-wide activity-log enrichment reads without a bounded failure state.
+
+- implementation commit: `9e26c65`
+- backend: when `activityId` is present, `listActivityLogs` reads that activity directly, filters registrations and teams by `activityId`, and fetches only referenced user documents.
+- frontend: activity-detail loading has a 20-second timeout; timeout state shows `活动详情加载超时，请重试。` and a retry action.
+- tests: `85` suites, `875` tests passed; `git diff --check` passed.
+- cloud function: deployed to `cloudbase-miniapp-test-dfc753877`, remote `ModTime` `2026-07-24 18:42:46`.
+- static hosting: deployed `29/29` files to `/admin/` with asset version `20260724-activity-detail-timeout`.
+- live smoke: `测试07221933` improved from about 29 seconds to about 4.9 seconds and rendered `3` roster rows plus `22` activity-log rows.
+- runtime boundary: no MySQL migration, dual-write, or self-hosted HTTP API switch.

@@ -264,3 +264,14 @@ Deployment readiness tasks remain:
 - Smoke: `内战统计` returned `14` attendance rows in about 6 seconds and the already-loaded cancellation projection showed `17` rows immediately.
 - Commit: `0d79ae9`.
 - Architecture boundary: CloudBase remains the only runtime store; no MySQL runtime migration, dual-write, or self-hosted HTTP API cutover was made.
+
+## 2026-07-24 Post-V2 Activity Detail Loading Repair
+
+- Completed: activity-scoped `listActivityLogs` enrichment now filters registrations and teams by `activityId` and reads only referenced user documents.
+- Completed: added a 20-second activity-detail timeout with a visible retry action.
+- Completed: advanced Web Admin static asset version to `20260724-activity-detail-timeout`.
+- Verification: `85` suites and `875` tests passed; `git diff --check` passed.
+- Deployment: `listActivityLogs` and all `29` Web Admin static files were deployed to `cloudbase-miniapp-test-dfc753877`.
+- Smoke: the same `测试07221933` detail improved from about 29 seconds to about 4.9 seconds and returned `3` roster rows plus `22` activity-log rows.
+- Commit: `9e26c65`.
+- Architecture boundary: the repair changes API query scope and client resilience only; no MySQL runtime migration, dual-write, or self-hosted HTTP API cutover was made.

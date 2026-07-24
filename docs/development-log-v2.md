@@ -1774,3 +1774,33 @@ Verification and deployment:
 - CloudBase static hosting uploaded `29/29` files under `/admin/`.
 - browser smoke with `内战统计` completed in about 6 seconds, restored the load button, displayed `14` attendance rows, and switched immediately to `17` cancellation rows.
 - no runtime MySQL migration, dual-write, or self-hosted HTTP API switch was introduced.
+
+## 2026-07-24 - Web Admin Activity Detail Loading
+
+Fixed activity-detail dialogs taking about 29 seconds to finish loading while waiting for roster data and activity logs.
+
+Root cause:
+
+- the Web Admin waited for `getActivityDetail` and all `listActivityLogs` pages in one combined request path before rendering the dialog body.
+- an activity-scoped `listActivityLogs` call filtered activity logs but still scanned all activities, registrations, teams, and users for enrichment.
+- activity-detail loading had no bounded timeout or visible retry state.
+
+Delivered behavior:
+
+- activity-scoped log reads now load the selected activity directly, query registrations and teams by `activityId`, and fetch only user documents referenced by the activity registrations or logs.
+- the Web Admin limits activity-detail loading to 20 seconds.
+- a timed-out detail request replaces the spinner with `活动详情加载超时，请重试。` and a retry action.
+- the hosted asset version is `20260724-activity-detail-timeout`.
+- no collection field or SQL column was added.
+
+Verification and deployment:
+
+- TDD red tests first proved that related registrations and teams were not activity-filtered and that no activity-detail timeout existed.
+- focused regression passed: `3` suites, `101` tests.
+- full regression passed: `85` suites, `875` tests.
+- `git diff --check` passed.
+- implementation commit: `9e26c65`.
+- `listActivityLogs` was deployed to `cloudbase-miniapp-test-dfc753877`; remote `ModTime` is `2026-07-24 18:42:46`.
+- CloudBase static hosting uploaded `29/29` files under `/admin/`.
+- browser smoke for `测试07221933` improved from about 29 seconds to about 4.9 seconds and rendered `3` roster rows plus `22` activity-log rows.
+- no runtime MySQL migration, dual-write, or self-hosted HTTP API switch was introduced.
