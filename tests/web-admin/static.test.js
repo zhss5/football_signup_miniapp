@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const WEB_ADMIN_ASSET_VERSION = '20260724-unified-export-hardening';
+const WEB_ADMIN_ASSET_VERSION = '20260724-pagination-controls';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
@@ -37,13 +37,16 @@ test('web admin workspace uses a Chinese sidebar plus independent content views'
   expect(html).toContain('data-nav-target="users"');
   expect(html).toContain('data-nav-target="activities"');
   expect(html).toContain('data-nav-target="attendance-stats"');
+  expect(html).toContain('data-nav-target="notification-logs"');
   expect(html).not.toContain('data-nav-target="logs"');
   expect(html).toContain('data-admin-view="users"');
   expect(html).toContain('data-admin-view="activities"');
   expect(html).toContain('data-admin-view="attendance-stats"');
+  expect(html).toContain('data-admin-view="notification-logs"');
   expect(html).toContain('用户管理');
   expect(html).toContain('活动管理');
   expect(html).toContain('统计分析');
+  expect(html).toContain('通知日志');
   expect(html).toContain('出勤统计');
   expect(html).toContain('取消统计');
   expect(html).not.toContain('全局日志');
@@ -167,7 +170,9 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).not.toContain('data-action="export-roster"');
   expect(html).not.toContain('data-action="load-activity-logs"');
   expect(html).not.toContain('data-action="load-notification-logs"');
-  expect(html).not.toContain('data-logs-status');
+  expect(html).toContain('data-logs-status');
+  expect(html).toContain('data-notification-logs-table');
+  expect(html).toContain('data-pagination="notificationLogs"');
   const rosterHeaderStart = html.indexOf('活动报名人列表');
   const rosterHeaderEnd = html.indexOf('<tbody data-roster-table>', rosterHeaderStart);
   const rosterHeaderBlock = rosterHeaderStart >= 0 && rosterHeaderEnd > rosterHeaderStart
@@ -281,6 +286,10 @@ test('role management checkboxes render as toggle switches', () => {
 
 test('web admin static shell loads the test CloudBase runtime before app startup', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');
+  const versionedAssets = Array.from(
+    html.matchAll(/(?:href|src)="[^"?]+\?v=([^\"]+)"/g),
+    match => match[1]
+  );
   const cloudbaseSdkIndex = html.indexOf(
     'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js'
   );
@@ -290,6 +299,9 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   );
   const apiIndex = html.indexOf(`src="./src/api.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const appIndex = html.indexOf(`src="./src/app.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
+  const paginationIndex = html.indexOf(
+    `src="./src/pagination.js?v=${WEB_ADMIN_ASSET_VERSION}"`
+  );
   const qrIndex = html.indexOf(`src="./vendor/qrcode.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`);
   const xlsxIndex = html.indexOf(
     `src="./vendor/xlsx.full.min.js?v=${WEB_ADMIN_ASSET_VERSION}"`
@@ -299,13 +311,16 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   );
 
   expect(cloudbaseSdkIndex).toBeGreaterThan(-1);
+  expect(versionedAssets.length).toBeGreaterThan(0);
+  expect(versionedAssets.every(version => version === WEB_ADMIN_ASSET_VERSION)).toBe(true);
   expect(configIndex).toBeGreaterThan(cloudbaseSdkIndex);
   expect(runtimeIndex).toBeGreaterThan(configIndex);
   expect(apiIndex).toBeGreaterThan(runtimeIndex);
   expect(qrIndex).toBeGreaterThan(apiIndex);
   expect(xlsxIndex).toBeGreaterThan(qrIndex);
   expect(exportFilesIndex).toBeGreaterThan(xlsxIndex);
-  expect(appIndex).toBeGreaterThan(exportFilesIndex);
+  expect(paginationIndex).toBeGreaterThan(exportFilesIndex);
+  expect(appIndex).toBeGreaterThan(paginationIndex);
   expect(html).not.toContain('cdn.sheetjs.com');
 });
 
