@@ -108,18 +108,24 @@ were deployed:
 - `exportActivityRoster`
 
 CloudBase CLI `fn list` / `fn detail` showed each function as `Deployment
-completed` and `Active`, with remote modify times from `2026-07-24 15:56:37`
-through `15:58:57`; `listActivities` was `15:57:04` and `getActivityDetail`
-was `15:58:31`.
+completed` and `Active`. Final corrected packages were deployed from their
+function directories and verified from remote source: `getActivityDetail` at
+`2026-07-24 17:05:08`, `exportActivityRoster` at `17:05:44`, and
+`getAttendanceStats` at `17:21:57`.
 
 Static hosting deployed `web-admin` to `/admin/` with `29/29` uploaded files:
 
 `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`
 
-Hosted HTML loaded `20260724-task-5-complete-statistics-export` for every
+Hosted HTML loaded `20260724-statistics-type-pagination` for every
 local asset, including `pagination.js` before `app.js`. No collection
 bootstrap, data backfill, schema migration, runtime MySQL migration,
 dual-write, or self-hosted API cutover was performed.
+
+Deploy changed cloud functions from each function directory with `--dir .`.
+Using a repository-root relative `--dir cloudfunctions/<name>` invocation can
+upload stale source in this CLI/environment combination; always verify remote
+`CodeInfo` after deployment.
 
 Always copy shared helpers before deploying cloud functions:
 
@@ -231,30 +237,34 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260724-task-5-complete-statistics-export` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260724-statistics-type-pagination` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
-- CloudBase static hosting is online at `/admin/`; the Task 7 deploy uploaded `29/29` files successfully in the test environment.
-- hosted HTML loads `20260724-task-5-complete-statistics-export` for every local asset, including `pagination.js` before `app.js`.
+- CloudBase static hosting is online at `/admin/`; the final deploy uploaded `29/29` files successfully in the test environment.
+- hosted HTML loads `20260724-statistics-type-pagination` for every local asset, including `pagination.js` before `app.js`.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry and every local static asset load `?v=20260724-task-5-complete-statistics-export`; hosted `app.js` and `styles.css` include the pagination, split-statistics, and existing user-row action feedback hooks.
+- the hosted entry and every local static asset load `?v=20260724-statistics-type-pagination`; hosted `app.js` and `styles.css` include the pagination, split-statistics, and existing user-row action feedback hooks.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
-- the shared statistics workspace is named `统计分析` and separates `出勤统计` from `取消统计` while reusing one date/activity-type query.
+- the shared statistics workspace is named `统计分析` and separates `出勤统计` from `取消统计` while reusing one date/activity-type query. The client sends stable `statisticsType=attendance|cancellation` requests so each tab has its own exact total, fixed 20-row pages, and full multi-page export.
 
 Task 7 authenticated admin smoke:
 
 - an existing admin session opened the workspace and kept the QR/login view hidden;
 - activities: exact total `13`, page `1/1`, and `13` rows; current data has no activity second page;
 - users: exact total `102`, page `1/6` with `20` rows, then page `2/6` with `20` rows and previous enabled;
-- statistics: shared exact total `22`, page `1/2`; attendance and cancellation retained independent page positions, with attendance reaching `2/2` while cancellation stayed `1/2`, then cancellation reaching `2/2`. Attendance displayed `17` rows on page one and `2` on page two because each tab projects the shared paginated data;
-- notification logs: exact total `7`, page `1/1`, `7` rows, and success status; current data has no log second page;
-- `测试07221933`: activity detail rendered `3` roster rows and `22` activity-log rows with no application error;
-- roster CSV and XLSX menu actions were invoked and returned the UI to an enabled state without an error. Browser download event/file capture was unavailable, so downloaded-file row counts were not inspected; unit tests cover row parity;
+- attendance statistics: exact total `19`, page `1/1`, and `19` rows;
+- cancellation statistics: exact total `22`, page `1/2` with `20` rows, then page `2/2` with `2` rows;
+- notification logs: exact total `7`, page `1/1`, and `7` rows;
+- activity `测试07221933`: `3` roster rows and `22` activity-log rows;
+- roster CSV: resulting download inspected locally with `3` data rows and the expected eight columns;
 - browser console had only unrelated extension warnings, with no pagination-metadata or cloud-function application error.
 
-Residual live-smoke gaps: no activity/log second page exists in current data; an ordinary-user session was not available (unit/role tests cover denial); and the browser download artifact was not capturable.
+Residual live-smoke gaps: no activity/log second page exists in current data;
+ordinary-user and organizer-only sessions were not available, while unit and
+role tests cover those boundaries. The browser download event was not exposed,
+but the resulting CSV artifact was located and inspected.
 - cancellation-rate tones are lower-is-better: `0%-20%` green, above `20%-50%` yellow, and above `50%` red; attendance-rate tones remain higher-is-better.
 - the test environment `getAttendanceStats` deployment was verified from remote `CodeInfo` to include additive `cancellationDetails` rows.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
@@ -316,11 +326,12 @@ Important rules:
 
 ### 2026-07-24 Task 7 Deployment And Smoke Evidence
 
-- final pre-deployment direct Jest regression passed: focused `10` suites / `141` tests and full `85` suites / `860` tests;
+- final pre-deployment direct Jest regression passed before integration corrections: focused `10` suites / `141` tests and full `85` suites / `860` tests;
+- final post-correction direct Jest regression passed with `85` suites / `873` tests;
 - six Node.js 18.15 functions were deployed and remotely verified active in `cloudbase-miniapp-test-dfc753877`;
 - Web Admin static hosting deployed `29/29` files to `/admin/` and served the current asset version;
-- authenticated admin smoke covered user second-page navigation, independently paged statistics tabs, activity detail, notification logs, and roster export menu actions with no observed application error;
-- limitations are recorded above rather than treated as passed coverage: no activity/log second page in current data, no live ordinary-user session, and no capturable downloaded artifact.
+- authenticated admin smoke covered user second-page navigation, independently filtered and paged statistics tabs, activity detail, notification logs, and roster export with no observed application error;
+- limitations are recorded above rather than treated as passed coverage: no activity/log second page in current data and no live ordinary-user or organizer-only session. The CSV download event was not exposed, but the resulting file was located and inspected.
 
 ### 2026-07-24 Web Admin Pagination Documentation Milestone
 

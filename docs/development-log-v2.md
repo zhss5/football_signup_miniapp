@@ -4,7 +4,7 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
-## 2026-07-24 - Final Pagination And Roster Integration Corrections
+## 2026-07-24 - Final Pagination, Roster, And Statistics Integration Corrections
 
 Closed the integration findings from the final pagination rollout review.
 
@@ -21,14 +21,45 @@ Closed the integration findings from the final pagination rollout review.
   whose team is missing. Both expose matching API-only `未分队` fallback groups
   after real teams, including a collision-free reserved ID for an empty
   `teamId`;
+- `getAttendanceStats` now accepts the additive stable `statisticsType`
+  values `attendance` and `cancellation`. The backend filters each projection
+  before calculating `total` and applying fixed 20-row pagination, while
+  omitted or unknown values retain the legacy combined response;
+- the Web Admin loads the two statistics projections in parallel, keeps their
+  totals and page positions independent, and exports every validated page for
+  the active projection. A failed or malformed response leaves both previous
+  statistics states intact;
 - the fallback group is not persisted. Future SQL migration validation must
   identify and repair orphan registrations before enabling the team foreign
   key;
 - this correction adds no collection or stored field and does not introduce
   runtime MySQL migration, dual-write, or a self-hosted HTTP API cutover.
 
-Verification and test-environment redeployment are recorded after the final
-whole-range regression.
+Milestone commits:
+
+- `4f01bb2` validates visible fixed-page responses before replacing UI state;
+- `cd19166` aligns activity detail and roster export, including orphan rows;
+- `041a5b1` serializes roster export requests and uses their own response rows;
+- `cac27e0` paginates attendance and cancellation projections independently.
+
+Test-environment deployment and smoke:
+
+- `getActivityDetail` remote modify time: `2026-07-24 17:05:08`;
+- `exportActivityRoster` remote modify time: `2026-07-24 17:05:44`;
+- `getAttendanceStats` remote modify time: `2026-07-24 17:21:57`, with remote
+  source verification for `normalizeStatisticsType` and typed filtering;
+- CloudBase static hosting uploaded `29/29` files to `/admin/`, and hosted
+  assets use `20260724-statistics-type-pagination` with `pagination.js` before
+  `app.js`;
+- authenticated admin smoke showed activities `13` on page `1/1`, users `102`
+  across `6` pages, attendance `19` on page `1/1`, cancellation `22` across
+  `2` pages with `2` rows on the terminal page, and notification logs `7` on
+  page `1/1`;
+- activity `测试07221933` exposed `3` roster rows and `22` activity-log rows;
+- the downloaded roster CSV was inspected locally: `3` data rows and the
+  expected eight columns (`活动类型`, `队伍`, `报名名称`, `备注`, `表现描述`,
+  `位置偏好`, `代报名`, `出勤状态`);
+- final direct Jest regression passed with `85` suites and `873` tests.
 
 ## 2026-07-24 - Task 7 Pagination Deployment And Authenticated Web Admin Smoke
 
@@ -57,20 +88,20 @@ Authenticated admin-browser smoke evidence:
 - activities returned exact total `13`, page `1/1`, and `13` rows;
 - users returned exact total `102`; page `1/6` and page `2/6` each rendered
   `20` rows, and the previous button was enabled on page two;
-- statistics returned shared exact total `22`, page `1/2`. Attendance and
-  cancellation page positions advanced independently: attendance reached
-  `2/2` while cancellation remained `1/2`, then cancellation reached `2/2`.
-  Attendance projected `17` rows on page one and `2` on page two; this is the
-  documented per-tab projection of the shared paginated dataset, not an
-  error;
+- the initial statistics smoke exposed that the combined participant set was
+  paginated before the UI projected attendance and cancellation rows. This
+  made per-tab totals and page lengths incorrect and was fixed by `cac27e0`;
+- the final smoke returned independent backend projections: attendance exact
+  total `19`, page `1/1`; cancellation exact total `22`, page `1/2`, then
+  `2` rows on page `2/2`;
 - notification logs returned exact total `7`, page `1/1`, `7` rows, and a
   success status;
 - activity `测试07221933` loaded `3` roster rows and `22` activity-log rows
   without an application error;
 - roster CSV and XLSX menu actions ran, closed their menu, and returned the UI
-  to an enabled state without an error. The Chrome download event/file could
-  not be captured, so downloaded-file row counts were not inspected; unit
-  tests cover row parity;
+  to an enabled state without an error. The browser download event was not
+  exposed, but the resulting CSV file was found and inspected locally with
+  `3` data rows and the expected eight columns;
 - the console contained only unrelated extension warnings; no pagination
   metadata or cloud-function application error was observed.
 
