@@ -1091,7 +1091,8 @@
 
     function getStatisticsRows(tabId) {
       const rows = state.statisticsRows[tabId] || [];
-      if (rows.length || state.pagination[tabId].skip > 0) {
+      const pageState = state.pagination[tabId];
+      if (rows.length || pageState.skip > 0 || pageState.total === 0) {
         return rows;
       }
 
@@ -1956,14 +1957,14 @@
 
         if (options.resetForFilters) {
           const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
-          state.statisticsRows[target] = rows;
-          state.statisticsRows[siblingTarget] = [];
-          state.statsRows = target === 'attendance' ? rows : [];
+          state.statisticsRows.attendance = rows;
+          state.statisticsRows.cancellation = rows;
+          state.statsRows = rows;
           state.pagination[siblingTarget] = {
-            total: 0,
-            limit: PAGE_LIMIT,
-            skip: 0,
-            hasMore: false,
+            total: metadata.total,
+            limit: metadata.limit,
+            skip: metadata.skip,
+            hasMore: metadata.hasMore,
             loading: false
           };
           renderPagination(siblingTarget);

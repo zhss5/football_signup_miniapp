@@ -573,7 +573,12 @@ test('statistics tabs retain independent pagination skips', async () => {
   expect(pagination.cancellation.previous.disabled).toBe(false);
 });
 
-test('statistics filter submission commits both-tab reset only after the active page succeeds', async () => {
+test.each([
+  { activeTab: 'attendance', activateCancellation: false },
+  { activeTab: 'cancellation', activateCancellation: true }
+])('statistics filter reload from $activeTab seeds both projections from page one', async ({
+  activateCancellation
+}) => {
   const filterResponse = createDeferred();
   let waitForFilter = false;
   const getAttendanceStats = jest.fn(params => {
@@ -612,15 +617,9 @@ test('statistics filter submission commits both-tab reset only after the active 
 
   await app.start();
   await app.loadAttendanceStats();
-  await appRoot.click(pagination.attendance.next);
-  await appRoot.click(pagination.attendance.next);
-  appRoot.click(statisticsTabs.cancellation);
-  await appRoot.click(pagination.cancellation.next);
-
-  expect(app.state.pagination.attendance.skip).toBe(40);
-  expect(app.state.pagination.cancellation.skip).toBe(20);
-  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-40');
-  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
+  if (activateCancellation) {
+    appRoot.click(statisticsTabs.cancellation);
+  }
 
   elements['[name="statsActivityType"]'].value = 'external';
   waitForFilter = true;
@@ -633,10 +632,7 @@ test('statistics filter submission commits both-tab reset only after the active 
     limit: 20,
     skip: 0
   });
-  expect(app.state.pagination.attendance.skip).toBe(40);
-  expect(app.state.pagination.cancellation.skip).toBe(20);
-  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-40');
-  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
+  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-0');
 
   filterResponse.resolve({
     items: [
@@ -660,13 +656,20 @@ test('statistics filter submission commits both-tab reset only after the active 
   });
   await result;
 
-  expect(app.state.pagination.attendance.skip).toBe(0);
-  expect(app.state.pagination.cancellation.skip).toBe(0);
-  expect(app.state.statisticsRows.attendance).toEqual([]);
-  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('external-0');
-
-  appRoot.click(statisticsTabs.attendance);
-  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('all-40');
+  ['attendance', 'cancellation'].forEach(target => {
+    expect(app.state.statisticsRows[target][0].participantName).toBe('external-0');
+    expect(app.state.pagination[target]).toMatchObject({
+      total: 101,
+      limit: 20,
+      skip: 0,
+      hasMore: true,
+      loading: false
+    });
+    expect(pagination[target].total.textContent).toBe('共 101 条');
+    expect(pagination[target].page.textContent).toBe('第 1 / 6 页');
+  });
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toContain('external-0');
+  expect(elements['[data-cancellation-stats-table]'].innerHTML).toContain('external-0');
 });
 
 test('statistics filter failure preserves both tab rows and pagination positions', async () => {
