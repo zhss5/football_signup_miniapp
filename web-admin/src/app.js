@@ -51,6 +51,7 @@
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
   const PAGE_LIMIT = 20;
   const DEFAULT_STATISTICS_REQUEST_TIMEOUT_MS = 20000;
+  const DEFAULT_ACTIVITY_DETAIL_REQUEST_TIMEOUT_MS = 20000;
   const ATTENDANCE_STATS_EMPTY_TEXT = '统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
   const CANCELLATION_STATS_EMPTY_TEXT = '当前范围内没有最终报名或取消记录。';
   const ADMIN_VIEW_TITLES = {
@@ -288,6 +289,9 @@
     const statisticsRequestTimeoutMs = Number(
       options.statisticsRequestTimeoutMs || DEFAULT_STATISTICS_REQUEST_TIMEOUT_MS
     );
+    const activityDetailRequestTimeoutMs = Number(
+      options.activityDetailRequestTimeoutMs || DEFAULT_ACTIVITY_DETAIL_REQUEST_TIMEOUT_MS
+    );
     let loginPollTimer = null;
 
     function readStoredWebAdminSessionToken() {
@@ -358,6 +362,7 @@
       activityDetailRosterKeyword: '',
       activityDetailLogKeyword: '',
       activityDetailLoading: false,
+      activityDetailError: '',
       activitySummary: '',
       textEdit: null,
       notificationLogRows: [],
@@ -1730,15 +1735,25 @@
 
     function closeActivityDetail() {
       state.activityDetailLoading = false;
+      state.activityDetailError = '';
       closeTextEditDialog();
       renderActivityDetailLoading(false);
       setHidden(query('[data-activity-detail]'), true);
     }
 
     function renderActivityDetailLoading(isLoading = state.activityDetailLoading) {
-      setHidden(query('[data-activity-detail-loading]'), !isLoading);
-      setHidden(query('[data-activity-detail-body]'), isLoading);
-      setHidden(query('[data-activity-summary-editor]'), isLoading);
+      const errorMessage = String(state.activityDetailError || '');
+      const showStatus = isLoading || Boolean(errorMessage);
+      setHidden(query('[data-activity-detail-loading]'), !showStatus);
+      setHidden(query('[data-activity-detail-body]'), showStatus);
+      setHidden(query('[data-activity-summary-editor]'), showStatus);
+      setHidden(query('[data-activity-detail-loading-spinner]'), !isLoading);
+      setHidden(query('[data-action="retry-activity-detail"]'), !errorMessage);
+
+      const message = query('[data-activity-detail-loading-message]');
+      if (message) {
+        message.textContent = errorMessage || '正在加载活动详情...';
+      }
     }
 
     function beginActivityDetailLoading(activityId) {
@@ -1747,6 +1762,7 @@
       state.rosterRows = [];
       state.activityDetailLogRows = [];
       state.activityDetailLoading = true;
+      state.activityDetailError = '';
       state.activitySummary = '';
       state.textEdit = null;
       state.exportCsv = '';
@@ -1799,14 +1815,17 @@
       beginActivityDetailLoading(activityId);
 
       try {
-        const [detail, activityDetailLogRows] = await Promise.all([
-          api.getActivityDetail(activityId),
-          loadAllActivityLogRows(activityId)
-        ]);
+        const [detail, activityDetailLogRows] = await withActivityDetailRequestTimeout(
+          Promise.all([
+            api.getActivityDetail(activityId),
+            loadAllActivityLogRows(activityId)
+          ])
+        );
         state.selectedActivityId = activityId;
         state.rosterRows = await resolveAvatarRows(activityUi.buildRosterRows(detail));
         state.activityDetailLogRows = activityDetailLogRows;
         state.activityDetailLoading = false;
+        state.activityDetailError = '';
         state.activitySummary = detail.activity && detail.activity.activitySummary
           ? String(detail.activity.activitySummary)
           : '';
@@ -1830,6 +1849,7 @@
         renderActivityDetailLogRows();
       } catch (error) {
         state.activityDetailLoading = false;
+        state.activityDetailError = getErrorMessage(error);
         renderActivityDetailLoading(false);
         throw error;
       }
@@ -1996,10 +2016,10 @@
       };
     }
 
-    function withStatisticsRequestTimeout(request) {
+    function withRequestTimeout(request, timeoutMs, timeoutMessage) {
       if (
-        !Number.isFinite(statisticsRequestTimeoutMs) ||
-        statisticsRequestTimeoutMs <= 0 ||
+        !Number.isFinite(timeoutMs) ||
+        timeoutMs <= 0 ||
         typeof timerApi.setTimeout !== 'function'
       ) {
         return Promise.resolve(request);
@@ -2013,8 +2033,8 @@
           }
 
           settled = true;
-          reject(new Error('统计请求超时，请重试。'));
-        }, statisticsRequestTimeoutMs);
+          reject(new Error(timeoutMessage));
+        }, timeoutMs);
 
         Promise.resolve(request).then(
           result => {
@@ -2041,6 +2061,22 @@
           }
         );
       });
+    }
+
+    function withStatisticsRequestTimeout(request) {
+      return withRequestTimeout(
+        request,
+        statisticsRequestTimeoutMs,
+        '统计请求超时，请重试。'
+      );
+    }
+
+    function withActivityDetailRequestTimeout(request) {
+      return withRequestTimeout(
+        request,
+        activityDetailRequestTimeoutMs,
+        '活动详情加载超时，请重试。'
+      );
     }
 
     async function requestStatisticsPage(target, requestedSkip, filters = getStatisticsFilters()) {
@@ -2807,6 +2843,11 @@
             hideActivityContextMenu();
             closeActivityDetail();
             return;
+          }
+
+          if (button.dataset.action === 'retry-activity-detail') {
+            return loadActivityDetail(getSelectedActivityId())
+              .catch(error => renderIdentity(getErrorMessage(error)));
           }
 
           if (button.dataset.action === 'load-activity-detail') {

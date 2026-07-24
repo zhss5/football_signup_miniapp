@@ -368,6 +368,11 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-activity-detail]': createElement(),
     '[data-activity-title]': createElement(),
     '[data-activity-detail-loading]': createElement(),
+    '[data-activity-detail-loading-spinner]': createElement(),
+    '[data-activity-detail-loading-message]': createElement(),
+    '[data-action="retry-activity-detail"]': createElement({
+      action: 'retry-activity-detail'
+    }),
     '[data-activity-detail-body]': createElement(),
     '[data-activity-summary-editor]': createElement(),
     '[data-activity-summary-display]': createElement(),
@@ -499,6 +504,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     runtimeRoot: options.runtimeRoot,
     timerApi: options.timerApi,
     statisticsRequestTimeoutMs: options.statisticsRequestTimeoutMs,
+    activityDetailRequestTimeoutMs: options.activityDetailRequestTimeoutMs,
     storage
   });
 
@@ -1632,6 +1638,51 @@ test('second click from a browser double-click opens detail modal and shows load
   expect(elements['[data-activity-detail-loading]'].hidden).toBe(true);
   expect(elements['[data-activity-detail-body]'].hidden).toBe(false);
   expect(elements['[data-activity-title]'].textContent).toBe('Loaded Activity');
+});
+
+test('activity detail timeout replaces the endless spinner with a retry action', async () => {
+  const callbacks = [];
+  const timerApi = {
+    setTimeout: jest.fn(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    }),
+    clearTimeout: jest.fn()
+  };
+  const getActivityDetail = jest.fn(() => new Promise(() => {}));
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getActivityDetail,
+      listActivityLogs: jest.fn().mockResolvedValue({ items: [], hasMore: false })
+    },
+    {
+      timerApi,
+      activityDetailRequestTimeoutMs: 5
+    }
+  );
+
+  await app.start();
+  const pending = app.loadActivityDetail('activity_pending');
+
+  expect(elements['[data-activity-detail-loading]'].hidden).toBe(false);
+  expect(callbacks).toHaveLength(1);
+  callbacks[0]();
+  await expect(pending).rejects.toThrow('活动详情加载超时');
+
+  expect(elements['[data-activity-detail-loading]'].hidden).toBe(false);
+  expect(elements['[data-activity-detail-body]'].hidden).toBe(true);
+  expect(elements['[data-activity-detail-loading-spinner]'].hidden).toBe(true);
+  expect(elements['[data-activity-detail-loading-message]'].textContent).toContain(
+    '活动详情加载超时'
+  );
+  expect(elements['[data-action="retry-activity-detail"]'].hidden).toBe(false);
+
+  appRoot.click(elements['[data-action="retry-activity-detail"]']);
+  expect(getActivityDetail).toHaveBeenCalledTimes(2);
 });
 
 test('right-clicking a pending activity shows open and confirm actions in a context menu', async () => {

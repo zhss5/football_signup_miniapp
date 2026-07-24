@@ -328,6 +328,14 @@ test('activity detail filters logs in the database before the collection read li
     collection: 'activity_logs',
     criteria: { activityId: 'activity_1' }
   });
+  expect(db.queryCalls).toContainEqual({
+    collection: 'registrations',
+    criteria: { activityId: 'activity_1' }
+  });
+  expect(db.queryCalls).toContainEqual({
+    collection: 'activity_teams',
+    criteria: { activityId: 'activity_1' }
+  });
 });
 
 test('target filtering queries current and legacy activity log identity fields', async () => {

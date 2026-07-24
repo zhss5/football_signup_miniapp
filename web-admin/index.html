@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260724-statistics-single-request" />
+    <link rel="stylesheet" href="./styles.css?v=20260724-activity-detail-timeout" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -222,8 +222,13 @@
                   </div>
 
                   <div class="activity-detail-loading" data-activity-detail-loading hidden>
-                    <span class="loading-spinner" aria-hidden="true"></span>
-                    <span>正在加载活动详情...</span>
+                    <span
+                      class="loading-spinner"
+                      data-activity-detail-loading-spinner
+                      aria-hidden="true"
+                    ></span>
+                    <span data-activity-detail-loading-message>正在加载活动详情...</span>
+                    <button type="button" data-action="retry-activity-detail" hidden>重试</button>
                   </div>
 
                   <section class="activity-summary-editor" data-activity-summary-editor hidden>
@@ -678,16 +683,16 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/roles.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/api.js?v=20260724-statistics-single-request"></script>
-    <script src="./vendor/qrcode.min.js?v=20260724-statistics-single-request"></script>
-    <script src="./vendor/xlsx.full.min.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/export-files.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/user-management.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/activity-management.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/pagination.js?v=20260724-statistics-single-request"></script>
-    <script src="./src/app.js?v=20260724-statistics-single-request"></script>
+    <script src="./config.test.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/roles.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/api.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./vendor/qrcode.min.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./vendor/xlsx.full.min.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/export-files.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/user-management.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/activity-management.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/pagination.js?v=20260724-activity-detail-timeout"></script>
+    <script src="./src/app.js?v=20260724-activity-detail-timeout"></script>
   </body>
 </html>

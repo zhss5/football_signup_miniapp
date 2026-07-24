@@ -15,6 +15,14 @@ async function loadDoc(db, collectionName, id) {
   return res && res.data ? res.data : null;
 }
 
+async function loadDocs(db, collectionName, ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const docs = await Promise.all(
+    uniqueIds.map(id => loadDoc(db, collectionName, id).catch(() => null))
+  );
+  return docs.filter(Boolean);
+}
+
 async function loadCollection(db, collectionName, criteria = null) {
   const items = [];
   let offset = 0;
@@ -199,14 +207,55 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
 
-  const [caller, activities, logs, registrations, teams, users] = await Promise.all([
-    loadDoc(db, COLLECTIONS.USERS, openid),
-    loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadActivityLogs(db, { activityId, action, targetOpenId }),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS),
-    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
-    loadCollection(db, COLLECTIONS.USERS)
-  ]);
+  let caller;
+  let activities;
+  let logs;
+  let registrations;
+  let teams;
+  let users;
+
+  if (activityId) {
+    const activityResult = await Promise.all([
+      loadDoc(db, COLLECTIONS.USERS, openid),
+      loadDoc(db, COLLECTIONS.ACTIVITIES, activityId),
+      loadActivityLogs(db, { activityId, action, targetOpenId })
+    ]);
+    caller = activityResult[0];
+    const activity = activityResult[1];
+    logs = activityResult[2];
+
+    if (!activity) {
+      throw businessError('Activity not found');
+    }
+
+    if (!canEditActivity(activity, caller, openid)) {
+      throw businessError('Only the organizer or an admin can list activity logs');
+    }
+
+    [registrations, teams] = await Promise.all([
+      loadCollection(db, COLLECTIONS.REGISTRATIONS, { activityId }),
+      loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS, { activityId })
+    ]);
+    users = await loadDocs(db, COLLECTIONS.USERS, [
+      openid,
+      ...registrations.map(registration => registration.userOpenId),
+      ...logs.flatMap(log => [
+        log.operatorOpenId,
+        log.targetOpenId,
+        log.userOpenId
+      ])
+    ]);
+    activities = [activity];
+  } else {
+    [caller, activities, logs, registrations, teams, users] = await Promise.all([
+      loadDoc(db, COLLECTIONS.USERS, openid),
+      loadCollection(db, COLLECTIONS.ACTIVITIES),
+      loadActivityLogs(db, { activityId, action, targetOpenId }),
+      loadCollection(db, COLLECTIONS.REGISTRATIONS),
+      loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
+      loadCollection(db, COLLECTIONS.USERS)
+    ]);
+  }
 
   const callerIsAdmin = isAdmin(caller);
   const callerIsOrganizer = hasRole(caller, 'organizer');
@@ -221,17 +270,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   let allowedActivityIds;
   if (activityId) {
-    const activity = activityById[activityId] || (await loadDoc(db, COLLECTIONS.ACTIVITIES, activityId));
-    if (!activity) {
-      throw businessError('Activity not found');
-    }
-
-    if (!canEditActivity(activity, caller, openid)) {
-      throw businessError('Only the organizer or an admin can list activity logs');
-    }
-
     allowedActivityIds = new Set([activityId]);
-    activityById[activityId] = activity;
   } else if (callerIsAdmin) {
     allowedActivityIds = null;
   } else {
