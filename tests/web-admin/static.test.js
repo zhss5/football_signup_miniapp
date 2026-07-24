@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const WEB_ADMIN_ASSET_VERSION = '20260724-final-visible-pagination';
+const WEB_ADMIN_ASSET_VERSION = '20260724-final-roster-integration';
 
 test('web admin static shell defaults to Chinese visible copy', () => {
   const html = fs.readFileSync(path.join(process.cwd(), 'web-admin/index.html'), 'utf8');

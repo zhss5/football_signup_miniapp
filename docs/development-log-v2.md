@@ -4,6 +4,32 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-24 - Final Pagination And Roster Integration Corrections
+
+Closed the integration findings from the final pagination rollout review.
+
+- organizers can now open the notification-log Web Admin view; the existing
+  `listNotificationLogs` cloud function still limits them to activities they
+  organize;
+- visible Web Admin pages require exact `items`, `total`, fixed `limit: 20`,
+  requested `skip`, item-count, and `hasMore` consistency before replacing
+  rendered rows or pagination state;
+- roster CSV/XLSX export now reads `exportActivityRoster.rows` at export time,
+  applies the current roster keyword after the backend response, and never
+  falls back to stale activity-detail rows;
+- `getActivityDetail` and `exportActivityRoster` preserve joined registrations
+  whose team is missing. Both expose matching API-only `未分队` fallback groups
+  after real teams, including a collision-free reserved ID for an empty
+  `teamId`;
+- the fallback group is not persisted. Future SQL migration validation must
+  identify and repair orphan registrations before enabling the team foreign
+  key;
+- this correction adds no collection or stored field and does not introduce
+  runtime MySQL migration, dual-write, or a self-hosted HTTP API cutover.
+
+Verification and test-environment redeployment are recorded after the final
+whole-range regression.
+
 ## 2026-07-24 - Task 7 Pagination Deployment And Authenticated Web Admin Smoke
 
 Deployed the completed pagination and roster-completeness rollout to CloudBase

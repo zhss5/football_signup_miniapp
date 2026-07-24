@@ -100,6 +100,7 @@ function getParticipantName(registration) {
       registration.displayName ||
       registration.preferredName ||
       registration.userOpenId ||
+      registration._id ||
       ''
   ).trim();
 }
@@ -110,6 +111,10 @@ function getTeamSort(team) {
 }
 
 function compareRows(left, right) {
+  if (left.teamMissing !== right.teamMissing) {
+    return left.teamMissing ? 1 : -1;
+  }
+
   if (left.teamSort !== right.teamSort) {
     return left.teamSort - right.teamSort;
   }
@@ -152,14 +157,54 @@ function toExportRow(activity, registration, team, user) {
     proxyRegistration,
     attendanceStatus: normalizeAttendanceStatus(registration.attendanceStatus),
     performanceDescription: String(registration.performanceDescription || '').trim(),
+    teamMissing: team.missingTeam === true,
     teamSort: getTeamSort(team),
     joinedAt: registration.joinedAt || ''
   };
 }
 
 function stripInternalSortFields(row) {
-  const { teamSort, joinedAt, ...publicRow } = row;
+  const { teamMissing, teamSort, joinedAt, ...publicRow } = row;
   return publicRow;
+}
+
+function allocateUnassignedTeamId(usedTeamIds) {
+  const baseId = '__unassigned__';
+  let candidate = baseId;
+  let suffix = 2;
+
+  while (usedTeamIds.has(candidate)) {
+    candidate = `${baseId}_${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+}
+
+function buildFallbackTeamByKey(activityId, teams, registrations) {
+  const realTeamIds = new Set(teams.map(team => String(team && team._id || '')).filter(Boolean));
+  const missingTeamKeys = Array.from(new Set(
+    registrations
+      .map(registration => String(registration.teamId || ''))
+      .filter(teamId => !realTeamIds.has(teamId))
+  ));
+  const usedTeamIds = new Set([
+    ...realTeamIds,
+    ...missingTeamKeys.filter(Boolean)
+  ]);
+  const unassignedTeamId = allocateUnassignedTeamId(usedTeamIds);
+
+  return missingTeamKeys.reduce((result, teamId) => {
+    result.set(teamId, {
+      _id: teamId || unassignedTeamId,
+      activityId,
+      teamName: '未分队',
+      sort: Number.MAX_SAFE_INTEGER,
+      status: 'inactive',
+      missingTeam: true
+    });
+    return result;
+  }, new Map());
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -197,23 +242,30 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const teamById = teams.reduce((acc, team) => {
     if (team && team.activityId === activityId) {
-      acc[team._id] = team;
+      acc.set(String(team._id || ''), team);
     }
 
     return acc;
-  }, {});
+  }, new Map());
   const userByOpenId = users.reduce((acc, user) => {
     if (user && user._id) {
-      acc[user._id] = user;
+      acc.set(String(user._id), user);
     }
 
     return acc;
-  }, {});
+  }, new Map());
+  const fallbackTeamByKey = buildFallbackTeamByKey(activityId, teams, registrations);
   const rows = registrations
-    .map(registration =>
-      toExportRow(activity, registration, teamById[registration.teamId] || {}, userByOpenId[registration.userOpenId])
-    )
-    .filter(row => row.participantName)
+    .map(registration => {
+      const teamId = String(registration.teamId || '');
+      const team = teamById.get(teamId) || fallbackTeamByKey.get(teamId);
+      return toExportRow(
+        activity,
+        registration,
+        team,
+        userByOpenId.get(String(registration.userOpenId || ''))
+      );
+    })
     .sort(compareRows)
     .map(stripInternalSortFields);
 

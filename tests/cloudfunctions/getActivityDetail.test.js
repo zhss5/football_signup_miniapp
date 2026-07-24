@@ -1065,3 +1065,210 @@ test('getActivityDetail and exportActivityRoster group equal team sorts by stabl
   expect(rosterOrder(detail.teams.flatMap(team => team.members), 'signupName')).toEqual(expected);
   expect(rosterOrder(exported.rows, 'participantName')).toEqual(expected);
 });
+
+test('getActivityDetail and exportActivityRoster retain dangling and empty-team registrations in the same fallback groups', async () => {
+  const db = createRosterParityDb({
+    teams: [
+      { _id: 'team_green', activityId: 'activity_1', teamName: 'Green', sort: 0, status: 'active' }
+    ],
+    registrations: [
+      {
+        _id: 'reg_real',
+        activityId: 'activity_1',
+        teamId: 'team_green',
+        userOpenId: 'openid_real',
+        status: 'joined',
+        signupName: 'Real Team',
+        joinedAt: '2026-07-24T09:00:00.000Z'
+      },
+      {
+        _id: 'reg_unassigned',
+        activityId: 'activity_1',
+        teamId: '',
+        userOpenId: 'openid_unassigned',
+        status: 'joined',
+        signupName: 'Unassigned',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      },
+      {
+        _id: 'reg_dangling',
+        activityId: 'activity_1',
+        teamId: 'team_missing',
+        userOpenId: 'openid_dangling',
+        status: 'joined',
+        signupName: 'Dangling',
+        joinedAt: '2026-07-24T11:00:00.000Z'
+      }
+    ]
+  });
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const detailRows = detail.teams.flatMap(team =>
+    team.members.map(member => ({
+      registrationId: member.registrationId,
+      teamId: team._id,
+      teamName: team.teamName
+    }))
+  );
+  const exportRows = exported.rows.map(row => ({
+    registrationId: row.registrationId,
+    teamId: row.teamId,
+    teamName: row.teamName
+  }));
+
+  expect(detail.teams.map(team => ({
+    teamId: team._id,
+    teamName: team.teamName,
+    missingTeam: team.missingTeam || false
+  }))).toEqual([
+    { teamId: 'team_green', teamName: 'Green', missingTeam: false },
+    { teamId: '__unassigned__', teamName: '未分队', missingTeam: true },
+    { teamId: 'team_missing', teamName: '未分队', missingTeam: true }
+  ]);
+  expect(detailRows).toEqual(exportRows);
+  expect(exportRows).toHaveLength(3);
+});
+
+test('empty-team fallback ID does not collide with an existing reserved-looking team ID', async () => {
+  const db = createRosterParityDb({
+    teams: [
+      {
+        _id: '__unassigned__',
+        activityId: 'activity_1',
+        teamName: 'Legacy Reserved Team',
+        sort: 0,
+        status: 'active'
+      }
+    ],
+    registrations: [
+      {
+        _id: 'reg_reserved',
+        activityId: 'activity_1',
+        teamId: '__unassigned__',
+        userOpenId: 'openid_reserved',
+        status: 'joined',
+        signupName: 'Reserved Team Player',
+        joinedAt: '2026-07-24T09:00:00.000Z'
+      },
+      {
+        _id: 'reg_empty',
+        activityId: 'activity_1',
+        teamId: '',
+        userOpenId: 'openid_empty',
+        status: 'joined',
+        signupName: 'Empty Team Player',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      }
+    ]
+  });
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(detail.teams.map(team => [team._id, team.teamName])).toEqual([
+    ['__unassigned__', 'Legacy Reserved Team'],
+    ['__unassigned___2', '未分队']
+  ]);
+  expect(exported.rows.map(row => [row.teamId, row.teamName])).toEqual([
+    ['__unassigned__', 'Legacy Reserved Team'],
+    ['__unassigned___2', '未分队']
+  ]);
+});
+
+test('reserved object-key team IDs and blank participant names remain collision-safe and complete', async () => {
+  const db = createRosterParityDb({
+    teams: [
+      { _id: 'team_green', activityId: 'activity_1', teamName: 'Green', sort: 0, status: 'active' }
+    ],
+    registrations: [
+      {
+        _id: 'reg_proto',
+        activityId: 'activity_1',
+        teamId: '__proto__',
+        userOpenId: 'openid_proto',
+        status: 'joined',
+        signupName: 'Proto Player',
+        joinedAt: '2026-07-24T09:00:00.000Z'
+      },
+      {
+        _id: 'reg_constructor',
+        activityId: 'activity_1',
+        teamId: 'constructor',
+        userOpenId: 'openid_constructor',
+        status: 'joined',
+        signupName: 'Constructor Player',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      },
+      {
+        _id: 'reg_blank',
+        activityId: 'activity_1',
+        teamId: 'team_green',
+        userOpenId: '',
+        status: 'joined',
+        signupName: '',
+        joinedAt: '2026-07-24T11:00:00.000Z'
+      }
+    ]
+  });
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const detailRows = detail.teams.flatMap(team =>
+    team.members.map(member => ({
+      registrationId: member.registrationId,
+      participantName: member.signupName,
+      teamId: team._id,
+      teamName: team.teamName
+    }))
+  );
+  const exportRows = exported.rows.map(row => ({
+    registrationId: row.registrationId,
+    participantName: row.participantName,
+    teamId: row.teamId,
+    teamName: row.teamName
+  }));
+
+  expect(detailRows).toEqual(exportRows);
+  expect(exportRows).toEqual(expect.arrayContaining([
+    expect.objectContaining({
+      registrationId: 'reg_proto',
+      teamId: '__proto__',
+      teamName: '未分队'
+    }),
+    expect.objectContaining({
+      registrationId: 'reg_constructor',
+      teamId: 'constructor',
+      teamName: '未分队'
+    }),
+    expect.objectContaining({
+      registrationId: 'reg_blank',
+      participantName: 'reg_blank',
+      teamId: 'team_green'
+    })
+  ]));
+});

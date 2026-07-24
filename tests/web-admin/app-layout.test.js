@@ -417,6 +417,9 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       activity: {},
       teams: []
     }),
+    exportActivityRoster: jest.fn().mockResolvedValue({
+      rows: []
+    }),
     listActivityLogs: jest.fn().mockResolvedValue({
       items: []
     }),
@@ -3311,6 +3314,40 @@ test('activity detail exports filtered roster and activity logs as CSV or XLSX',
       writeFile
     }
   };
+  const exportActivityRoster = jest.fn().mockResolvedValue({
+    rows: [
+      {
+        activityId: 'activity_1',
+        activityType: 'external',
+        activityTypeLabel: '外战',
+        teamId: 'team_red',
+        teamName: 'Red',
+        registrationId: 'reg_1',
+        userOpenId: 'openid_alex',
+        participantName: 'Alex',
+        managerAlias: 'Left foot',
+        preferredPositions: ['forward'],
+        proxyRegistration: false,
+        attendanceStatus: 'present',
+        performanceDescription: ''
+      },
+      {
+        activityId: 'activity_1',
+        activityType: 'external',
+        activityTypeLabel: '外战',
+        teamId: 'team_red',
+        teamName: 'Red',
+        registrationId: 'reg_2',
+        userOpenId: 'openid_ben',
+        participantName: 'Ben',
+        managerAlias: 'Goalkeeper from export API',
+        preferredPositions: ['goalkeeper'],
+        proxyRegistration: false,
+        attendanceStatus: 'absent',
+        performanceDescription: ''
+      }
+    ]
+  });
   const { app, appRoot, elements } = buildHarness(
     {
       _id: 'openid_admin',
@@ -3349,6 +3386,7 @@ test('activity detail exports filtered roster and activity logs as CSV or XLSX',
           }
         ]
       }),
+      exportActivityRoster,
       listActivityLogs: jest.fn().mockResolvedValue({
         items: [
           {
@@ -3385,22 +3423,16 @@ test('activity detail exports filtered roster and activity logs as CSV or XLSX',
 
   elements['[data-roster-keyword]'].value = 'Goalkeeper';
   elements['[data-roster-keyword]'].eventHandlers.input();
-  appRoot.click(createElement({
-    action: 'export-file',
-    exportFormat: 'csv',
-    exportSource: 'activity-roster'
-  }));
+  await app.exportFile('activity-roster', 'csv');
 
+  expect(exportActivityRoster).toHaveBeenNthCalledWith(1, 'activity_1');
   expect(elements['[data-export-output]'].value).toContain('活动类型');
   expect(elements['[data-export-output]'].value).toContain('外战');
   expect(elements['[data-export-output]'].value).toContain('队伍,报名名称,备注,表现描述,位置偏好,代报名,出勤状态');
   expect(elements['[data-export-output]'].value).not.toContain('Alex');
-  expect(elements['[data-export-output]'].value).toContain('Ben');
-  appRoot.click(createElement({
-    action: 'export-file',
-    exportFormat: 'xlsx',
-    exportSource: 'activity-roster'
-  }));
+  expect(elements['[data-export-output]'].value).toContain('Goalkeeper from export API');
+  await app.exportFile('activity-roster', 'xlsx');
+  expect(exportActivityRoster).toHaveBeenNthCalledWith(2, 'activity_1');
   const rosterWorkbook = writeFile.mock.calls[0][0];
   expect(writeFile.mock.calls[0][1]).toBe('activity-roster-activity_1.xlsx');
   expect(XLSX.utils.sheet_to_json(rosterWorkbook.Sheets['报名名单'])).toEqual([
@@ -3408,7 +3440,7 @@ test('activity detail exports filtered roster and activity logs as CSV or XLSX',
       活动类型: '外战',
       队伍: 'Red',
       报名名称: 'Ben',
-      备注: 'Goalkeeper',
+      备注: 'Goalkeeper from export API',
       表现描述: '',
       位置偏好: '门将',
       代报名: '否',
@@ -3443,6 +3475,122 @@ test('activity detail exports filtered roster and activity logs as CSV or XLSX',
       时间: '2026-06-10 19:00'
     }
   ]);
+});
+
+test('activity roster export failure creates no CSV or XLSX file and surfaces a Chinese error', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const exportActivityRoster = jest.fn().mockRejectedValue(new Error('network failed'));
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      exportActivityRoster,
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: { title: 'Friday Football', activityType: 'external' },
+        teams: [{
+          _id: 'team_red',
+          teamName: 'Red',
+          members: [{
+            registrationId: 'reg_1',
+            signupName: 'Stale detail row',
+            attendanceStatus: 'present'
+          }]
+        }]
+      })
+    },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+
+  for (const format of ['csv', 'xlsx']) {
+    await appRoot.click(createElement({
+      action: 'export-file',
+      exportFormat: format,
+      exportSource: 'activity-roster'
+    }));
+  }
+
+  expect(exportActivityRoster).toHaveBeenCalledTimes(2);
+  expect(writeFile).not.toHaveBeenCalled();
+  expect(elements['[data-export-output]'].value).toBe('');
+  expect(elements['[data-export-status]'].textContent).toBe('报名名单导出失败，请重试。');
+});
+
+test.each([
+  {
+    label: 'malformed backend row',
+    rows: [null],
+    xlsxError: null
+  },
+  {
+    label: 'XLSX generation failure',
+    rows: [{
+      activityId: 'activity_1',
+      activityType: 'internal',
+      activityTypeLabel: '内战',
+      teamId: 'team_green',
+      teamName: 'Green',
+      registrationId: 'reg_1',
+      participantName: 'Alex',
+      preferredPositions: [],
+      proxyRegistration: false,
+      attendanceStatus: 'present'
+    }],
+    xlsxError: new Error('xlsx generation failed')
+  }
+])('activity roster export normalizes $label to the Chinese failure without a file', async ({
+  rows,
+  xlsxError
+}) => {
+  const writeFile = xlsxError
+    ? jest.fn(() => {
+        throw xlsxError;
+      })
+    : jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      exportActivityRoster: jest.fn().mockResolvedValue({ rows }),
+      getActivityDetail: jest.fn().mockResolvedValue({
+        activity: { title: 'Friday Football', activityType: 'internal' },
+        teams: []
+      })
+    },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  await app.loadActivityDetail('activity_1');
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'activity-roster'
+  }));
+
+  expect(elements['[data-export-output]'].value).toBe('');
+  expect(elements['[data-export-status]'].textContent).toBe('报名名单导出失败，请重试。');
+  if (!xlsxError) {
+    expect(writeFile).not.toHaveBeenCalled();
+  }
 });
 
 test('activity detail close action hides the modal', async () => {

@@ -65,7 +65,7 @@ async function loadRosterUsers(db, command, registrations) {
   );
 
   if (userOpenIds.length === 0 || !command || typeof command.in !== 'function') {
-    return {};
+    return new Map();
   }
 
   const userGroups = groupValues(userOpenIds, USER_PROFILE_BATCH_SIZE);
@@ -76,9 +76,9 @@ async function loadRosterUsers(db, command, registrations) {
   );
 
   return userBatches.flat().reduce((acc, user) => {
-    acc[user._id] = user;
+    acc.set(String(user._id), user);
     return acc;
-  }, {});
+  }, new Map());
 }
 
 async function getCurrentUser(db, openid) {
@@ -130,6 +130,7 @@ function getParticipantName(registration) {
       registration.displayName ||
       registration.preferredName ||
       registration.userOpenId ||
+      registration._id ||
       ''
   ).trim();
 }
@@ -160,6 +161,53 @@ function compareTeams(left, right) {
   }
 
   return String(left._id || '').localeCompare(String(right._id || ''));
+}
+
+function allocateUnassignedTeamId(usedTeamIds) {
+  const baseId = '__unassigned__';
+  let candidate = baseId;
+  let suffix = 2;
+
+  while (usedTeamIds.has(candidate)) {
+    candidate = `${baseId}_${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+}
+
+function buildDetailTeams(activityId, teams, membersByTeam) {
+  const realTeamIds = new Set(teams.map(team => String(team && team._id || '')).filter(Boolean));
+  const missingTeamKeys = Array.from(membersByTeam.keys())
+    .filter(teamId => !realTeamIds.has(teamId));
+  const usedTeamIds = new Set([
+    ...realTeamIds,
+    ...missingTeamKeys.filter(Boolean)
+  ]);
+  const unassignedTeamId = allocateUnassignedTeamId(usedTeamIds);
+  const fallbackTeams = missingTeamKeys
+    .map(teamId => ({
+      _id: teamId || unassignedTeamId,
+      activityId,
+      teamName: '未分队',
+      sort: Number.MAX_SAFE_INTEGER,
+      status: 'inactive',
+      missingTeam: true,
+      members: membersByTeam.get(teamId) || []
+    }))
+    .sort(compareTeams);
+  const realTeams = teams
+    .filter(team =>
+      team.status !== 'inactive' ||
+      (membersByTeam.get(String(team._id || '')) || []).length > 0
+    )
+    .sort(compareTeams)
+    .map(team => ({
+      ...team,
+      members: membersByTeam.get(String(team._id || '')) || []
+    }));
+
+  return [...realTeams, ...fallbackTeams];
 }
 
 async function main(event, context = cloud.getWXContext(), deps = {}) {
@@ -248,14 +296,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const membersByTeam = joinedRegistrations
     .sort(compareRegistrations)
     .reduce((acc, registration) => {
-      if (!acc[registration.teamId]) {
-        acc[registration.teamId] = [];
+      const teamId = String(registration.teamId || '');
+      if (!acc.has(teamId)) {
+        acc.set(teamId, []);
       }
 
-      const user = usersById[registration.userOpenId] || {};
+      const user = usersById.get(String(registration.userOpenId || '')) || {};
       const member = {
         userOpenId: registration.userOpenId,
-        signupName: registration.signupName,
+        signupName: getParticipantName(registration),
         avatarUrl: pickAvatarUrl(registration, user),
         preferredPositions: Array.isArray(registration.preferredPositions)
           ? registration.preferredPositions.filter(Boolean)
@@ -275,19 +324,13 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
         }
       }
 
-      acc[registration.teamId].push(member);
+      acc.get(teamId).push(member);
       return acc;
-    }, {});
+    }, new Map());
 
   return {
     activity: activityPayload,
-    teams: teams
-      .filter(team => team.status !== 'inactive' || (membersByTeam[team._id] || []).length > 0)
-      .sort(compareTeams)
-      .map(team => ({
-        ...team,
-        members: membersByTeam[team._id] || []
-      })),
+    teams: buildDetailTeams(event.activityId, teams, membersByTeam),
     myRegistration: myRegistration.data,
     viewer: {
       isOrganizer: activity.data.organizerOpenId === openid,

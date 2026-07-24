@@ -1033,10 +1033,8 @@
       setHidden(menu, false);
     }
 
-    function getFilteredRosterRows() {
-      const keyword = normalizeKeyword(state.activityDetailRosterKeyword);
-      const rows = activityUi.buildAttendanceRows(state.rosterRows);
-
+    function filterRosterRows(rows, keywordValue) {
+      const keyword = normalizeKeyword(keywordValue);
       if (!keyword) {
         return rows;
       }
@@ -1055,6 +1053,13 @@
           row.attendanceStatus,
           formatStatusText(row.attendanceStatus)
         ], keyword)
+      );
+    }
+
+    function getFilteredRosterRows() {
+      return filterRosterRows(
+        activityUi.buildAttendanceRows(state.rosterRows),
+        state.activityDetailRosterKeyword
       );
     }
 
@@ -2159,11 +2164,11 @@
       };
     }
 
-    function buildRosterExportDescriptor() {
+    function buildRosterExportDescriptor(rows = getFilteredRosterRows()) {
       return {
         baseFilename: `activity-roster-${getSelectedActivityId() || 'selected'}`,
         sheetName: '报名名单',
-        rows: getFilteredRosterRows().map(row => ({
+        rows: rows.map(row => ({
           活动类型: row.activityTypeText || formatActivityTypeText(row.activityType),
           队伍: row.teamName,
           报名名称: row.signupName,
@@ -2271,9 +2276,64 @@
       downloadExportDescriptor(format, descriptor);
     }
 
+    function buildRosterExportRows(rows) {
+      return activityUi.buildAttendanceRows(rows.map(row => ({
+        teamId: row.teamId || '',
+        teamName: row.teamName || '',
+        activityType: row.activityType || 'internal',
+        activityTypeText:
+          row.activityTypeLabel || formatActivityTypeText(row.activityType || 'internal'),
+        registrationId: row.registrationId || '',
+        userOpenId: row.userOpenId || '',
+        signupName: row.participantName || '',
+        managerAlias: row.managerAlias || '',
+        preferredPositions: Array.isArray(row.preferredPositions)
+          ? row.preferredPositions.filter(Boolean).join(' / ')
+          : String(row.preferredPositions || ''),
+        proxyRegistration: row.proxyRegistration === true,
+        attendanceStatus: row.attendanceStatus || 'present',
+        performanceDescription: String(row.performanceDescription || '').trim()
+      })));
+    }
+
+    async function exportRosterFile(format) {
+      const activityId = getSelectedActivityId();
+      if (!activityId) {
+        throw new Error('请先选择活动。');
+      }
+
+      if (!exportFiles) {
+        throw new Error('导出组件未加载，请刷新页面后重试。');
+      }
+
+      closeExportMenus();
+      renderExportStatus('');
+      writeExportOutput('');
+
+      try {
+        const result = await api.exportActivityRoster(activityId);
+        if (!result || !Array.isArray(result.rows)) {
+          throw new Error('Invalid roster export response.');
+        }
+
+        const rows = filterRosterRows(
+          buildRosterExportRows(result.rows),
+          state.activityDetailRosterKeyword
+        );
+        downloadExportDescriptor(format, buildRosterExportDescriptor(rows));
+      } catch (error) {
+        writeExportOutput('');
+        throw new Error('报名名单导出失败，请重试。');
+      }
+    }
+
     function exportFile(source, format) {
       if (source === 'statistics') {
         return exportStatisticsFile(format);
+      }
+
+      if (source === 'activity-roster') {
+        return exportRosterFile(format);
       }
 
       closeExportMenus();
