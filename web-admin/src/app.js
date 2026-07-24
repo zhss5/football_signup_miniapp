@@ -2058,6 +2058,18 @@
           throw new Error('Inconsistent pagination total.');
         }
 
+        const expectedItemCount = Math.min(
+          metadata.limit,
+          Math.max(0, metadata.total - metadata.skip)
+        );
+        const expectedHasMore = metadata.skip + pageItems.length < metadata.total;
+        if (
+          pageItems.length !== expectedItemCount ||
+          metadata.hasMore !== expectedHasMore
+        ) {
+          throw new Error('Inconsistent pagination page.');
+        }
+
         items.push(...pageItems);
 
         if (!metadata.hasMore) {

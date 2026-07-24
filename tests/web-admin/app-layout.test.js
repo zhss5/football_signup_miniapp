@@ -257,6 +257,18 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     roster: createElement({ exportOptions: 'activity-roster' }),
     logs: createElement({ exportOptions: 'activity-logs' })
   };
+  const statisticsExportOptions = {
+    csv: createElement({
+      action: 'export-file',
+      exportSource: 'statistics',
+      exportFormat: 'csv'
+    }),
+    xlsx: createElement({
+      action: 'export-file',
+      exportSource: 'statistics',
+      exportFormat: 'xlsx'
+    })
+  };
   const elements = {
     '[data-view="identity"]': createElement(),
     '[data-view="login"]': createElement(),
@@ -358,6 +370,11 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       exportMenus.statistics,
       exportMenus.roster,
       exportMenus.logs
+    ],
+    '[data-export-source="statistics"]': [
+      exportTriggers.statistics,
+      statisticsExportOptions.csv,
+      statisticsExportOptions.xlsx
     ]
   });
   const api = {
@@ -429,6 +446,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     exportTriggers,
     nav,
     pagination,
+    statisticsExportOptions,
     statisticsPanes,
     statisticsTabs,
     views
@@ -2159,6 +2177,275 @@ test('statistics export aborts without a file when a later page fails', async ()
   expect(elements['[data-export-output]'].value).toBe('');
   expect(elements['[data-export-status]'].textContent).toBe('统计数据导出失败，请重试。');
   expect(elements['[data-stats-export-button]'].disabled).toBe(false);
+});
+
+test('statistics export rejects an oversized page with contradictory hasMore without changing visible rows', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const visiblePage = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }));
+  const invalidExportPage = Array.from({ length: 25 }, (_, index) => ({
+    participantName: `错误人员${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }));
+  const getAttendanceStats = jest
+    .fn()
+    .mockResolvedValueOnce({ items: visiblePage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({
+      items: invalidExportPage,
+      total: 25,
+      limit: 20,
+      skip: 0,
+      hasMore: false
+    });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  const visibleRows = elements['[data-attendance-stats-table]'].innerHTML;
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+
+  expect(writeFile).not.toHaveBeenCalled();
+  expect(elements['[data-export-status]'].textContent).toBe('统计数据导出失败，请重试。');
+  expect(elements['[data-attendance-stats-table]'].innerHTML).toBe(visibleRows);
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('错误人员');
+});
+
+test('statistics export rejects a full page with false hasMore when rows remain', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const page = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }));
+  const getAttendanceStats = jest
+    .fn()
+    .mockResolvedValueOnce({ items: page, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({ items: page, total: 25, limit: 20, skip: 0, hasMore: false });
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  await appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+
+  expect(writeFile).not.toHaveBeenCalled();
+  expect(elements['[data-export-status]'].textContent).toBe('统计数据导出失败，请重试。');
+});
+
+test('statistics export disables every control and ignores a concurrent export until collection completes', async () => {
+  const page = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }));
+  const pendingExportPage = createDeferred();
+  const getAttendanceStats = jest
+    .fn()
+    .mockResolvedValueOnce({ items: page, total: 20, limit: 20, skip: 0, hasMore: false })
+    .mockImplementationOnce(() => pendingExportPage.promise);
+  const {
+    app,
+    appRoot,
+    elements,
+    statisticsExportOptions
+  } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  const firstExport = appRoot.click(statisticsExportOptions.csv);
+
+  expect(elements['[data-stats-export-button]'].disabled).toBe(true);
+  expect(statisticsExportOptions.csv.disabled).toBe(true);
+  expect(statisticsExportOptions.xlsx.disabled).toBe(true);
+  const secondExport = appRoot.click(statisticsExportOptions.xlsx);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
+
+  pendingExportPage.resolve({ items: page, total: 20, limit: 20, skip: 0, hasMore: false });
+  await Promise.all([firstExport, secondExport]);
+
+  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
+  expect(elements['[data-export-output]'].value).toContain('人员20');
+  expect(elements['[data-stats-export-button]'].disabled).toBe(false);
+  expect(statisticsExportOptions.csv.disabled).toBe(false);
+  expect(statisticsExportOptions.xlsx.disabled).toBe(false);
+});
+
+test('statistics export restores every control after a deferred page failure', async () => {
+  const firstPage = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    attendanceRate: 1
+  }));
+  const laterPage = createDeferred();
+  const getAttendanceStats = jest
+    .fn()
+    .mockResolvedValueOnce({ items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockResolvedValueOnce({ items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true })
+    .mockImplementationOnce(() => laterPage.promise);
+  const {
+    app,
+    appRoot,
+    elements,
+    statisticsExportOptions
+  } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  const exportTask = appRoot.click(statisticsExportOptions.csv);
+  await Promise.resolve();
+  await Promise.resolve();
+
+  expect(elements['[data-stats-export-button]'].disabled).toBe(true);
+  expect(statisticsExportOptions.csv.disabled).toBe(true);
+  expect(statisticsExportOptions.xlsx.disabled).toBe(true);
+  laterPage.reject(new Error('network failed'));
+  await exportTask;
+
+  expect(elements['[data-export-status]'].textContent).toBe('统计数据导出失败，请重试。');
+  expect(elements['[data-stats-export-button]'].disabled).toBe(false);
+  expect(statisticsExportOptions.csv.disabled).toBe(false);
+  expect(statisticsExportOptions.xlsx.disabled).toBe(false);
+});
+
+test('statistics exports project every page for attendance and cancellation in CSV and XLSX', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const firstPage = Array.from({ length: 20 }, (_, index) => ({
+    participantName: `人员${index + 1}`,
+    managerAlias: `备注${index + 1}`,
+    signupCount: 1,
+    presentCount: 1,
+    absentCount: 0,
+    attendanceRate: 1,
+    effectiveSignupActivityCount: 1,
+    cancelledActivityCount: 1,
+    cancelRate: 0.5
+  }));
+  const secondPage = Array.from({ length: 5 }, (_, index) => ({
+    participantName: `人员${index + 21}`,
+    managerAlias: `备注${index + 21}`,
+    signupCount: 2,
+    presentCount: 1,
+    absentCount: 1,
+    attendanceRate: 0.5,
+    effectiveSignupActivityCount: 2,
+    cancelledActivityCount: 1,
+    cancelRate: 1 / 3
+  }));
+  const getAttendanceStats = jest.fn(params => Promise.resolve(
+    params.skip === 20
+      ? { items: secondPage, total: 25, limit: 20, skip: 20, hasMore: false }
+      : { items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true }
+  ));
+  const { app, appRoot, elements, statisticsTabs, statisticsExportOptions } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+  await appRoot.click(statisticsExportOptions.csv);
+  expect(elements['[data-export-output]'].value).toContain('人员25,备注25,2,1,1,50.00%');
+  expect(elements['[data-export-output]'].value).not.toContain('最终取消数');
+  expect(elements['[data-export-output]'].value.trim().split(/\r?\n/)).toHaveLength(26);
+
+  await appRoot.click(statisticsExportOptions.xlsx);
+  const attendanceWorkbook = writeFile.mock.calls[0][0];
+  expect(XLSX.utils.sheet_to_json(attendanceWorkbook.Sheets['出勤统计'])).toHaveLength(25);
+  expect(XLSX.utils.sheet_to_json(attendanceWorkbook.Sheets['出勤统计'])[24]).toEqual({
+    参与者: '人员25',
+    备注: '备注25',
+    应出勤次数: 2,
+    出勤: 1,
+    缺勤: 1,
+    出勤率: '50.00%'
+  });
+
+  appRoot.click(statisticsTabs.cancellation);
+  await appRoot.click(statisticsExportOptions.csv);
+  expect(elements['[data-export-output]'].value).toContain('人员25,备注25,2,1,33.33%');
+  expect(elements['[data-export-output]'].value).not.toContain('应出勤次数');
+  expect(elements['[data-export-output]'].value.trim().split(/\r?\n/)).toHaveLength(26);
+
+  await appRoot.click(statisticsExportOptions.xlsx);
+  const cancellationWorkbook = writeFile.mock.calls[1][0];
+  expect(XLSX.utils.sheet_to_json(cancellationWorkbook.Sheets['取消统计'])).toHaveLength(25);
+  expect(XLSX.utils.sheet_to_json(cancellationWorkbook.Sheets['取消统计'])[24]).toEqual({
+    参与者: '人员25',
+    备注: '备注25',
+    最终保留报名数: 2,
+    最终取消数: 1,
+    取消率: '33.33%'
+  });
+  expect(getAttendanceStats).toHaveBeenCalledTimes(9);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {
