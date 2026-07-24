@@ -76,7 +76,7 @@ Delivered behavior:
 Compatibility and deployment:
 
 - the runtime remains CloudBase-only and Version 1-compatible. This change adds no collections, fields, or schema migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover.
-- deployment is pending: redeploy `listUsers`, `listActivities`, `getAttendanceStats`, `listNotificationLogs`, `getActivityDetail`, and `exportActivityRoster`, then redeploy Web Admin static hosting to `/admin/`.
+- Historical next step: this implementation entry originally required deployment of `listUsers`, `listActivities`, `getAttendanceStats`, `listNotificationLogs`, `getActivityDetail`, `exportActivityRoster`, and Web Admin static hosting to `/admin/`. Task 7 completed that deployment and authenticated admin smoke; see the `2026-07-24 - Task 7 Pagination Deployment And Authenticated Web Admin Smoke` entry above.
 
 Verification:
 
