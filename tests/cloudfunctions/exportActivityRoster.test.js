@@ -202,6 +202,59 @@ test('organizer can export roster rows grouped by team', async () => {
   expect(result.rows).toHaveLength(2);
 });
 
+test('exportActivityRoster breaks equal numeric team sorts by stable team ID', async () => {
+  const db = createFakeDb({
+    teams: {
+      team_alpha: {
+        _id: 'team_alpha',
+        activityId: 'activity_1',
+        teamName: 'Alpha',
+        sort: 0,
+        status: 'active'
+      },
+      team_zebra: {
+        _id: 'team_zebra',
+        activityId: 'activity_1',
+        teamName: 'Zebra',
+        sort: 0,
+        status: 'active'
+      }
+    },
+    registrations: {
+      reg_alpha: {
+        _id: 'reg_alpha',
+        activityId: 'activity_1',
+        teamId: 'team_alpha',
+        userOpenId: 'openid_alex',
+        status: 'joined',
+        signupName: 'Alpha Player',
+        joinedAt: '2026-07-24T11:00:00.000Z'
+      },
+      reg_zebra: {
+        _id: 'reg_zebra',
+        activityId: 'activity_1',
+        teamId: 'team_zebra',
+        userOpenId: 'openid_ben',
+        status: 'joined',
+        signupName: 'Zebra Player',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      }
+    }
+  });
+
+  const result = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(
+    result.rows
+      .filter(row => ['reg_alpha', 'reg_zebra'].includes(row.registrationId))
+      .map(row => row.registrationId)
+  ).toEqual(['reg_alpha', 'reg_zebra']);
+});
+
 test('admin can export another organizer activity roster', async () => {
   const db = createFakeDb();
 

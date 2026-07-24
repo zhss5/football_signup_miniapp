@@ -114,6 +114,11 @@ function compareRows(left, right) {
     return left.teamSort - right.teamSort;
   }
 
+  const teamCompare = String(left.teamId || '').localeCompare(String(right.teamId || ''));
+  if (teamCompare !== 0) {
+    return teamCompare;
+  }
+
   const joinedCompare = String(left.joinedAt || '').localeCompare(String(right.joinedAt || ''));
   if (joinedCompare !== 0) {
     return joinedCompare;

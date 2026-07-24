@@ -885,3 +885,183 @@ test('getActivityDetail keeps joined members on inactive teams in parity with ro
     exported.rows.map(row => row.registrationId)
   );
 });
+
+function createRosterParityDb({ teams, registrations }) {
+  const state = {
+    users: {
+      openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] }
+    },
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Saturday 8-10',
+        organizerOpenId: 'openid_owner',
+        status: 'published'
+      }
+    },
+    activity_teams: Object.fromEntries(teams.map(team => [team._id, team])),
+    registrations: Object.fromEntries(registrations.map(registration => [registration._id, registration]))
+  };
+
+  function createQuery(items, criteria = null, offset = 0, count = 100, order = null) {
+    return {
+      where(nextCriteria) {
+        return createQuery(items, nextCriteria, offset, count, order);
+      },
+      orderBy(field, direction) {
+        return createQuery(items, criteria, offset, count, { field, direction });
+      },
+      limit(nextCount) {
+        return createQuery(items, criteria, offset, nextCount, order);
+      },
+      async get() {
+        const filtered = Object.values(items || {}).filter(item =>
+          Object.entries(criteria || {}).every(([key, value]) => {
+            if (value && Array.isArray(value.values)) {
+              return value.values.includes(item[key]);
+            }
+
+            if (value && value.operator === 'gt') {
+              return String(item[key]) > String(value.value);
+            }
+
+            return item[key] === value;
+          })
+        );
+        const ordered = order
+          ? [...filtered].sort((left, right) => {
+              const comparison = String(left[order.field]).localeCompare(String(right[order.field]));
+              return order.direction === 'desc' ? -comparison : comparison;
+            })
+          : filtered;
+
+        return { data: ordered.slice(offset, offset + count) };
+      }
+    };
+  }
+
+  return {
+    command: {
+      in(values) {
+        return { values };
+      },
+      gt(value) {
+        return { operator: 'gt', value };
+      }
+    },
+    collection(name) {
+      const query = createQuery(state[name]);
+
+      return {
+        doc(id) {
+          return {
+            async get() {
+              return { data: state[name][id] || null };
+            }
+          };
+        },
+        where: query.where,
+        orderBy: query.orderBy,
+        limit: query.limit,
+        get: query.get
+      };
+    }
+  };
+}
+
+function rosterOrder(items, nameField) {
+  return items.map(item => ({ registrationId: item.registrationId, name: item[nameField] }));
+}
+
+test('getActivityDetail and exportActivityRoster order equal join times by participant name before registration ID', async () => {
+  const db = createRosterParityDb({
+    teams: [
+      { _id: 'team_green', activityId: 'activity_1', teamName: 'Green', sort: 0, status: 'active' }
+    ],
+    registrations: [
+      {
+        _id: 'reg_a_zulu',
+        activityId: 'activity_1',
+        teamId: 'team_green',
+        userOpenId: 'openid_zulu',
+        status: 'joined',
+        signupName: 'Zulu',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      },
+      {
+        _id: 'reg_z_alpha',
+        activityId: 'activity_1',
+        teamId: 'team_green',
+        userOpenId: 'openid_alpha',
+        status: 'joined',
+        signupName: 'Alpha',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      }
+    ]
+  });
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const expected = [
+    { registrationId: 'reg_z_alpha', name: 'Alpha' },
+    { registrationId: 'reg_a_zulu', name: 'Zulu' }
+  ];
+
+  expect(rosterOrder(detail.teams.flatMap(team => team.members), 'signupName')).toEqual(expected);
+  expect(rosterOrder(exported.rows, 'participantName')).toEqual(expected);
+});
+
+test('getActivityDetail and exportActivityRoster group equal team sorts by stable team ID', async () => {
+  const db = createRosterParityDb({
+    teams: [
+      { _id: 'team_zebra', activityId: 'activity_1', teamName: 'Zebra', sort: 0, status: 'active' },
+      { _id: 'team_alpha', activityId: 'activity_1', teamName: 'Alpha', sort: 0, status: 'active' }
+    ],
+    registrations: [
+      {
+        _id: 'reg_zebra',
+        activityId: 'activity_1',
+        teamId: 'team_zebra',
+        userOpenId: 'openid_zebra',
+        status: 'joined',
+        signupName: 'Zebra Player',
+        joinedAt: '2026-07-24T10:00:00.000Z'
+      },
+      {
+        _id: 'reg_alpha',
+        activityId: 'activity_1',
+        teamId: 'team_alpha',
+        userOpenId: 'openid_alpha',
+        status: 'joined',
+        signupName: 'Alpha Player',
+        joinedAt: '2026-07-24T11:00:00.000Z'
+      }
+    ]
+  });
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+  const expected = [
+    { registrationId: 'reg_alpha', name: 'Alpha Player' },
+    { registrationId: 'reg_zebra', name: 'Zebra Player' }
+  ];
+
+  expect(rosterOrder(detail.teams.flatMap(team => team.members), 'signupName')).toEqual(expected);
+  expect(rosterOrder(exported.rows, 'participantName')).toEqual(expected);
+});

@@ -124,6 +124,44 @@ function pickAvatarUrl(registration = {}, user = {}) {
   );
 }
 
+function getParticipantName(registration) {
+  return String(
+    registration.signupName ||
+      registration.displayName ||
+      registration.preferredName ||
+      registration.userOpenId ||
+      ''
+  ).trim();
+}
+
+function getTeamSort(team) {
+  const sort = Number(team && team.sort);
+  return Number.isFinite(sort) ? sort : 0;
+}
+
+function compareRegistrations(left, right) {
+  const joinedAtCompare = String(left.joinedAt || '').localeCompare(String(right.joinedAt || ''));
+  if (joinedAtCompare !== 0) {
+    return joinedAtCompare;
+  }
+
+  const participantCompare = getParticipantName(left).localeCompare(getParticipantName(right));
+  if (participantCompare !== 0) {
+    return participantCompare;
+  }
+
+  return String(left._id || '').localeCompare(String(right._id || ''));
+}
+
+function compareTeams(left, right) {
+  const sortCompare = getTeamSort(left) - getTeamSort(right);
+  if (sortCompare !== 0) {
+    return sortCompare;
+  }
+
+  return String(left._id || '').localeCompare(String(right._id || ''));
+}
+
 async function main(event, context = cloud.getWXContext(), deps = {}) {
   const db = deps.db || cloud.database();
   const openid = await resolveOpenIdFromEvent(
@@ -208,14 +246,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const usersById = await loadRosterUsers(db, command, joinedRegistrations);
 
   const membersByTeam = joinedRegistrations
-    .sort((left, right) => {
-      const joinedAtCompare = String(left.joinedAt).localeCompare(String(right.joinedAt));
-      if (joinedAtCompare !== 0) {
-        return joinedAtCompare;
-      }
-
-      return String(left._id).localeCompare(String(right._id));
-    })
+    .sort(compareRegistrations)
     .reduce((acc, registration) => {
       if (!acc[registration.teamId]) {
         acc[registration.teamId] = [];
@@ -252,7 +283,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     activity: activityPayload,
     teams: teams
       .filter(team => team.status !== 'inactive' || (membersByTeam[team._id] || []).length > 0)
-      .sort((left, right) => left.sort - right.sort)
+      .sort(compareTeams)
       .map(team => ({
         ...team,
         members: membersByTeam[team._id] || []
