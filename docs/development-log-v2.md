@@ -4,6 +4,36 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-24 - Unified Web Admin CSV And XLSX Exports
+
+Replaced every existing CSV-only Web Admin export control with one consistent format menu.
+
+Delivered behavior:
+
+- activity roster, activity operation logs, attendance statistics, and cancellation statistics can each be exported as CSV or XLSX.
+- each control is labelled `导出` and opens `CSV 格式 (.csv)` and `Excel 格式 (.xlsx)` choices.
+- roster and activity-log exports continue using the current keyword-filtered rows.
+- statistics export follows the active attendance/cancellation tab and the currently loaded date and activity-type filters.
+- CSV and XLSX share one row mapping, Chinese headers, and stable field order.
+- XLSX files use dedicated `报名名单`, `活动流水`, `出勤统计`, or `取消统计` worksheets with conservative column widths.
+- opening a different menu closes the previous menu; selection, outside click, statistics-tab switching, and `Escape` close the active menu.
+- SheetJS Community Edition 0.20.3 is pinned and vendored under `web-admin/vendor/`; the hosted page does not fetch it from a third-party CDN at runtime.
+
+TDD and verification:
+
+- export utility RED tests first failed because the CSV/XLSX module, local SheetJS asset, and script tags did not exist.
+- UI RED tests then failed against the old CSV-only buttons and missing menu/format routing.
+- focused export tests passed with `3` suites and `68` tests.
+- Web Admin regression passed with `10` suites and `105` tests.
+- full direct Jest regression passed with `84` suites and `821` tests.
+- direct Jest was used instead of the `npm test` pretest copy hook so unrelated uncommitted notification helper changes remained untouched.
+- scoped `git diff --check` passed with line-ending warnings only.
+
+Deployment scope:
+
+- redeploy only Web Admin static hosting so the new local vendor asset, export module, HTML, CSS, and cache-busted scripts are uploaded together.
+- no cloud function deployment, collection migration, data backfill, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover is required.
+
 ## 2026-07-23 - Recent Activity Log Query Repair
 
 Fixed an activity-detail log query that incorrectly displayed zero rows once `activity_logs` exceeded the CloudBase collection read limit.
