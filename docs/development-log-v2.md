@@ -26,7 +26,7 @@ Compatibility and deployment:
 Verification:
 
 - focused direct Jest passed with `10` suites and `138` tests.
-- the required full `npx jest --runInBand` run is blocked by one pre-existing failure: `tests/web-admin/app-login.test.js` still mocks paginated `listActivities` and `listUsers` responses as `{ items: [] }`, while the current Web Admin client correctly requires integer `total`, `limit`, and `skip` plus boolean `hasMore`. The run recorded `84` passed and `1` failed suites, with `856` passed and `1` failed tests. This documentation-only milestone leaves the out-of-scope test fixture unchanged.
+- test-only follow-up commit `31f1a95` updated `tests/web-admin/app-login.test.js` to return valid `{ items, total, limit, skip, hasMore }` pagination metadata. Its targeted direct Jest run passed with `1` suite and `3` tests; final `npx jest --runInBand` passed with `85` suites and `857` tests.
 
 ## 2026-07-24 - Unified Web Admin CSV And XLSX Exports
 

@@ -297,11 +297,11 @@ npx jest --runInBand
 git diff --check
 ```
 
-Results before the documentation commit:
+Results, including test-only follow-up commit `31f1a95`:
 
 - focused direct Jest passed with `10` suites and `138` tests.
-- full direct Jest is blocked by the pre-existing `tests/web-admin/app-login.test.js` fixture, which returns only `{ items: [] }` for paginated `listActivities` and `listUsers` mocks. The strict metadata validation added before this documentation task rejects the fixture. The run reports `84` passed and `1` failed suites, with `856` passed and `1` failed tests.
-- the failure is outside this documentation-only scope; do not weaken client validation. Update the fixture in a separate application/test change to return valid `{ items, total, limit, skip, hasMore }` metadata, then rerun full regression.
+- the targeted direct Jest run for `tests/web-admin/app-login.test.js` passed with `1` suite and `3` tests after its pagination mocks were updated to return valid `{ items, total, limit, skip, hasMore }` metadata.
+- final direct Jest passed with `85` suites and `857` tests.
 - `git diff --check` must be rerun after the documentation edits and before staging.
 
 Latest verification before this handoff refresh:
