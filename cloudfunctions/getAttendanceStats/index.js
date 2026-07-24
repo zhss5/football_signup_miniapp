@@ -7,14 +7,57 @@ const { normalizeActivityType } = require('./validators');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
+const COLLECTION_BATCH_SIZE = 100;
+
 async function loadUser(db, openid) {
   const res = await db.collection(COLLECTIONS.USERS).doc(openid).get();
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName) {
-  const res = await db.collection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
+function normalizeLimit(value) {
+  const limit = Number(value);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return DEFAULT_LIMIT;
+  }
+
+  return Math.min(Math.floor(limit), MAX_LIMIT);
+}
+
+function normalizeSkip(value) {
+  const skip = Number(value);
+  if (!Number.isFinite(skip) || skip <= 0) {
+    return 0;
+  }
+
+  return Math.floor(skip);
+}
+
+async function loadCollection(db, command, collectionName, criteria = {}) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const query = lastId ? { ...criteria, _id: command.gt(lastId) } : criteria;
+    const result = await db
+      .collection(collectionName)
+      .where(query)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    lastId = batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
 }
 
 function parseTimestamp(value) {
@@ -173,10 +216,13 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const rangeEnd = parseTimestamp(payload.endAt);
   const activityTypeFilter = normalizeActivityTypeFilter(payload.activityType);
   const nowAt = getNowTimestamp(deps);
+  const limit = normalizeLimit(payload.limit);
+  const skip = normalizeSkip(payload.skip);
+  const command = deps.command || db.command;
   const [activities, registrations, users] = await Promise.all([
-    loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS),
-    loadCollection(db, COLLECTIONS.USERS)
+    loadCollection(db, command, COLLECTIONS.ACTIVITIES),
+    loadCollection(db, command, COLLECTIONS.REGISTRATIONS),
+    loadCollection(db, command, COLLECTIONS.USERS)
   ]);
   const userById = users.reduce((acc, user) => {
     if (user && user._id) {
@@ -340,7 +386,14 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     }))
     .sort((left, right) => left.participantName.localeCompare(right.participantName));
 
-  return { items };
+  const total = items.length;
+  return {
+    items: items.slice(skip, skip + limit),
+    total,
+    limit,
+    skip,
+    hasMore: skip + limit < total
+  };
 }
 
 module.exports = { main };

@@ -1,5 +1,55 @@
 const getAttendanceStats = require('../../cloudfunctions/getAttendanceStats/index');
 
+function matchesQuery(item, query) {
+  if (!query) {
+    return true;
+  }
+
+  return Object.entries(query).every(([key, expected]) => {
+    if (expected && expected.gt !== undefined) {
+      return String(item[key] || '') > String(expected.gt);
+    }
+
+    return item[key] === expected;
+  });
+}
+
+function createCollectionQuery(source, state = {}) {
+  const queryState = {
+    query: null,
+    order: [],
+    limit: null,
+    ...state
+  };
+
+  return {
+    where(query) {
+      return createCollectionQuery(source, { ...queryState, query });
+    },
+    orderBy(field, direction) {
+      return createCollectionQuery(source, {
+        ...queryState,
+        order: queryState.order.concat({ field, direction })
+      });
+    },
+    limit(count) {
+      return createCollectionQuery(source, { ...queryState, limit: Number(count) || 0 });
+    },
+    async get() {
+      let data = source.filter(item => matchesQuery(item, queryState.query));
+
+      queryState.order.forEach(({ field, direction }) => {
+        data = data.slice().sort((left, right) => {
+          const result = String(left[field] || '').localeCompare(String(right[field] || ''));
+          return direction === 'desc' ? -result : result;
+        });
+      });
+
+      return { data: data.slice(0, queryState.limit === null ? 100 : queryState.limit) };
+    }
+  };
+}
+
 function createFakeDb(options = {}) {
   const state = {
     users: {
@@ -76,17 +126,22 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    command: {
+      gt(value) {
+        return { gt: value };
+      }
+    },
     collection(name) {
+      const query = createCollectionQuery(Object.values(state[name] || {}));
+
       return {
+        ...query,
         doc(id) {
           return {
             async get() {
               return { data: state[name][id] || null };
             }
           };
-        },
-        async get() {
-          return { data: Object.values(state[name] || {}) };
         }
       };
     }
@@ -808,6 +863,74 @@ test('real signups with the same display name are grouped by openid instead of n
       absentCount: 1
     })
   ]));
+});
+
+test('attendance stats load all cursor batches before aggregating and paging sorted participants', async () => {
+  const activities = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => {
+      const id = `bulk_activity_${String(index).padStart(3, '0')}`;
+      return [id, {
+        _id: id,
+        organizerOpenId: 'openid_other_owner',
+        status: 'published',
+        startAt: '2026-07-01T12:00:00.000Z'
+      }];
+    })
+  );
+  const registrations = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => {
+      const id = `bulk_registration_${String(index).padStart(3, '0')}`;
+      return [id, {
+        _id: id,
+        activityId: `bulk_activity_${String(index).padStart(3, '0')}`,
+        signupName: `Unrelated ${index}`,
+        status: 'joined',
+        attendanceStatus: 'present'
+      }];
+    })
+  );
+
+  Array.from({ length: 45 }, (_, index) => {
+    const suffix = String(index).padStart(3, '0');
+    activities[`stats_activity_${suffix}`] = {
+      _id: `stats_activity_${suffix}`,
+      organizerOpenId: 'openid_owner',
+      status: 'published',
+      startAt: '2026-07-02T12:00:00.000Z'
+    };
+    registrations[`stats_registration_${suffix}`] = {
+      _id: `stats_registration_${suffix}`,
+      activityId: `stats_activity_${suffix}`,
+      signupName: `Player ${suffix}`,
+      status: 'joined',
+      attendanceStatus: 'present'
+    };
+  });
+
+  const result = await getAttendanceStats.main(
+    {
+      startAt: '2026-07-01T00:00:00.000Z',
+      endAt: '2026-07-31T23:59:59.999Z',
+      skip: 20
+    },
+    { OPENID: 'openid_owner' },
+    { db: createFakeDb({ activities, registrations }), now: '2026-08-01T00:00:00.000Z' }
+  );
+
+  expect(result).toMatchObject({
+    total: 45,
+    limit: 20,
+    skip: 20,
+    hasMore: true
+  });
+  expect(result.items).toHaveLength(20);
+  expect(result.items.map(item => item.participantName)).toEqual(
+    Array.from({ length: 20 }, (_, index) => `Player ${String(index + 20).padStart(3, '0')}`)
+  );
+  expect(result.items[0]).toMatchObject({
+    signupCount: 1,
+    presentCount: 1
+  });
 });
 
 test('regular user cannot get attendance stats', async () => {

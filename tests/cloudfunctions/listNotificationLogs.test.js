@@ -1,5 +1,55 @@
 const listNotificationLogs = require('../../cloudfunctions/listNotificationLogs/index');
 
+function matchesQuery(item, query) {
+  if (!query) {
+    return true;
+  }
+
+  return Object.entries(query).every(([key, expected]) => {
+    if (expected && expected.gt !== undefined) {
+      return String(item[key] || '') > String(expected.gt);
+    }
+
+    return item[key] === expected;
+  });
+}
+
+function createCollectionQuery(source, state = {}) {
+  const queryState = {
+    query: null,
+    order: [],
+    limit: null,
+    ...state
+  };
+
+  return {
+    where(query) {
+      return createCollectionQuery(source, { ...queryState, query });
+    },
+    orderBy(field, direction) {
+      return createCollectionQuery(source, {
+        ...queryState,
+        order: queryState.order.concat({ field, direction })
+      });
+    },
+    limit(count) {
+      return createCollectionQuery(source, { ...queryState, limit: Number(count) || 0 });
+    },
+    async get() {
+      let data = source.filter(item => matchesQuery(item, queryState.query));
+
+      queryState.order.forEach(({ field, direction }) => {
+        data = data.slice().sort((left, right) => {
+          const result = String(left[field] || '').localeCompare(String(right[field] || ''));
+          return direction === 'desc' ? -result : result;
+        });
+      });
+
+      return { data: data.slice(0, queryState.limit === null ? 100 : queryState.limit) };
+    }
+  };
+}
+
 function createFakeDb(options = {}) {
   const state = {
     users: {
@@ -47,17 +97,22 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    command: {
+      gt(value) {
+        return { gt: value };
+      }
+    },
     collection(name) {
+      const query = createCollectionQuery(Object.values(state[name] || {}));
+
       return {
+        ...query,
         doc(id) {
           return {
             async get() {
               return { data: state[name][id] || null };
             }
           };
-        },
-        async get() {
-          return { data: Object.values(state[name] || {}) };
         }
       };
     }
@@ -126,4 +181,52 @@ test('listNotificationLogs supports filters and pagination', async () => {
     ],
     hasMore: false
   });
+});
+
+test('listNotificationLogs filters beyond the source cap and returns a stable second page with exact metadata', async () => {
+  const notification_logs = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => {
+      const id = `bulk_log_${String(index).padStart(3, '0')}`;
+      return [id, {
+        _id: id,
+        activityId: 'activity_2',
+        notificationType: 'registration_joined',
+        status: 'sent',
+        createdAt: '2026-07-01T10:00:00.000Z'
+      }];
+    })
+  );
+
+  Array.from({ length: 45 }, (_, index) => {
+    const suffix = String(index).padStart(3, '0');
+    notification_logs[`log_page_${suffix}`] = {
+      _id: `log_page_${suffix}`,
+      activityId: 'activity_1',
+      notificationType: 'cancelled',
+      status: 'failed',
+      createdAt: '2026-07-02T10:00:00.000Z'
+    };
+  });
+
+  const result = await listNotificationLogs.main(
+    {
+      activityId: 'activity_1',
+      notificationType: 'cancelled',
+      status: 'failed',
+      skip: 20
+    },
+    { OPENID: 'openid_admin' },
+    { db: createFakeDb({ notification_logs }) }
+  );
+
+  expect(result).toMatchObject({
+    total: 45,
+    limit: 20,
+    skip: 20,
+    hasMore: true
+  });
+  expect(result.items).toHaveLength(20);
+  expect(result.items.map(item => item._id)).toEqual(
+    Array.from({ length: 20 }, (_, index) => `log_page_${String(24 - index).padStart(3, '0')}`)
+  );
 });

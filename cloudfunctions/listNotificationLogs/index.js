@@ -8,6 +8,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const COLLECTION_BATCH_SIZE = 100;
 
 function normalizeLimit(value) {
   const limit = Number(value);
@@ -32,13 +33,39 @@ async function loadDoc(db, collectionName, id) {
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName) {
-  const res = await db.collection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
+async function loadCollection(db, command, collectionName, criteria = {}) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const query = lastId ? { ...criteria, _id: command.gt(lastId) } : criteria;
+    const result = await db
+      .collection(collectionName)
+      .where(query)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    lastId = batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
 }
 
 function compareByCreatedAtDesc(left, right) {
-  return String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+  const createdAtCompare = String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return String(right._id || '').localeCompare(String(left._id || ''));
 }
 
 function toSafeLog(log, activity) {
@@ -76,13 +103,15 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const status = String(payload.status || '').trim();
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
-  const [activities, logs] = await Promise.all([
-    loadCollection(db, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, COLLECTIONS.NOTIFICATION_LOGS)
-  ]);
+  const command = deps.command || db.command;
+  const activities = await loadCollection(
+    db,
+    command,
+    COLLECTIONS.ACTIVITIES,
+    callerIsAdmin ? {} : { organizerOpenId: openid }
+  );
   const allowedActivityIds = new Set(
     activities
-      .filter(activity => callerIsAdmin || activity.organizerOpenId === openid)
       .map(activity => activity._id)
   );
   const activityById = new Map(
@@ -91,6 +120,29 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   if (activityId && !allowedActivityIds.has(activityId)) {
     throw businessError('Only the organizer or an admin can list notification logs');
+  }
+
+  const logCriteria = {
+    ...(activityId ? { activityId } : {}),
+    ...(status ? { status } : {})
+  };
+  let logs;
+  if (notificationType) {
+    const [canonicalLogs, legacyLogs] = await Promise.all([
+      loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
+        ...logCriteria,
+        notificationType
+      }),
+      loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
+        ...logCriteria,
+        type: notificationType
+      })
+    ]);
+    logs = Array.from(new Map(
+      canonicalLogs.concat(legacyLogs).map(log => [log._id, log])
+    ).values());
+  } else {
+    logs = await loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, logCriteria);
   }
 
   const filtered = logs
@@ -102,7 +154,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   return {
     items: filtered.slice(skip, skip + limit),
-    hasMore: filtered.length > skip + limit
+    total: filtered.length,
+    limit,
+    skip,
+    hasMore: skip + limit < filtered.length
   };
 }
 
