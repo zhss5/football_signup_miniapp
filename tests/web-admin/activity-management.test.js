@@ -6,8 +6,7 @@ const {
   formatBeijingDateTime,
   buildNotificationLogRows,
   buildRosterRows,
-  buildStatsRows,
-  rowsToCsv
+  buildStatsRows
 } = require('../../web-admin/src/activity-management');
 
 test('buildActivitySearchParams keeps listActivities filters API-shaped', () => {
@@ -204,18 +203,6 @@ test('buildRosterRows defaults missing activity type to internal for roster expo
     activityType: 'internal',
     activityTypeText: '内战'
   });
-});
-
-test('rowsToCsv produces browser-downloadable CSV text with escaped fields', () => {
-  expect(
-    rowsToCsv([
-      {
-        teamName: 'White',
-        signupName: 'Alex, Jr',
-        attendanceStatus: 'present'
-      }
-    ])
-  ).toBe('teamName,signupName,attendanceStatus\r\nWhite,"Alex, Jr",present');
 });
 
 test('stats and log row builders keep stable display fields', () => {

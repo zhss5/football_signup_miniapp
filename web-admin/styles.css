@@ -604,21 +604,80 @@ textarea {
   mask: url("./assets/icons/search.svg") center / contain no-repeat;
 }
 
-.toolbar button[data-action="export-attendance-stats"],
-.detail-subsection-tools button[data-action*="export"],
+.toolbar .export-menu-trigger,
+.detail-subsection-tools .export-menu-trigger,
 .log-actions button {
   border-color: #cbe8d5;
   background: #ecfbf2;
   color: var(--admin-green);
 }
 
-.toolbar button[data-action="export-attendance-stats"]::before,
-.detail-subsection-tools button[data-action*="export"]::before {
+.toolbar .export-menu-trigger::before,
+.detail-subsection-tools .export-menu-trigger::before {
   width: 14px;
   height: 14px;
   background: currentColor;
   content: "";
   mask: url("./assets/icons/download.svg") center / contain no-repeat;
+}
+
+.export-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.export-menu-trigger::after {
+  width: 7px;
+  height: 7px;
+  margin: -4px 1px 0 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.export-menu-trigger[aria-expanded="true"]::after {
+  margin-top: 4px;
+  transform: rotate(225deg);
+}
+
+.export-menu-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 90;
+  display: grid;
+  width: 176px;
+  box-sizing: border-box;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 18, 0.16);
+}
+
+.toolbar .export-menu-options button,
+.detail-subsection-tools .export-menu-options button {
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.toolbar .export-menu-options button:hover,
+.detail-subsection-tools .export-menu-options button:hover {
+  background: #eef8f1;
+  color: var(--admin-green);
 }
 
 .toolbar button {

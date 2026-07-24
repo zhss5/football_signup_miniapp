@@ -1,4 +1,5 @@
 const { createWebAdminApp } = require('../../web-admin/src/app');
+const XLSX = require('../../web-admin/vendor/xlsx.full.min.js');
 
 function createElement(dataset = {}) {
   return {
@@ -68,6 +69,7 @@ function createAppRoot(elements, groups) {
   let clickHandler = null;
   let contextMenuHandler = null;
   let doubleClickHandler = null;
+  let keydownHandler = null;
 
   return {
     querySelector: jest.fn(selector => elements[selector] || null),
@@ -83,6 +85,10 @@ function createAppRoot(elements, groups) {
 
       if (eventName === 'dblclick') {
         doubleClickHandler = handler;
+      }
+
+      if (eventName === 'keydown') {
+        keydownHandler = handler;
       }
     }),
     click(element, eventOverrides = {}) {
@@ -121,6 +127,13 @@ function createAppRoot(elements, groups) {
         event,
         result
       };
+    },
+    keydown(key) {
+      if (!keydownHandler) {
+        throw new Error('keydown handler was not registered');
+      }
+
+      return keydownHandler({ key });
     },
     submit(element) {
       const handler = element.eventHandlers && element.eventHandlers.submit;
@@ -177,6 +190,25 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     attendance: createElement({ statisticsPane: 'attendance' }),
     cancellation: createElement({ statisticsPane: 'cancellation' })
   };
+  const exportTriggers = {
+    statistics: createElement({
+      action: 'toggle-export-menu',
+      exportSource: 'statistics'
+    }),
+    roster: createElement({
+      action: 'toggle-export-menu',
+      exportSource: 'activity-roster'
+    }),
+    logs: createElement({
+      action: 'toggle-export-menu',
+      exportSource: 'activity-logs'
+    })
+  };
+  const exportMenus = {
+    statistics: createElement({ exportOptions: 'statistics' }),
+    roster: createElement({ exportOptions: 'activity-roster' }),
+    logs: createElement({ exportOptions: 'activity-logs' })
+  };
   const elements = {
     '[data-view="identity"]': createElement(),
     '[data-view="login"]': createElement(),
@@ -197,9 +229,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[data-users-search-button]': createElement(),
     '[data-activities-search-button]': createElement(),
     '[data-stats-load-button]': createElement(),
-    '[data-stats-export-button]': createElement({
-      action: 'export-attendance-stats'
-    }),
+    '[data-stats-export-button]': exportTriggers.statistics,
     '[data-activities-table]': createElement(),
     '[data-activities-count]': createElement(),
     '[data-users-table]': createElement(),
@@ -263,7 +293,17 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
       views.logs
     ],
     '[data-statistics-tab]': [statisticsTabs.attendance, statisticsTabs.cancellation],
-    '[data-statistics-pane]': [statisticsPanes.attendance, statisticsPanes.cancellation]
+    '[data-statistics-pane]': [statisticsPanes.attendance, statisticsPanes.cancellation],
+    '[data-export-menu-trigger]': [
+      exportTriggers.statistics,
+      exportTriggers.roster,
+      exportTriggers.logs
+    ],
+    '[data-export-options]': [
+      exportMenus.statistics,
+      exportMenus.roster,
+      exportMenus.logs
+    ]
   });
   const api = {
     setWebAdminSessionToken: jest.fn(),
@@ -312,6 +352,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     app,
     appRoot,
     elements,
+    exportMenus,
+    exportTriggers,
     nav,
     statisticsPanes,
     statisticsTabs,
@@ -1100,8 +1142,42 @@ test('statistics tabs render focused tables and switch without another API reque
   expect(app.state.activeStatisticsTab).toBe('cancellation');
   expect(statisticsPanes.attendance.hidden).toBe(true);
   expect(statisticsPanes.cancellation.hidden).toBe(false);
-  expect(elements['[data-stats-export-button]'].textContent).toBe('导出取消统计 CSV');
+  expect(elements['[data-stats-export-button]'].textContent).toBe('导出');
   expect(getAttendanceStats).toHaveBeenCalledTimes(1);
+});
+
+test('export menus keep one source open and close on outside click or Escape', async () => {
+  const {
+    app,
+    appRoot,
+    exportMenus,
+    exportTriggers
+  } = buildHarness({
+    _id: 'openid_admin',
+    roles: ['user', 'admin']
+  });
+
+  await app.start();
+
+  appRoot.click(exportTriggers.statistics);
+  expect(exportMenus.statistics.hidden).toBe(false);
+  expect(exportMenus.roster.hidden).toBe(true);
+  expect(exportTriggers.statistics.attributes['aria-expanded']).toBe('true');
+
+  appRoot.click(exportTriggers.roster);
+  expect(exportMenus.statistics.hidden).toBe(true);
+  expect(exportMenus.roster.hidden).toBe(false);
+  expect(exportTriggers.statistics.attributes['aria-expanded']).toBe('false');
+  expect(exportTriggers.roster.attributes['aria-expanded']).toBe('true');
+
+  appRoot.click(createElement());
+  expect(exportMenus.roster.hidden).toBe(true);
+
+  appRoot.click(exportTriggers.logs);
+  expect(exportMenus.logs.hidden).toBe(false);
+  appRoot.keydown('Escape');
+  expect(exportMenus.logs.hidden).toBe(true);
+  expect(app.state.openExportMenu).toBe('');
 });
 
 test('double-clicking a cancellation stats row opens final-outcome details', async () => {
@@ -1264,7 +1340,11 @@ test('attendance stats exports loaded rows as CSV text', async () => {
   await app.start();
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
-  appRoot.click(elements['[data-stats-export-button]']);
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'csv',
+    exportSource: 'statistics'
+  }));
 
   expect(elements['[data-export-output]'].value).toContain('参与者,备注,应出勤次数,出勤,缺勤,出勤率');
   expect(elements['[data-export-output]'].value).not.toContain('最终取消数');
@@ -1297,13 +1377,91 @@ test('cancellation statistics export uses only final-outcome columns', async () 
   const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
   await result;
   appRoot.click(statisticsTabs.cancellation);
-  appRoot.click(elements['[data-stats-export-button]']);
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'csv',
+    exportSource: 'statistics'
+  }));
 
   expect(elements['[data-export-output]'].value).toContain(
     '参与者,备注,最终保留报名数,最终取消数,取消率'
   );
   expect(elements['[data-export-output]'].value).toContain('张虹生,酱油2,2,1,33.33%');
   expect(elements['[data-export-output]'].value).not.toContain('出勤率');
+});
+
+test('statistics XLSX export follows the active attendance or cancellation tab', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
+  const { app, appRoot, elements, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    {
+      getAttendanceStats: jest.fn().mockResolvedValue({
+        items: [
+          {
+            participantName: '张虹生',
+            managerAlias: '酱油2',
+            signupCount: 2,
+            presentCount: 1,
+            absentCount: 1,
+            attendanceRate: 0.5,
+            effectiveSignupActivityCount: 2,
+            cancelledActivityCount: 1,
+            cancelRate: 0.3333
+          }
+        ]
+      })
+    },
+    { runtimeRoot }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+  await result;
+
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+  const attendanceWorkbook = writeFile.mock.calls[0][0];
+  expect(writeFile.mock.calls[0][1]).toBe('attendance-stats.xlsx');
+  expect(XLSX.utils.sheet_to_json(attendanceWorkbook.Sheets['出勤统计'])).toEqual([
+    {
+      参与者: '张虹生',
+      备注: '酱油2',
+      应出勤次数: 2,
+      出勤: 1,
+      缺勤: 1,
+      出勤率: '50.00%'
+    }
+  ]);
+
+  appRoot.click(statisticsTabs.cancellation);
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'statistics'
+  }));
+  const cancellationWorkbook = writeFile.mock.calls[1][0];
+  expect(writeFile.mock.calls[1][1]).toBe('cancellation-stats.xlsx');
+  expect(XLSX.utils.sheet_to_json(cancellationWorkbook.Sheets['取消统计'])).toEqual([
+    {
+      参与者: '张虹生',
+      备注: '酱油2',
+      最终保留报名数: 2,
+      最终取消数: 1,
+      取消率: '33.33%'
+    }
+  ]);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {
@@ -2036,7 +2194,14 @@ test('activity detail attendance and alias actions update the current rows witho
   expect(elements['[data-text-edit-dialog]'].hidden).toBe(true);
 });
 
-test('activity detail exports filtered roster and activity logs as CSV text', async () => {
+test('activity detail exports filtered roster and activity logs as CSV or XLSX', async () => {
+  const writeFile = jest.fn();
+  const runtimeRoot = {
+    XLSX: {
+      ...XLSX,
+      writeFile
+    }
+  };
   const { app, appRoot, elements } = buildHarness(
     {
       _id: 'openid_admin',
@@ -2102,7 +2267,8 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
           }
         ]
       })
-    }
+    },
+    { runtimeRoot }
   );
 
   await app.start();
@@ -2110,23 +2276,64 @@ test('activity detail exports filtered roster and activity logs as CSV text', as
 
   elements['[data-roster-keyword]'].value = 'Goalkeeper';
   elements['[data-roster-keyword]'].eventHandlers.input();
-  appRoot.click(createElement({ action: 'export-activity-roster-view' }));
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'csv',
+    exportSource: 'activity-roster'
+  }));
 
   expect(elements['[data-export-output]'].value).toContain('活动类型');
   expect(elements['[data-export-output]'].value).toContain('外战');
   expect(elements['[data-export-output]'].value).toContain('队伍,报名名称,备注,表现描述,位置偏好,代报名,出勤状态');
   expect(elements['[data-export-output]'].value).not.toContain('Alex');
   expect(elements['[data-export-output]'].value).toContain('Ben');
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'activity-roster'
+  }));
+  const rosterWorkbook = writeFile.mock.calls[0][0];
+  expect(writeFile.mock.calls[0][1]).toBe('activity-roster-activity_1.xlsx');
+  expect(XLSX.utils.sheet_to_json(rosterWorkbook.Sheets['报名名单'])).toEqual([
+    {
+      活动类型: '外战',
+      队伍: 'Red',
+      报名名称: 'Ben',
+      备注: 'Goalkeeper',
+      表现描述: '',
+      位置偏好: '门将',
+      代报名: '否',
+      出勤状态: '缺勤'
+    }
+  ]);
 
   elements['[data-activity-detail-logs-keyword]'].value = 'openid_ben';
   elements['[data-activity-detail-logs-keyword]'].eventHandlers.input();
-  appRoot.click(createElement({ action: 'export-activity-logs-view' }));
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'csv',
+    exportSource: 'activity-logs'
+  }));
 
   expect(elements['[data-export-output]'].value).toContain('操作,操作人,时间');
   expect(elements['[data-export-output]'].value).not.toContain('操作,操作人,报名人,时间');
   expect(elements['[data-export-output]'].value).not.toContain('Alex 报名');
   expect(elements['[data-export-output]'].value).toContain('Goalkeeper 取消报名');
   expect(elements['[data-export-output]'].value).toContain('Goalkeeper');
+  appRoot.click(createElement({
+    action: 'export-file',
+    exportFormat: 'xlsx',
+    exportSource: 'activity-logs'
+  }));
+  const logsWorkbook = writeFile.mock.calls[1][0];
+  expect(writeFile.mock.calls[1][1]).toBe('activity-logs-activity_1.xlsx');
+  expect(XLSX.utils.sheet_to_json(logsWorkbook.Sheets['活动流水'])).toEqual([
+    {
+      操作: 'Goalkeeper 取消报名',
+      操作人: 'Goalkeeper',
+      时间: '2026-06-10 19:00'
+    }
+  ]);
 });
 
 test('activity detail close action hides the modal', async () => {

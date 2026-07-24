@@ -220,9 +220,41 @@
                         <h4>活动报名人列表</h4>
                         <div class="detail-subsection-tools">
                           <span data-roster-count class="table-summary">共 0 行</span>
-                          <button type="button" data-action="export-activity-roster-view">
-                            导出CSV
-                          </button>
+                          <div class="export-menu">
+                            <button
+                              type="button"
+                              class="export-menu-trigger"
+                              data-action="toggle-export-menu"
+                              data-export-menu-trigger
+                              data-export-source="activity-roster"
+                              aria-haspopup="menu"
+                              aria-expanded="false"
+                              aria-label="导出活动报名名单"
+                            >
+                              导出
+                            </button>
+                            <div
+                              class="export-menu-options"
+                              data-export-options="activity-roster"
+                              role="menu"
+                              hidden
+                            >
+                              <button
+                                type="button"
+                                data-action="export-file"
+                                data-export-source="activity-roster"
+                                data-export-format="csv"
+                                role="menuitem"
+                              >CSV 格式 (.csv)</button>
+                              <button
+                                type="button"
+                                data-action="export-file"
+                                data-export-source="activity-roster"
+                                data-export-format="xlsx"
+                                role="menuitem"
+                              >Excel 格式 (.xlsx)</button>
+                            </div>
+                          </div>
                           <label class="detail-search">
                             <span>关键词</span>
                             <input
@@ -257,9 +289,41 @@
                         <h4>报名活动流水</h4>
                         <div class="detail-subsection-tools">
                           <span data-activity-detail-logs-count class="table-summary">共 0 行</span>
-                          <button type="button" data-action="export-activity-logs-view">
-                            导出CSV
-                          </button>
+                          <div class="export-menu">
+                            <button
+                              type="button"
+                              class="export-menu-trigger"
+                              data-action="toggle-export-menu"
+                              data-export-menu-trigger
+                              data-export-source="activity-logs"
+                              aria-haspopup="menu"
+                              aria-expanded="false"
+                              aria-label="导出报名活动流水"
+                            >
+                              导出
+                            </button>
+                            <div
+                              class="export-menu-options"
+                              data-export-options="activity-logs"
+                              role="menu"
+                              hidden
+                            >
+                              <button
+                                type="button"
+                                data-action="export-file"
+                                data-export-source="activity-logs"
+                                data-export-format="csv"
+                                role="menuitem"
+                              >CSV 格式 (.csv)</button>
+                              <button
+                                type="button"
+                                data-action="export-file"
+                                data-export-source="activity-logs"
+                                data-export-format="xlsx"
+                                role="menuitem"
+                              >Excel 格式 (.xlsx)</button>
+                            </div>
+                          </div>
                           <label class="detail-search">
                             <span>关键词</span>
                             <input
@@ -315,9 +379,42 @@
 
                 <button type="submit" data-stats-load-button>加载统计</button>
 
-                <button type="button" data-action="export-attendance-stats" data-stats-export-button>
-                  导出出勤统计 CSV
-                </button>
+                <div class="export-menu">
+                  <button
+                    type="button"
+                    class="export-menu-trigger"
+                    data-action="toggle-export-menu"
+                    data-export-menu-trigger
+                    data-export-source="statistics"
+                    data-stats-export-button
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                    aria-label="导出当前统计"
+                  >
+                    导出
+                  </button>
+                  <div
+                    class="export-menu-options"
+                    data-export-options="statistics"
+                    role="menu"
+                    hidden
+                  >
+                    <button
+                      type="button"
+                      data-action="export-file"
+                      data-export-source="statistics"
+                      data-export-format="csv"
+                      role="menuitem"
+                    >CSV 格式 (.csv)</button>
+                    <button
+                      type="button"
+                      data-action="export-file"
+                      data-export-source="statistics"
+                      data-export-format="xlsx"
+                      role="menuitem"
+                    >Excel 格式 (.xlsx)</button>
+                  </div>
+                </div>
               </form>
 
               <div class="statistics-tabs" role="tablist" aria-label="统计类型">

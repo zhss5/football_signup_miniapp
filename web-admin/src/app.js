@@ -4,7 +4,8 @@
       require('./api'),
       require('./roles'),
       require('./user-management'),
-      require('./activity-management')
+      require('./activity-management'),
+      require('./export-files')
     );
     return;
   }
@@ -13,9 +14,16 @@
     root.WebAdminApi,
     root.WebAdminRoles,
     root.WebAdminUserManagement,
-    root.WebAdminActivityManagement
+    root.WebAdminActivityManagement,
+    root.WebAdminExportFiles
   );
-})(typeof globalThis !== 'undefined' ? globalThis : this, function appFactory(apiModule, roles, users, activityUi) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function appFactory(
+  apiModule,
+  roles,
+  users,
+  activityUi,
+  exportFiles
+) {
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -331,6 +339,7 @@
       notificationLogRows: [],
       logStatus: '',
       exportCsv: '',
+      openExportMenu: '',
       activeView: DEFAULT_ADMIN_VIEW
     };
 
@@ -975,10 +984,43 @@
 
       const exportButton = query('[data-stats-export-button]');
       if (exportButton) {
-        exportButton.textContent = state.activeStatisticsTab === 'cancellation'
-          ? '导出取消统计 CSV'
-          : '导出出勤统计 CSV';
+        exportButton.textContent = '导出';
       }
+    }
+
+    function renderExportMenus() {
+      queryAll('[data-export-options]').forEach(menu => {
+        const source = menu && menu.dataset ? menu.dataset.exportOptions : '';
+        setHidden(menu, source !== state.openExportMenu);
+      });
+
+      queryAll('[data-export-menu-trigger]').forEach(button => {
+        const source = button && button.dataset ? button.dataset.exportSource : '';
+        if (typeof button.setAttribute === 'function') {
+          button.setAttribute(
+            'aria-expanded',
+            source && source === state.openExportMenu ? 'true' : 'false'
+          );
+        }
+      });
+    }
+
+    function closeExportMenus() {
+      if (!state.openExportMenu) {
+        renderExportMenus();
+        return;
+      }
+
+      state.openExportMenu = '';
+      renderExportMenus();
+    }
+
+    function toggleExportMenu(source) {
+      const normalizedSource = String(source || '').trim();
+      state.openExportMenu = state.openExportMenu === normalizedSource
+        ? ''
+        : normalizedSource;
+      renderExportMenus();
     }
 
     function setActiveStatisticsTab(tabId) {
@@ -987,6 +1029,7 @@
       }
 
       state.activeStatisticsTab = tabId;
+      closeExportMenus();
       renderStatisticsTabs();
     }
 
@@ -1750,46 +1793,7 @@
       }
     }
 
-    function downloadCsv(filename, csv) {
-      const content = `\uFEFF${csv || ''}`;
-      const doc = runtimeBrowserRoot && runtimeBrowserRoot.document;
-      const blobCtor = runtimeBrowserRoot && runtimeBrowserRoot.Blob;
-      const urlApi = runtimeBrowserRoot && (runtimeBrowserRoot.URL || runtimeBrowserRoot.webkitURL);
-
-      if (
-        doc &&
-        typeof doc.createElement === 'function' &&
-        blobCtor &&
-        urlApi &&
-        typeof urlApi.createObjectURL === 'function'
-      ) {
-        const blob = new blobCtor([content], { type: 'text/csv;charset=utf-8' });
-        const url = urlApi.createObjectURL(blob);
-        const link = doc.createElement('a');
-        link.href = url;
-        link.download = filename;
-
-        if (doc.body && typeof doc.body.appendChild === 'function') {
-          doc.body.appendChild(link);
-        }
-
-        if (typeof link.click === 'function') {
-          link.click();
-        }
-
-        if (link.parentNode && typeof link.parentNode.removeChild === 'function') {
-          link.parentNode.removeChild(link);
-        }
-
-        if (typeof urlApi.revokeObjectURL === 'function') {
-          urlApi.revokeObjectURL(url);
-        }
-      }
-
-      writeExportOutput(csv);
-    }
-
-    function exportAttendanceStats() {
+    function buildAttendanceExportDescriptor() {
       const attendanceRows = getAttendanceStatsRows();
       if (!attendanceRows.length) {
         const empty = query('[data-attendance-stats-empty]');
@@ -1798,22 +1802,24 @@
           setHidden(empty, false);
         }
         writeExportOutput('');
-        return;
+        return null;
       }
 
-      const rows = attendanceRows.map(row => ({
-        参与者: row.participantName,
-        备注: row.managerAlias,
-        应出勤次数: row.signupCount,
-        出勤: row.presentCount,
-        缺勤: row.absentCount,
-        出勤率: row.attendanceRateText
-      }));
-      const csv = activityUi.rowsToCsv(rows);
-      downloadCsv('attendance-stats.csv', csv);
+      return {
+        baseFilename: 'attendance-stats',
+        sheetName: '出勤统计',
+        rows: attendanceRows.map(row => ({
+          参与者: row.participantName,
+          备注: row.managerAlias,
+          应出勤次数: row.signupCount,
+          出勤: row.presentCount,
+          缺勤: row.absentCount,
+          出勤率: row.attendanceRateText
+        }))
+      };
     }
 
-    function exportCancellationStats() {
+    function buildCancellationExportDescriptor() {
       const rows = getCancellationStatsRows();
       if (!rows.length) {
         const empty = query('[data-cancellation-stats-empty]');
@@ -1822,51 +1828,101 @@
           setHidden(empty, false);
         }
         writeExportOutput('');
+        return null;
+      }
+
+      return {
+        baseFilename: 'cancellation-stats',
+        sheetName: '取消统计',
+        rows: rows.map(row => ({
+          参与者: row.participantName,
+          备注: row.managerAlias,
+          最终保留报名数: row.effectiveSignupActivityCount,
+          最终取消数: row.cancelledActivityCount,
+          取消率: row.cancelRateText
+        }))
+      };
+    }
+
+    function buildRosterExportDescriptor() {
+      return {
+        baseFilename: `activity-roster-${getSelectedActivityId() || 'selected'}`,
+        sheetName: '报名名单',
+        rows: getFilteredRosterRows().map(row => ({
+          活动类型: row.activityTypeText || formatActivityTypeText(row.activityType),
+          队伍: row.teamName,
+          报名名称: row.signupName,
+          备注: row.managerAlias,
+          表现描述: row.performanceDescription,
+          位置偏好: formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
+          代报名: row.proxyRegistration ? '是' : '否',
+          出勤状态: formatStatusText(row.attendanceStatus)
+        }))
+      };
+    }
+
+    function buildActivityLogsExportDescriptor() {
+      return {
+        baseFilename: `activity-logs-${getSelectedActivityId() || 'selected'}`,
+        sheetName: '活动流水',
+        rows: getFilteredActivityDetailLogRows().map(row => ({
+          操作: row.summary || row.type,
+          操作人: row.operatorDisplayName,
+          时间: row.createdAt
+        }))
+      };
+    }
+
+    function getExportDescriptor(source) {
+      if (source === 'statistics') {
+        return state.activeStatisticsTab === 'cancellation'
+          ? buildCancellationExportDescriptor()
+          : buildAttendanceExportDescriptor();
+      }
+
+      if (source === 'activity-roster') {
+        return buildRosterExportDescriptor();
+      }
+
+      if (source === 'activity-logs') {
+        return buildActivityLogsExportDescriptor();
+      }
+
+      throw new Error('不支持的导出内容。');
+    }
+
+    function exportFile(source, format) {
+      closeExportMenus();
+      const descriptor = getExportDescriptor(source);
+      if (!descriptor) {
         return;
       }
 
-      const csv = activityUi.rowsToCsv(rows.map(row => ({
-        参与者: row.participantName,
-        备注: row.managerAlias,
-        最终保留报名数: row.effectiveSignupActivityCount,
-        最终取消数: row.cancelledActivityCount,
-        取消率: row.cancelRateText
-      })));
-      downloadCsv('cancellation-stats.csv', csv);
-    }
+      if (!exportFiles) {
+        throw new Error('导出组件未加载，请刷新页面后重试。');
+      }
 
-    function exportActiveStatistics() {
-      if (state.activeStatisticsTab === 'cancellation') {
-        exportCancellationStats();
+      if (format === 'xlsx') {
+        writeExportOutput('');
+        exportFiles.downloadXlsx({
+          filename: `${descriptor.baseFilename}.xlsx`,
+          rows: descriptor.rows,
+          sheetName: descriptor.sheetName,
+          xlsx: runtimeBrowserRoot && runtimeBrowserRoot.XLSX
+        });
         return;
       }
 
-      exportAttendanceStats();
-    }
+      if (format !== 'csv') {
+        throw new Error('不支持的导出格式。');
+      }
 
-    function exportActivityRosterView() {
-      const rows = getFilteredRosterRows().map(row => ({
-        活动类型: row.activityTypeText || formatActivityTypeText(row.activityType),
-        队伍: row.teamName,
-        报名名称: row.signupName,
-        备注: row.managerAlias,
-        表现描述: row.performanceDescription,
-        位置偏好: formatDelimitedLabels(row.preferredPositions, POSITION_LABELS),
-        代报名: row.proxyRegistration ? '是' : '否',
-        出勤状态: formatStatusText(row.attendanceStatus)
-      }));
-      const csv = activityUi.rowsToCsv(rows);
-      downloadCsv(`activity-roster-${getSelectedActivityId() || 'selected'}.csv`, csv);
-    }
-
-    function exportActivityLogsView() {
-      const rows = getFilteredActivityDetailLogRows().map(row => ({
-        操作: row.summary || row.type,
-        操作人: row.operatorDisplayName,
-        时间: row.createdAt
-      }));
-      const csv = activityUi.rowsToCsv(rows);
-      downloadCsv(`activity-logs-${getSelectedActivityId() || 'selected'}.csv`, csv);
+      const csv = exportFiles.downloadCsv({
+        browserRoot: runtimeBrowserRoot,
+        filename: `${descriptor.baseFilename}.csv`,
+        rows: descriptor.rows
+      });
+      writeExportOutput(csv);
     }
 
     async function loadActivityLogs() {
@@ -2066,6 +2122,7 @@
           const navButton = event.target.closest('[data-nav-target]');
           if (navButton) {
             hideActivityContextMenu();
+            closeExportMenus();
             setActiveAdminView(navButton.dataset.navTarget);
             return;
           }
@@ -2078,6 +2135,7 @@
 
           const button = event.target.closest('[data-action]');
           if (!button) {
+            closeExportMenus();
             const row = event.target.closest('[data-activity-id]');
             if (row) {
               hideActivityContextMenu();
@@ -2121,6 +2179,22 @@
             closeAttendanceDetail();
             return;
           }
+
+          if (button.dataset.action === 'toggle-export-menu') {
+            toggleExportMenu(button.dataset.exportSource);
+            return;
+          }
+
+          if (button.dataset.action === 'export-file') {
+            try {
+              exportFile(button.dataset.exportSource, button.dataset.exportFormat);
+            } catch (error) {
+              renderIdentity(getErrorMessage(error));
+            }
+            return;
+          }
+
+          closeExportMenus();
 
           if (button.dataset.action === 'close-cancellation-detail') {
             closeCancellationDetail();
@@ -2180,21 +2254,6 @@
           if (button.dataset.action === 'save-text-edit') {
             return runWithButtonElement(button, '保存中...', saveTextEdit)
               .catch(error => renderIdentity(error.message));
-          }
-
-          if (button.dataset.action === 'export-attendance-stats') {
-            exportActiveStatistics();
-            return;
-          }
-
-          if (button.dataset.action === 'export-activity-roster-view') {
-            exportActivityRosterView();
-            return;
-          }
-
-          if (button.dataset.action === 'export-activity-logs-view') {
-            exportActivityLogsView();
-            return;
           }
 
           if (button.dataset.action === 'load-activity-logs') {
@@ -2269,6 +2328,12 @@
 
           return loadActivityDetail(row.dataset.activityId).catch(error => renderIdentity(error.message));
         });
+
+        appRoot.addEventListener('keydown', event => {
+          if (event && event.key === 'Escape') {
+            closeExportMenus();
+          }
+        });
       }
     }
 
@@ -2278,6 +2343,7 @@
       }
 
       bindEvents();
+      renderExportMenus();
       if (state.webAdminSessionToken) {
         if (api && typeof api.setWebAdminSessionToken === 'function') {
           api.setWebAdminSessionToken(state.webAdminSessionToken);
@@ -2291,7 +2357,7 @@
 
     return {
       beginWebAdminLogin,
-      exportAttendanceStats,
+      exportFile,
       loadActivityDetail,
       loadActivityLogs,
       loadAttendanceStats,

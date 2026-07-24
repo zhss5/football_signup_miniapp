@@ -99,8 +99,16 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('data-role="admin"');
   expect(html).toContain('data-action="search-activities"');
   expect(html).toContain('data-action="load-attendance-stats"');
-  expect(html).toContain('data-action="export-attendance-stats"');
-  expect(html).toContain('导出出勤统计 CSV');
+  expect(html).not.toContain('data-action="export-attendance-stats"');
+  expect(html).not.toContain('data-action="export-activity-roster-view"');
+  expect(html).not.toContain('data-action="export-activity-logs-view"');
+  expect((html.match(/data-action="toggle-export-menu"/g) || []).length).toBe(3);
+  expect((html.match(/data-action="export-file"/g) || []).length).toBe(6);
+  expect((html.match(/CSV 格式 \(\.csv\)/g) || []).length).toBe(3);
+  expect((html.match(/Excel 格式 \(\.xlsx\)/g) || []).length).toBe(3);
+  expect(html).toContain('data-export-source="statistics"');
+  expect(html).toContain('data-export-source="activity-roster"');
+  expect(html).toContain('data-export-source="activity-logs"');
   expect(html).toContain('name="statsActivityType"');
   expect(html).toContain('内战统计');
   expect(html).toContain('外战统计');
@@ -133,13 +141,12 @@ test('web admin static shell keeps existing forms and action hooks with Chinese 
   expect(html).toContain('活动总结');
   expect(html).toContain('data-activity-detail-logs-keyword');
   expect(html).toContain('data-activity-detail-logs-count');
-  expect(html).toContain('data-action="export-activity-roster-view"');
-  expect(html).toContain('data-action="export-activity-logs-view"');
   expect(html).toContain('data-activity-detail-loading');
   expect(html).toContain('正在加载活动详情...');
   expect(html).toContain('activity-detail-body');
   expect(html).toContain('data-activity-detail-body');
-  expect(html).toContain('导出CSV');
+  expect(html).toContain('aria-label="导出活动报名名单"');
+  expect(html).toContain('aria-label="导出报名活动流水"');
   expect(html).toContain('活动报名人列表');
   expect(html).toContain('<th>表现描述</th>');
   expect(html).toContain('data-activity-detail-logs-table');
@@ -299,6 +306,16 @@ test('web admin static shell loads the test CloudBase runtime before app startup
   expect(exportFilesIndex).toBeGreaterThan(xlsxIndex);
   expect(appIndex).toBeGreaterThan(exportFilesIndex);
   expect(html).not.toContain('cdn.sheetjs.com');
+});
+
+test('web admin export controls use a compact anchored format menu', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'web-admin/styles.css'), 'utf8');
+
+  expect(css).toContain('.export-menu');
+  expect(css).toContain('.export-menu-trigger');
+  expect(css).toContain('.export-menu-options');
+  expect(css).toContain('position: absolute');
+  expect(css).toContain('z-index:');
 });
 
 test('web admin vendors the fixed SheetJS browser runtime', () => {

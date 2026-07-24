@@ -342,29 +342,6 @@
     }));
   }
 
-  function escapeCsvValue(value) {
-    const text = Array.isArray(value) ? value.join(' / ') : String(value ?? '');
-    if (/[",\r\n]/.test(text)) {
-      return `"${text.replace(/"/g, '""')}"`;
-    }
-
-    return text;
-  }
-
-  function rowsToCsv(rows = []) {
-    if (!rows.length) {
-      return '';
-    }
-
-    const headers = Object.keys(rows[0]);
-    const lines = [
-      headers.join(','),
-      ...rows.map(row => headers.map(header => escapeCsvValue(row[header])).join(','))
-    ];
-
-    return lines.join('\r\n');
-  }
-
   return {
     buildActivityLogRows,
     buildActivityRows,
@@ -374,7 +351,6 @@
     formatBeijingDateTime,
     buildNotificationLogRows,
     buildRosterRows,
-    buildStatsRows,
-    rowsToCsv
+    buildStatsRows
   };
 });
