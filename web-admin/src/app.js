@@ -84,7 +84,7 @@
   function getAllowedAdminViews(user) {
     return roles.isAdmin(user)
       ? ['users', 'activities', 'attendance-stats', 'notification-logs']
-      : ['activities', 'attendance-stats'];
+      : ['activities', 'attendance-stats', 'notification-logs'];
   }
 
   function createPaginationState() {
@@ -502,15 +502,33 @@
 
     function getPaginationMetadata(result, requestedSkip) {
       const response = result || {};
-      const valid =
+      const pageItems = Array.isArray(response.items) ? response.items : null;
+      const validMetadata =
         Number.isInteger(response.total) && response.total >= 0 &&
         Number.isInteger(response.limit) && response.limit === PAGE_LIMIT &&
         Number.isInteger(response.skip) && response.skip >= 0 &&
         response.skip === requestedSkip &&
         typeof response.hasMore === 'boolean';
 
-      if (!valid) {
+      if (!validMetadata || !pageItems) {
         throw new Error('Invalid pagination metadata.');
+      }
+
+      const skipWithinTotal = response.total === 0
+        ? response.skip === 0
+        : response.skip < response.total;
+      const expectedItemCount = Math.min(
+        response.limit,
+        Math.max(0, response.total - response.skip)
+      );
+      const expectedHasMore = response.skip + pageItems.length < response.total;
+
+      if (
+        !skipWithinTotal ||
+        pageItems.length !== expectedItemCount ||
+        response.hasMore !== expectedHasMore
+      ) {
+        throw new Error('Inconsistent pagination page.');
       }
 
       return {

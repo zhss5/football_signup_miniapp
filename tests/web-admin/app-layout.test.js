@@ -173,6 +173,25 @@ function createDeferred() {
   };
 }
 
+function createCompletePageItems(seed, total, skip = 0, limit = 20) {
+  const count = Math.min(limit, Math.max(0, total - skip));
+
+  return Array.from({ length: count }, (_, index) => {
+    if (typeof seed === 'function') {
+      return seed(index);
+    }
+
+    if (seed && seed._id) {
+      return {
+        ...seed,
+        _id: `${seed._id}_${skip + index}`
+      };
+    }
+
+    return { ...(seed || {}) };
+  });
+}
+
 function normalizePaginatedTestResponse(result, params = {}) {
   if (!result || typeof result !== 'object') {
     return result;
@@ -478,14 +497,14 @@ test('admin users see all sidebar items and land on activity management', async 
 
 test('user and activity pagination send offsets and searches reset to the first page', async () => {
   const listUsers = jest.fn().mockResolvedValue({
-    items: [],
+    items: createCompletePageItems({}, 41),
     total: 41,
     limit: 20,
     skip: 0,
     hasMore: true
   });
   const listActivities = jest.fn().mockResolvedValue({
-    items: [],
+    items: createCompletePageItems({}, 41),
     total: 41,
     limit: 20,
     skip: 0,
@@ -540,7 +559,7 @@ test('user and activity pagination send offsets and searches reset to the first 
 
 test('statistics tabs retain independent pagination skips', async () => {
   const getAttendanceStats = jest.fn(params => Promise.resolve({
-    items: [],
+    items: createCompletePageItems({}, 101, params.skip),
     total: 101,
     limit: 20,
     skip: params.skip,
@@ -605,20 +624,18 @@ test.each([
     }
 
     return Promise.resolve({
-      items: [
-        {
-          participantName: `${params.activityType}-${params.skip}`,
-          signupCount: 1,
-          presentCount: 1,
-          absentCount: 0,
-          attendanceRate: 1,
-          effectiveSignupActivityCount: 1,
-          cancelledActivityCount: 0,
-          cancelRate: 0,
-          details: [],
-          cancellationDetails: []
-        }
-      ],
+      items: createCompletePageItems({
+        participantName: `${params.activityType}-${params.skip}`,
+        signupCount: 1,
+        presentCount: 1,
+        absentCount: 0,
+        attendanceRate: 1,
+        effectiveSignupActivityCount: 1,
+        cancelledActivityCount: 0,
+        cancelRate: 0,
+        details: [],
+        cancellationDetails: []
+      }, 101, params.skip),
       total: 101,
       limit: 20,
       skip: params.skip,
@@ -653,20 +670,18 @@ test.each([
   expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-0');
 
   filterResponse.resolve({
-    items: [
-      {
-        participantName: 'external-0',
-        signupCount: 1,
-        presentCount: 1,
-        absentCount: 0,
-        attendanceRate: 1,
-        effectiveSignupActivityCount: 1,
-        cancelledActivityCount: 0,
-        cancelRate: 0,
-        details: [],
-        cancellationDetails: []
-      }
-    ],
+    items: createCompletePageItems({
+      participantName: 'external-0',
+      signupCount: 1,
+      presentCount: 1,
+      absentCount: 0,
+      attendanceRate: 1,
+      effectiveSignupActivityCount: 1,
+      cancelledActivityCount: 0,
+      cancelRate: 0,
+      details: [],
+      cancellationDetails: []
+    }, 101),
     total: 101,
     limit: 20,
     skip: 0,
@@ -698,20 +713,18 @@ test('statistics filter failure preserves both tab rows and pagination positions
     }
 
     return Promise.resolve({
-      items: [
-        {
-          participantName: `${params.activityType}-${params.skip}`,
-          signupCount: 1,
-          presentCount: 1,
-          absentCount: 0,
-          attendanceRate: 1,
-          effectiveSignupActivityCount: 1,
-          cancelledActivityCount: 0,
-          cancelRate: 0,
-          details: [],
-          cancellationDetails: []
-        }
-      ],
+      items: createCompletePageItems({
+        participantName: `${params.activityType}-${params.skip}`,
+        signupCount: 1,
+        presentCount: 1,
+        absentCount: 0,
+        attendanceRate: 1,
+        effectiveSignupActivityCount: 1,
+        cancelledActivityCount: 0,
+        cancelRate: 0,
+        details: [],
+        cancellationDetails: []
+      }, 101, params.skip),
       total: 101,
       limit: 20,
       skip: params.skip,
@@ -755,7 +768,10 @@ test('statistics filter failure preserves both tab rows and pagination positions
 test('missing pagination metadata preserves user rows and restores controls', async () => {
   const listUsers = jest.fn()
     .mockResolvedValueOnce({
-      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      items: createCompletePageItems(
+        { _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] },
+        41
+      ),
       total: 41,
       limit: 20,
       skip: 0,
@@ -814,7 +830,10 @@ test.each([
 ])('mismatched pagination $label preserves user rows and state', async ({ response }) => {
   const listUsers = jest.fn()
     .mockResolvedValueOnce({
-      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      items: createCompletePageItems(
+        { _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] },
+        41
+      ),
       total: 41,
       limit: 20,
       skip: 0,
@@ -845,10 +864,101 @@ test.each([
   expect(elements['[data-users-status]'].textContent).toContain('pagination metadata');
 });
 
+test.each([
+  {
+    label: 'short nonterminal page',
+    response: {
+      __rawPaginationResponse: true,
+      items: [{ _id: 'openid_ben', preferredName: 'Ben', roles: ['user'] }],
+      total: 41,
+      limit: 20,
+      skip: 20,
+      hasMore: true
+    }
+  },
+  {
+    label: 'contradictory hasMore',
+    response: {
+      __rawPaginationResponse: true,
+      items: [{ _id: 'openid_ben', preferredName: 'Ben', roles: ['user'] }],
+      total: 21,
+      limit: 20,
+      skip: 20,
+      hasMore: true
+    }
+  },
+  {
+    label: 'skip outside total',
+    response: {
+      __rawPaginationResponse: true,
+      items: [],
+      total: 20,
+      limit: 20,
+      skip: 20,
+      hasMore: false
+    }
+  },
+  {
+    label: 'rows instead of items',
+    response: {
+      __rawPaginationResponse: true,
+      rows: Array.from({ length: 20 }, (_, index) => ({
+        _id: `openid_ben_${index}`,
+        preferredName: `Ben ${index}`,
+        roles: ['user']
+      })),
+      total: 41,
+      limit: 20,
+      skip: 20,
+      hasMore: true
+    }
+  }
+])('inconsistent visible $label preserves user rows and pagination state', async ({ response }) => {
+  const firstPage = Array.from({ length: 20 }, (_, index) => ({
+    _id: `openid_alex_${index}`,
+    preferredName: `Alex ${index}`,
+    roles: ['user']
+  }));
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: firstPage,
+      total: 41,
+      limit: 20,
+      skip: 0,
+      hasMore: true
+    })
+    .mockResolvedValueOnce(response);
+  const { app, appRoot, elements, pagination } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listUsers }
+  );
+
+  await app.start();
+  await appRoot.click(pagination.users.next);
+
+  expect(elements['[data-users-table]'].innerHTML).toContain('Alex 0');
+  expect(elements['[data-users-table]'].innerHTML).not.toContain('Ben');
+  expect(app.state.pagination.users).toMatchObject({
+    total: 41,
+    limit: 20,
+    skip: 0,
+    hasMore: true,
+    loading: false
+  });
+  expect(pagination.users.next.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('pagination');
+});
+
 test('pagination renders API totals and preserves rows after a failed page request', async () => {
   const listUsers = jest.fn()
     .mockResolvedValueOnce({
-      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      items: createCompletePageItems(
+        { _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] },
+        41
+      ),
       total: 41,
       limit: 20,
       skip: 0,
@@ -1071,23 +1181,38 @@ test('logout clears the stored web admin session and returns to QR login', async
   expect(createWebAdminLogin).toHaveBeenCalled();
 });
 
-test('organizers can use operations views but do not see user management', async () => {
+test('organizers can use operations and scoped notification log views but do not see user management', async () => {
+  const listNotificationLogs = jest.fn().mockResolvedValue({
+    items: [],
+    total: 0,
+    limit: 20,
+    skip: 0,
+    hasMore: false
+  });
   const { api, app, nav, views } = buildHarness({
     _id: 'openid_organizer',
     roles: ['user', 'organizer']
-  });
+  }, { listNotificationLogs });
 
   await app.start();
 
   expect(nav.users.hidden).toBe(true);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.notificationLogs.hidden).toBe(true);
+  expect(nav.notificationLogs.hidden).toBe(false);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
-  expect(views.notificationLogs.hidden).toBe(true);
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).not.toHaveBeenCalled();
+
+  await app.setActiveAdminView('notification-logs');
+
+  expect(views.notificationLogs.hidden).toBe(false);
+  expect(listNotificationLogs).toHaveBeenCalledWith({
+    activityId: '',
+    limit: 20,
+    skip: 0
+  });
 });
 
 test('regular users stay on the forbidden view', async () => {
@@ -2144,12 +2269,12 @@ test('statistics export aborts without a file when a later page fails', async ()
       writeFile
     }
   };
-  const firstPage = [{
+  const firstPage = createCompletePageItems({
     participantName: '人员1',
     signupCount: 1,
     presentCount: 1,
     attendanceRate: 1
-  }];
+  }, 25);
   const getAttendanceStats = jest
     .fn()
     .mockResolvedValueOnce({ items: firstPage, total: 25, limit: 20, skip: 0, hasMore: true })
