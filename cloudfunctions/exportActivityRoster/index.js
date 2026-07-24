@@ -6,14 +6,67 @@ const { canEditActivity } = require('./roles');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const COLLECTION_BATCH_SIZE = 100;
+
 async function loadDoc(db, collectionName, id) {
   const res = await db.collection(collectionName).doc(id).get();
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName) {
-  const res = await db.collection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
+async function loadCollection(db, collectionName, criteria = null) {
+  const items = [];
+  let offset = 0;
+
+  while (true) {
+    let query = db.collection(collectionName);
+    if (criteria) {
+      query = query.where(criteria);
+    }
+
+    const result = await query.skip(offset).limit(COLLECTION_BATCH_SIZE).get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    offset += batch.length;
+  }
+}
+
+function groupValues(values, size) {
+  const groups = [];
+
+  for (let index = 0; index < values.length; index += size) {
+    groups.push(values.slice(index, index + size));
+  }
+
+  return groups;
+}
+
+async function loadRosterUsers(db, command, registrations) {
+  const userOpenIds = Array.from(
+    new Set(
+      registrations
+        .filter(registration => !registration.proxyRegistration)
+        .map(registration => registration.userOpenId)
+        .filter(Boolean)
+    )
+  );
+
+  if (userOpenIds.length === 0 || !command || typeof command.in !== 'function') {
+    return [];
+  }
+
+  const userGroups = groupValues(userOpenIds, COLLECTION_BATCH_SIZE);
+  const userBatches = await Promise.all(
+    userGroups.map(userOpenIds =>
+      loadCollection(db, COLLECTIONS.USERS, { _id: command.in(userOpenIds) })
+    )
+  );
+
+  return userBatches.flat();
 }
 
 function normalizeArray(value) {
@@ -57,7 +110,14 @@ function compareRows(left, right) {
     return joinedCompare;
   }
 
-  return String(left.participantName || '').localeCompare(String(right.participantName || ''));
+  const participantCompare = String(left.participantName || '').localeCompare(
+    String(right.participantName || '')
+  );
+  if (participantCompare !== 0) {
+    return participantCompare;
+  }
+
+  return String(left.registrationId || '').localeCompare(String(right.registrationId || ''));
 }
 
 function toExportRow(activity, registration, team, user) {
@@ -98,17 +158,17 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     { ...deps, getWXContext: deps.getWXContext || (() => cloud.getWXContext()) }
   );
   const activityId = String(payload.activityId || '').trim();
+  const command = deps.command || db.command;
 
   if (!activityId) {
     throw businessError('activityId is required');
   }
 
-  const [activity, caller, teams, registrations, users] = await Promise.all([
+  const [activity, caller, teams, registrations] = await Promise.all([
     loadDoc(db, COLLECTIONS.ACTIVITIES, activityId),
     loadDoc(db, COLLECTIONS.USERS, openid),
-    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS),
-    loadCollection(db, COLLECTIONS.USERS)
+    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS, { activityId }),
+    loadCollection(db, COLLECTIONS.REGISTRATIONS, { activityId, status: 'joined' })
   ]);
 
   if (!activity) {
@@ -118,6 +178,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   if (!canEditActivity(activity, caller, openid)) {
     throw businessError('Only the organizer or an admin can export rosters');
   }
+
+  const users = await loadRosterUsers(db, command, registrations);
 
   const teamById = teams.reduce((acc, team) => {
     if (team && team.activityId === activityId) {
@@ -134,7 +196,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     return acc;
   }, {});
   const rows = registrations
-    .filter(registration => registration.activityId === activityId && registration.status === 'joined')
     .map(registration =>
       toExportRow(activity, registration, teamById[registration.teamId] || {}, userByOpenId[registration.userOpenId])
     )
@@ -142,7 +203,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .sort(compareRows)
     .map(stripInternalSortFields);
 
-  return { rows };
+  return {
+    rows,
+    total: rows.length
+  };
 }
 
 module.exports = { main };

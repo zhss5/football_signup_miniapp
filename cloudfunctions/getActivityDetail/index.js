@@ -11,6 +11,70 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const MANAGER_REGISTRATION_NOTICE_TEMPLATE_KEY = 'manager_registration_notice';
 const MANAGER_LATE_CANCELLATION_NOTICE_TEMPLATE_KEY =
   'manager_late_cancellation_notice';
+const COLLECTION_BATCH_SIZE = 100;
+
+async function loadCollection(db, collectionName, criteria = null) {
+  const items = [];
+  let offset = 0;
+
+  while (true) {
+    let query = db.collection(collectionName);
+    if (criteria) {
+      query = query.where(criteria);
+    }
+
+    const supportsPagination =
+      typeof query.skip === 'function' && typeof query.limit === 'function';
+    const result = supportsPagination
+      ? await query.skip(offset).limit(COLLECTION_BATCH_SIZE).get()
+      : await query.get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (!supportsPagination || batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
+    }
+
+    offset += batch.length;
+  }
+}
+
+function groupValues(values, size) {
+  const groups = [];
+
+  for (let index = 0; index < values.length; index += size) {
+    groups.push(values.slice(index, index + size));
+  }
+
+  return groups;
+}
+
+async function loadRosterUsers(db, command, registrations) {
+  const userOpenIds = Array.from(
+    new Set(
+      registrations
+        .filter(registration => !registration.proxyRegistration)
+        .map(registration => registration.userOpenId)
+        .filter(Boolean)
+    )
+  );
+
+  if (userOpenIds.length === 0 || !command || typeof command.in !== 'function') {
+    return {};
+  }
+
+  const userGroups = groupValues(userOpenIds, COLLECTION_BATCH_SIZE);
+  const userBatches = await Promise.all(
+    userGroups.map(userOpenIds =>
+      loadCollection(db, COLLECTIONS.USERS, { _id: command.in(userOpenIds) })
+    )
+  );
+
+  return userBatches.flat().reduce((acc, user) => {
+    acc[user._id] = user;
+    return acc;
+  }, {});
+}
 
 async function getCurrentUser(db, openid) {
   const result = await db
@@ -81,14 +145,13 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   const viewerUser = await getCurrentUser(db, openid);
 
-  const teamsRes = await db
-    .collection(COLLECTIONS.ACTIVITY_TEAMS)
-    .where({ activityId: event.activityId })
-    .get();
-  const joinedRes = await db
-    .collection(COLLECTIONS.REGISTRATIONS)
-    .where({ activityId: event.activityId, status: 'joined' })
-    .get();
+  const [teams, joinedRegistrations] = await Promise.all([
+    loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS, { activityId: event.activityId }),
+    loadCollection(db, COLLECTIONS.REGISTRATIONS, {
+      activityId: event.activityId,
+      status: 'joined'
+    })
+  ]);
   const registrationId = `${event.activityId}_${openid}`;
   const myRegistration = await db
     .collection(COLLECTIONS.REGISTRATIONS)
@@ -137,23 +200,17 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       ])
     : [emptyNotificationSubscription, emptyNotificationSubscription];
 
-  const userOpenIds = Array.from(new Set(joinedRes.data.map(item => item.userOpenId)));
-  let usersById = {};
+  const usersById = await loadRosterUsers(db, command, joinedRegistrations);
 
-  if (userOpenIds.length > 0 && command && typeof command.in === 'function') {
-    const usersRes = await db
-      .collection(COLLECTIONS.USERS)
-      .where({ _id: command.in(userOpenIds) })
-      .get();
+  const membersByTeam = joinedRegistrations
+    .sort((left, right) => {
+      const joinedAtCompare = String(left.joinedAt).localeCompare(String(right.joinedAt));
+      if (joinedAtCompare !== 0) {
+        return joinedAtCompare;
+      }
 
-    usersById = usersRes.data.reduce((acc, user) => {
-      acc[user._id] = user;
-      return acc;
-    }, {});
-  }
-
-  const membersByTeam = joinedRes.data
-    .sort((left, right) => String(left.joinedAt).localeCompare(String(right.joinedAt)))
+      return String(left._id).localeCompare(String(right._id));
+    })
     .reduce((acc, registration) => {
       if (!acc[registration.teamId]) {
         acc[registration.teamId] = [];
@@ -188,7 +245,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
   return {
     activity: activityPayload,
-    teams: teamsRes.data
+    teams: teams
       .filter(team => team.status !== 'inactive')
       .sort((left, right) => left.sort - right.sort)
       .map(team => ({

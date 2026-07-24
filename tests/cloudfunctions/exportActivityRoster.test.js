@@ -105,9 +105,43 @@ function createFakeDb(options = {}) {
     }
   };
 
+  function createQuery(items, criteria = null, offset = 0, count = 100) {
+    return {
+      where(nextCriteria) {
+        return createQuery(items, nextCriteria, offset, count);
+      },
+      skip(nextOffset) {
+        return createQuery(items, criteria, nextOffset, count);
+      },
+      limit(nextCount) {
+        return createQuery(items, criteria, offset, nextCount);
+      },
+      async get() {
+        const filtered = Object.values(items || {}).filter(item =>
+          Object.entries(criteria || {}).every(([key, value]) => {
+            if (value && Array.isArray(value.values)) {
+              return value.values.includes(item[key]);
+            }
+
+            return item[key] === value;
+          })
+        );
+
+        return { data: filtered.slice(offset, offset + count) };
+      }
+    };
+  }
+
   return {
     state,
+    command: {
+      in(values) {
+        return { values };
+      }
+    },
     collection(name) {
+      const query = createQuery(state[name]);
+
       return {
         doc(id) {
           return {
@@ -116,9 +150,10 @@ function createFakeDb(options = {}) {
             }
           };
         },
-        async get() {
-          return { data: Object.values(state[name] || {}) };
-        }
+        where: query.where,
+        skip: query.skip,
+        limit: query.limit,
+        get: query.get
       };
     }
   };
@@ -310,4 +345,50 @@ test('export rows include activity type and default historical activities to int
     activityType: 'internal',
     activityTypeLabel: '内战'
   });
+});
+
+test('exportActivityRoster returns every joined registration for a large activity', async () => {
+  const db = createFakeDb();
+  const unrelatedRegistrations = Array.from({ length: 100 }, (_, index) => [
+    `reg_unrelated_${index}`,
+    {
+      _id: `reg_unrelated_${index}`,
+      activityId: 'activity_other',
+      teamId: 'team_other',
+      userOpenId: `openid_unrelated_${index}`,
+      status: 'joined',
+      signupName: `Unrelated ${index}`,
+      joinedAt: '2026-06-01T09:00:00.000Z'
+    }
+  ]);
+  const targetRegistrations = Array.from({ length: 105 }, (_, index) => [
+    `reg_target_${index}`,
+    {
+      _id: `reg_target_${index}`,
+      activityId: 'activity_1',
+      teamId: 'team_green',
+      userOpenId: `openid_target_${index}`,
+      status: 'joined',
+      signupName: `Target ${index}`,
+      joinedAt: '2026-06-01T10:00:00.000Z'
+    }
+  ]);
+
+  db.state.registrations = Object.fromEntries([...unrelatedRegistrations, ...targetRegistrations]);
+  targetRegistrations.forEach(([, registration]) => {
+    db.state.users[registration.userOpenId] = {
+      _id: registration.userOpenId,
+      roles: ['user']
+    };
+  });
+
+  const exported = await exportActivityRoster.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  expect(exported.rows).toHaveLength(105);
+  expect(exported.total).toBe(105);
+  expect(exported.rows.every(row => row.activityId === 'activity_1')).toBe(true);
 });

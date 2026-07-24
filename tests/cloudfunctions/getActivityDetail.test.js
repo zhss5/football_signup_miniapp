@@ -56,6 +56,7 @@ test('getActivityDetail groups joined members under each team', async () => {
       userOpenId: 'openid_a',
       status: 'joined',
       signupName: 'Alex',
+      avatarUrl: 'https://example.com/avatar-a.png',
       preferredPositions: ['前锋', '门将'],
       proxyRegistration: true,
       attendanceStatus: 'absent',
@@ -578,4 +579,127 @@ test('getActivityDetail exposes manager registration notification subscription s
   expect(regularResult.viewer.registrationNotificationSubscriptionTemplateId).toBe('');
   expect(regularResult.viewer.lateCancellationNotificationSubscribed).toBe(false);
   expect(regularResult.viewer.lateCancellationNotificationSubscriptionTemplateId).toBe('');
+});
+
+test('getActivityDetail returns every joined member for a large activity', async () => {
+  const activity = {
+    _id: 'activity_1',
+    title: 'Saturday 8-10',
+    organizerOpenId: 'openid_owner',
+    status: 'published'
+  };
+  const teams = [
+    {
+      _id: 'team_white',
+      activityId: 'activity_1',
+      teamName: 'White',
+      sort: 0,
+      status: 'active'
+    }
+  ];
+  const registrations = [
+    ...Array.from({ length: 100 }, (_, index) => ({
+      _id: `reg_unrelated_${index}`,
+      activityId: 'activity_other',
+      teamId: 'team_other',
+      userOpenId: `openid_unrelated_${index}`,
+      status: 'joined',
+      signupName: `Unrelated ${index}`,
+      joinedAt: '2026-06-01T09:00:00.000Z'
+    })),
+    ...Array.from({ length: 105 }, (_, index) => ({
+      _id: `reg_target_${index}`,
+      activityId: 'activity_1',
+      teamId: 'team_white',
+      userOpenId: `openid_target_${index}`,
+      status: 'joined',
+      signupName: `Target ${index}`,
+      joinedAt: '2026-06-01T10:00:00.000Z'
+    }))
+  ];
+  const users = registrations
+    .filter(registration => registration.activityId === 'activity_1')
+    .map(registration => ({ _id: registration.userOpenId }));
+
+  function createQuery(items, criteria = null, offset = 0, count = 100) {
+    return {
+      where(nextCriteria) {
+        return createQuery(items, nextCriteria, offset, count);
+      },
+      skip(nextOffset) {
+        return createQuery(items, criteria, nextOffset, count);
+      },
+      limit(nextCount) {
+        return createQuery(items, criteria, offset, nextCount);
+      },
+      async get() {
+        const filtered = items.filter(item =>
+          Object.entries(criteria || {}).every(([key, value]) => {
+            if (value && Array.isArray(value.values)) {
+              return value.values.includes(item[key]);
+            }
+
+            return item[key] === value;
+          })
+        );
+
+        return { data: filtered.slice(offset, offset + count) };
+      }
+    };
+  }
+
+  const fakeDb = {
+    command: {
+      in(values) {
+        return { values };
+      }
+    },
+    collection(name) {
+      const itemsByCollection = {
+        activity_teams: teams,
+        registrations,
+        users
+      };
+      const query = createQuery(itemsByCollection[name] || []);
+
+      return {
+        doc(id) {
+          return {
+            async get() {
+              if (name === 'activities') {
+                return { data: activity };
+              }
+
+              if (name === 'registrations') {
+                const registration = registrations.find(item => item._id === id);
+                if (registration) {
+                  return { data: registration };
+                }
+
+                throw new Error('not found');
+              }
+
+              if (name === 'users') {
+                return { data: users.find(item => item._id === id) || null };
+              }
+
+              throw new Error(`Unsupported doc lookup for ${name}`);
+            }
+          };
+        },
+        where: query.where,
+        skip: query.skip,
+        limit: query.limit,
+        get: query.get
+      };
+    }
+  };
+
+  const detail = await getActivityDetail.main(
+    { activityId: 'activity_1' },
+    { OPENID: 'openid_owner' },
+    { db: fakeDb }
+  );
+
+  expect(detail.teams.flatMap(team => team.members)).toHaveLength(105);
 });
