@@ -5,7 +5,8 @@
       require('./roles'),
       require('./user-management'),
       require('./activity-management'),
-      require('./export-files')
+      require('./export-files'),
+      require('./pagination')
     );
     return;
   }
@@ -15,14 +16,16 @@
     root.WebAdminRoles,
     root.WebAdminUserManagement,
     root.WebAdminActivityManagement,
-    root.WebAdminExportFiles
+    root.WebAdminExportFiles,
+    root.WebAdminPagination
   );
 })(typeof globalThis !== 'undefined' ? globalThis : this, function appFactory(
   apiModule,
   roles,
   users,
   activityUi,
-  exportFiles
+  exportFiles,
+  pagination
 ) {
   function escapeHtml(value) {
     return String(value || '')
@@ -46,12 +49,14 @@
   const WEB_ADMIN_SESSION_STORAGE_KEY = 'football-signup-web-admin-session';
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
+  const PAGE_LIMIT = 20;
   const ATTENDANCE_STATS_EMPTY_TEXT = '统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
   const CANCELLATION_STATS_EMPTY_TEXT = '当前范围内没有最终报名或取消记录。';
   const ADMIN_VIEW_TITLES = {
     users: '用户管理',
     activities: '活动管理',
-    'attendance-stats': '统计分析'
+    'attendance-stats': '统计分析',
+    'notification-logs': '通知日志'
   };
   const ROLE_LABELS = {
     user: '普通用户',
@@ -78,8 +83,18 @@
 
   function getAllowedAdminViews(user) {
     return roles.isAdmin(user)
-      ? ['users', 'activities', 'attendance-stats']
+      ? ['users', 'activities', 'attendance-stats', 'notification-logs']
       : ['activities', 'attendance-stats'];
+  }
+
+  function createPaginationState() {
+    return {
+      users: { total: 0, limit: PAGE_LIMIT, skip: 0, hasMore: false, loading: false },
+      activities: { total: 0, limit: PAGE_LIMIT, skip: 0, hasMore: false, loading: false },
+      attendance: { total: 0, limit: PAGE_LIMIT, skip: 0, hasMore: false, loading: false },
+      cancellation: { total: 0, limit: PAGE_LIMIT, skip: 0, hasMore: false, loading: false },
+      notificationLogs: { total: 0, limit: PAGE_LIMIT, skip: 0, hasMore: false, loading: false }
+    };
   }
 
   function formatRoleLabel(role) {
@@ -324,6 +339,11 @@
       selectedActivityId: '',
       rosterRows: [],
       statsRows: [],
+      statisticsRows: {
+        attendance: [],
+        cancellation: []
+      },
+      pagination: createPaginationState(),
       activeStatisticsTab: 'attendance',
       attendanceDetailRows: [],
       attendanceDetailTitle: '',
@@ -432,6 +452,83 @@
       if (status) {
         status.textContent = message || '';
       }
+    }
+
+    function getPaginationState(target) {
+      return state.pagination[target];
+    }
+
+    function renderPagination(target) {
+      const pageState = getPaginationState(target);
+      if (!pageState || !pagination || typeof pagination.buildPaginationModel !== 'function') {
+        return;
+      }
+
+      const model = pagination.buildPaginationModel(pageState);
+      const total = query(`[data-pagination-total="${target}"]`);
+      const page = query(`[data-pagination-page="${target}"]`);
+      const previous = query(`[data-page-action="previous"][data-page-target="${target}"]`);
+      const next = query(`[data-page-action="next"][data-page-target="${target}"]`);
+
+      if (total) {
+        total.textContent = `共 ${model.total} 条`;
+      }
+
+      if (page) {
+        page.textContent = `第 ${model.page} / ${model.pageCount} 页`;
+      }
+
+      if (previous) {
+        previous.disabled = !model.canPrevious;
+        previous.setAttribute('aria-disabled', String(!model.canPrevious));
+      }
+
+      if (next) {
+        next.disabled = !model.canNext;
+        next.setAttribute('aria-disabled', String(!model.canNext));
+      }
+    }
+
+    function beginPageRequest(target) {
+      const pageState = getPaginationState(target);
+      if (!pageState) {
+        return;
+      }
+
+      pageState.loading = true;
+      renderPagination(target);
+    }
+
+    function completePageRequest(target, result, requestedSkip) {
+      const pageState = getPaginationState(target);
+      if (!pageState) {
+        return;
+      }
+
+      const response = result || {};
+      const responseTotal = Number(response.total);
+      const responseSkip = Number(response.skip);
+
+      if (Number.isFinite(responseTotal) && responseTotal >= 0) {
+        pageState.total = responseTotal;
+      }
+
+      pageState.skip = Number.isFinite(responseSkip) && responseSkip >= 0
+        ? responseSkip
+        : requestedSkip;
+      pageState.hasMore = Boolean(response.hasMore);
+      pageState.loading = false;
+      renderPagination(target);
+    }
+
+    function failPageRequest(target) {
+      const pageState = getPaginationState(target);
+      if (!pageState) {
+        return;
+      }
+
+      pageState.loading = false;
+      renderPagination(target);
     }
 
     function renderLogStatus(message) {
@@ -573,7 +670,7 @@
       setCurrentViewTitle(state.activeView);
     }
 
-    function setActiveAdminView(viewId) {
+    async function setActiveAdminView(viewId) {
       const allowedViews = getAllowedAdminViews(state.currentUser);
       if (!allowedViews.includes(viewId)) {
         return;
@@ -581,6 +678,15 @@
 
       state.activeView = viewId;
       renderAdminNavigation(state.currentUser);
+
+      if (viewId === 'notification-logs') {
+        try {
+          await loadNotificationLogs(0, '');
+          renderLogStatus('通知日志已加载');
+        } catch (error) {
+          renderLogStatus(getErrorMessage(error));
+        }
+      }
     }
 
     function getCurrentUserDisplayName(user) {
@@ -633,15 +739,15 @@
       return true;
     }
 
-    function getSearchFormValues() {
+    function getSearchFormValues(skip) {
       const keyword = query('[name="keyword"]');
       const role = query('[data-role-filter]');
 
       return users.buildSearchParams({
         keyword: keyword ? keyword.value : '',
         role: role ? role.value : '',
-        limit: 20,
-        skip: 0
+        limit: PAGE_LIMIT,
+        skip
       });
     }
 
@@ -651,6 +757,8 @@
       if (count) {
         count.textContent = `共 ${state.rows.length} 行`;
       }
+
+      renderPagination('users');
 
       if (!table) {
         return;
@@ -744,15 +852,26 @@
       );
     }
 
-    async function searchUsers() {
-      state.search = getSearchFormValues();
-      const result = await api.listUsers(state.search);
-      state.rows = users.buildUserRows(result.items || [], state.currentUser);
-      state.hasMore = Boolean(result.hasMore);
-      renderRows();
+    async function searchUsers(options = {}) {
+      const requestedSkip = Number.isFinite(Number(options.skip))
+        ? Math.max(0, Number(options.skip))
+        : 0;
+      state.search = getSearchFormValues(requestedSkip);
+      beginPageRequest('users');
+
+      try {
+        const result = await api.listUsers(state.search);
+        state.rows = users.buildUserRows(result.items || [], state.currentUser);
+        state.hasMore = Boolean(result.hasMore);
+        completePageRequest('users', result, requestedSkip);
+        renderRows();
+      } catch (error) {
+        failPageRequest('users');
+        throw error;
+      }
     }
 
-    function getActivityFormValues() {
+    function getActivityFormValues(skip) {
       const keyword = query('[name="activityKeyword"]');
       const status = query('[name="activityStatus"]');
       const organizerKeyword = query('[name="activityOrganizerKeyword"]');
@@ -767,8 +886,8 @@
         organizerOpenId: organizerOpenId ? organizerOpenId.value : '',
         startAtFrom: startAtFrom ? startAtFrom.value : '',
         startAtTo: startAtTo ? startAtTo.value : '',
-        limit: 20,
-        skip: 0
+        limit: PAGE_LIMIT,
+        skip
       });
     }
 
@@ -808,6 +927,8 @@
       if (count) {
         count.textContent = `共 ${state.activities.length} 行`;
       }
+
+      renderPagination('activities');
 
       if (!table) {
         return;
@@ -953,12 +1074,21 @@
       );
     }
 
+    function getStatisticsRows(tabId) {
+      const rows = state.statisticsRows[tabId] || [];
+      if (rows.length || state.pagination[tabId].skip > 0) {
+        return rows;
+      }
+
+      return state.statsRows;
+    }
+
     function getAttendanceStatsRows() {
-      return state.statsRows.filter(row => Number(row.signupCount) > 0);
+      return getStatisticsRows('attendance').filter(row => Number(row.signupCount) > 0);
     }
 
     function getCancellationStatsRows() {
-      return state.statsRows.filter(
+      return getStatisticsRows('cancellation').filter(
         row => Number(row.effectiveSignupActivityCount) + Number(row.cancelledActivityCount) > 0
       );
     }
@@ -1031,6 +1161,7 @@
       state.activeStatisticsTab = tabId;
       closeExportMenus();
       renderStatisticsTabs();
+      renderStatsRows();
     }
 
     function renderStatsRows() {
@@ -1042,6 +1173,8 @@
       if (count) {
         count.textContent = `共 ${rows.length} 行`;
       }
+
+      renderPagination('attendance');
 
       if (empty) {
         empty.textContent = hasRows ? '' : ATTENDANCE_STATS_EMPTY_TEXT;
@@ -1077,6 +1210,8 @@
       if (count) {
         count.textContent = `共 ${rows.length} 行`;
       }
+
+      renderPagination('cancellation');
 
       if (empty) {
         empty.textContent = hasRows ? '' : CANCELLATION_STATS_EMPTY_TEXT;
@@ -1347,6 +1482,7 @@
 
     function renderNotificationLogRows() {
       const table = query('[data-notification-logs-table]');
+      renderPagination('notificationLogs');
       if (!table) {
         return;
       }
@@ -1569,16 +1705,27 @@
       renderActivityDetailLoading(true);
     }
 
-    async function searchActivities() {
-      state.activitySearch = getActivityFormValues();
-      const result = await api.listActivities(state.activitySearch);
-      state.activities = activityUi.buildActivityRows(result.items || []);
-      if (state.selectedActivityId && !getActivityRowById(state.selectedActivityId)) {
-        state.selectedActivityId = '';
+    async function searchActivities(options = {}) {
+      const requestedSkip = Number.isFinite(Number(options.skip))
+        ? Math.max(0, Number(options.skip))
+        : 0;
+      state.activitySearch = getActivityFormValues(requestedSkip);
+      beginPageRequest('activities');
+
+      try {
+        const result = await api.listActivities(state.activitySearch);
+        state.activities = activityUi.buildActivityRows(result.items || []);
+        if (state.selectedActivityId && !getActivityRowById(state.selectedActivityId)) {
+          state.selectedActivityId = '';
+        }
+        hideActivityContextMenu();
+        completePageRequest('activities', result, requestedSkip);
+        renderActivityRows();
+        renderActivityOrganizerOptions();
+      } catch (error) {
+        failPageRequest('activities');
+        throw error;
       }
-      hideActivityContextMenu();
-      renderActivityRows();
-      renderActivityOrganizerOptions();
     }
 
     async function loadActivityDetail(activityId) {
@@ -1770,18 +1917,46 @@
       await searchUsers();
     }
 
-    async function loadAttendanceStats() {
+    async function loadAttendanceStats(target = state.activeStatisticsTab, skip) {
+      const pageState = getPaginationState(target);
+      const requestedSkip = Number.isFinite(Number(skip))
+        ? Math.max(0, Number(skip))
+        : pageState.skip;
       const startAt = query('[name="statsStartAt"]');
       const endAt = query('[name="statsEndAt"]');
       const activityType = query('[name="statsActivityType"]');
-      const result = await api.getAttendanceStats({
-        startAt: startAt ? startAt.value : '',
-        endAt: endAt ? endAt.value : '',
-        activityType: activityType && activityType.value ? activityType.value : 'all'
-      });
-      state.statsRows = activityUi.buildStatsRows(result.items || result.rows || []);
-      renderStatsRows();
-      renderStatisticsTabs();
+      beginPageRequest(target);
+
+      try {
+        const result = await api.getAttendanceStats({
+          startAt: startAt ? startAt.value : '',
+          endAt: endAt ? endAt.value : '',
+          activityType: activityType && activityType.value ? activityType.value : 'all',
+          limit: PAGE_LIMIT,
+          skip: requestedSkip
+        });
+        const rows = activityUi.buildStatsRows(result.items || result.rows || []);
+        state.statisticsRows[target] = rows;
+        if (target === 'attendance') {
+          state.statsRows = rows;
+        }
+        completePageRequest(target, result, requestedSkip);
+        if (requestedSkip === 0) {
+          const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
+          const siblingPage = getPaginationState(siblingTarget);
+          if (siblingPage && siblingPage.skip === 0 && !siblingPage.loading) {
+            const currentPage = getPaginationState(target);
+            siblingPage.total = currentPage.total;
+            siblingPage.hasMore = currentPage.hasMore;
+            renderPagination(siblingTarget);
+          }
+        }
+        renderStatsRows();
+        renderStatisticsTabs();
+      } catch (error) {
+        failPageRequest(target);
+        throw error;
+      }
     }
 
     function writeExportOutput(csv) {
@@ -1946,14 +2121,26 @@
       renderActivityLogRows();
     }
 
-    async function loadNotificationLogs() {
-      const result = await api.listNotificationLogs({
-        activityId: getSelectedActivityId(),
-        limit: 50,
-        skip: 0
-      });
-      state.notificationLogRows = activityUi.buildNotificationLogRows(result.items || []);
-      renderNotificationLogRows();
+    async function loadNotificationLogs(skip, activityId) {
+      const pageState = getPaginationState('notificationLogs');
+      const requestedSkip = Number.isFinite(Number(skip))
+        ? Math.max(0, Number(skip))
+        : pageState.skip;
+      beginPageRequest('notificationLogs');
+
+      try {
+        const result = await api.listNotificationLogs({
+          activityId: typeof activityId === 'string' ? activityId : getSelectedActivityId(),
+          limit: PAGE_LIMIT,
+          skip: requestedSkip
+        });
+        state.notificationLogRows = activityUi.buildNotificationLogRows(result.items || []);
+        completePageRequest('notificationLogs', result, requestedSkip);
+        renderNotificationLogRows();
+      } catch (error) {
+        failPageRequest('notificationLogs');
+        throw error;
+      }
     }
 
     async function beginWebAdminLogin() {
@@ -1976,6 +2163,11 @@
       state.activities = [];
       state.rosterRows = [];
       state.statsRows = [];
+      state.statisticsRows = {
+        attendance: [],
+        cancellation: []
+      };
+      state.pagination = createPaginationState();
       state.attendanceDetailRows = [];
       state.attendanceDetailTitle = '';
       state.cancellationDetailRows = [];
@@ -2134,13 +2326,57 @@
           if (navButton) {
             hideActivityContextMenu();
             closeExportMenus();
-            setActiveAdminView(navButton.dataset.navTarget);
-            return;
+            return setActiveAdminView(navButton.dataset.navTarget);
           }
 
           const statisticsTab = event.target.closest('[data-statistics-tab]');
           if (statisticsTab) {
             setActiveStatisticsTab(statisticsTab.dataset.statisticsTab);
+            return;
+          }
+
+          const pageButton = event.target.closest('[data-page-action]');
+          if (pageButton) {
+            const target = pageButton.dataset.pageTarget;
+            const pageState = getPaginationState(target);
+            const model = pageState && pagination && pagination.buildPaginationModel
+              ? pagination.buildPaginationModel(pageState)
+              : null;
+            const requestedSkip = pageButton.dataset.pageAction === 'previous'
+              ? model && model.previousSkip
+              : model && model.nextSkip;
+            const allowed = pageButton.dataset.pageAction === 'previous'
+              ? model && model.canPrevious
+              : model && model.canNext;
+
+            if (!allowed) {
+              return;
+            }
+
+            if (target === 'users') {
+              return searchUsers({ skip: requestedSkip }).catch(error => {
+                renderUsersStatus(getErrorMessage(error));
+              });
+            }
+
+            if (target === 'activities') {
+              return searchActivities({ skip: requestedSkip }).catch(error => {
+                renderIdentity(getErrorMessage(error));
+              });
+            }
+
+            if (target === 'attendance' || target === 'cancellation') {
+              return loadAttendanceStats(target, requestedSkip).catch(error => {
+                renderIdentity(getErrorMessage(error));
+              });
+            }
+
+            if (target === 'notificationLogs') {
+              return loadNotificationLogs(requestedSkip, '').catch(error => {
+                renderLogStatus(getErrorMessage(error));
+              });
+            }
+
             return;
           }
 

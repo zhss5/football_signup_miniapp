@@ -914,6 +914,47 @@ textarea {
   line-height: 20px;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -6px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.pagination [data-pagination-total] {
+  min-width: 72px;
+}
+
+.pagination [data-pagination-page] {
+  min-width: 84px;
+  text-align: center;
+}
+
+.pagination button {
+  min-width: 72px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d7e1da;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #316a49;
+  cursor: pointer;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: #76a98a;
+  background: #f3faf5;
+}
+
+.pagination button:disabled {
+  color: #98a2b3;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .detail-subsection-tools .table-summary {
   margin: 0;
   white-space: nowrap;
@@ -1639,6 +1680,15 @@ textarea {
   }
 
   .toolbar label {
+    min-width: 0;
+  }
+
+  .pagination {
+    align-items: stretch;
+  }
+
+  .pagination [data-pagination-total],
+  .pagination [data-pagination-page] {
     min-width: 0;
   }
 

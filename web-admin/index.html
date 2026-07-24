@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>足球报名后台</title>
-    <link rel="stylesheet" href="./styles.css?v=20260724-unified-export-hardening" />
+    <link rel="stylesheet" href="./styles.css?v=20260724-pagination-controls" />
   </head>
   <body>
     <main id="admin-app" class="admin-shell">
@@ -50,6 +50,7 @@
               <button type="button" data-nav-target="users">用户管理</button>
               <button type="button" data-nav-target="activities">活动管理</button>
               <button type="button" data-nav-target="attendance-stats">统计分析</button>
+              <button type="button" data-nav-target="notification-logs">通知日志</button>
             </nav>
           </aside>
 
@@ -112,6 +113,12 @@
                 </thead>
                 <tbody data-users-table></tbody>
               </table>
+              <div class="pagination" data-pagination="users" aria-label="用户分页">
+                <span data-pagination-total="users">共 0 条</span>
+                <button type="button" data-page-action="previous" data-page-target="users" disabled>上一页</button>
+                <span data-pagination-page="users">第 0 / 0 页</span>
+                <button type="button" data-page-action="next" data-page-target="users" disabled>下一页</button>
+              </div>
             </section>
 
             <section data-view="activities" data-admin-view="activities" class="panel">
@@ -176,6 +183,12 @@
                 </thead>
                 <tbody data-activities-table></tbody>
               </table>
+              <div class="pagination" data-pagination="activities" aria-label="活动分页">
+                <span data-pagination-total="activities">共 0 条</span>
+                <button type="button" data-page-action="previous" data-page-target="activities" disabled>上一页</button>
+                <span data-pagination-page="activities">第 0 / 0 页</span>
+                <button type="button" data-page-action="next" data-page-target="activities" disabled>下一页</button>
+              </div>
 
               <div
                 data-activity-context-menu
@@ -461,6 +474,12 @@
                   </thead>
                   <tbody data-attendance-stats-table></tbody>
                 </table>
+                <div class="pagination" data-pagination="attendance" aria-label="出勤统计分页">
+                  <span data-pagination-total="attendance">共 0 条</span>
+                  <button type="button" data-page-action="previous" data-page-target="attendance" disabled>上一页</button>
+                  <span data-pagination-page="attendance">第 0 / 0 页</span>
+                  <button type="button" data-page-action="next" data-page-target="attendance" disabled>下一页</button>
+                </div>
               </section>
 
               <section data-statistics-pane="cancellation" hidden>
@@ -483,7 +502,36 @@
                   </thead>
                   <tbody data-cancellation-stats-table></tbody>
                 </table>
+                <div class="pagination" data-pagination="cancellation" aria-label="取消统计分页">
+                  <span data-pagination-total="cancellation">共 0 条</span>
+                  <button type="button" data-page-action="previous" data-page-target="cancellation" disabled>上一页</button>
+                  <span data-pagination-page="cancellation">第 0 / 0 页</span>
+                  <button type="button" data-page-action="next" data-page-target="cancellation" disabled>下一页</button>
+                </div>
               </section>
+            </section>
+            <section data-admin-view="notification-logs" class="panel" hidden>
+              <h3>通知日志</h3>
+              <p data-logs-status class="inline-status" aria-live="polite" hidden></p>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>通知类型</th>
+                    <th>活动</th>
+                    <th>接收人</th>
+                    <th>状态</th>
+                    <th>错误信息</th>
+                    <th>时间</th>
+                  </tr>
+                </thead>
+                <tbody data-notification-logs-table></tbody>
+              </table>
+              <div class="pagination" data-pagination="notificationLogs" aria-label="通知日志分页">
+                <span data-pagination-total="notificationLogs">共 0 条</span>
+                <button type="button" data-page-action="previous" data-page-target="notificationLogs" disabled>上一页</button>
+                <span data-pagination-page="notificationLogs">第 0 / 0 页</span>
+                <button type="button" data-page-action="next" data-page-target="notificationLogs" disabled>下一页</button>
+              </div>
             </section>
             </main>
 
@@ -630,15 +678,16 @@
     </main>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="./config.test.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/cloudbase-runtime.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/roles.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/api.js?v=20260724-unified-export-hardening"></script>
-    <script src="./vendor/qrcode.min.js?v=20260724-unified-export-hardening"></script>
-    <script src="./vendor/xlsx.full.min.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/export-files.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/user-management.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/activity-management.js?v=20260724-unified-export-hardening"></script>
-    <script src="./src/app.js?v=20260724-unified-export-hardening"></script>
+    <script src="./config.test.js?v=20260724-pagination-controls"></script>
+    <script src="./src/cloudbase-runtime.js?v=20260724-pagination-controls"></script>
+    <script src="./src/roles.js?v=20260724-pagination-controls"></script>
+    <script src="./src/api.js?v=20260724-pagination-controls"></script>
+    <script src="./vendor/qrcode.min.js?v=20260724-pagination-controls"></script>
+    <script src="./vendor/xlsx.full.min.js?v=20260724-pagination-controls"></script>
+    <script src="./src/export-files.js?v=20260724-pagination-controls"></script>
+    <script src="./src/user-management.js?v=20260724-pagination-controls"></script>
+    <script src="./src/activity-management.js?v=20260724-pagination-controls"></script>
+    <script src="./src/pagination.js?v=20260724-pagination-controls"></script>
+    <script src="./src/app.js?v=20260724-pagination-controls"></script>
   </body>
 </html>

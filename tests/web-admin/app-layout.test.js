@@ -42,6 +42,10 @@ function createTarget(element) {
         return element;
       }
 
+      if (selector === '[data-page-action]' && element.dataset.pageAction) {
+        return element;
+      }
+
       if (selector === '[data-activity-id]' && element.dataset.activityId) {
         return element;
       }
@@ -174,14 +178,24 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     users: createElement({ navTarget: 'users' }),
     activities: createElement({ navTarget: 'activities' }),
     attendanceStats: createElement({ navTarget: 'attendance-stats' }),
-    logs: createElement({ navTarget: 'logs' })
+    notificationLogs: createElement({ navTarget: 'notification-logs' })
   };
   const views = {
     users: createElement({ adminView: 'users' }),
     activities: createElement({ adminView: 'activities' }),
     attendanceStats: createElement({ adminView: 'attendance-stats' }),
-    logs: createElement({ adminView: 'logs' })
+    notificationLogs: createElement({ adminView: 'notification-logs' })
   };
+  const pagination = ['users', 'activities', 'attendance', 'cancellation', 'notificationLogs']
+    .reduce((result, target) => {
+      result[target] = {
+        total: createElement(),
+        page: createElement(),
+        previous: createElement({ pageAction: 'previous', pageTarget: target }),
+        next: createElement({ pageAction: 'next', pageTarget: target })
+      };
+      return result;
+    }, {});
   const statisticsTabs = {
     attendance: createElement({ statisticsTab: 'attendance' }),
     cancellation: createElement({ statisticsTab: 'cancellation' })
@@ -280,18 +294,24 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     '[name="activityStartAtTo"]': createElement(),
     '[data-activity-organizer-options]': createElement()
   };
+  Object.entries(pagination).forEach(([target, controls]) => {
+    elements[`[data-pagination-total="${target}"]`] = controls.total;
+    elements[`[data-pagination-page="${target}"]`] = controls.page;
+    elements[`[data-page-action="previous"][data-page-target="${target}"]`] = controls.previous;
+    elements[`[data-page-action="next"][data-page-target="${target}"]`] = controls.next;
+  });
   const appRoot = createAppRoot(elements, {
     '[data-nav-target]': [
       nav.users,
       nav.activities,
       nav.attendanceStats,
-      nav.logs
+      nav.notificationLogs
     ],
     '[data-admin-view]': [
       views.users,
       views.activities,
       views.attendanceStats,
-      views.logs
+      views.notificationLogs
     ],
     '[data-statistics-tab]': [statisticsTabs.attendance, statisticsTabs.cancellation],
     '[data-statistics-pane]': [statisticsPanes.attendance, statisticsPanes.cancellation],
@@ -356,6 +376,7 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     exportMenus,
     exportTriggers,
     nav,
+    pagination,
     statisticsPanes,
     statisticsTabs,
     views
@@ -375,14 +396,185 @@ test('admin users see all sidebar items and land on activity management', async 
   expect(nav.users.hidden).toBe(false);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.logs.hidden).toBe(true);
+  expect(nav.notificationLogs.hidden).toBe(false);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
-  expect(views.logs.hidden).toBe(true);
+  expect(views.notificationLogs.hidden).toBe(true);
   expect(elements['[data-current-view-title]'].textContent).toBe('活动管理');
   expect(nav.activities.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).toHaveBeenCalled();
+});
+
+test('user and activity pagination send offsets and searches reset to the first page', async () => {
+  const listUsers = jest.fn().mockResolvedValue({
+    items: [],
+    total: 41,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  });
+  const listActivities = jest.fn().mockResolvedValue({
+    items: [],
+    total: 41,
+    limit: 20,
+    skip: 0,
+    hasMore: true
+  });
+  const { app, appRoot, elements, pagination } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listActivities, listUsers }
+  );
+
+  await app.start();
+  listUsers.mockClear();
+  listActivities.mockClear();
+
+  await appRoot.click(pagination.users.next);
+  await appRoot.click(pagination.activities.next);
+
+  expect(listUsers).toHaveBeenCalledWith({
+    keyword: '',
+    role: '',
+    limit: 20,
+    skip: 20
+  });
+  expect(listActivities).toHaveBeenCalledWith({
+    scope: 'web-admin',
+    keyword: '',
+    status: '',
+    organizerKeyword: '',
+    organizerOpenId: '',
+    startAtFrom: '',
+    startAtTo: '',
+    limit: 20,
+    skip: 20
+  });
+
+  elements['[name="keyword"]'] = createElement();
+  elements['[name="keyword"]'].value = 'Alex';
+  await appRoot.submit(elements['[data-action="search-users"]']).result;
+  await appRoot.submit(elements['[data-action="search-activities"]']).result;
+
+  expect(listUsers).toHaveBeenLastCalledWith({
+    keyword: 'Alex',
+    role: '',
+    limit: 20,
+    skip: 0
+  });
+  expect(listActivities).toHaveBeenLastCalledWith(expect.objectContaining({ skip: 0 }));
+});
+
+test('statistics tabs retain independent pagination skips', async () => {
+  const getAttendanceStats = jest.fn(params => Promise.resolve({
+    items: [],
+    total: 41,
+    limit: 20,
+    skip: params.skip,
+    hasMore: true
+  }));
+  const { app, appRoot, pagination, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  await app.loadAttendanceStats();
+  getAttendanceStats.mockClear();
+
+  await appRoot.click(pagination.attendance.next);
+  appRoot.click(statisticsTabs.cancellation);
+  await appRoot.click(pagination.cancellation.next);
+  appRoot.click(statisticsTabs.attendance);
+
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(1, {
+    startAt: '',
+    endAt: '',
+    activityType: 'all',
+    limit: 20,
+    skip: 20
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
+    startAt: '',
+    endAt: '',
+    activityType: 'all',
+    limit: 20,
+    skip: 20
+  });
+  expect(app.state.pagination.attendance.skip).toBe(20);
+  expect(app.state.pagination.cancellation.skip).toBe(20);
+  expect(pagination.attendance.previous.disabled).toBe(false);
+  expect(pagination.cancellation.previous.disabled).toBe(false);
+});
+
+test('pagination renders API totals and preserves rows after a failed page request', async () => {
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      total: 41,
+      limit: 20,
+      skip: 0,
+      hasMore: true
+    })
+    .mockRejectedValueOnce(new Error('second page unavailable'));
+  const { app, appRoot, elements, pagination } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listUsers }
+  );
+
+  await app.start();
+
+  expect(pagination.users.total.textContent).toBe('共 41 条');
+  expect(pagination.users.page.textContent).toBe('第 1 / 3 页');
+  expect(pagination.users.previous.disabled).toBe(true);
+  expect(pagination.users.next.disabled).toBe(false);
+  expect(elements['[data-users-table]'].innerHTML).toContain('Alex');
+
+  await appRoot.click(pagination.users.next);
+
+  expect(elements['[data-users-table]'].innerHTML).toContain('Alex');
+  expect(pagination.users.next.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('second page unavailable');
+});
+
+test('notification log navigation loads its first page with zero and last-page controls', async () => {
+  const listNotificationLogs = jest.fn().mockResolvedValue({
+    items: [],
+    total: 0,
+    limit: 20,
+    skip: 0,
+    hasMore: false
+  });
+  const { app, appRoot, pagination, nav, views } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listNotificationLogs }
+  );
+
+  await app.start();
+  await appRoot.click(nav.notificationLogs);
+
+  expect(views.notificationLogs.hidden).toBe(false);
+  expect(listNotificationLogs).toHaveBeenCalledWith({
+    activityId: '',
+    limit: 20,
+    skip: 0
+  });
+  expect(pagination.notificationLogs.total.textContent).toBe('共 0 条');
+  expect(pagination.notificationLogs.page.textContent).toBe('第 0 / 0 页');
+  expect(pagination.notificationLogs.previous.disabled).toBe(true);
+  expect(pagination.notificationLogs.next.disabled).toBe(true);
 });
 
 test('global activity logs render the activity title column', async () => {
@@ -558,10 +750,10 @@ test('organizers can use operations views but do not see user management', async
   expect(nav.users.hidden).toBe(true);
   expect(nav.activities.hidden).toBe(false);
   expect(nav.attendanceStats.hidden).toBe(false);
-  expect(nav.logs.hidden).toBe(true);
+  expect(nav.notificationLogs.hidden).toBe(true);
   expect(views.activities.hidden).toBe(false);
   expect(views.users.hidden).toBe(true);
-  expect(views.logs.hidden).toBe(true);
+  expect(views.notificationLogs.hidden).toBe(true);
   expect(api.listActivities).toHaveBeenCalled();
   expect(api.listUsers).not.toHaveBeenCalled();
 });
@@ -589,7 +781,7 @@ test('sidebar navigation activates only the selected content view', async () => 
 
   expect(views.attendanceStats.hidden).toBe(false);
   expect(views.activities.hidden).toBe(true);
-  expect(views.logs.hidden).toBe(true);
+  expect(views.notificationLogs.hidden).toBe(true);
   expect(app.state.activeView).toBe('attendance-stats');
   expect(nav.attendanceStats.setAttribute).toHaveBeenCalledWith('aria-current', 'page');
   expect(nav.activities.removeAttribute).toHaveBeenCalledWith('aria-current');
@@ -985,7 +1177,9 @@ test('attendance stats submit shows eligible-activity empty state for blank resu
   expect(api.getAttendanceStats).toHaveBeenCalledWith({
     startAt: '2026-06-01',
     endAt: '2026-06-30',
-    activityType: 'all'
+    activityType: 'all',
+    limit: 20,
+    skip: 0
   });
   expect(elements['[data-attendance-stats-table]'].innerHTML).toBe('');
   expect(elements['[data-attendance-stats-empty]'].hidden).toBe(false);
