@@ -100,10 +100,18 @@ test('web admin stores a confirmed QR session and then loads the workspace', asy
       roles: ['user', 'admin']
     }),
     listActivities: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     }),
     listUsers: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     })
   };
 
