@@ -94,6 +94,19 @@ It returns API-shaped `created`, `existing`, and `skipped` arrays and does not d
 
 ## 4. Cloud Function Deployment
 
+### Pending Web Admin Pagination And Roster-Completeness Rollout
+
+The 2026-07-24 pagination implementation has not been deployed by this documentation task. Before the next Web Admin smoke pass, redeploy all six changed functions:
+
+- `listUsers`
+- `listActivities`
+- `getAttendanceStats`
+- `listNotificationLogs`
+- `getActivityDetail`
+- `exportActivityRoster`
+
+Then redeploy Web Admin static hosting to `/admin/`. Advance every versioned CSS and JavaScript asset query token in `web-admin/index.html` together before that upload so CloudBase/CDN caches cannot serve stale pagination code. No collection bootstrap, data backfill, or schema migration is required for this rollout.
+
 Always copy shared helpers before deploying cloud functions:
 
 ```bash
@@ -251,6 +264,9 @@ Current web-admin capabilities:
 - roster export through `exportActivityRoster`, with CSV generated in the browser.
 - activity operation logs through `listActivityLogs`.
 - notification logs through `listNotificationLogs`.
+- fixed 20-row pagination for user management, activity management, attendance statistics, cancellation statistics, and notification logs. List APIs return `{ items, total, limit, skip, hasMore }`; the client rejects malformed metadata without replacing the visible page.
+- complete activity detail and roster-export reads for every joined registration in the selected activity. Roster detail remains unpaginated, while attendance/cancellation CSV/XLSX exports read all validated pages for the active filters and fail rather than emit partial results.
+- role boundaries remain server enforced: admins/super admins list users and have global review scope; organizers have own-activity scope for activities, statistics, and notification logs; ordinary users cannot use these management reads or roster export.
 
 ## 7. SQL And Self-Hosted Readiness
 
@@ -267,8 +283,26 @@ Important rules:
 - keep cloud function inputs/outputs API-shaped.
 - do not couple backend contracts directly to mini-program or web-admin UI structure.
 - V2 prepares schema compatibility only; it does not run MySQL, dual-write, or cut over to a self-hosted API.
+- The pagination response remains API-shaped for a future SQL implementation: `{ items, total, limit, skip, hasMore }`. CloudBase uses complete `_id` cursor reads and final stable `_id` tie-breakers before filtering, aggregation, and public offset pagination. Future SQL validation must prove identical filtered totals, terminal-page `hasMore`, roster order/completeness, and complete multi-page export behavior. `limit`/`skip` map to SQL `LIMIT/OFFSET` today but do not commit the future implementation to permanent offset pagination.
 
 ## 8. Verification Snapshot
+
+### 2026-07-24 Web Admin Pagination Documentation Milestone
+
+Commands run without the `npm test` pretest copy hook:
+
+```powershell
+npx jest --runInBand tests/cloudfunctions/getActivityDetail.test.js tests/cloudfunctions/exportActivityRoster.test.js tests/cloudfunctions/listUsers.test.js tests/cloudfunctions/listActivities.test.js tests/cloudfunctions/getAttendanceStats.test.js tests/cloudfunctions/listNotificationLogs.test.js tests/web-admin/pagination.test.js tests/web-admin/app-layout.test.js tests/web-admin/api.test.js tests/web-admin/export-files.test.js
+npx jest --runInBand
+git diff --check
+```
+
+Results before the documentation commit:
+
+- focused direct Jest passed with `10` suites and `138` tests.
+- full direct Jest is blocked by the pre-existing `tests/web-admin/app-login.test.js` fixture, which returns only `{ items: [] }` for paginated `listActivities` and `listUsers` mocks. The strict metadata validation added before this documentation task rejects the fixture. The run reports `84` passed and `1` failed suites, with `856` passed and `1` failed tests.
+- the failure is outside this documentation-only scope; do not weaken client validation. Update the fixture in a separate application/test change to return valid `{ items, total, limit, skip, hasMore }` metadata, then rerun full regression.
+- `git diff --check` must be rerun after the documentation edits and before staging.
 
 Latest verification before this handoff refresh:
 

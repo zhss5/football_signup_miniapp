@@ -4,6 +4,30 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-24 - Web Admin Pagination And Complete Roster Reads
+
+Completed the Web Admin pagination and CloudBase completeness rollout.
+
+Delivered behavior:
+
+- `listUsers`, Web Admin `listActivities`, `getAttendanceStats`, and `listNotificationLogs` return additive `{ items, total, limit, skip, hasMore }` responses. The Web Admin requests a fixed `20` rows and strictly validates the returned metadata before replacing a visible page.
+- user management, activity management, attendance statistics, cancellation statistics, and notification logs show exact filtered totals with previous/next navigation. Filter changes reset to the first page; attendance and cancellation retain independent page positions.
+- CloudBase collection reads that can exceed one response page traverse complete `_id` cursor batches, apply supported filters before aggregation, deduplicate by `_id`, and retain deterministic `_id` tie-breakers after their business sort.
+- `getActivityDetail` and `exportActivityRoster` read every joined registration for the selected activity. Roster detail and roster CSV/XLSX remain complete single-activity views with team, join-time, participant-name, and registration-ID ordering.
+- attendance and cancellation CSV/XLSX export re-reads all validated pages for the active filters. A metadata mismatch, inconsistent total, incorrect page size, incorrect `hasMore`, or stalled page progression aborts the export rather than creating a partial file.
+- server role boundaries are unchanged: only admins/super admins list users; organizers are limited to their own activities, statistics, and notification logs; admins/super admins have global scope; ordinary users remain denied management reads and roster export.
+- the static HTML asset query version is a deployment requirement. Advance all versioned CSS and JavaScript queries together before uploading `/admin/` so stale CloudBase/CDN assets cannot bypass the stricter client contract.
+
+Compatibility and deployment:
+
+- the runtime remains CloudBase-only and Version 1-compatible. This change adds no collections, fields, or schema migration, runtime MySQL migration, dual-write, or self-hosted HTTP API cutover.
+- deployment is pending: redeploy `listUsers`, `listActivities`, `getAttendanceStats`, `listNotificationLogs`, `getActivityDetail`, and `exportActivityRoster`, then redeploy Web Admin static hosting to `/admin/`.
+
+Verification:
+
+- focused direct Jest passed with `10` suites and `138` tests.
+- the required full `npx jest --runInBand` run is blocked by one pre-existing failure: `tests/web-admin/app-login.test.js` still mocks paginated `listActivities` and `listUsers` responses as `{ items: [] }`, while the current Web Admin client correctly requires integer `total`, `limit`, and `skip` plus boolean `hasMore`. The run recorded `84` passed and `1` failed suites, with `856` passed and `1` failed tests. This documentation-only milestone leaves the out-of-scope test fixture unchanged.
+
 ## 2026-07-24 - Unified Web Admin CSV And XLSX Exports
 
 Replaced every existing CSV-only Web Admin export control with one consistent format menu.
