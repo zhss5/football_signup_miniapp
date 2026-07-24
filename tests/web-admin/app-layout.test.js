@@ -173,6 +173,40 @@ function createDeferred() {
   };
 }
 
+function normalizePaginatedTestResponse(result, params = {}) {
+  if (!result || typeof result !== 'object') {
+    return result;
+  }
+
+  const { __rawPaginationResponse, ...response } = result;
+  if (__rawPaginationResponse) {
+    return response;
+  }
+
+  const items = Array.isArray(response.items)
+    ? response.items
+    : Array.isArray(response.rows)
+      ? response.rows
+      : [];
+
+  return {
+    ...response,
+    total: Object.prototype.hasOwnProperty.call(response, 'total') ? response.total : items.length,
+    limit: Object.prototype.hasOwnProperty.call(response, 'limit') ? response.limit : 20,
+    skip: Object.prototype.hasOwnProperty.call(response, 'skip') ? response.skip : params.skip || 0,
+    hasMore: Object.prototype.hasOwnProperty.call(response, 'hasMore')
+      ? response.hasMore
+      : false
+  };
+}
+
+function wrapPaginatedTestApi(api, methodName) {
+  const method = api[methodName];
+  api[methodName] = jest.fn((params = {}) =>
+    Promise.resolve(method(params)).then(result => normalizePaginatedTestResponse(result, params))
+  );
+}
+
 function buildHarness(user, apiOverrides = {}, options = {}) {
   const nav = {
     users: createElement({ navTarget: 'users' }),
@@ -330,10 +364,18 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     setWebAdminSessionToken: jest.fn(),
     getCurrentUser: jest.fn().mockResolvedValue(user),
     listActivities: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     }),
     listUsers: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     }),
     getActivityDetail: jest.fn().mockResolvedValue({
       activity: {},
@@ -347,14 +389,24 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     }),
     updateActivityReview: jest.fn().mockResolvedValue({}),
     getAttendanceStats: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     }),
     listNotificationLogs: jest.fn().mockResolvedValue({
-      items: []
+      items: [],
+      total: 0,
+      limit: 20,
+      skip: 0,
+      hasMore: false
     }),
     resolveFileUrls: jest.fn().mockResolvedValue({}),
     ...apiOverrides
   };
+  ['listActivities', 'listUsers', 'getAttendanceStats', 'listNotificationLogs']
+    .forEach(methodName => wrapPaginatedTestApi(api, methodName));
   const storage = {
     getItem: jest.fn().mockReturnValue('session_1'),
     setItem: jest.fn(),
@@ -471,7 +523,7 @@ test('user and activity pagination send offsets and searches reset to the first 
 test('statistics tabs retain independent pagination skips', async () => {
   const getAttendanceStats = jest.fn(params => Promise.resolve({
     items: [],
-    total: 41,
+    total: 101,
     limit: 20,
     skip: params.skip,
     hasMore: true
@@ -489,6 +541,7 @@ test('statistics tabs retain independent pagination skips', async () => {
   getAttendanceStats.mockClear();
 
   await appRoot.click(pagination.attendance.next);
+  await appRoot.click(pagination.attendance.next);
   appRoot.click(statisticsTabs.cancellation);
   await appRoot.click(pagination.cancellation.next);
   appRoot.click(statisticsTabs.attendance);
@@ -505,12 +558,115 @@ test('statistics tabs retain independent pagination skips', async () => {
     endAt: '',
     activityType: 'all',
     limit: 20,
+    skip: 40
+  });
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
+    startAt: '',
+    endAt: '',
+    activityType: 'all',
+    limit: 20,
     skip: 20
   });
-  expect(app.state.pagination.attendance.skip).toBe(20);
+  expect(app.state.pagination.attendance.skip).toBe(40);
   expect(app.state.pagination.cancellation.skip).toBe(20);
   expect(pagination.attendance.previous.disabled).toBe(false);
   expect(pagination.cancellation.previous.disabled).toBe(false);
+});
+
+test('statistics filter submission resets both tabs and invalidates stale rows', async () => {
+  const getAttendanceStats = jest.fn(params => Promise.resolve({
+    items: [
+      {
+        participantName: `${params.activityType}-${params.skip}`,
+        signupCount: 1,
+        presentCount: 1,
+        absentCount: 0,
+        attendanceRate: 1,
+        effectiveSignupActivityCount: 1,
+        cancelledActivityCount: 0,
+        cancelRate: 0,
+        details: [],
+        cancellationDetails: []
+      }
+    ],
+    total: 101,
+    limit: 20,
+    skip: params.skip,
+    hasMore: true
+  }));
+  const { app, appRoot, elements, pagination, statisticsTabs } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats }
+  );
+
+  await app.start();
+  await app.loadAttendanceStats();
+  await appRoot.click(pagination.attendance.next);
+  await appRoot.click(pagination.attendance.next);
+  appRoot.click(statisticsTabs.cancellation);
+  await appRoot.click(pagination.cancellation.next);
+
+  expect(app.state.pagination.attendance.skip).toBe(40);
+  expect(app.state.pagination.cancellation.skip).toBe(20);
+  expect(app.state.statisticsRows.attendance[0].participantName).toBe('all-40');
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('all-20');
+
+  elements['[name="statsActivityType"]'].value = 'external';
+  await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
+
+  expect(getAttendanceStats).toHaveBeenLastCalledWith({
+    startAt: '',
+    endAt: '',
+    activityType: 'external',
+    limit: 20,
+    skip: 0
+  });
+  expect(app.state.pagination.attendance.skip).toBe(0);
+  expect(app.state.pagination.cancellation.skip).toBe(0);
+  expect(app.state.statisticsRows.attendance).toEqual([]);
+  expect(app.state.statisticsRows.cancellation[0].participantName).toBe('external-0');
+
+  appRoot.click(statisticsTabs.attendance);
+  expect(elements['[data-attendance-stats-table]'].innerHTML).not.toContain('all-40');
+});
+
+test('missing pagination metadata preserves user rows and restores controls', async () => {
+  const listUsers = jest.fn()
+    .mockResolvedValueOnce({
+      items: [{ _id: 'openid_alex', preferredName: 'Alex', roles: ['user'] }],
+      total: 41,
+      limit: 20,
+      skip: 0,
+      hasMore: true
+    })
+    .mockResolvedValueOnce({
+      __rawPaginationResponse: true,
+      items: [{ _id: 'openid_ben', preferredName: 'Ben', roles: ['user'] }]
+    });
+  const { app, appRoot, elements, pagination } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { listUsers }
+  );
+
+  await app.start();
+  await appRoot.click(pagination.users.next);
+
+  expect(elements['[data-users-table]'].innerHTML).toContain('Alex');
+  expect(elements['[data-users-table]'].innerHTML).not.toContain('Ben');
+  expect(app.state.pagination.users).toMatchObject({
+    total: 41,
+    skip: 0,
+    hasMore: true,
+    loading: false
+  });
+  expect(pagination.users.next.disabled).toBe(false);
+  expect(elements['[data-users-status]'].textContent).toContain('pagination metadata');
 });
 
 test('pagination renders API totals and preserves rows after a failed page request', async () => {

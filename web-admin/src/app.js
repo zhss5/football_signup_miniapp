@@ -499,26 +499,40 @@
       renderPagination(target);
     }
 
+    function getPaginationMetadata(result) {
+      const response = result || {};
+      const valid =
+        Number.isInteger(response.total) && response.total >= 0 &&
+        Number.isInteger(response.limit) && response.limit > 0 &&
+        Number.isInteger(response.skip) && response.skip >= 0 &&
+        typeof response.hasMore === 'boolean';
+
+      if (!valid) {
+        throw new Error('Invalid pagination metadata.');
+      }
+
+      return {
+        total: response.total,
+        limit: response.limit,
+        skip: response.skip,
+        hasMore: response.hasMore
+      };
+    }
+
     function completePageRequest(target, result, requestedSkip) {
       const pageState = getPaginationState(target);
       if (!pageState) {
         return;
       }
 
-      const response = result || {};
-      const responseTotal = Number(response.total);
-      const responseSkip = Number(response.skip);
-
-      if (Number.isFinite(responseTotal) && responseTotal >= 0) {
-        pageState.total = responseTotal;
-      }
-
-      pageState.skip = Number.isFinite(responseSkip) && responseSkip >= 0
-        ? responseSkip
-        : requestedSkip;
-      pageState.hasMore = Boolean(response.hasMore);
+      const metadata = getPaginationMetadata(result);
+      pageState.total = metadata.total;
+      pageState.limit = metadata.limit;
+      pageState.skip = metadata.skip;
+      pageState.hasMore = metadata.hasMore;
       pageState.loading = false;
       renderPagination(target);
+      return metadata;
     }
 
     function failPageRequest(target) {
@@ -861,9 +875,9 @@
 
       try {
         const result = await api.listUsers(state.search);
+        const metadata = completePageRequest('users', result, requestedSkip);
         state.rows = users.buildUserRows(result.items || [], state.currentUser);
-        state.hasMore = Boolean(result.hasMore);
-        completePageRequest('users', result, requestedSkip);
+        state.hasMore = metadata.hasMore;
         renderRows();
       } catch (error) {
         failPageRequest('users');
@@ -1714,12 +1728,12 @@
 
       try {
         const result = await api.listActivities(state.activitySearch);
+        completePageRequest('activities', result, requestedSkip);
         state.activities = activityUi.buildActivityRows(result.items || []);
         if (state.selectedActivityId && !getActivityRowById(state.selectedActivityId)) {
           state.selectedActivityId = '';
         }
         hideActivityContextMenu();
-        completePageRequest('activities', result, requestedSkip);
         renderActivityRows();
         renderActivityOrganizerOptions();
       } catch (error) {
@@ -1917,6 +1931,29 @@
       await searchUsers();
     }
 
+    function resetStatisticsForFilters() {
+      state.statsRows = [];
+      state.statisticsRows = {
+        attendance: [],
+        cancellation: []
+      };
+      state.pagination.attendance = {
+        total: 0,
+        limit: PAGE_LIMIT,
+        skip: 0,
+        hasMore: false,
+        loading: false
+      };
+      state.pagination.cancellation = {
+        total: 0,
+        limit: PAGE_LIMIT,
+        skip: 0,
+        hasMore: false,
+        loading: false
+      };
+      renderStatsRows();
+    }
+
     async function loadAttendanceStats(target = state.activeStatisticsTab, skip) {
       const pageState = getPaginationState(target);
       const requestedSkip = Number.isFinite(Number(skip))
@@ -1935,12 +1972,12 @@
           limit: PAGE_LIMIT,
           skip: requestedSkip
         });
+        completePageRequest(target, result, requestedSkip);
         const rows = activityUi.buildStatsRows(result.items || result.rows || []);
         state.statisticsRows[target] = rows;
         if (target === 'attendance') {
           state.statsRows = rows;
         }
-        completePageRequest(target, result, requestedSkip);
         if (requestedSkip === 0) {
           const siblingTarget = target === 'attendance' ? 'cancellation' : 'attendance';
           const siblingPage = getPaginationState(siblingTarget);
@@ -1957,6 +1994,11 @@
         failPageRequest(target);
         throw error;
       }
+    }
+
+    async function reloadStatisticsForFilters() {
+      resetStatisticsForFilters();
+      return loadAttendanceStats(state.activeStatisticsTab, 0);
     }
 
     function writeExportOutput(csv) {
@@ -2134,8 +2176,8 @@
           limit: PAGE_LIMIT,
           skip: requestedSkip
         });
-        state.notificationLogRows = activityUi.buildNotificationLogRows(result.items || []);
         completePageRequest('notificationLogs', result, requestedSkip);
+        state.notificationLogRows = activityUi.buildNotificationLogRows(result.items || []);
         renderNotificationLogRows();
       } catch (error) {
         failPageRequest('notificationLogs');
@@ -2297,7 +2339,7 @@
           return runWithLoadingButton(
             '[data-stats-load-button]',
             '加载中...',
-            loadAttendanceStats
+            reloadStatisticsForFilters
           ).catch(error => renderIdentity(error.message));
         });
       }
