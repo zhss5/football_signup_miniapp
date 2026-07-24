@@ -4,6 +4,61 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-24 - Task 7 Pagination Deployment And Authenticated Web Admin Smoke
+
+Deployed the completed pagination and roster-completeness rollout to CloudBase
+test environment `cloudbase-miniapp-test-dfc753877`.
+
+Deployment evidence:
+
+- successfully deployed the six Node.js 18.15 functions: `listUsers`,
+  `listActivities`, `getAttendanceStats`, `listNotificationLogs`,
+  `getActivityDetail`, and `exportActivityRoster`;
+- CloudBase CLI `fn list` / `fn detail` showed `Deployment completed` and
+  `Active`, with remote modify times from `2026-07-24 15:56:37` through
+  `15:58:57` (`listActivities` at `15:57:04` and `getActivityDetail` at
+  `15:58:31`);
+- static hosting upload deployed `web-admin` to `/admin/` with `29/29` files;
+  the hosted URL is
+  `https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`;
+- hosted HTML returned the `20260724-task-5-complete-statistics-export` token
+  for every local asset and loaded `pagination.js` before `app.js`.
+
+Authenticated admin-browser smoke evidence:
+
+- an existing admin session opened the workspace and the QR/login view stayed
+  hidden;
+- activities returned exact total `13`, page `1/1`, and `13` rows;
+- users returned exact total `102`; page `1/6` and page `2/6` each rendered
+  `20` rows, and the previous button was enabled on page two;
+- statistics returned shared exact total `22`, page `1/2`. Attendance and
+  cancellation page positions advanced independently: attendance reached
+  `2/2` while cancellation remained `1/2`, then cancellation reached `2/2`.
+  Attendance projected `17` rows on page one and `2` on page two; this is the
+  documented per-tab projection of the shared paginated dataset, not an
+  error;
+- notification logs returned exact total `7`, page `1/1`, `7` rows, and a
+  success status;
+- activity `测试07221933` loaded `3` roster rows and `22` activity-log rows
+  without an application error;
+- roster CSV and XLSX menu actions ran, closed their menu, and returned the UI
+  to an enabled state without an error. The Chrome download event/file could
+  not be captured, so downloaded-file row counts were not inspected; unit
+  tests cover row parity;
+- the console contained only unrelated extension warnings; no pagination
+  metadata or cloud-function application error was observed.
+
+Coverage limits and compatibility:
+
+- current data has no second activity or notification-log page, so those
+  second-page paths were not live exercised;
+- the current live session was an admin; ordinary-user denial was not retested
+  live, although unit and role tests cover it;
+- final pre-deployment regression passed: focused direct Jest `10` suites /
+  `141` tests and full direct Jest `85` suites / `860` tests;
+- this deployment introduced no runtime MySQL migration, dual-write,
+  self-hosted API cutover, collection migration, or data backfill.
+
 ## 2026-07-24 - Web Admin Pagination And Complete Roster Reads
 
 Completed the Web Admin pagination and CloudBase completeness rollout.

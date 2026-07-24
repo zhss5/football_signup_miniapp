@@ -1,6 +1,6 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-07-23
+- Date: 2026-07-24
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
@@ -94,9 +94,11 @@ It returns API-shaped `created`, `existing`, and `skipped` arrays and does not d
 
 ## 4. Cloud Function Deployment
 
-### Pending Web Admin Pagination And Roster-Completeness Rollout
+### Completed Web Admin Pagination And Roster-Completeness Rollout
 
-The 2026-07-24 pagination implementation has not been deployed by this documentation task. Before the next Web Admin smoke pass, redeploy all six changed functions:
+Task 7 deployed the 2026-07-24 pagination implementation to
+`cloudbase-miniapp-test-dfc753877`. The six changed Node.js 18.15 functions
+were deployed:
 
 - `listUsers`
 - `listActivities`
@@ -105,7 +107,19 @@ The 2026-07-24 pagination implementation has not been deployed by this documenta
 - `getActivityDetail`
 - `exportActivityRoster`
 
-Then redeploy Web Admin static hosting to `/admin/`. Advance every versioned CSS and JavaScript asset query token in `web-admin/index.html` together before that upload so CloudBase/CDN caches cannot serve stale pagination code. No collection bootstrap, data backfill, or schema migration is required for this rollout.
+CloudBase CLI `fn list` / `fn detail` showed each function as `Deployment
+completed` and `Active`, with remote modify times from `2026-07-24 15:56:37`
+through `15:58:57`; `listActivities` was `15:57:04` and `getActivityDetail`
+was `15:58:31`.
+
+Static hosting deployed `web-admin` to `/admin/` with `29/29` uploaded files:
+
+`https://cloudbase-miniapp-test-dfc753877-1424891512.tcloudbaseapp.com/admin/`
+
+Hosted HTML loaded `20260724-task-5-complete-statistics-export` for every
+local asset, including `pagination.js` before `app.js`. No collection
+bootstrap, data backfill, schema migration, runtime MySQL migration,
+dual-write, or self-hosted API cutover was performed.
 
 Always copy shared helpers before deploying cloud functions:
 
@@ -217,17 +231,30 @@ Test environment hosting:
 - Test runtime config: `web-admin/config.test.js`.
 - Runtime adapter: `web-admin/src/cloudbase-runtime.js`.
 - The test entry does not hardcode the production CloudBase environment ID.
-- Local static assets use `?v=20260722-cancel-rate-tone` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
+- Local static assets use `?v=20260724-task-5-complete-statistics-export` query strings to avoid stale CloudBase static hosting/CDN scripts after redeploy.
 
 Current hosted smoke status:
 
-- CloudBase static hosting is online and `/admin/` returns HTTP `200`.
-- the latest `tcb hosting deploy web-admin /admin` uploaded `24` files successfully in the test environment.
+- CloudBase static hosting is online at `/admin/`; the Task 7 deploy uploaded `29/29` files successfully in the test environment.
+- hosted HTML loads `20260724-task-5-complete-statistics-export` for every local asset, including `pagination.js` before `app.js`.
 - the hosted entry loads the CloudBase Web SDK from `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js`.
-- the hosted entry and static assets load `?v=20260722-cancel-rate-tone`; hosted `app.js` and `styles.css` include the split statistics views and existing user-row action feedback hooks.
+- the hosted entry and every local static asset load `?v=20260724-task-5-complete-statistics-export`; hosted `app.js` and `styles.css` include the pagination, split-statistics, and existing user-row action feedback hooks.
 - the hosted entry contains the common Web Admin layout with `data-admin-sidebar`, `data-admin-content`, and role-aware sidebar targets.
 - the Web Admin default visible interface is Chinese; API names, role enums, status enums, and `data-*` hooks remain stable.
 - the shared statistics workspace is named `统计分析` and separates `出勤统计` from `取消统计` while reusing one date/activity-type query.
+
+Task 7 authenticated admin smoke:
+
+- an existing admin session opened the workspace and kept the QR/login view hidden;
+- activities: exact total `13`, page `1/1`, and `13` rows; current data has no activity second page;
+- users: exact total `102`, page `1/6` with `20` rows, then page `2/6` with `20` rows and previous enabled;
+- statistics: shared exact total `22`, page `1/2`; attendance and cancellation retained independent page positions, with attendance reaching `2/2` while cancellation stayed `1/2`, then cancellation reaching `2/2`. Attendance displayed `17` rows on page one and `2` on page two because each tab projects the shared paginated data;
+- notification logs: exact total `7`, page `1/1`, `7` rows, and success status; current data has no log second page;
+- `测试07221933`: activity detail rendered `3` roster rows and `22` activity-log rows with no application error;
+- roster CSV and XLSX menu actions were invoked and returned the UI to an enabled state without an error. Browser download event/file capture was unavailable, so downloaded-file row counts were not inspected; unit tests cover row parity;
+- browser console had only unrelated extension warnings, with no pagination-metadata or cloud-function application error.
+
+Residual live-smoke gaps: no activity/log second page exists in current data; an ordinary-user session was not available (unit/role tests cover denial); and the browser download artifact was not capturable.
 - cancellation-rate tones are lower-is-better: `0%-20%` green, above `20%-50%` yellow, and above `50%` red; attendance-rate tones remain higher-is-better.
 - the test environment `getAttendanceStats` deployment was verified from remote `CodeInfo` to include additive `cancellationDetails` rows.
 - hosted `api.js` contains `createWebAdminLogin`, `pollWebAdminLogin`, and `webAdminSessionToken` support.
@@ -286,6 +313,14 @@ Important rules:
 - The pagination response remains API-shaped for a future SQL implementation: `{ items, total, limit, skip, hasMore }`. CloudBase uses complete `_id` cursor reads and final stable `_id` tie-breakers before filtering, aggregation, and public offset pagination. Future SQL validation must prove identical filtered totals, terminal-page `hasMore`, complete multi-page export behavior, and the shared flattened roster order: numeric team `sort`, team ID, `joinedAt`, participant display-name fallback (`signupName`, `displayName`, `preferredName`, `userOpenId`), then registration ID. `limit`/`skip` map to SQL `LIMIT/OFFSET` today but do not commit the future implementation to permanent offset pagination.
 
 ## 8. Verification Snapshot
+
+### 2026-07-24 Task 7 Deployment And Smoke Evidence
+
+- final pre-deployment direct Jest regression passed: focused `10` suites / `141` tests and full `85` suites / `860` tests;
+- six Node.js 18.15 functions were deployed and remotely verified active in `cloudbase-miniapp-test-dfc753877`;
+- Web Admin static hosting deployed `29/29` files to `/admin/` and served the current asset version;
+- authenticated admin smoke covered user second-page navigation, independently paged statistics tabs, activity detail, notification logs, and roster export menu actions with no observed application error;
+- limitations are recorded above rather than treated as passed coverage: no activity/log second page in current data, no live ordinary-user session, and no capturable downloaded artifact.
 
 ### 2026-07-24 Web Admin Pagination Documentation Milestone
 
