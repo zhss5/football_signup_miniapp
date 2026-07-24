@@ -202,21 +202,45 @@ function normalizePaginatedTestResponse(result, params = {}) {
     return response;
   }
 
-  const items = Array.isArray(response.items)
-    ? response.items
-    : Array.isArray(response.rows)
-      ? response.rows
-      : [];
+  const normalizePage = (page, skip = params.skip || 0) => {
+    const items = Array.isArray(page.items)
+      ? page.items
+      : Array.isArray(page.rows)
+        ? page.rows
+        : [];
 
-  return {
-    ...response,
-    total: Object.prototype.hasOwnProperty.call(response, 'total') ? response.total : items.length,
-    limit: Object.prototype.hasOwnProperty.call(response, 'limit') ? response.limit : 20,
-    skip: Object.prototype.hasOwnProperty.call(response, 'skip') ? response.skip : params.skip || 0,
-    hasMore: Object.prototype.hasOwnProperty.call(response, 'hasMore')
-      ? response.hasMore
-      : false
+    return {
+      ...page,
+      total: Object.prototype.hasOwnProperty.call(page, 'total') ? page.total : items.length,
+      limit: Object.prototype.hasOwnProperty.call(page, 'limit') ? page.limit : 20,
+      skip: Object.prototype.hasOwnProperty.call(page, 'skip') ? page.skip : skip,
+      hasMore: Object.prototype.hasOwnProperty.call(page, 'hasMore')
+        ? page.hasMore
+        : false
+    };
   };
+
+  if (params.statisticsType === 'both') {
+    if (response.projections) {
+      return {
+        ...response,
+        projections: {
+          attendance: normalizePage(response.projections.attendance || {}, 0),
+          cancellation: normalizePage(response.projections.cancellation || {}, 0)
+        }
+      };
+    }
+
+    const page = normalizePage(response, 0);
+    return {
+      projections: {
+        attendance: page,
+        cancellation: page
+      }
+    };
+  }
+
+  return normalizePage(response);
 }
 
 function wrapPaginatedTestApi(api, methodName) {
@@ -473,6 +497,8 @@ function buildHarness(user, apiOverrides = {}, options = {}) {
     api,
     autoPoll: false,
     runtimeRoot: options.runtimeRoot,
+    timerApi: options.timerApi,
+    statisticsRequestTimeoutMs: options.statisticsRequestTimeoutMs,
     storage
   });
 
@@ -634,26 +660,47 @@ test('statistics tabs retain independent pagination skips', async () => {
   expect(pagination.cancellation.previous.disabled).toBe(false);
 });
 
-test('loading statistics requests independently filtered attendance and cancellation pages', async () => {
+test('loading statistics requests both independently paginated projections once', async () => {
   const getAttendanceStats = jest.fn(params => {
-    const total = params.statisticsType === 'attendance' ? 21 : 42;
     return Promise.resolve({
-      items: createCompletePageItems({
-        participantName: params.statisticsType,
-        signupCount: params.statisticsType === 'attendance' ? 1 : 0,
-        presentCount: params.statisticsType === 'attendance' ? 1 : 0,
-        absentCount: 0,
-        attendanceRate: params.statisticsType === 'attendance' ? 1 : 0,
-        effectiveSignupActivityCount: params.statisticsType === 'cancellation' ? 1 : 0,
-        cancelledActivityCount: params.statisticsType === 'cancellation' ? 1 : 0,
-        cancelRate: params.statisticsType === 'cancellation' ? 0.5 : 0,
-        details: [],
-        cancellationDetails: []
-      }, total, params.skip),
-      total,
-      limit: 20,
-      skip: params.skip,
-      hasMore: total > params.skip + 20
+      projections: {
+        attendance: {
+          items: createCompletePageItems({
+            participantName: 'attendance',
+            signupCount: 1,
+            presentCount: 1,
+            absentCount: 0,
+            attendanceRate: 1,
+            effectiveSignupActivityCount: 1,
+            cancelledActivityCount: 0,
+            cancelRate: 0,
+            details: [],
+            cancellationDetails: []
+          }, 21, 0),
+          total: 21,
+          limit: 20,
+          skip: 0,
+          hasMore: true
+        },
+        cancellation: {
+          items: createCompletePageItems({
+            participantName: 'cancellation',
+            signupCount: 0,
+            presentCount: 0,
+            absentCount: 0,
+            attendanceRate: 0,
+            effectiveSignupActivityCount: 1,
+            cancelledActivityCount: 1,
+            cancelRate: 0.5,
+            details: [],
+            cancellationDetails: []
+          }, 42, 0),
+          total: 42,
+          limit: 20,
+          skip: 0,
+          hasMore: true
+        }
+      }
     });
   });
   const { app, appRoot, elements } = buildHarness(
@@ -668,19 +715,12 @@ test('loading statistics requests independently filtered attendance and cancella
   getAttendanceStats.mockClear();
   await appRoot.submit(elements['[data-action="load-attendance-stats"]']).result;
 
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(1, {
+  expect(getAttendanceStats).toHaveBeenCalledTimes(1);
+  expect(getAttendanceStats).toHaveBeenCalledWith({
     startAt: '',
     endAt: '',
     activityType: 'all',
-    statisticsType: 'attendance',
-    limit: 20,
-    skip: 0
-  });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
-    startAt: '',
-    endAt: '',
-    activityType: 'all',
-    statisticsType: 'cancellation',
+    statisticsType: 'both',
     limit: 20,
     skip: 0
   });
@@ -688,6 +728,44 @@ test('loading statistics requests independently filtered attendance and cancella
   expect(app.state.pagination.cancellation.total).toBe(42);
   expect(app.state.statisticsRows.attendance[0].participantName).toBe('attendance');
   expect(app.state.statisticsRows.cancellation[0].participantName).toBe('cancellation');
+});
+
+test('statistics request timeout restores the load button instead of spinning forever', async () => {
+  const callbacks = [];
+  const timerApi = {
+    setTimeout: jest.fn(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    }),
+    clearTimeout: jest.fn()
+  };
+  const getAttendanceStats = jest.fn(() => new Promise(() => {}));
+  const { app, appRoot, elements } = buildHarness(
+    {
+      _id: 'openid_admin',
+      roles: ['user', 'admin']
+    },
+    { getAttendanceStats },
+    {
+      timerApi,
+      statisticsRequestTimeoutMs: 5
+    }
+  );
+
+  await app.start();
+  const { result } = appRoot.submit(elements['[data-action="load-attendance-stats"]']);
+
+  expect(elements['[data-stats-load-button]'].disabled).toBe(true);
+  expect(callbacks).toHaveLength(1);
+  if (!callbacks[0]) {
+    return;
+  }
+
+  callbacks[0]();
+  await result;
+
+  expect(elements['[data-stats-load-button]'].disabled).toBe(false);
+  expect(elements['[data-view="identity"]'].textContent).toContain('统计请求超时');
 });
 
 test.each([
@@ -744,15 +822,7 @@ test.each([
     startAt: '',
     endAt: '',
     activityType: 'external',
-    statisticsType: 'attendance',
-    limit: 20,
-    skip: 0
-  });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
-    startAt: '',
-    endAt: '',
-    activityType: 'external',
-    statisticsType: 'cancellation',
+    statisticsType: 'both',
     limit: 20,
     skip: 0
   });
@@ -843,15 +913,7 @@ test('statistics filter failure preserves both tab rows and pagination positions
     startAt: '',
     endAt: '',
     activityType: 'external',
-    statisticsType: 'attendance',
-    limit: 20,
-    skip: 0
-  });
-  expect(getAttendanceStats).toHaveBeenCalledWith({
-    startAt: '',
-    endAt: '',
-    activityType: 'external',
-    statisticsType: 'cancellation',
+    statisticsType: 'both',
     limit: 20,
     skip: 0
   });
@@ -1733,15 +1795,7 @@ test('attendance stats submit shows eligible-activity empty state for blank resu
     startAt: '2026-06-01',
     endAt: '2026-06-30',
     activityType: 'all',
-    statisticsType: 'attendance',
-    limit: 20,
-    skip: 0
-  });
-  expect(api.getAttendanceStats).toHaveBeenCalledWith({
-    startAt: '2026-06-01',
-    endAt: '2026-06-30',
-    activityType: 'all',
-    statisticsType: 'cancellation',
+    statisticsType: 'both',
     limit: 20,
     skip: 0
   });
@@ -1902,7 +1956,7 @@ test('statistics tabs render focused tables and switch without another API reque
   expect(statisticsPanes.attendance.hidden).toBe(true);
   expect(statisticsPanes.cancellation.hidden).toBe(false);
   expect(elements['[data-stats-export-button]'].textContent).toBe('导出');
-  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(1);
 });
 
 test('export menus keep one source open and close on outside click or Escape', async () => {
@@ -2338,7 +2392,7 @@ test('statistics CSV and XLSX exports collect every fixed statistics page withou
     最终取消数: 1,
     取消率: '33.33%'
   });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(2, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
@@ -2346,7 +2400,7 @@ test('statistics CSV and XLSX exports collect every fixed statistics page withou
     limit: 20,
     skip: 0
   });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(4, {
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(3, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
@@ -2354,7 +2408,7 @@ test('statistics CSV and XLSX exports collect every fixed statistics page withou
     limit: 20,
     skip: 20
   });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(5, {
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(4, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
@@ -2362,7 +2416,7 @@ test('statistics CSV and XLSX exports collect every fixed statistics page withou
     limit: 20,
     skip: 0
   });
-  expect(getAttendanceStats).toHaveBeenNthCalledWith(6, {
+  expect(getAttendanceStats).toHaveBeenNthCalledWith(5, {
     startAt: '2026-07-01',
     endAt: '2026-07-24',
     activityType: 'external',
@@ -2523,7 +2577,6 @@ test('statistics export disables every control and ignores a concurrent export u
   const getAttendanceStats = jest
     .fn()
     .mockResolvedValueOnce({ items: page, total: 20, limit: 20, skip: 0, hasMore: false })
-    .mockResolvedValueOnce({ items: page, total: 20, limit: 20, skip: 0, hasMore: false })
     .mockImplementationOnce(() => pendingExportPage.promise);
   const {
     app,
@@ -2547,12 +2600,12 @@ test('statistics export disables every control and ignores a concurrent export u
   expect(statisticsExportOptions.csv.disabled).toBe(true);
   expect(statisticsExportOptions.xlsx.disabled).toBe(true);
   const secondExport = appRoot.click(statisticsExportOptions.xlsx);
-  expect(getAttendanceStats).toHaveBeenCalledTimes(3);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
 
   pendingExportPage.resolve({ items: page, total: 20, limit: 20, skip: 0, hasMore: false });
   await Promise.all([firstExport, secondExport]);
 
-  expect(getAttendanceStats).toHaveBeenCalledTimes(3);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(2);
   expect(elements['[data-export-output]'].value).toContain('人员20');
   expect(elements['[data-stats-export-button]'].disabled).toBe(false);
   expect(statisticsExportOptions.csv.disabled).toBe(false);
@@ -2684,7 +2737,7 @@ test('statistics exports project every page for attendance and cancellation in C
     最终取消数: 1,
     取消率: '33.33%'
   });
-  expect(getAttendanceStats).toHaveBeenCalledTimes(10);
+  expect(getAttendanceStats).toHaveBeenCalledTimes(9);
 });
 
 test('user rows render Chinese role labels without changing role values', async () => {

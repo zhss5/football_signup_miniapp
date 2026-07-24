@@ -50,6 +50,7 @@
   const DEFAULT_ADMIN_VIEW = 'activities';
   const ACTIVITY_LOG_PAGE_LIMIT = 50;
   const PAGE_LIMIT = 20;
+  const DEFAULT_STATISTICS_REQUEST_TIMEOUT_MS = 20000;
   const ATTENDANCE_STATS_EMPTY_TEXT = '统计已开始且未取消/未删除的活动；当前范围内没有出勤记录。';
   const CANCELLATION_STATS_EMPTY_TEXT = '当前范围内没有最终报名或取消记录。';
   const ADMIN_VIEW_TITLES = {
@@ -284,6 +285,9 @@
     const timerApi = options.timerApi || runtimeBrowserRoot || {};
     const sessionStorageKey = options.sessionStorageKey || WEB_ADMIN_SESSION_STORAGE_KEY;
     const pollIntervalMs = Number(options.pollIntervalMs || 2000);
+    const statisticsRequestTimeoutMs = Number(
+      options.statisticsRequestTimeoutMs || DEFAULT_STATISTICS_REQUEST_TIMEOUT_MS
+    );
     let loginPollTimer = null;
 
     function readStoredWebAdminSessionToken() {
@@ -1992,18 +1996,96 @@
       };
     }
 
-    async function requestStatisticsPage(target, requestedSkip, filters = getStatisticsFilters()) {
-      const result = await api.getAttendanceStats({
-        ...filters,
-        statisticsType: target,
-        limit: PAGE_LIMIT,
-        skip: requestedSkip
+    function withStatisticsRequestTimeout(request) {
+      if (
+        !Number.isFinite(statisticsRequestTimeoutMs) ||
+        statisticsRequestTimeoutMs <= 0 ||
+        typeof timerApi.setTimeout !== 'function'
+      ) {
+        return Promise.resolve(request);
+      }
+
+      return new Promise((resolve, reject) => {
+        let settled = false;
+        const timeoutId = timerApi.setTimeout(() => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          reject(new Error('统计请求超时，请重试。'));
+        }, statisticsRequestTimeoutMs);
+
+        Promise.resolve(request).then(
+          result => {
+            if (settled) {
+              return;
+            }
+
+            settled = true;
+            if (typeof timerApi.clearTimeout === 'function') {
+              timerApi.clearTimeout(timeoutId);
+            }
+            resolve(result);
+          },
+          error => {
+            if (settled) {
+              return;
+            }
+
+            settled = true;
+            if (typeof timerApi.clearTimeout === 'function') {
+              timerApi.clearTimeout(timeoutId);
+            }
+            reject(error);
+          }
+        );
       });
+    }
+
+    async function requestStatisticsPage(target, requestedSkip, filters = getStatisticsFilters()) {
+      const result = await withStatisticsRequestTimeout(
+        api.getAttendanceStats({
+          ...filters,
+          statisticsType: target,
+          limit: PAGE_LIMIT,
+          skip: requestedSkip
+        })
+      );
 
       return {
         result,
         metadata: getPaginationMetadata(result, requestedSkip),
         rows: activityUi.buildStatsRows(result.items || result.rows || [])
+      };
+    }
+
+    async function requestStatisticsProjections(filters = getStatisticsFilters()) {
+      const result = await withStatisticsRequestTimeout(
+        api.getAttendanceStats({
+          ...filters,
+          statisticsType: 'both',
+          limit: PAGE_LIMIT,
+          skip: 0
+        })
+      );
+      const projections = result && result.projections;
+
+      if (!projections || !projections.attendance || !projections.cancellation) {
+        throw new Error('Invalid statistics projections response.');
+      }
+
+      return {
+        attendance: {
+          result: projections.attendance,
+          metadata: getPaginationMetadata(projections.attendance, 0),
+          rows: activityUi.buildStatsRows(projections.attendance.items || [])
+        },
+        cancellation: {
+          result: projections.cancellation,
+          metadata: getPaginationMetadata(projections.cancellation, 0),
+          rows: activityUi.buildStatsRows(projections.cancellation.items || [])
+        }
       };
     }
 
@@ -2035,10 +2117,9 @@
       beginPageRequest('cancellation');
 
       try {
-        const [attendancePage, cancellationPage] = await Promise.all([
-          requestStatisticsPage('attendance', 0, filters),
-          requestStatisticsPage('cancellation', 0, filters)
-        ]);
+        const projections = await requestStatisticsProjections(filters);
+        const attendancePage = projections.attendance;
+        const cancellationPage = projections.cancellation;
 
         completePageRequest('attendance', attendancePage.result, 0, attendancePage.metadata);
         completePageRequest('cancellation', cancellationPage.result, 0, cancellationPage.metadata);

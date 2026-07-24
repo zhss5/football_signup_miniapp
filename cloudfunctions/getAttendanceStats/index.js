@@ -82,7 +82,18 @@ function normalizeActivityTypeFilter(value) {
 
 function normalizeStatisticsType(value) {
   const type = String(value || '').trim();
-  return type === 'attendance' || type === 'cancellation' ? type : 'all';
+  return type === 'attendance' || type === 'cancellation' || type === 'both' ? type : 'all';
+}
+
+function paginateItems(items, limit, skip) {
+  const total = items.length;
+  return {
+    items: items.slice(skip, skip + limit),
+    total,
+    limit,
+    skip,
+    hasMore: skip + limit < total
+  };
 }
 
 function matchesActivityType(activity, activityTypeFilter) {
@@ -391,26 +402,29 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       )
     }))
     .sort((left, right) => left.participantName.localeCompare(right.participantName));
-  const items = combinedItems.filter(row => {
-    if (statisticsType === 'attendance') {
-      return row.signupCount > 0;
-    }
+  const attendanceItems = combinedItems.filter(row => row.signupCount > 0);
+  const cancellationItems = combinedItems.filter(
+    row => row.effectiveSignupActivityCount + row.cancelledActivityCount > 0
+  );
 
-    if (statisticsType === 'cancellation') {
-      return row.effectiveSignupActivityCount + row.cancelledActivityCount > 0;
-    }
+  if (statisticsType === 'both') {
+    return {
+      projections: {
+        attendance: paginateItems(attendanceItems, limit, skip),
+        cancellation: paginateItems(cancellationItems, limit, skip)
+      }
+    };
+  }
 
-    return true;
-  });
+  if (statisticsType === 'attendance') {
+    return paginateItems(attendanceItems, limit, skip);
+  }
 
-  const total = items.length;
-  return {
-    items: items.slice(skip, skip + limit),
-    total,
-    limit,
-    skip,
-    hasMore: skip + limit < total
-  };
+  if (statisticsType === 'cancellation') {
+    return paginateItems(cancellationItems, limit, skip);
+  }
+
+  return paginateItems(combinedItems, limit, skip);
 }
 
 module.exports = { main };

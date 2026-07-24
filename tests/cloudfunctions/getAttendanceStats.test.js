@@ -983,6 +983,11 @@ test('statisticsType filters attendance and cancellation rows before pagination'
     { OPENID: 'openid_owner' },
     deps
   );
+  const both = await getAttendanceStats.main(
+    { ...input, statisticsType: 'both' },
+    { OPENID: 'openid_owner' },
+    deps
+  );
 
   expect(attendance).toMatchObject({
     total: 25,
@@ -1005,6 +1010,25 @@ test('statisticsType filters attendance and cancellation rows before pagination'
       item => item.effectiveSignupActivityCount + item.cancelledActivityCount > 0
     )
   ).toBe(true);
+
+  expect(both).toMatchObject({
+    projections: {
+      attendance: {
+        total: 25,
+        limit: 20,
+        skip: 0,
+        hasMore: true
+      },
+      cancellation: {
+        total: 30,
+        limit: 20,
+        skip: 0,
+        hasMore: true
+      }
+    }
+  });
+  expect(both.projections.attendance.items).toHaveLength(20);
+  expect(both.projections.cancellation.items).toHaveLength(20);
 });
 
 test('regular user cannot get attendance stats', async () => {
