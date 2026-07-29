@@ -92,6 +92,37 @@ npm run deploy:v2-bootstrap -- -EnvId 'your-cloud-env-id' -DeployOnly
 
 It returns API-shaped `created`, `existing`, and `skipped` arrays and does not delete, clear, rename, or recreate V1 data.
 
+### V0.9.4 To Version 2 Upgrade Rehearsal
+
+Use the dedicated runbook before upgrading an existing V0.9.4 production
+environment:
+
+- `docs/superpowers/plans/2026-07-29-v0.9.4-to-v2-upgrade-rehearsal.md`
+
+The existing test environment `cloudbase-miniapp-test-dfc753877` may be reused
+as the isolated rehearsal environment after its current data and Cloud Storage
+objects are backed up. Do not delete the CloudBase environment itself.
+
+The test environment must first be restored to a representative V0.9.4 data
+baseline. A blank database verifies only a new installation and does not prove
+upgrade compatibility. Remove the five Version 2-only collections when
+possible so the rehearsal exercises their creation; if they remain, record
+that the rehearsal verifies bootstrap idempotency only.
+
+The production deployment gate is compatibility-first:
+
+1. bootstrap additive collections and create indexes;
+2. deploy the Version 1-existing functions changed by Version 2;
+3. run the V0.9.4 client regression against that backend;
+4. deploy Version 2-only functions;
+5. smoke the Version 2 mini program and Web Admin;
+6. compare data integrity and counts before approving production rollout.
+
+Prefer function/client rollback over database restore because Version 2 fields
+and collections are additive. Restore data only for proven deletion,
+corruption, or invalid transformation, and restore related collections from
+one consistent snapshot.
+
 ## 4. Cloud Function Deployment
 
 ### Completed Web Admin Pagination And Roster-Completeness Rollout

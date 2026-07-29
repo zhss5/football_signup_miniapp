@@ -4,6 +4,30 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-07-29 - V0.9.4 To Version 2 Upgrade Rehearsal Runbook
+
+Documented the compatibility-first rehearsal required before upgrading an
+existing V0.9.4 CloudBase environment to Version 2.
+
+- added
+  `docs/superpowers/plans/2026-07-29-v0.9.4-to-v2-upgrade-rehearsal.md`;
+- confirmed `cloudbase-miniapp-test-dfc753877` can be reused after backup
+  without deleting the CloudBase environment itself;
+- required a representative V0.9.4 data snapshot because an empty database
+  tests only a new installation;
+- separated the rollout into additive collection/index readiness, a
+  Version 1-compatible backend wave, Version 1 client regression, Version
+  2-only backend deployment, and Version 2 client/Web Admin smoke;
+- recorded backup, restore, data-integrity, notification, role, bench queue,
+  pagination, export, and Web Admin acceptance gates;
+- documented code-first rollback and restricted database restore to proven
+  deletion, corruption, or invalid transformation;
+- retained the CloudBase runtime and explicitly excluded runtime MySQL
+  migration, dual-write, and self-hosted HTTP API cutover.
+
+No business code, CloudBase resource, collection, function, or static-hosting
+deployment was changed by this documentation task.
+
 ## 2026-07-24 - Final Pagination, Roster, And Statistics Integration Corrections
 
 Closed the integration findings from the final pagination rollout review.
