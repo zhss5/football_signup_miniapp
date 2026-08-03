@@ -103,9 +103,12 @@ The existing test environment `cloudbase-miniapp-test-dfc753877` may be reused
 as the isolated rehearsal environment after its current data and Cloud Storage
 objects are backed up. Do not delete the CloudBase environment itself.
 
-The test environment must first be restored to a representative V0.9.4 data
-baseline. A blank database verifies only a new installation and does not prove
-upgrade compatibility. Remove the five Version 2-only collections when
+The test environment must first be restored from a representative V0.9.4
+production snapshot. A blank database verifies only a new installation and
+does not prove upgrade compatibility. The V0.9.4 tag already uses
+`activity_logs`, `notification_subscriptions`, and `notification_logs`; retain
+and import those rows with `users`, `activities`, `activity_teams`, and
+`registrations`. Remove only `user_role_logs` and `web_admin_sessions` when
 possible so the rehearsal exercises their creation; if they remain, record
 that the rehearsal verifies bootstrap idempotency only.
 

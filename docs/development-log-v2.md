@@ -4,6 +4,25 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-08-03 - Corrected V0.9.4 Rehearsal Collection Baseline
+
+Corrected the upgrade rehearsal after verifying the annotated `0.9.4` tag
+instead of inferring collection age from the Version 2 bootstrap list.
+
+- V0.9.4 already defines `activity_logs`, `notification_subscriptions`, and
+  `notification_logs` in `cloudfunctions/_shared/collections.js`;
+- the production snapshot must retain those three collections together with
+  `users`, `activities`, `activity_teams`, and `registrations`;
+- only `user_role_logs` and `web_admin_sessions` are absent from the V0.9.4
+  collection contract and should normally be created by the Version 2
+  bootstrap rehearsal;
+- the production V0.9.4 environment is a read-only snapshot source during the
+  rehearsal; all destructive reset and Version 2 deployment work remains
+  limited to `cloudbase-miniapp-test-dfc753877`.
+
+No business code or CloudBase resource was changed by this documentation
+correction.
+
 ## 2026-07-29 - V0.9.4 To Version 2 Upgrade Rehearsal Runbook
 
 Documented the compatibility-first rehearsal required before upgrading an
