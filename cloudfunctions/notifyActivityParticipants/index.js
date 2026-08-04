@@ -16,6 +16,7 @@ const NOTIFICATION_COLLECTIONS = [
 ];
 const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
+const COLLECTION_BATCH_SIZE = 100;
 let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
@@ -102,6 +103,36 @@ async function assertCanNotify(db, activity, openid) {
   }
 }
 
+async function loadCollection(db, collectionName, criteria) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const pageCriteria = lastId
+      ? { ...criteria, _id: db.command.gt(lastId) }
+      : criteria;
+    const result = await db
+      .collection(collectionName)
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(
+        new Map(items.map((item, index) => [item._id || `__missing_${index}`, item])).values()
+      );
+    }
+
+    lastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
+}
+
 function getSendSubscribeMessage(deps) {
   if (typeof deps.sendSubscribeMessage === 'function') {
     return deps.sendSubscribeMessage;
@@ -142,28 +173,22 @@ async function updateActivityState(db, activityId, notificationType, openid, sta
 }
 
 async function getJoinedOpenIds(db, activityId) {
-  const result = await db
-    .collection(COLLECTIONS.REGISTRATIONS)
-    .where({
-      activityId,
-      status: 'joined'
-    })
-    .get();
+  const registrations = await loadCollection(db, COLLECTIONS.REGISTRATIONS, {
+    activityId,
+    status: 'joined'
+  });
 
-  return new Set((result.data || []).map(item => item.userOpenId).filter(Boolean));
+  return new Set(registrations.map(item => item.userOpenId).filter(Boolean));
 }
 
 async function getAcceptedSubscriptions(db, activityId, joinedOpenIds) {
-  const result = await db
-    .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
-    .where({
-      activityId,
-      templateKey: TEMPLATE_KEY,
-      status: 'accepted'
-    })
-    .get();
+  const subscriptions = await loadCollection(db, COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS, {
+    activityId,
+    templateKey: TEMPLATE_KEY,
+    status: 'accepted'
+  });
 
-  return (result.data || []).filter(
+  return subscriptions.filter(
     item => item.userOpenId && item.templateId && joinedOpenIds.has(item.userOpenId)
   );
 }
@@ -177,6 +202,7 @@ async function hasSentLog(db, activityId, notificationType, recipientOpenId) {
       recipientOpenId,
       status: 'sent'
     })
+    .limit(1)
     .get();
 
   return (result.data || []).length > 0;

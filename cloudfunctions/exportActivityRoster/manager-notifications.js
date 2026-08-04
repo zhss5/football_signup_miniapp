@@ -8,6 +8,7 @@ const NOTIFICATION_COLLECTIONS = [
   COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS,
   COLLECTIONS.NOTIFICATION_LOGS
 ];
+const COLLECTION_BATCH_SIZE = 100;
 let collectionBootstrapPromise = null;
 
 function clip(value, maxLength) {
@@ -93,18 +94,45 @@ async function getUser(db, openid) {
   return result.data || null;
 }
 
+async function loadCollection(db, collectionName, criteria) {
+  const items = [];
+  let lastId = '';
+
+  while (true) {
+    const pageCriteria = lastId
+      ? { ...criteria, _id: db.command.gt(lastId) }
+      : criteria;
+    const result = await db
+      .collection(collectionName)
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+    items.push(...batch);
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return Array.from(
+        new Map(items.map((item, index) => [item._id || `__missing_${index}`, item])).values()
+      );
+    }
+
+    lastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
+  }
+}
+
 async function getAcceptedManagerSubscriptions(db, activity, actorOpenId) {
-  const result = await db
-    .collection(COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS)
-    .where({
-      activityId: activity._id,
-      templateKey: TEMPLATE_KEY,
-      status: 'accepted'
-    })
-    .get();
+  const subscriptions = await loadCollection(db, COLLECTIONS.NOTIFICATION_SUBSCRIPTIONS, {
+    activityId: activity._id,
+    templateKey: TEMPLATE_KEY,
+    status: 'accepted'
+  });
   const managerSubscriptions = [];
 
-  for (const subscription of result.data || []) {
+  for (const subscription of subscriptions) {
     if (!subscription.userOpenId || !subscription.templateId) {
       continue;
     }

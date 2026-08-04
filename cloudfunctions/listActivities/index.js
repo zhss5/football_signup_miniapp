@@ -9,6 +9,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const COLLECTION_BATCH_SIZE = 100;
+const DOCUMENT_ID_BATCH_SIZE = COLLECTION_BATCH_SIZE - 1;
 
 function normalizeLimit(value) {
   const limit = Number(value);
@@ -55,15 +56,15 @@ async function loadUser(db, openid) {
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, command, collectionName) {
+async function loadCollection(db, command, collectionName, criteria = {}) {
   const items = [];
   let lastId = '';
 
   while (true) {
-    const criteria = lastId ? { _id: command.gt(lastId) } : {};
+    const pageCriteria = lastId ? { ...criteria, _id: command.gt(lastId) } : criteria;
     const result = await db
       .collection(collectionName)
-      .where(criteria)
+      .where(pageCriteria)
       .orderBy('_id', 'asc')
       .limit(COLLECTION_BATCH_SIZE)
       .get();
@@ -79,6 +80,23 @@ async function loadCollection(db, command, collectionName) {
       throw new Error(`${collectionName} cursor pagination requires document _id`);
     }
   }
+}
+
+async function loadDocumentsByIds(db, command, collectionName, ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const batches = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    const idBatch = uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE);
+    const result = await db
+      .collection(collectionName)
+      .where({ _id: command.in(idBatch) })
+      .limit(DOCUMENT_ID_BATCH_SIZE)
+      .get();
+    batches.push(...(Array.isArray(result.data) ? result.data : []));
+  }
+
+  return Array.from(new Map(batches.map(item => [item._id, item])).values());
 }
 
 function getUserProfileName(user = {}) {
@@ -244,18 +262,24 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   }
 
   if (payload.scope === 'joined') {
-    const regRes = await db.collection('registrations').where({ userOpenId: openid, status: 'joined' }).get();
-    const activityIds = regRes.data.map(item => item.activityId);
+    const registrations = await loadCollection(db, command, COLLECTIONS.REGISTRATIONS, {
+      userOpenId: openid,
+      status: 'joined'
+    });
+    const activityIds = registrations.map(item => item.activityId).filter(Boolean);
     if (activityIds.length === 0) {
       return { items: [] };
     }
 
-    const activityRes = await db.collection('activities').where({
-      _id: db.command.in(activityIds)
-    }).get();
+    const activities = await loadDocumentsByIds(
+      db,
+      command,
+      COLLECTIONS.ACTIVITIES,
+      activityIds
+    );
 
     return {
-      items: pageActivities(activityRes.data.filter(item => item.status !== 'deleted'), payload)
+      items: pageActivities(activities.filter(item => item.status !== 'deleted'), payload)
     };
   }
 

@@ -1,6 +1,15 @@
 const { execFileSync } = require('child_process');
 const notifyActivityParticipants = require('../../cloudfunctions/notifyActivityParticipants/index');
 
+function matchesQuery(item, query) {
+  return Object.entries(query).every(([key, expected]) => {
+    if (expected && expected.gt !== undefined) {
+      return String(item[key] || '') > String(expected.gt);
+    }
+    return item[key] === expected;
+  });
+}
+
 function createCollection(dataByCollection, writes) {
   return {
     doc(id) {
@@ -18,16 +27,30 @@ function createCollection(dataByCollection, writes) {
       };
     },
     where(query) {
+      let queryLimit = 100;
+      let order = null;
       return {
-        limit() {
+        orderBy(field, direction) {
+          order = { field, direction };
+          return this;
+        },
+        limit(value) {
+          queryLimit = value;
           return this;
         },
         async get() {
-          const data = Object.values(dataByCollection).filter(item =>
-            Object.keys(query).every(key => item[key] === query[key])
-          );
+          let data = Object.values(dataByCollection).filter(item => matchesQuery(item, query));
 
-          return { data };
+          if (order) {
+            data = data.slice().sort((left, right) => {
+              const result = String(left[order.field] || '').localeCompare(
+                String(right[order.field] || '')
+              );
+              return order.direction === 'desc' ? -result : result;
+            });
+          }
+
+          return { data: data.slice(0, queryLimit) };
         }
       };
     },
@@ -54,6 +77,11 @@ function createFakeDb(seed) {
 
   return {
     writes,
+    command: {
+      gt(value) {
+        return { gt: value };
+      }
+    },
     collection(name) {
       return createCollection(data[name], writes);
     }
@@ -251,6 +279,65 @@ test('notifyActivityParticipants confirms the activity and sends proceeding noti
     notificationType: 'proceeding',
     status: 'sent'
   });
+});
+
+test('notifyActivityParticipants sends to accepted joined users beyond the first query page', async () => {
+  const registrations = Object.fromEntries(
+    Array.from({ length: 105 }, (_, index) => [
+      `reg_${String(index).padStart(3, '0')}`,
+      {
+        _id: `reg_${String(index).padStart(3, '0')}`,
+        activityId: 'activity_1',
+        userOpenId: `openid_player_${index}`,
+        status: 'joined'
+      }
+    ])
+  );
+  const notificationSubscriptions = Object.fromEntries(
+    Array.from({ length: 105 }, (_, index) => [
+      `sub_${String(index).padStart(3, '0')}`,
+      {
+        _id: `sub_${String(index).padStart(3, '0')}`,
+        activityId: 'activity_1',
+        userOpenId: `openid_player_${index}`,
+        templateKey: 'activity_notice',
+        templateId: 'tmpl_123',
+        status: 'accepted'
+      }
+    ])
+  );
+  const fakeDb = createFakeDb({
+    activities: {
+      activity_1: {
+        _id: 'activity_1',
+        title: 'Large Match',
+        startAt: '2026-04-26T12:00:00.000Z',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        confirmStatus: 'pending'
+      }
+    },
+    users: {
+      openid_owner: { _id: 'openid_owner', roles: ['organizer'] }
+    },
+    registrations,
+    notificationSubscriptions
+  });
+  const sendSubscribeMessage = jest.fn().mockResolvedValue({ errCode: 0 });
+
+  const result = await notifyActivityParticipants.main(
+    { activityId: 'activity_1', notificationType: 'proceeding' },
+    { OPENID: 'openid_owner' },
+    {
+      db: fakeDb,
+      now: '2026-04-19T10:00:00.000Z',
+      sendSubscribeMessage,
+      ensureNotificationCollections: jest.fn().mockResolvedValue({})
+    }
+  );
+
+  expect(sendSubscribeMessage).toHaveBeenCalledTimes(105);
+  expect(result.sent).toBe(105);
 });
 
 test('notifyActivityParticipants accepts a web admin session token for confirmation', async () => {

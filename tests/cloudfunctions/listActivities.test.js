@@ -266,6 +266,34 @@ test('joined scope sorts activities after registration lookup and honors limit',
   expect(result.items.map(item => item._id)).toEqual(['activity_new', 'activity_middle']);
 });
 
+test('joined scope includes activities referenced beyond the first registration page', async () => {
+  const registrations = Array.from({ length: 105 }, (_, index) => ({
+    _id: `reg_${String(index).padStart(3, '0')}`,
+    activityId: `activity_${String(index).padStart(3, '0')}`,
+    userOpenId: 'openid_player',
+    status: 'joined'
+  }));
+  const activities = Array.from({ length: 105 }, (_, index) => ({
+    _id: `activity_${String(index).padStart(3, '0')}`,
+    startAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+    status: 'published'
+  }));
+  cloud.database.mockReturnValue(createFakeDb({ registrations, activities }));
+
+  const result = await listActivities.main(
+    { scope: 'joined', limit: 5 },
+    { OPENID: 'openid_player' }
+  );
+
+  expect(result.items.map(item => item._id)).toEqual([
+    'activity_104',
+    'activity_103',
+    'activity_102',
+    'activity_101',
+    'activity_100'
+  ]);
+});
+
 test('web-admin scope lets admin filter activities by date status organizer and keyword', async () => {
   cloud.database.mockReturnValue(
     createFakeDb({

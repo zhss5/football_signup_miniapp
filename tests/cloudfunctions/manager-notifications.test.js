@@ -31,13 +31,37 @@ function createCollection(collectionName, dataByCollection, writes) {
       };
     },
     where(query) {
+      let queryLimit = 100;
+      let order = null;
       return {
+        orderBy(field, direction) {
+          order = { field, direction };
+          return this;
+        },
+        limit(value) {
+          queryLimit = value;
+          return this;
+        },
         async get() {
-          const data = Object.values(dataByCollection).filter(item =>
-            Object.keys(query).every(key => item[key] === query[key])
+          let data = Object.values(dataByCollection).filter(item =>
+            Object.entries(query).every(([key, expected]) => {
+              if (expected && expected.gt !== undefined) {
+                return String(item[key] || '') > String(expected.gt);
+              }
+              return item[key] === expected;
+            })
           );
 
-          return { data };
+          if (order) {
+            data = data.slice().sort((left, right) => {
+              const result = String(left[order.field] || '').localeCompare(
+                String(right[order.field] || '')
+              );
+              return order.direction === 'desc' ? -result : result;
+            });
+          }
+
+          return { data: data.slice(0, queryLimit) };
         }
       };
     },
@@ -61,6 +85,11 @@ function createFakeDb(seed) {
 
   return {
     writes,
+    command: {
+      gt(value) {
+        return { gt: value };
+      }
+    },
     collection(name) {
       return createCollection(name, data[name], writes);
     }
@@ -267,6 +296,57 @@ test('notifyActivityManagers sends registration changes only to subscribed manag
       })
     ])
   );
+});
+
+test('notifyActivityManagers includes accepted managers beyond the first query page', async () => {
+  const users = Object.fromEntries(
+    Array.from({ length: 105 }, (_, index) => [
+      `openid_manager_${index}`,
+      {
+        _id: `openid_manager_${index}`,
+        roles: ['user', 'admin']
+      }
+    ])
+  );
+  const notificationSubscriptions = Object.fromEntries(
+    Array.from({ length: 105 }, (_, index) => [
+      `sub_${String(index).padStart(3, '0')}`,
+      {
+        _id: `sub_${String(index).padStart(3, '0')}`,
+        activityId: 'activity_1',
+        userOpenId: `openid_manager_${index}`,
+        templateKey: 'manager_registration_notice',
+        templateId: 'tmpl_manager',
+        status: 'accepted'
+      }
+    ])
+  );
+  const db = createFakeDb({ users, notificationSubscriptions });
+  const sendSubscribeMessage = jest.fn().mockResolvedValue({ errCode: 0 });
+
+  const result = await notifyActivityManagers(
+    db,
+    {
+      activity: {
+        _id: 'activity_1',
+        title: 'Large Match',
+        organizerOpenId: 'openid_owner',
+        joinedCount: 105,
+        signupLimitTotal: 120
+      },
+      actorOpenId: 'openid_actor',
+      participantName: 'Player',
+      changeType: 'registration_joined',
+      stamp: '2026-05-01T10:00:00.000Z'
+    },
+    {
+      sendSubscribeMessage,
+      ensureNotificationCollections: jest.fn().mockResolvedValue({})
+    }
+  );
+
+  expect(sendSubscribeMessage).toHaveBeenCalledTimes(105);
+  expect(result.sent).toBe(105);
 });
 
 test('notifyActivityManagers consumes stale accepted subscriptions after send failures so managers can re-subscribe', async () => {
