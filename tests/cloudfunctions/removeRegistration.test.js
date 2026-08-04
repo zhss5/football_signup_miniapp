@@ -52,7 +52,25 @@ function createDb({ activity, actorUser, registration, team }) {
   };
 }
 
-function createBenchPromotionDb() {
+function createBenchPromotionDb(options = {}) {
+  const earlyRegistrationId = options.overflow
+    ? 'activity_1_zz_early_bench'
+    : 'activity_1_openid_early_bench';
+  const fillerRegistrations = options.overflow
+    ? Object.fromEntries(
+        Array.from({ length: 105 }, (_, index) => [
+          `activity_1_fill_${String(index).padStart(3, '0')}`,
+          {
+            _id: `activity_1_fill_${String(index).padStart(3, '0')}`,
+            activityId: 'activity_1',
+            teamId: 'team_bench',
+            userOpenId: `openid_fill_${index}`,
+            status: 'joined',
+            joinedAt: '2026-05-01T13:00:00.000Z'
+          }
+        ])
+      )
+    : {};
   const state = {
     activities: {
       activity_1: {
@@ -79,8 +97,9 @@ function createBenchPromotionDb() {
         status: 'joined',
         joinedAt: '2026-05-01T10:00:00.000Z'
       },
-      activity_1_openid_early_bench: {
-        _id: 'activity_1_openid_early_bench',
+      ...fillerRegistrations,
+      [earlyRegistrationId]: {
+        _id: earlyRegistrationId,
         activityId: 'activity_1',
         teamId: 'team_bench',
         userOpenId: 'openid_early_bench',
@@ -118,19 +137,59 @@ function createBenchPromotionDb() {
     }
   };
   const logs = [];
+
+  function matchesQuery(item, query) {
+    return Object.entries(query).every(([key, value]) => {
+      if (value && value.operator === 'gt') {
+        return String(item[key] || '') > String(value.value || '');
+      }
+
+      if (value && value.operator === 'in') {
+        return value.values.includes(item[key]);
+      }
+
+      return item[key] === value;
+    });
+  }
+
+  function createQuery(collectionName, criteria) {
+    let order = null;
+    let queryLimit = 100;
+
+    return {
+      orderBy(field, direction) {
+        order = { field, direction };
+        return this;
+      },
+      limit(value) {
+        queryLimit = value;
+        return this;
+      },
+      async get() {
+        const records = Object.values(
+          collectionName === 'registrations' ? state.registrations : state.teams
+        ).filter(item => matchesQuery(item, criteria));
+
+        if (order) {
+          records.sort((left, right) => {
+            const comparison = String(left[order.field] || '').localeCompare(
+              String(right[order.field] || '')
+            );
+            return order.direction === 'desc' ? -comparison : comparison;
+          });
+        }
+
+        return { data: records.slice(0, queryLimit) };
+      }
+    };
+  }
   const transaction = {
     collection: jest.fn(collectionName => ({
       add: jest.fn(async ({ data }) => {
         logs.push(data);
         return { _id: `activity_log_${logs.length}` };
       }),
-      where: jest.fn(query => ({
-        get: jest.fn().mockResolvedValue({
-          data: Object.values(
-            collectionName === 'registrations' ? state.registrations : state.teams
-          ).filter(item => Object.keys(query).every(key => item[key] === query[key]))
-        })
-      })),
+      where: jest.fn(query => createQuery(collectionName, query)),
       doc: jest.fn(documentId => ({
         get: jest.fn().mockResolvedValue({
           data:
@@ -162,7 +221,16 @@ function createBenchPromotionDb() {
   return {
     state,
     logs,
+    earlyRegistrationId,
     db: {
+      command: {
+        gt(value) {
+          return { operator: 'gt', value };
+        },
+        in(values) {
+          return { operator: 'in', values };
+        }
+      },
       runTransaction: callback => callback(transaction)
     }
   };
@@ -290,6 +358,25 @@ test('removeRegistration promotes the earliest bench registration after removing
     promotedRegistrationId: 'activity_1_openid_early_bench',
     promotedTeamId: 'team_white',
     promotedFromTeamId: 'team_bench'
+  });
+});
+
+test('removeRegistration finds the earliest bench registration beyond the first query page', async () => {
+  const { db, state, earlyRegistrationId } = createBenchPromotionDb({ overflow: true });
+
+  const result = await removeRegistration.main(
+    {
+      activityId: 'activity_1',
+      userOpenId: 'proxy_1'
+    },
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-05-09T15:00:00.000Z' }
+  );
+
+  expect(result.promotedRegistrationId).toBe(earlyRegistrationId);
+  expect(state.registrations[earlyRegistrationId]).toMatchObject({
+    status: 'joined',
+    teamId: 'team_white'
   });
 });
 

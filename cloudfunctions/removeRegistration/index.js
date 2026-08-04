@@ -7,6 +7,8 @@ const { nowIso } = require('./time');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+const COLLECTION_BATCH_SIZE = 100;
+
 function normalizeCount(value) {
   const count = Number(value || 0);
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
@@ -43,19 +45,51 @@ function compareBenchQueue(left, right) {
   return getRegistrationDocumentId(left).localeCompare(getRegistrationDocumentId(right));
 }
 
-async function queryTransactionCollection(transaction, collectionName, query) {
+async function queryTransactionCollection(transaction, command, collectionName, criteria) {
   const collection = transaction.collection(collectionName);
 
   if (!collection || typeof collection.where !== 'function') {
     return { data: [] };
   }
 
-  return collection.where(query).get();
+  const items = [];
+  const seenIds = new Set();
+  let lastId = '';
+
+  while (true) {
+    const pageCriteria = lastId
+      ? { ...criteria, _id: command.gt(lastId) }
+      : criteria;
+    const result = await collection
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+
+    batch.forEach(item => {
+      if (item && item._id && !seenIds.has(item._id)) {
+        seenIds.add(item._id);
+        items.push(item);
+      }
+    });
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return { data: items };
+    }
+
+    const nextLastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!nextLastId || nextLastId === lastId) {
+      throw new Error(`Unable to paginate ${collectionName} transaction query`);
+    }
+    lastId = nextLastId;
+  }
 }
 
-async function findBenchPromotionCandidate(transaction, activityId) {
+async function findBenchPromotionCandidate(transaction, command, activityId) {
   const teamsRes = await queryTransactionCollection(
     transaction,
+    command,
     COLLECTIONS.ACTIVITY_TEAMS,
     { activityId }
   );
@@ -74,8 +108,13 @@ async function findBenchPromotionCandidate(transaction, activityId) {
 
   const registrationsRes = await queryTransactionCollection(
     transaction,
+    command,
     COLLECTIONS.REGISTRATIONS,
-    { activityId, status: 'joined' }
+    {
+      activityId,
+      status: 'joined',
+      teamId: command.in(Array.from(benchTeamById.keys()))
+    }
   );
   const registration = (registrationsRes.data || [])
     .filter(item => benchTeamById.has(item.teamId))
@@ -158,7 +197,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
       .get();
     const team = teamRes.data || {};
     const promotion = !isBenchTeam(team)
-      ? await findBenchPromotionCandidate(transaction, event.activityId)
+      ? await findBenchPromotionCandidate(transaction, db.command, event.activityId)
       : null;
 
     await transaction.collection(COLLECTIONS.REGISTRATIONS).doc(registrationId).update({

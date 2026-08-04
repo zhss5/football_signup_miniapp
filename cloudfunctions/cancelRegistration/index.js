@@ -11,6 +11,7 @@ const REGISTRATION_CANCELLED_NOTIFICATION = 'registration_cancelled';
 const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
 const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]+/g;
+const COLLECTION_BATCH_SIZE = 100;
 
 function normalizeCount(value) {
   const count = Number(value || 0);
@@ -100,18 +101,54 @@ function compareBenchQueue(left, right) {
   return getRegistrationDocumentId(left).localeCompare(getRegistrationDocumentId(right));
 }
 
-async function queryTransactionCollection(transaction, collectionName, query) {
+async function queryTransactionCollection(transaction, command, collectionName, criteria) {
   const collection = transaction.collection(collectionName);
 
   if (!collection || typeof collection.where !== 'function') {
     return { data: [] };
   }
 
-  return collection.where(query).get();
+  const items = [];
+  const seenIds = new Set();
+  let lastId = '';
+
+  while (true) {
+    const pageCriteria = lastId
+      ? { ...criteria, _id: command.gt(lastId) }
+      : criteria;
+    const result = await collection
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+
+    batch.forEach(item => {
+      if (item && item._id && !seenIds.has(item._id)) {
+        seenIds.add(item._id);
+        items.push(item);
+      }
+    });
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return { data: items };
+    }
+
+    const nextLastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!nextLastId || nextLastId === lastId) {
+      throw new Error(`Unable to paginate ${collectionName} transaction query`);
+    }
+    lastId = nextLastId;
+  }
 }
 
-async function findBenchPromotionCandidate(transaction, activityId) {
-  const teamsRes = await queryTransactionCollection(transaction, 'activity_teams', { activityId });
+async function findBenchPromotionCandidate(transaction, command, activityId) {
+  const teamsRes = await queryTransactionCollection(
+    transaction,
+    command,
+    'activity_teams',
+    { activityId }
+  );
   const benchTeams = (teamsRes.data || []).filter(isActiveBenchTeam);
   const benchTeamById = benchTeams.reduce((map, team) => {
     const id = team && team._id ? team._id : '';
@@ -125,10 +162,16 @@ async function findBenchPromotionCandidate(transaction, activityId) {
     return null;
   }
 
-  const registrationRes = await queryTransactionCollection(transaction, 'registrations', {
-    activityId,
-    status: 'joined'
-  });
+  const registrationRes = await queryTransactionCollection(
+    transaction,
+    command,
+    'registrations',
+    {
+      activityId,
+      status: 'joined',
+      teamId: command.in(Array.from(benchTeamById.keys()))
+    }
+  );
   const promotedRegistration = (registrationRes.data || [])
     .filter(registration => benchTeamById.has(registration.teamId))
     .sort(compareBenchQueue)[0] || null;
@@ -395,7 +438,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     const cancelCount = normalizeCount(registrationRes.data.cancelCount) + 1;
     const joinedCountAfter = Math.max(activityRes.data.joinedCount - 1, 0);
     const promotion = !isBenchTeam(teamRes.data)
-      ? await findBenchPromotionCandidate(transaction, event.activityId)
+      ? await findBenchPromotionCandidate(transaction, db.command, event.activityId)
       : null;
 
     await transaction.collection('registrations').doc(registrationId).update({

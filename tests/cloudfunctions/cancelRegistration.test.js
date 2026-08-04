@@ -118,13 +118,32 @@ function createNotificationDb(seed = {}) {
   };
 }
 
-function createBenchPromotionHarness() {
+function createBenchPromotionHarness(options = {}) {
   const writes = {
     registrationUpdates: [],
     activityUpdates: [],
     teamUpdates: [],
     logs: []
   };
+  const earlyRegistrationId = options.overflow
+    ? 'activity_1_zz_early_bench'
+    : 'activity_1_openid_early_bench';
+  const fillerRegistrations = options.overflow
+    ? Object.fromEntries(
+        Array.from({ length: 105 }, (_, index) => [
+          `activity_1_fill_${String(index).padStart(3, '0')}`,
+          {
+            _id: `activity_1_fill_${String(index).padStart(3, '0')}`,
+            activityId: 'activity_1',
+            status: 'joined',
+            teamId: 'team_bench',
+            signupName: `Filler ${index}`,
+            userOpenId: `openid_fill_${index}`,
+            joinedAt: '2026-05-01T13:00:00.000Z'
+          }
+        ])
+      )
+    : {};
   const state = {
     registrations: {
       activity_1_openid_player: {
@@ -146,8 +165,9 @@ function createBenchPromotionHarness() {
         userOpenId: 'openid_late_bench',
         joinedAt: '2026-05-01T12:00:00.000Z'
       },
-      activity_1_openid_early_bench: {
-        _id: 'activity_1_openid_early_bench',
+      ...fillerRegistrations,
+      [earlyRegistrationId]: {
+        _id: earlyRegistrationId,
         activityId: 'activity_1',
         status: 'joined',
         teamId: 'team_bench',
@@ -192,19 +212,59 @@ function createBenchPromotionHarness() {
     }
   };
 
+  function matchesQuery(item, query) {
+    return Object.entries(query).every(([key, value]) => {
+      if (value && value.operator === 'gt') {
+        return String(item[key] || '') > String(value.value || '');
+      }
+
+      if (value && value.operator === 'in') {
+        return value.values.includes(item[key]);
+      }
+
+      return item[key] === value;
+    });
+  }
+
+  function createQuery(collectionName, criteria) {
+    let order = null;
+    let queryLimit = 100;
+
+    return {
+      orderBy(field, direction) {
+        order = { field, direction };
+        return this;
+      },
+      limit(value) {
+        queryLimit = value;
+        return this;
+      },
+      async get() {
+        const records = Object.values(
+          collectionName === 'registrations' ? state.registrations : state.teams
+        ).filter(item => matchesQuery(item, criteria));
+
+        if (order) {
+          records.sort((left, right) => {
+            const comparison = String(left[order.field] || '').localeCompare(
+              String(right[order.field] || '')
+            );
+            return order.direction === 'desc' ? -comparison : comparison;
+          });
+        }
+
+        return { data: records.slice(0, queryLimit) };
+      }
+    };
+  }
+
   const transaction = {
     collection: jest.fn(collectionName => ({
       add: jest.fn(async ({ data }) => {
         writes.logs.push(data);
         return { _id: `activity_logs_${writes.logs.length}` };
       }),
-      where: jest.fn(query => ({
-        get: jest.fn().mockResolvedValue({
-          data: Object.values(
-            collectionName === 'registrations' ? state.registrations : state.teams
-          ).filter(item => Object.keys(query).every(key => item[key] === query[key]))
-        })
-      })),
+      where: jest.fn(query => createQuery(collectionName, query)),
       doc: jest.fn(documentId => ({
         get: jest.fn().mockResolvedValue({
           data:
@@ -244,8 +304,17 @@ function createBenchPromotionHarness() {
     state,
     writes,
     fakeDb: {
+      command: {
+        gt(value) {
+          return { operator: 'gt', value };
+        },
+        in(values) {
+          return { operator: 'in', values };
+        }
+      },
       runTransaction: callback => callback(transaction)
-    }
+    },
+    earlyRegistrationId
   };
 }
 
@@ -654,6 +723,35 @@ test('cancelRegistration promotes the earliest bench registration into a cancell
     promotedRegistrationId: 'activity_1_openid_early_bench',
     promotedTeamId: 'team_white',
     promotedFromTeamId: 'team_bench'
+  });
+
+  jest.dontMock('wx-server-sdk');
+});
+
+test('cancelRegistration finds the earliest bench registration beyond the first query page', async () => {
+  jest.resetModules();
+
+  const { fakeDb, state, earlyRegistrationId } = createBenchPromotionHarness({ overflow: true });
+
+  jest.doMock('wx-server-sdk', () => ({
+    DYNAMIC_CURRENT_ENV: 'current-env',
+    init: jest.fn(),
+    getWXContext: jest.fn(() => ({ OPENID: 'openid_player' })),
+    database: jest.fn(() => fakeDb)
+  }));
+
+  const isolatedCancelRegistration = require('../../cloudfunctions/cancelRegistration/index');
+
+  const result = await isolatedCancelRegistration.main(
+    { activityId: 'activity_1' },
+    {},
+    { now: '2026-05-09T15:00:00.000Z' }
+  );
+
+  expect(result.promotedRegistrationId).toBe(earlyRegistrationId);
+  expect(state.registrations[earlyRegistrationId]).toMatchObject({
+    status: 'joined',
+    teamId: 'team_white'
   });
 
   jest.dontMock('wx-server-sdk');
