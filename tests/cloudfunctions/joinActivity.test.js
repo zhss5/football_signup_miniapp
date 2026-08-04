@@ -1,5 +1,36 @@
 const joinActivity = require('../../cloudfunctions/joinActivity/index');
 
+const TEST_TEAM_PAGE_SIZE = 100;
+
+function createTestCommand() {
+  return {
+    gt: value => ({ __operator: 'gt', value })
+  };
+}
+
+function createPagedTeamQuery(teams, query) {
+  let requestedLimit = TEST_TEAM_PAGE_SIZE;
+  const queryApi = {
+    orderBy: jest.fn(() => queryApi),
+    limit: jest.fn(value => {
+      requestedLimit = value;
+      return queryApi;
+    }),
+    get: jest.fn(async () => {
+      const afterId = query._id && query._id.__operator === 'gt' ? query._id.value : '';
+      const data = Object.values(teams)
+        .filter(team => team.activityId === query.activityId)
+        .filter(team => !afterId || team._id > afterId)
+        .sort((left, right) => left._id.localeCompare(right._id))
+        .slice(0, Math.min(requestedLimit, TEST_TEAM_PAGE_SIZE));
+
+      return { data };
+    })
+  };
+
+  return queryApi;
+}
+
 test('joinActivity rejects full team', async () => {
   await expect(
     joinActivity.main(
@@ -711,7 +742,7 @@ test('joinActivity rejects more than two preferred positions', async () => {
   ).rejects.toThrow('At most two preferred positions are allowed');
 });
 
-test('joinActivity auto-assigns a stale bench request to the first regular team with capacity', async () => {
+test('joinActivity finds a regular-team vacancy after the first 100 team documents', async () => {
   jest.resetModules();
 
   const setRegistration = jest.fn().mockResolvedValue({});
@@ -750,14 +781,25 @@ test('joinActivity auto-assigns a stale bench request to the first regular team 
       status: 'active'
     }
   };
+
+  for (let index = 0; index < TEST_TEAM_PAGE_SIZE; index += 1) {
+    const id = `aa_team_${String(index).padStart(3, '0')}`;
+    teams[id] = {
+      _id: id,
+      activityId: 'activity_1',
+      teamName: `Full ${index}`,
+      sort: index + 10,
+      joinedCount: 1,
+      maxMembers: 1,
+      teamType: 'regular',
+      status: 'active'
+    };
+  }
+
   const transaction = {
     collection: jest.fn(collectionName => ({
       add: jest.fn().mockResolvedValue({}),
-      where: jest.fn(query => ({
-        get: jest.fn().mockResolvedValue({
-          data: Object.values(teams).filter(team => team.activityId === query.activityId)
-        })
-      })),
+      where: jest.fn(query => createPagedTeamQuery(teams, query)),
       doc: jest.fn(documentId => {
         if (collectionName === 'activities') {
           return {
@@ -817,6 +859,7 @@ test('joinActivity auto-assigns a stale bench request to the first regular team 
     init: jest.fn(),
     getWXContext: jest.fn(() => ({ OPENID: 'openid_a' })),
     database: jest.fn(() => ({
+      command: createTestCommand(),
       runTransaction: callback => callback(transaction)
     }))
   }));

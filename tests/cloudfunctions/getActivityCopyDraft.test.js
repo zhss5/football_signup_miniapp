@@ -1,5 +1,30 @@
 const getActivityCopyDraft = require('../../cloudfunctions/getActivityCopyDraft/index');
 
+const TEST_TEAM_PAGE_SIZE = 100;
+
+function createPagedTeamQuery(teams, query) {
+  let requestedLimit = TEST_TEAM_PAGE_SIZE;
+  const queryApi = {
+    orderBy: jest.fn(() => queryApi),
+    limit: jest.fn(value => {
+      requestedLimit = value;
+      return queryApi;
+    }),
+    get: jest.fn(async () => {
+      const afterId = query._id && query._id.__operator === 'gt' ? query._id.value : '';
+      const data = Object.values(teams)
+        .filter(team => team.activityId === query.activityId)
+        .filter(team => !afterId || team._id > afterId)
+        .sort((left, right) => left._id.localeCompare(right._id))
+        .slice(0, Math.min(requestedLimit, TEST_TEAM_PAGE_SIZE));
+
+      return { data };
+    })
+  };
+
+  return queryApi;
+}
+
 function createFakeDb(options = {}) {
   const state = {
     users: {
@@ -86,6 +111,9 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    command: {
+      gt: value => ({ __operator: 'gt', value })
+    },
     collection(name) {
       return {
         doc(id) {
@@ -104,27 +132,33 @@ function createFakeDb(options = {}) {
           };
         },
         where(query) {
-          return {
-            async get() {
-              if (name === 'activity_teams') {
-                return {
-                  data: Object.values(state.teams).filter(
-                    team => team.activityId === query.activityId
-                  )
-                };
-              }
+          if (name === 'activity_teams') {
+            return createPagedTeamQuery(state.teams, query);
+          }
 
-              throw new Error(`Unsupported query: ${name}`);
-            }
-          };
+          throw new Error(`Unsupported query: ${name}`);
         }
       };
     }
   };
 }
 
-test('organizer can start a copy draft from an activity they manage', async () => {
-  const db = createFakeDb();
+test('copy draft reads reusable teams after the first 100 team documents', async () => {
+  const overflowTeams = {};
+  for (let index = 0; index < TEST_TEAM_PAGE_SIZE; index += 1) {
+    const id = `aa_team_${String(index).padStart(3, '0')}`;
+    overflowTeams[id] = {
+      _id: id,
+      activityId: 'activity_1',
+      teamName: `Inactive ${index}`,
+      sort: index + 10,
+      maxMembers: 1,
+      joinedCount: 0,
+      teamType: 'regular',
+      status: 'inactive'
+    };
+  }
+  const db = createFakeDb({ teams: overflowTeams });
 
   const result = await getActivityCopyDraft.main(
     { activityId: 'activity_1' },

@@ -318,3 +318,35 @@ Deployment readiness tasks remain:
 - The runtime remains CloudBase-only: no runtime MySQL migration, dual-write,
   self-hosted HTTP API cutover, collection migration, or data backfill was
   introduced.
+
+## 2026-08-04 Residual Activity-Team Query Hardening
+
+- Extended the approved query-hardening design and implementation plan before
+  changing business code; documentation milestone commit: `c528bdd`.
+- Made `joinActivity` and `addProxyRegistration` traverse every team document
+  for the selected activity before redirecting a stale bench request to the
+  first available regular team.
+- Made `getActivityCopyDraft` load every selected activity team before deriving
+  reusable regular teams and bench capacity.
+- Made `updateActivity` load every selected activity team before validating and
+  reconciling regular and bench teams.
+- Preserved all UI flows, cloud-function names, event fields, response fields,
+  permissions, validation, status strings, team ordering, and audit behavior.
+- TDD RED evidence: the four focused suites each failed once when the relevant
+  team was placed after a simulated 100-document CloudBase response window;
+  the remaining `49` focused tests passed.
+- GREEN verification: focused tests passed with `4` suites and `53` tests; all
+  cloud-function tests passed with `36` suites and `352` tests; full repository
+  regression passed with `85` suites and `888` tests; JavaScript syntax and
+  `git diff --check` passed.
+- V0.9.4 compatibility: `joinActivity`, `addProxyRegistration`, and
+  `updateActivity` exist in tag `0.9.4`; their public contracts remain
+  unchanged. `getActivityCopyDraft` is V2-only.
+- Test-environment deployment requires only `joinActivity`,
+  `addProxyRegistration`, `getActivityCopyDraft`, and `updateActivity`. The
+  existing `activity_teams: activityId + _id` filtered-cursor index remains the
+  required index; no new index or collection is introduced.
+- No Web Admin static hosting or mini-program upload is required. No deployment
+  or push was performed in this follow-up.
+- No stored field, runtime MySQL migration, dual-write, self-hosted HTTP API
+  cutover, collection migration, or data backfill was introduced.

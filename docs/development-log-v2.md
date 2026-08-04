@@ -1901,3 +1901,52 @@ Deployment readiness:
 - Web Admin static files and mini-program source did not change, so this goal
   does not require static hosting or a mini-program upload;
 - no deployment or push was performed by this goal.
+
+## 2026-08-04 - Residual Activity-Team Query Pagination
+
+Completed the four remaining activity-scoped team reads that could stop after
+one CloudBase response page.
+
+Root cause and scope:
+
+- `joinActivity`, `addProxyRegistration`, `getActivityCopyDraft`, and
+  `updateActivity` filtered `activity_teams` by `activityId` but called `get()`
+  only once;
+- an activity with more than 100 accumulated active or historical team rows
+  could therefore omit a later regular-team vacancy, copied team setting,
+  bench capacity, or existing team during update reconciliation;
+- the repair is internal to backend loading and changes no mini-program or Web
+  Admin interaction.
+
+Delivered behavior:
+
+- every path now reads `activity_teams` in `_id` ascending batches of 100 and
+  continues with `activityId + _id > lastId` until the matching set is complete;
+- duplicate team IDs are discarded defensively before the existing business
+  ordering and reconciliation logic runs;
+- the existing regular-team `sort` and `_id` ordering, permissions, validation,
+  event fields, response fields, errors, audit actions, and status enums remain
+  unchanged;
+- the existing CloudBase `activity_teams: activityId + _id` index and future
+  SQL `activity_id` index cover the query without a schema change.
+
+TDD and verification:
+
+- RED: four focused assertions failed for records after a simulated first page,
+  while the other `49` focused assertions passed;
+- GREEN: `4` focused suites and `53` tests passed;
+- all cloud-function tests passed: `36` suites and `352` tests;
+- full repository regression passed: `85` suites and `888` tests;
+- `node --check` passed for all four changed cloud functions;
+- `git diff --check` passed.
+
+Compatibility and deployment:
+
+- tag `0.9.4` contains `joinActivity`, `addProxyRegistration`, and
+  `updateActivity`; the unchanged APIs remain compatible with V1 clients;
+- `getActivityCopyDraft` is V2-only;
+- redeploy only these four functions to apply this follow-up;
+- Web Admin hosting and mini-program upload are not required;
+- no deployment or push was performed;
+- no runtime MySQL migration, dual-write, self-hosted HTTP API switch, stored
+  field migration, or data backfill was introduced.

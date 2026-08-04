@@ -10,6 +10,7 @@ const { normalizeActivityType, validateActivityDraft } = require('./validators')
 const BENCH_TEAM_NAME = '\u66ff\u8865';
 const DEFAULT_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 6;
 const MAX_LATE_CANCELLATION_NOTICE_WINDOW_HOURS = 168;
+const COLLECTION_BATCH_SIZE = 100;
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -21,6 +22,41 @@ async function getCurrentUser(db, openid) {
     .catch(() => ({ data: null }));
 
   return result.data || null;
+}
+
+async function loadActivityTeams(db, activityId) {
+  const teams = [];
+  const seenIds = new Set();
+  let lastId = '';
+
+  while (true) {
+    const criteria = lastId
+      ? { activityId, _id: db.command.gt(lastId) }
+      : { activityId };
+    const result = await db
+      .collection(COLLECTIONS.ACTIVITY_TEAMS)
+      .where(criteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+
+    batch.forEach(team => {
+      if (team && team._id && !seenIds.has(team._id)) {
+        seenIds.add(team._id);
+        teams.push(team);
+      }
+    });
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return teams;
+    }
+
+    lastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error('activity_teams cursor pagination requires document _id');
+    }
+  }
 }
 
 function normalizeImageList(event) {
@@ -382,11 +418,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('Only the organizer or an admin can edit this activity');
   }
 
-  const teamsResult = await db
-    .collection(COLLECTIONS.ACTIVITY_TEAMS)
-    .where({ activityId: event.activityId })
-    .get();
-  const teams = teamsResult.data || [];
+  const teams = await loadActivityTeams(db, event.activityId);
   const regularTeams = getRegularTeams(teams);
   const regularTeamDrafts = buildRegularTeamDrafts(event, regularTeams);
   const signupLimitTotal = resolveSignupLimitTotal(event, regularTeamDrafts);

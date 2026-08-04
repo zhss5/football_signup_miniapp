@@ -1,3 +1,34 @@
+const TEST_TEAM_PAGE_SIZE = 100;
+
+function createTestCommand() {
+  return {
+    gt: value => ({ __operator: 'gt', value })
+  };
+}
+
+function createPagedTeamQuery(teams, query) {
+  let requestedLimit = TEST_TEAM_PAGE_SIZE;
+  const queryApi = {
+    orderBy: jest.fn(() => queryApi),
+    limit: jest.fn(value => {
+      requestedLimit = value;
+      return queryApi;
+    }),
+    get: jest.fn(async () => {
+      const afterId = query._id && query._id.__operator === 'gt' ? query._id.value : '';
+      const data = Object.values(teams)
+        .filter(team => team.activityId === query.activityId)
+        .filter(team => !afterId || team._id > afterId)
+        .sort((left, right) => left._id.localeCompare(right._id))
+        .slice(0, Math.min(requestedLimit, TEST_TEAM_PAGE_SIZE));
+
+      return { data };
+    })
+  };
+
+  return queryApi;
+}
+
 test('addProxyRegistration lets an organizer add a proxy participant', async () => {
   jest.resetModules();
 
@@ -318,11 +349,27 @@ test('addProxyRegistration normalizes proxy participant names', async () => {
   jest.dontMock('wx-server-sdk');
 });
 
-test('addProxyRegistration assigns a bench request to the first available regular team', async () => {
+test('addProxyRegistration finds a regular-team vacancy after the first 100 team documents', async () => {
   jest.resetModules();
+
+  const overflowTeams = {};
+  for (let index = 0; index < TEST_TEAM_PAGE_SIZE; index += 1) {
+    const id = `aa_team_${String(index).padStart(3, '0')}`;
+    overflowTeams[id] = {
+      _id: id,
+      activityId: 'activity_1',
+      teamName: `Full ${index}`,
+      teamType: 'regular',
+      sort: index + 10,
+      joinedCount: 1,
+      maxMembers: 1,
+      status: 'active'
+    };
+  }
 
   const harness = createProxyTransactionHarness({
     teams: {
+      ...overflowTeams,
       team_bench: {
         _id: 'team_bench',
         activityId: 'activity_1',
@@ -518,6 +565,7 @@ function mockCloudDatabase(transaction) {
     init: jest.fn(),
     getWXContext: jest.fn(() => ({ OPENID: 'openid_owner' })),
     database: jest.fn(() => ({
+      command: createTestCommand(),
       runTransaction: callback => callback(transaction)
     }))
   }));
@@ -541,11 +589,7 @@ function createProxyTransactionHarness({ teams }) {
     collection: jest.fn(collectionName => {
       if (collectionName === 'activity_teams') {
         return {
-          where: jest.fn(({ activityId }) => ({
-            get: jest.fn().mockResolvedValue({
-              data: Object.values(teams).filter(team => team.activityId === activityId)
-            })
-          })),
+          where: jest.fn(query => createPagedTeamQuery(teams, query)),
           doc: jest.fn(documentId => ({
             get: jest.fn().mockResolvedValue({ data: teams[documentId] || null }),
             update: jest.fn().mockImplementation(async ({ data }) => {

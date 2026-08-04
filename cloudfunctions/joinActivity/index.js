@@ -13,6 +13,7 @@ const POSITION_VALUES = ['前锋', '中场', '边锋', '后腰', '中卫', '边�
 const MAX_PREFERRED_POSITIONS = 2;
 const MAX_REPEAT_EXIT_COUNT = 3;
 const REPEAT_SIGNUP_LIMIT_MESSAGE = 'Too many repeat signups. Please contact the organizer';
+const COLLECTION_BATCH_SIZE = 100;
 
 function normalizeText(value) {
   return String(value || '').trim();
@@ -81,9 +82,44 @@ function compareTeamOrder(left, right) {
   return String(left && left._id ? left._id : '').localeCompare(String(right && right._id ? right._id : ''));
 }
 
-async function findAvailableRegularTeam(transaction, activityId) {
-  const teamsRes = await transaction.collection('activity_teams').where({ activityId }).get();
-  return (teamsRes.data || [])
+async function loadActivityTeams(transaction, command, activityId) {
+  const teams = [];
+  const seenIds = new Set();
+  let lastId = '';
+
+  while (true) {
+    const criteria = lastId
+      ? { activityId, _id: command.gt(lastId) }
+      : { activityId };
+    const result = await transaction
+      .collection(COLLECTIONS.ACTIVITY_TEAMS)
+      .where(criteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
+    const batch = Array.isArray(result.data) ? result.data : [];
+
+    batch.forEach(team => {
+      if (team && team._id && !seenIds.has(team._id)) {
+        seenIds.add(team._id);
+        teams.push(team);
+      }
+    });
+
+    if (batch.length < COLLECTION_BATCH_SIZE) {
+      return teams;
+    }
+
+    lastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error('activity_teams cursor pagination requires document _id');
+    }
+  }
+}
+
+async function findAvailableRegularTeam(transaction, command, activityId) {
+  const teams = await loadActivityTeams(transaction, command, activityId);
+  return teams
     .filter(team => isActiveRegularTeam(team) && hasTeamCapacity(team))
     .sort(compareTeamOrder)[0] || null;
 }
@@ -220,7 +256,7 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     const requestedTeam = teamRes.data;
     const autoAssignedTeam = isBenchTeam(requestedTeam)
-      ? await findAvailableRegularTeam(transaction, event.activityId)
+      ? await findAvailableRegularTeam(transaction, db.command, event.activityId)
       : null;
     const selectedTeam = autoAssignedTeam || requestedTeam;
     const selectedTeamId = selectedTeam._id || event.teamId;
