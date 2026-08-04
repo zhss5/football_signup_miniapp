@@ -110,8 +110,33 @@ function createFakeDb(options = {}) {
   };
 
   const queryCalls = [];
+  const collectionGets = [];
 
-  function createCollectionQuery(name, criteria = null, querySkip = 0, queryLimit = 100) {
+  function matchesCriteria(item, criteria) {
+    if (!criteria) {
+      return true;
+    }
+
+    return Object.entries(criteria).every(([key, value]) => {
+      if (value && Array.isArray(value.values)) {
+        return value.values.includes(item && item[key]);
+      }
+
+      if (value && value.gt !== undefined) {
+        return String((item && item[key]) || '') > String(value.gt);
+      }
+
+      return item && item[key] === value;
+    });
+  }
+
+  function createCollectionQuery(
+    name,
+    criteria = null,
+    querySkip = 0,
+    queryLimit = 100,
+    order = []
+  ) {
     return {
       doc(id) {
         return {
@@ -122,23 +147,35 @@ function createFakeDb(options = {}) {
       },
       where(nextCriteria) {
         queryCalls.push({ collection: name, criteria: nextCriteria });
-        return createCollectionQuery(name, nextCriteria, querySkip, queryLimit);
+        return createCollectionQuery(name, nextCriteria, querySkip, queryLimit, order);
+      },
+      orderBy(field, direction) {
+        return createCollectionQuery(
+          name,
+          criteria,
+          querySkip,
+          queryLimit,
+          order.concat({ field, direction })
+        );
       },
       skip(value) {
-        return createCollectionQuery(name, criteria, value, queryLimit);
+        return createCollectionQuery(name, criteria, value, queryLimit, order);
       },
       limit(value) {
-        return createCollectionQuery(name, criteria, querySkip, value);
+        return createCollectionQuery(name, criteria, querySkip, value, order);
       },
       async get() {
+        collectionGets.push({ collection: name, criteria });
         const source = Array.isArray(state[name])
           ? state[name]
           : Object.values(state[name] || {});
-        const filtered = criteria
-          ? source.filter(item =>
-              Object.entries(criteria).every(([key, value]) => item && item[key] === value)
-            )
-          : source;
+        let filtered = source.filter(item => matchesCriteria(item, criteria));
+        order.forEach(({ field, direction }) => {
+          filtered = filtered.slice().sort((left, right) => {
+            const result = String(left[field] || '').localeCompare(String(right[field] || ''));
+            return direction === 'desc' ? -result : result;
+          });
+        });
 
         return { data: filtered.slice(querySkip, querySkip + queryLimit) };
       }
@@ -148,6 +185,15 @@ function createFakeDb(options = {}) {
   return {
     state,
     queryCalls,
+    collectionGets,
+    command: {
+      in(values) {
+        return { values };
+      },
+      gt(value) {
+        return { gt: value };
+      }
+    },
     collection(name) {
       return createCollectionQuery(name);
     }
@@ -328,14 +374,11 @@ test('activity detail filters logs in the database before the collection read li
     collection: 'activity_logs',
     criteria: { activityId: 'activity_1' }
   });
-  expect(db.queryCalls).toContainEqual({
-    collection: 'registrations',
-    criteria: { activityId: 'activity_1' }
-  });
-  expect(db.queryCalls).toContainEqual({
-    collection: 'activity_teams',
-    criteria: { activityId: 'activity_1' }
-  });
+  expect(
+    db.collectionGets.filter(entry =>
+      ['registrations', 'activity_teams', 'users'].includes(entry.collection)
+    )
+  ).toEqual([]);
 });
 
 test('target filtering queries current and legacy activity log identity fields', async () => {
@@ -382,4 +425,26 @@ test('target filtering queries current and legacy activity log identity fields',
       }
     ])
   );
+});
+
+test('organizer global logs scope source queries and only load referenced enrichment docs', async () => {
+  const db = createFakeDb();
+
+  await listActivityLogs.main(
+    { limit: 20 },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  const logGets = db.collectionGets.filter(entry => entry.collection === 'activity_logs');
+  expect(logGets.length).toBeGreaterThan(0);
+  expect(logGets.every(entry => Array.isArray(entry.criteria?.activityId?.values))).toBe(true);
+  expect(new Set(logGets.flatMap(entry => entry.criteria.activityId.values))).toEqual(
+    new Set(['activity_1'])
+  );
+  expect(
+    db.collectionGets.filter(entry =>
+      ['registrations', 'activity_teams', 'users'].includes(entry.collection)
+    )
+  ).toEqual([]);
 });

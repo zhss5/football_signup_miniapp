@@ -9,6 +9,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const COLLECTION_BATCH_SIZE = 100;
+const DOCUMENT_ID_BATCH_SIZE = COLLECTION_BATCH_SIZE - 1;
 
 function normalizeLimit(value) {
   const limit = Number(value);
@@ -59,6 +60,78 @@ async function loadCollection(db, command, collectionName, criteria = {}) {
   }
 }
 
+async function loadDocumentsByIds(db, command, collectionName, ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const items = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    const idBatch = uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE);
+    const result = await db
+      .collection(collectionName)
+      .where({ _id: command.in(idBatch) })
+      .limit(DOCUMENT_ID_BATCH_SIZE)
+      .get();
+    items.push(...(Array.isArray(result.data) ? result.data : []));
+  }
+
+  return Array.from(new Map(items.map(item => [item._id, item])).values());
+}
+
+function chunkIds(ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const chunks = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    chunks.push(uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE));
+  }
+
+  return chunks;
+}
+
+function deduplicateLogs(groups) {
+  return Array.from(new Map(groups.flat().map(log => [log._id, log])).values());
+}
+
+async function loadNotificationLogs(db, command, filters, allowedActivityIds = null) {
+  const baseCriteria = {
+    ...(filters.activityId ? { activityId: filters.activityId } : {}),
+    ...(filters.status ? { status: filters.status } : {})
+  };
+  let criteriaGroups;
+
+  if (filters.activityId || allowedActivityIds === null) {
+    criteriaGroups = [baseCriteria];
+  } else {
+    criteriaGroups = chunkIds(allowedActivityIds).map(activityIds => ({
+      ...baseCriteria,
+      activityId: command.in(activityIds)
+    }));
+  }
+
+  if (criteriaGroups.length === 0) {
+    return [];
+  }
+
+  if (!filters.notificationType) {
+    return deduplicateLogs(await Promise.all(
+      criteriaGroups.map(criteria =>
+        loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, criteria)
+      )
+    ));
+  }
+
+  return deduplicateLogs(await Promise.all(criteriaGroups.flatMap(criteria => [
+    loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
+      ...criteria,
+      notificationType: filters.notificationType
+    }),
+    loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
+      ...criteria,
+      type: filters.notificationType
+    })
+  ])));
+}
+
 function compareByCreatedAtDesc(left, right) {
   const createdAtCompare = String(right.createdAt || '').localeCompare(String(left.createdAt || ''));
   if (createdAtCompare !== 0) {
@@ -104,56 +177,56 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
   const command = deps.command || db.command;
-  const activities = await loadCollection(
+  let knownActivities = [];
+  let allowedActivityIds = null;
+
+  if (activityId) {
+    const activity = await loadDoc(db, COLLECTIONS.ACTIVITIES, activityId);
+    if (!activity || (!callerIsAdmin && activity.organizerOpenId !== openid)) {
+      throw businessError('Only the organizer or an admin can list notification logs');
+    }
+    knownActivities = [activity];
+    allowedActivityIds = new Set([activityId]);
+  } else if (!callerIsAdmin) {
+    knownActivities = await loadCollection(
+      db,
+      command,
+      COLLECTIONS.ACTIVITIES,
+      { organizerOpenId: openid }
+    );
+    allowedActivityIds = new Set(knownActivities.map(activity => activity._id));
+  }
+
+  const logs = await loadNotificationLogs(
+    db,
+    command,
+    { activityId, notificationType, status },
+    allowedActivityIds === null ? null : Array.from(allowedActivityIds)
+  );
+
+  const filtered = logs
+    .filter(log => !allowedActivityIds || allowedActivityIds.has(log.activityId))
+    .filter(log => (notificationType ? (log.notificationType || log.type) === notificationType : true))
+    .filter(log => (status ? log.status === status : true))
+    .sort(compareByCreatedAtDesc);
+  const pageLogs = filtered.slice(skip, skip + limit);
+  const knownActivityById = new Map(
+    knownActivities.map(activity => [activity._id, activity])
+  );
+  const missingActivities = await loadDocumentsByIds(
     db,
     command,
     COLLECTIONS.ACTIVITIES,
-    callerIsAdmin ? {} : { organizerOpenId: openid }
-  );
-  const allowedActivityIds = new Set(
-    activities
-      .map(activity => activity._id)
+    pageLogs
+      .map(log => log.activityId)
+      .filter(id => id && !knownActivityById.has(id))
   );
   const activityById = new Map(
-    activities.map(activity => [activity._id, activity])
+    knownActivities.concat(missingActivities).map(activity => [activity._id, activity])
   );
 
-  if (activityId && !allowedActivityIds.has(activityId)) {
-    throw businessError('Only the organizer or an admin can list notification logs');
-  }
-
-  const logCriteria = {
-    ...(activityId ? { activityId } : {}),
-    ...(status ? { status } : {})
-  };
-  let logs;
-  if (notificationType) {
-    const [canonicalLogs, legacyLogs] = await Promise.all([
-      loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
-        ...logCriteria,
-        notificationType
-      }),
-      loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, {
-        ...logCriteria,
-        type: notificationType
-      })
-    ]);
-    logs = Array.from(new Map(
-      canonicalLogs.concat(legacyLogs).map(log => [log._id, log])
-    ).values());
-  } else {
-    logs = await loadCollection(db, command, COLLECTIONS.NOTIFICATION_LOGS, logCriteria);
-  }
-
-  const filtered = logs
-    .filter(log => (activityId ? log.activityId === activityId : allowedActivityIds.has(log.activityId)))
-    .filter(log => (notificationType ? (log.notificationType || log.type) === notificationType : true))
-    .filter(log => (status ? log.status === status : true))
-    .sort(compareByCreatedAtDesc)
-    .map(log => toSafeLog(log, activityById.get(log.activityId)));
-
   return {
-    items: filtered.slice(skip, skip + limit),
+    items: pageLogs.map(log => toSafeLog(log, activityById.get(log.activityId))),
     total: filtered.length,
     limit,
     skip,

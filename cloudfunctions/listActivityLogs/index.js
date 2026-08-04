@@ -9,6 +9,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const COLLECTION_BATCH_SIZE = 100;
+const DOCUMENT_ID_BATCH_SIZE = COLLECTION_BATCH_SIZE - 1;
 
 async function loadDoc(db, collectionName, id) {
   const res = await db.collection(collectionName).doc(id).get();
@@ -23,26 +24,41 @@ async function loadDocs(db, collectionName, ids) {
   return docs.filter(Boolean);
 }
 
-async function loadCollection(db, collectionName, criteria = null) {
+async function loadCollection(db, command, collectionName, criteria = {}) {
   const items = [];
-  let offset = 0;
+  let lastId = '';
 
   while (true) {
-    let query = db.collection(collectionName);
-    if (criteria && Object.keys(criteria).length) {
-      query = query.where(criteria);
-    }
-
-    const res = await query.skip(offset).limit(COLLECTION_BATCH_SIZE).get();
+    const pageCriteria = lastId ? { ...criteria, _id: command.gt(lastId) } : criteria;
+    const res = await db
+      .collection(collectionName)
+      .where(pageCriteria)
+      .orderBy('_id', 'asc')
+      .limit(COLLECTION_BATCH_SIZE)
+      .get();
     const batch = Array.isArray(res.data) ? res.data : [];
     items.push(...batch);
 
     if (batch.length < COLLECTION_BATCH_SIZE) {
-      return items;
+      return Array.from(new Map(items.map(item => [item._id, item])).values());
     }
 
-    offset += batch.length;
+    lastId = batch[batch.length - 1] && batch[batch.length - 1]._id;
+    if (!lastId) {
+      throw new Error(`${collectionName} cursor pagination requires document _id`);
+    }
   }
+}
+
+function chunkIds(ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const chunks = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    chunks.push(uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE));
+  }
+
+  return chunks;
 }
 
 function normalizeLimit(value) {
@@ -124,31 +140,50 @@ function deduplicateLogs(logGroups) {
   return Array.from(logsById.values());
 }
 
-async function loadActivityLogs(db, filters) {
-  const criteria = {};
+async function loadActivityLogs(db, command, filters, allowedActivityIds = null) {
+  const baseCriteria = {};
   if (filters.activityId) {
-    criteria.activityId = filters.activityId;
+    baseCriteria.activityId = filters.activityId;
   }
   if (filters.action) {
-    criteria.action = filters.action;
+    baseCriteria.action = filters.action;
+  }
+
+  let criteriaGroups;
+  if (filters.activityId || allowedActivityIds === null) {
+    criteriaGroups = [baseCriteria];
+  } else {
+    criteriaGroups = chunkIds(allowedActivityIds).map(activityIds => ({
+      ...baseCriteria,
+      activityId: command.in(activityIds)
+    }));
+  }
+
+  if (criteriaGroups.length === 0) {
+    return [];
   }
 
   if (!filters.targetOpenId) {
-    return loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, criteria);
+    const groups = await Promise.all(
+      criteriaGroups.map(criteria =>
+        loadCollection(db, command, COLLECTIONS.ACTIVITY_LOGS, criteria)
+      )
+    );
+    return deduplicateLogs(groups);
   }
 
-  const [currentLogs, legacyLogs] = await Promise.all([
-    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, {
+  const groups = await Promise.all(criteriaGroups.flatMap(criteria => [
+    loadCollection(db, command, COLLECTIONS.ACTIVITY_LOGS, {
       ...criteria,
       targetOpenId: filters.targetOpenId
     }),
-    loadCollection(db, COLLECTIONS.ACTIVITY_LOGS, {
+    loadCollection(db, command, COLLECTIONS.ACTIVITY_LOGS, {
       ...criteria,
       userOpenId: filters.targetOpenId
     })
-  ]);
+  ]));
 
-  return deduplicateLogs([currentLogs, legacyLogs]);
+  return deduplicateLogs(groups);
 }
 
 function toSafeLog(log, activityById, registrationById, teamById, userById) {
@@ -206,23 +241,19 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const targetOpenId = normalizeText(payload.targetOpenId);
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
+  const command = deps.command || db.command;
+  const caller = await loadDoc(db, COLLECTIONS.USERS, openid);
+  const callerIsAdmin = isAdmin(caller);
+  const callerIsOrganizer = hasRole(caller, 'organizer');
+  if (!callerIsAdmin && !callerIsOrganizer) {
+    throw businessError('Only the organizer or an admin can list activity logs');
+  }
 
-  let caller;
-  let activities;
-  let logs;
-  let registrations;
-  let teams;
-  let users;
+  let allowedActivityIds = null;
+  let knownActivities = [];
 
   if (activityId) {
-    const activityResult = await Promise.all([
-      loadDoc(db, COLLECTIONS.USERS, openid),
-      loadDoc(db, COLLECTIONS.ACTIVITIES, activityId),
-      loadActivityLogs(db, { activityId, action, targetOpenId })
-    ]);
-    caller = activityResult[0];
-    const activity = activityResult[1];
-    logs = activityResult[2];
+    const activity = await loadDoc(db, COLLECTIONS.ACTIVITIES, activityId);
 
     if (!activity) {
       throw businessError('Activity not found');
@@ -231,55 +262,24 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     if (!canEditActivity(activity, caller, openid)) {
       throw businessError('Only the organizer or an admin can list activity logs');
     }
-
-    [registrations, teams] = await Promise.all([
-      loadCollection(db, COLLECTIONS.REGISTRATIONS, { activityId }),
-      loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS, { activityId })
-    ]);
-    users = await loadDocs(db, COLLECTIONS.USERS, [
-      openid,
-      ...registrations.map(registration => registration.userOpenId),
-      ...logs.flatMap(log => [
-        log.operatorOpenId,
-        log.targetOpenId,
-        log.userOpenId
-      ])
-    ]);
-    activities = [activity];
-  } else {
-    [caller, activities, logs, registrations, teams, users] = await Promise.all([
-      loadDoc(db, COLLECTIONS.USERS, openid),
-      loadCollection(db, COLLECTIONS.ACTIVITIES),
-      loadActivityLogs(db, { activityId, action, targetOpenId }),
-      loadCollection(db, COLLECTIONS.REGISTRATIONS),
-      loadCollection(db, COLLECTIONS.ACTIVITY_TEAMS),
-      loadCollection(db, COLLECTIONS.USERS)
-    ]);
-  }
-
-  const callerIsAdmin = isAdmin(caller);
-  const callerIsOrganizer = hasRole(caller, 'organizer');
-  if (!callerIsAdmin && !callerIsOrganizer) {
-    throw businessError('Only the organizer or an admin can list activity logs');
-  }
-
-  const activityById = buildCollectionMap(activities);
-  const registrationById = buildCollectionMap(registrations);
-  const teamById = buildCollectionMap(teams);
-  const userById = buildCollectionMap(users);
-
-  let allowedActivityIds;
-  if (activityId) {
     allowedActivityIds = new Set([activityId]);
-  } else if (callerIsAdmin) {
-    allowedActivityIds = null;
-  } else {
-    allowedActivityIds = new Set(
-      activities
-        .filter(activity => activity && activity.organizerOpenId === openid)
-        .map(activity => activity._id)
+    knownActivities = [activity];
+  } else if (!callerIsAdmin) {
+    knownActivities = await loadCollection(
+      db,
+      command,
+      COLLECTIONS.ACTIVITIES,
+      { organizerOpenId: openid }
     );
+    allowedActivityIds = new Set(knownActivities.map(activity => activity._id));
   }
+
+  const logs = await loadActivityLogs(
+    db,
+    command,
+    { activityId, action, targetOpenId },
+    allowedActivityIds === null ? null : Array.from(allowedActivityIds)
+  );
 
   const filtered = logs
     .filter(log => log && log.activityId)
@@ -287,9 +287,31 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     .filter(log => !action || log.action === action)
     .filter(log => !targetOpenId || log.targetOpenId === targetOpenId || log.userOpenId === targetOpenId)
     .sort(compareLogsByCreatedAtDesc);
-  const page = filtered
-    .slice(skip, skip + limit)
-    .map(log => toSafeLog(log, activityById, registrationById, teamById, userById));
+  const pageLogs = filtered.slice(skip, skip + limit);
+  const knownActivityById = buildCollectionMap(knownActivities);
+  const missingActivityIds = pageLogs
+    .map(log => log.activityId)
+    .filter(id => id && !knownActivityById[id]);
+  const [missingActivities, registrations] = await Promise.all([
+    loadDocs(db, COLLECTIONS.ACTIVITIES, missingActivityIds),
+    loadDocs(db, COLLECTIONS.REGISTRATIONS, pageLogs.map(log => log.registrationId))
+  ]);
+  const activityById = buildCollectionMap(knownActivities.concat(missingActivities));
+  const registrationById = buildCollectionMap(registrations);
+  const teams = await loadDocs(db, COLLECTIONS.ACTIVITY_TEAMS, pageLogs.flatMap(log => {
+    const registration = registrationById[log.registrationId] || {};
+    return [log.teamId, log.fromTeamId, log.toTeamId, registration.teamId];
+  }));
+  const users = await loadDocs(db, COLLECTIONS.USERS, [
+    openid,
+    ...registrations.map(registration => registration.userOpenId),
+    ...pageLogs.flatMap(log => [log.operatorOpenId, log.targetOpenId, log.userOpenId])
+  ]);
+  const teamById = buildCollectionMap(teams);
+  const userById = buildCollectionMap(users);
+  const page = pageLogs.map(log =>
+    toSafeLog(log, activityById, registrationById, teamById, userById)
+  );
 
   return {
     items: page,

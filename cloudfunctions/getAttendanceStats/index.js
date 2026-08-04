@@ -10,6 +10,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const COLLECTION_BATCH_SIZE = 100;
+const DOCUMENT_ID_BATCH_SIZE = COLLECTION_BATCH_SIZE - 1;
 
 async function loadUser(db, openid) {
   const res = await db.collection(COLLECTIONS.USERS).doc(openid).get();
@@ -58,6 +59,43 @@ async function loadCollection(db, command, collectionName, criteria = {}) {
       throw new Error(`${collectionName} cursor pagination requires document _id`);
     }
   }
+}
+
+async function loadCollectionByForeignIds(
+  db,
+  command,
+  collectionName,
+  fieldName,
+  ids
+) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const items = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    const idBatch = uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE);
+    items.push(...await loadCollection(db, command, collectionName, {
+      [fieldName]: command.in(idBatch)
+    }));
+  }
+
+  return Array.from(new Map(items.map(item => [item._id, item])).values());
+}
+
+async function loadDocumentsByIds(db, command, collectionName, ids) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const items = [];
+
+  for (let index = 0; index < uniqueIds.length; index += DOCUMENT_ID_BATCH_SIZE) {
+    const idBatch = uniqueIds.slice(index, index + DOCUMENT_ID_BATCH_SIZE);
+    const result = await db
+      .collection(collectionName)
+      .where({ _id: command.in(idBatch) })
+      .limit(DOCUMENT_ID_BATCH_SIZE)
+      .get();
+    items.push(...(Array.isArray(result.data) ? result.data : []));
+  }
+
+  return Array.from(new Map(items.map(item => [item._id, item])).values());
 }
 
 function parseTimestamp(value) {
@@ -140,6 +178,46 @@ function isCountableActivityInRange(activity, rangeStart, rangeEnd, nowAt, activ
 
   const startAt = parseTimestamp(activity.startAt);
   return startAt <= nowAt;
+}
+
+function buildStartAtCriterion(command, startAt, endAt) {
+  const rangeStart = parseTimestamp(startAt) === null ? '' : startAt;
+  const rangeEnd = parseTimestamp(endAt) === null ? '' : endAt;
+
+  if (rangeStart && rangeEnd) {
+    return command.gte(rangeStart).and(command.lte(rangeEnd));
+  }
+
+  if (rangeStart) {
+    return command.gte(rangeStart);
+  }
+
+  if (rangeEnd) {
+    return command.lte(rangeEnd);
+  }
+
+  return null;
+}
+
+function buildActivityCriteria(command, payload, openid, callerIsAdmin, activityTypeFilter) {
+  const criteria = {
+    status: command.nin(['cancelled', 'deleted'])
+  };
+  const startAtCriterion = buildStartAtCriterion(command, payload.startAt, payload.endAt);
+
+  if (!callerIsAdmin) {
+    criteria.organizerOpenId = openid;
+  }
+
+  if (activityTypeFilter === 'external') {
+    criteria.activityType = activityTypeFilter;
+  }
+
+  if (startAtCriterion) {
+    criteria.startAt = startAtCriterion;
+  }
+
+  return criteria;
 }
 
 function getParticipantName(registration) {
@@ -236,11 +314,38 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const limit = normalizeLimit(payload.limit);
   const skip = normalizeSkip(payload.skip);
   const command = deps.command || db.command;
-  const [activities, registrations, users] = await Promise.all([
-    loadCollection(db, command, COLLECTIONS.ACTIVITIES),
-    loadCollection(db, command, COLLECTIONS.REGISTRATIONS),
-    loadCollection(db, command, COLLECTIONS.USERS)
-  ]);
+  const activityCriteria = buildActivityCriteria(
+    command,
+    payload,
+    openid,
+    callerIsAdmin,
+    activityTypeFilter
+  );
+  const activities = await loadCollection(
+    db,
+    command,
+    COLLECTIONS.ACTIVITIES,
+    activityCriteria
+  );
+  const outcomeActivities = activities.filter(activity =>
+    isBaseActivityInRange(activity, rangeStart, rangeEnd, activityTypeFilter) &&
+    (callerIsAdmin || activity.organizerOpenId === openid)
+  );
+  const registrations = await loadCollectionByForeignIds(
+    db,
+    command,
+    COLLECTIONS.REGISTRATIONS,
+    'activityId',
+    outcomeActivities.map(activity => activity._id)
+  );
+  const users = await loadDocumentsByIds(
+    db,
+    command,
+    COLLECTIONS.USERS,
+    registrations
+      .filter(registration => !registration.proxyRegistration)
+      .map(registration => registration.userOpenId)
+  );
   const userById = users.reduce((acc, user) => {
     if (user && user._id) {
       acc[user._id] = user;
@@ -258,13 +363,8 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
 
     return acc;
   }, {});
-  const outcomeActivityById = activities.reduce((acc, activity) => {
-    if (
-      isBaseActivityInRange(activity, rangeStart, rangeEnd, activityTypeFilter) &&
-      (callerIsAdmin || activity.organizerOpenId === openid)
-    ) {
-      acc[activity._id] = activity;
-    }
+  const outcomeActivityById = outcomeActivities.reduce((acc, activity) => {
+    acc[activity._id] = activity;
 
     return acc;
   }, {});

@@ -6,6 +6,10 @@ function matchesQuery(item, query) {
   }
 
   return Object.entries(query).every(([key, expected]) => {
+    if (expected && Array.isArray(expected.values)) {
+      return expected.values.includes(item[key]);
+    }
+
     if (expected && expected.gt !== undefined) {
       return String(item[key] || '') > String(expected.gt);
     }
@@ -14,7 +18,7 @@ function matchesQuery(item, query) {
   });
 }
 
-function createCollectionQuery(source, state = {}) {
+function createCollectionQuery(source, state = {}, queryLog = null, collectionName = '') {
   const queryState = {
     query: null,
     order: [],
@@ -24,18 +28,26 @@ function createCollectionQuery(source, state = {}) {
 
   return {
     where(query) {
-      return createCollectionQuery(source, { ...queryState, query });
+      return createCollectionQuery(source, { ...queryState, query }, queryLog, collectionName);
     },
     orderBy(field, direction) {
       return createCollectionQuery(source, {
         ...queryState,
         order: queryState.order.concat({ field, direction })
-      });
+      }, queryLog, collectionName);
     },
     limit(count) {
-      return createCollectionQuery(source, { ...queryState, limit: Number(count) || 0 });
+      return createCollectionQuery(
+        source,
+        { ...queryState, limit: Number(count) || 0 },
+        queryLog,
+        collectionName
+      );
     },
     async get() {
+      if (queryLog) {
+        queryLog.push({ collectionName, query: queryState.query });
+      }
       let data = source.filter(item => matchesQuery(item, queryState.query));
 
       queryState.order.forEach(({ field, direction }) => {
@@ -51,6 +63,7 @@ function createCollectionQuery(source, state = {}) {
 }
 
 function createFakeDb(options = {}) {
+  const queryLog = [];
   const state = {
     users: {
       openid_admin: { _id: 'openid_admin', roles: ['user', 'admin'] },
@@ -97,13 +110,22 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    queryLog,
     command: {
+      in(values) {
+        return { values };
+      },
       gt(value) {
         return { gt: value };
       }
     },
     collection(name) {
-      const query = createCollectionQuery(Object.values(state[name] || {}));
+      const query = createCollectionQuery(
+        Object.values(state[name] || {}),
+        {},
+        queryLog,
+        name
+      );
 
       return {
         ...query,
@@ -228,5 +250,24 @@ test('listNotificationLogs filters beyond the source cap and returns a stable se
   expect(result.items).toHaveLength(20);
   expect(result.items.map(item => item._id)).toEqual(
     Array.from({ length: 20 }, (_, index) => `log_page_${String(24 - index).padStart(3, '0')}`)
+  );
+});
+
+test('organizer notification logs are queried only for owned activities', async () => {
+  const db = createFakeDb();
+
+  await listNotificationLogs.main(
+    { limit: 20 },
+    { OPENID: 'openid_owner' },
+    { db }
+  );
+
+  const logQueries = db.queryLog.filter(entry => entry.collectionName === 'notification_logs');
+  expect(logQueries.length).toBeGreaterThan(0);
+  expect(
+    logQueries.every(entry => Array.isArray(entry.query?.activityId?.values))
+  ).toBe(true);
+  expect(new Set(logQueries.flatMap(entry => entry.query.activityId.values))).toEqual(
+    new Set(['activity_1'])
   );
 });

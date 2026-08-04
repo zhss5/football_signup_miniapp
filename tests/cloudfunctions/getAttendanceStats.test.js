@@ -6,15 +6,35 @@ function matchesQuery(item, query) {
   }
 
   return Object.entries(query).every(([key, expected]) => {
+    if (expected && Array.isArray(expected.values)) {
+      return expected.values.includes(item[key]);
+    }
+
+    if (expected && Array.isArray(expected.notValues)) {
+      return !expected.notValues.includes(item[key]);
+    }
+
     if (expected && expected.gt !== undefined) {
       return String(item[key] || '') > String(expected.gt);
+    }
+
+    if (expected && expected.gte !== undefined && String(item[key] || '') < String(expected.gte)) {
+      return false;
+    }
+
+    if (expected && expected.lte !== undefined && String(item[key] || '') > String(expected.lte)) {
+      return false;
+    }
+
+    if (expected && (expected.gte !== undefined || expected.lte !== undefined)) {
+      return true;
     }
 
     return item[key] === expected;
   });
 }
 
-function createCollectionQuery(source, state = {}) {
+function createCollectionQuery(source, state = {}, queryLog = null, collectionName = '') {
   const queryState = {
     query: null,
     order: [],
@@ -24,18 +44,26 @@ function createCollectionQuery(source, state = {}) {
 
   return {
     where(query) {
-      return createCollectionQuery(source, { ...queryState, query });
+      return createCollectionQuery(source, { ...queryState, query }, queryLog, collectionName);
     },
     orderBy(field, direction) {
       return createCollectionQuery(source, {
         ...queryState,
         order: queryState.order.concat({ field, direction })
-      });
+      }, queryLog, collectionName);
     },
     limit(count) {
-      return createCollectionQuery(source, { ...queryState, limit: Number(count) || 0 });
+      return createCollectionQuery(
+        source,
+        { ...queryState, limit: Number(count) || 0 },
+        queryLog,
+        collectionName
+      );
     },
     async get() {
+      if (queryLog) {
+        queryLog.push({ collectionName, query: queryState.query });
+      }
       let data = source.filter(item => matchesQuery(item, queryState.query));
 
       queryState.order.forEach(({ field, direction }) => {
@@ -51,6 +79,7 @@ function createCollectionQuery(source, state = {}) {
 }
 
 function createFakeDb(options = {}) {
+  const queryLog = [];
   const state = {
     users: {
       openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] },
@@ -126,13 +155,36 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    queryLog,
     command: {
+      in(values) {
+        return { values };
+      },
+      nin(values) {
+        return { notValues: values };
+      },
       gt(value) {
         return { gt: value };
+      },
+      gte(value) {
+        return {
+          gte: value,
+          and(other) {
+            return { gte: value, ...other };
+          }
+        };
+      },
+      lte(value) {
+        return { lte: value };
       }
     },
     collection(name) {
-      const query = createCollectionQuery(Object.values(state[name] || {}));
+      const query = createCollectionQuery(
+        Object.values(state[name] || {}),
+        {},
+        queryLog,
+        name
+      );
 
       return {
         ...query,
@@ -1037,4 +1089,64 @@ test('regular user cannot get attendance stats', async () => {
   await expect(
     getAttendanceStats.main(dateRange, { OPENID: 'openid_regular' }, { db })
   ).rejects.toThrow('Only organizers or admins can view attendance stats');
+});
+
+test('attendance stats scope activities before loading registrations and referenced users', async () => {
+  const db = createFakeDb({
+    activities: {
+      activity_external: {
+        _id: 'activity_external',
+        title: 'External Match',
+        organizerOpenId: 'openid_owner',
+        status: 'published',
+        activityType: 'external',
+        startAt: '2026-05-10T12:00:00.000Z'
+      },
+      activity_external_other: {
+        _id: 'activity_external_other',
+        title: 'Other External Match',
+        organizerOpenId: 'openid_other_owner',
+        status: 'published',
+        activityType: 'external',
+        startAt: '2026-05-11T12:00:00.000Z'
+      }
+    },
+    registrations: {
+      reg_external: {
+        _id: 'reg_external',
+        activityId: 'activity_external',
+        userOpenId: 'openid_alex',
+        signupName: 'Alex',
+        status: 'joined',
+        attendanceStatus: 'present'
+      }
+    }
+  });
+
+  await getAttendanceStats.main(
+    { ...dateRange, activityType: 'external' },
+    { OPENID: 'openid_owner' },
+    { db, now: '2026-06-01T00:00:00.000Z' }
+  );
+
+  const activityQueries = db.queryLog.filter(entry => entry.collectionName === 'activities');
+  expect(activityQueries[0].query).toMatchObject({
+    organizerOpenId: 'openid_owner',
+    status: { notValues: ['cancelled', 'deleted'] },
+    activityType: 'external',
+    startAt: {
+      gte: dateRange.startAt,
+      lte: dateRange.endAt
+    }
+  });
+  const registrationQueries = db.queryLog.filter(entry => entry.collectionName === 'registrations');
+  expect(registrationQueries.every(entry => entry.query.activityId.values)).toBe(true);
+  expect(new Set(registrationQueries.flatMap(entry => entry.query.activityId.values))).toEqual(
+    new Set(['activity_external'])
+  );
+  const userQueries = db.queryLog.filter(entry => entry.collectionName === 'users');
+  expect(userQueries.every(entry => entry.query._id.values)).toBe(true);
+  expect(new Set(userQueries.flatMap(entry => entry.query._id.values))).toEqual(
+    new Set(['openid_alex'])
+  );
 });
