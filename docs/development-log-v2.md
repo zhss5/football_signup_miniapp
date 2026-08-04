@@ -4,6 +4,31 @@ This file is the development log for Version 2 work on the `codex/version-2-web-
 
 Use this file for Version 2 implementation entries instead of appending Version 2 work to `docs/development-log.md`.
 
+## 2026-08-04 - Finalized Version 2 Review And Production Release Order
+
+Updated the upgrade runbook and handoff with the finalized sequence from
+mini-program review through production CloudBase rollout and Web Admin domain
+launch.
+
+- the validated test environment remains stable throughout mini-program
+  review;
+- production is backed up and upgraded only after review approval, using the
+  rehearsed additive bootstrap, Version 1-compatible function wave, V0.9.4
+  smoke, Version 2-only wave, and controlled Version 2 smoke;
+- production Web Admin may be deployed for restricted internal verification,
+  but public launch waits for ICP filing approval, `admin.cobboy.cn` binding,
+  HTTPS, Web security-domain configuration, and final smoke verification;
+- the approved Version 2 mini program is published only after production
+  backend and client checks pass;
+- the current review package intentionally retains
+  `ENABLE_CLOUD_DIAGNOSTICS=true`; the earlier draft recommendation to disable
+  it is no longer the active release decision;
+- the applicable public-security filing remains a post-launch compliance step
+  subject to the deadline in the current rules.
+
+No business code, CloudBase resource, mini-program package, or hosted Web Admin
+artifact was changed by this documentation update.
+
 ## 2026-08-03 - Corrected V0.9.4 Rehearsal Collection Baseline
 
 Corrected the upgrade rehearsal after verifying the annotated `0.9.4` tag

@@ -1,11 +1,12 @@
 # Football Signup Mini Program Handoff
 
-- Date: 2026-07-24
+- Date: 2026-08-04
 - Branch: `codex/version-2-web-admin`
 - Workspace: `D:/workspaces/football_signup_miniapp`
 - Remote: `origin` -> `git@github.com:zhss5/football_signup_miniapp.git`
 - Baseline commit before the Web Admin QR-login implementation: `66b12ff Add test web admin CloudBase runtime`
-- Remote sync status: this goal creates local commits only; no push was requested. Run `git status --short --branch` before rollout or publishing.
+- Remote sync status: verify `git status --short --branch` and the remote branch
+  head before every rollout or publication step.
 
 ## 1. Current State
 
@@ -120,6 +121,28 @@ The production deployment gate is compatibility-first:
 4. deploy Version 2-only functions;
 5. smoke the Version 2 mini program and Web Admin;
 6. compare data integrity and counts before approving production rollout.
+
+The finalized review-to-production sequence is:
+
+1. submit the Version 2 mini program for review while keeping the validated
+   test environment unchanged;
+2. progress the `cobboy.cn` ICP filing in parallel;
+3. after review approval, back up production and deploy additive collections,
+   indexes, the Version 1-compatible function wave, and Version 2-only
+   functions in the rehearsed order;
+4. run the released V0.9.4 smoke before the Version 2-only wave, then run a
+   controlled Version 2 production smoke;
+5. deploy production Web Admin for restricted internal validation;
+6. publish the approved Version 2 mini program only after production checks
+   pass;
+7. after ICP filing approval, bind `admin.cobboy.cn`, configure HTTPS and Web
+   security domains, run the final Web Admin smoke, and then open it publicly;
+8. complete the applicable public-security filing after public launch within
+   the deadline required by the current rules.
+
+The current review-package decision is to retain
+`ENABLE_CLOUD_DIAGNOSTICS=true`. Do not silently replace this with the earlier
+draft recommendation to disable diagnostics.
 
 Prefer function/client rollback over database restore because Version 2 fields
 and collections are additive. Restore data only for proven deletion,
