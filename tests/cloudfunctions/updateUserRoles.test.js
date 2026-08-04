@@ -20,8 +20,29 @@ function createFakeDb(options = {}) {
       },
       ...(options.users || {})
     },
-    user_role_logs: []
+    user_role_logs: [],
+    queries: []
   };
+
+  function matchesCriteria(item, criteria) {
+    return Object.entries(criteria || {}).every(([key, value]) => {
+      const actual = item && item[key];
+      return Array.isArray(actual) ? actual.includes(value) : actual === value;
+    });
+  }
+
+  function createQuery(name, criteria = {}) {
+    return {
+      where(nextCriteria) {
+        return createQuery(name, { ...criteria, ...nextCriteria });
+      },
+      async count() {
+        const values = Object.values(state[name] || {});
+        state.queries.push({ name, criteria, operation: 'count' });
+        return { total: values.filter(item => matchesCriteria(item, criteria)).length };
+      }
+    };
+  }
 
   return {
     state,
@@ -46,7 +67,11 @@ function createFakeDb(options = {}) {
             return { data: state[name] };
           }
 
-          return { data: Object.values(state[name] || {}) };
+          state.queries.push({ name, criteria: {}, operation: 'get' });
+          return { data: Object.values(state[name] || {}).slice(0, 100) };
+        },
+        where(criteria) {
+          return createQuery(name, criteria);
         },
         async add({ data }) {
           const id = `${name}_${state[name].length + 1}`;
@@ -124,6 +149,45 @@ test('cannot remove the last super_admin', async () => {
       { db, now: fixedNow }
     )
   ).rejects.toThrow('Cannot remove the last super admin');
+});
+
+test('super_admin count includes matching users beyond the first collection page', async () => {
+  const fillers = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => [
+      `openid_regular_${String(index).padStart(3, '0')}`,
+      {
+        _id: `openid_regular_${String(index).padStart(3, '0')}`,
+        roles: ['user']
+      }
+    ])
+  );
+  const db = createFakeDb({
+    users: {
+      ...fillers,
+      openid_second_root: {
+        _id: 'openid_second_root',
+        roles: ['user', 'super_admin']
+      }
+    }
+  });
+
+  const result = await updateUserRoles.main(
+    { targetOpenId: 'openid_second_root', roles: ['user', 'admin'] },
+    { OPENID: 'openid_root' },
+    { db, now: fixedNow }
+  );
+
+  expect(result.user.roles).toEqual(['user', 'admin']);
+  expect(db.state.queries).toContainEqual({
+    name: 'users',
+    criteria: { roles: 'super_admin' },
+    operation: 'count'
+  });
+  expect(db.state.queries).not.toContainEqual({
+    name: 'users',
+    criteria: {},
+    operation: 'get'
+  });
 });
 
 test('role changes write an audit log', async () => {

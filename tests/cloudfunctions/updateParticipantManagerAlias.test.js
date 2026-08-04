@@ -1,6 +1,26 @@
 const updateParticipantManagerAlias = require('../../cloudfunctions/updateParticipantManagerAlias/index');
 
 function createFakeDb(options = {}) {
+  const defaultRegistrations = {
+    reg_player: {
+      _id: 'reg_player',
+      activityId: 'activity_1',
+      teamId: 'team_green',
+      userOpenId: 'openid_player',
+      status: 'joined',
+      signupName: 'Player',
+      proxyRegistration: false
+    },
+    reg_other_player: {
+      _id: 'reg_other_player',
+      activityId: 'activity_other',
+      teamId: 'team_other',
+      userOpenId: 'openid_other_player',
+      status: 'joined',
+      signupName: 'Other Player',
+      proxyRegistration: false
+    }
+  };
   const state = {
     users: {
       openid_owner: { _id: 'openid_owner', roles: ['user', 'organizer'] },
@@ -37,29 +57,39 @@ function createFakeDb(options = {}) {
       },
       ...(options.activities || {})
     },
-    registrations: {
-      reg_player: {
-        _id: 'reg_player',
-        activityId: 'activity_1',
-        teamId: 'team_green',
-        userOpenId: 'openid_player',
-        status: 'joined',
-        signupName: 'Player',
-        proxyRegistration: false
-      },
-      reg_other_player: {
-        _id: 'reg_other_player',
-        activityId: 'activity_other',
-        teamId: 'team_other',
-        userOpenId: 'openid_other_player',
-        status: 'joined',
-        signupName: 'Other Player',
-        proxyRegistration: false
-      },
-      ...(options.registrations || {})
-    },
-    activity_logs: []
+    registrations: options.replaceRegistrations
+      ? { ...(options.registrations || {}) }
+      : { ...defaultRegistrations, ...(options.registrations || {}) },
+    activity_logs: [],
+    queries: []
   };
+
+  function matchesCriteria(item, criteria) {
+    return Object.entries(criteria || {}).every(([key, value]) => item && item[key] === value);
+  }
+
+  function createQuery(name, criteria = {}) {
+    let queryLimit = 100;
+
+    return {
+      where(nextCriteria) {
+        return createQuery(name, { ...criteria, ...nextCriteria });
+      },
+      limit(value) {
+        queryLimit = value;
+        return this;
+      },
+      async get() {
+        state.queries.push({ name, criteria, limit: queryLimit });
+        const values = Array.isArray(state[name])
+          ? state[name]
+          : Object.values(state[name] || {});
+        return {
+          data: values.filter(item => matchesCriteria(item, criteria)).slice(0, queryLimit)
+        };
+      }
+    };
+  }
 
   return {
     state,
@@ -79,12 +109,11 @@ function createFakeDb(options = {}) {
             }
           };
         },
+        where(criteria) {
+          return createQuery(name, criteria);
+        },
         async get() {
-          if (Array.isArray(state[name])) {
-            return { data: state[name] };
-          }
-
-          return { data: Object.values(state[name] || {}) };
+          return createQuery(name).get();
         },
         async add({ data }) {
           const id = `${name}_${state[name].length + 1}`;
@@ -118,6 +147,56 @@ test('organizer can update manager alias for a real user in their activity', asy
     managerAliasUpdatedBy: 'openid_owner'
   });
   expect(db.state.users.openid_player.managerAlias).toBe('Zhang San');
+});
+
+test('manager alias query finds a valid registration beyond the first collection page', async () => {
+  const unrelatedRegistrations = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => [
+      `reg_unrelated_${String(index).padStart(3, '0')}`,
+      {
+        _id: `reg_unrelated_${String(index).padStart(3, '0')}`,
+        activityId: 'activity_other',
+        userOpenId: `openid_unrelated_${index}`,
+        status: 'joined'
+      }
+    ])
+  );
+  const db = createFakeDb({
+    replaceRegistrations: true,
+    registrations: {
+      ...unrelatedRegistrations,
+      reg_player: {
+        _id: 'reg_player',
+        activityId: 'activity_1',
+        teamId: 'team_green',
+        userOpenId: 'openid_player',
+        status: 'joined',
+        signupName: 'Player',
+        proxyRegistration: false
+      }
+    }
+  });
+
+  const result = await updateParticipantManagerAlias.main(
+    {
+      activityId: 'activity_1',
+      targetOpenId: 'openid_player',
+      managerAlias: 'Captain'
+    },
+    { OPENID: 'openid_owner' },
+    { db, now: fixedNow }
+  );
+
+  expect(result.user.managerAlias).toBe('Captain');
+  expect(db.state.queries).toContainEqual({
+    name: 'registrations',
+    criteria: {
+      activityId: 'activity_1',
+      userOpenId: 'openid_player',
+      status: 'joined'
+    },
+    limit: 1
+  });
 });
 
 test('admin and super_admin can update manager alias for another organizer activity', async () => {

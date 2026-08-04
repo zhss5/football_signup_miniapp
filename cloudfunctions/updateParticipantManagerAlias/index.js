@@ -14,23 +14,22 @@ async function loadDoc(db, collectionName, id) {
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, collectionName) {
-  const res = await db.collection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
-}
-
 function normalizeManagerAlias(value) {
   return String(value || '').trim();
 }
 
-function findRealRegistration(registrations, activityId, targetOpenId) {
-  return registrations.find(
-    registration =>
-      registration &&
-      registration.activityId === activityId &&
-      registration.userOpenId === targetOpenId &&
-      registration.status === 'joined'
-  );
+async function loadActiveRegistration(db, activityId, targetOpenId) {
+  const res = await db
+    .collection(COLLECTIONS.REGISTRATIONS)
+    .where({
+      activityId,
+      userOpenId: targetOpenId,
+      status: 'joined'
+    })
+    .limit(1)
+    .get();
+
+  return Array.isArray(res.data) ? res.data[0] || null : null;
 }
 
 function toSafeUser(openid, user, updateData) {
@@ -71,10 +70,10 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('managerAlias cannot exceed 40 characters');
   }
 
-  const [activity, actor, registrations] = await Promise.all([
+  const [activity, actor, registration] = await Promise.all([
     loadDoc(db, COLLECTIONS.ACTIVITIES, activityId),
     loadDoc(db, COLLECTIONS.USERS, openid),
-    loadCollection(db, COLLECTIONS.REGISTRATIONS)
+    loadActiveRegistration(db, activityId, targetOpenId)
   ]);
 
   if (!activity) {
@@ -85,7 +84,6 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
     throw businessError('Only the organizer or an admin can update manager aliases');
   }
 
-  const registration = findRealRegistration(registrations, activityId, targetOpenId);
   if (!registration) {
     throw businessError('Target user is not an active registration in this activity');
   }

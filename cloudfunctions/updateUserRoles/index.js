@@ -20,9 +20,11 @@ async function loadUser(db, openid) {
 }
 
 async function countSuperAdmins(db) {
-  const res = await db.collection(COLLECTIONS.USERS).get();
-  const users = Array.isArray(res.data) ? res.data : [];
-  return users.filter(user => hasRole(user, 'super_admin')).length;
+  const res = await db
+    .collection(COLLECTIONS.USERS)
+    .where({ roles: 'super_admin' })
+    .count();
+  return Number(res && res.total) || 0;
 }
 
 function rolesChanged(previousRoles, nextRoles, role) {
