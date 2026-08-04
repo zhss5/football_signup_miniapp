@@ -28,6 +28,8 @@ collection exceeds one page.
 - Remove every audited first-page truncation risk.
 - Preserve deterministic bench promotion for activities with more than one
   CloudBase response page of joined registrations.
+- Preserve complete activity-team selection, copy, and reconciliation when one
+  activity has more than one CloudBase response page of team documents.
 - Preserve complete joined-activity lists, activity statistics, and
   participant notifications beyond 100 matching records.
 - Restrict Web Admin list, statistics, and log reads to the smallest practical
@@ -208,6 +210,30 @@ before reading log pages. Only registrations, teams, activities, and users
 referenced by the filtered logs or explicitly selected activity are loaded for
 enrichment. The existing legacy log-field fallbacks remain supported.
 
+## Residual Activity-Team Query Hardening
+
+Four activity-scoped paths still read `activity_teams` with one `get()` call:
+
+- `joinActivity` when a stale bench signup request must be redirected to an
+  available regular team;
+- `addProxyRegistration` when a bench proxy-signup request must be redirected
+  to an available regular team;
+- `getActivityCopyDraft` when reusable regular-team and bench-capacity settings
+  are assembled;
+- `updateActivity` when existing regular and bench teams are reconciled with an
+  edited activity draft.
+
+Each path must read the complete `activityId` matching set in batches of 100,
+ordered by `_id` ascending and continued with `_id > lastId`. Duplicate IDs are
+discarded defensively. The complete result then enters the existing business
+ordering and reconciliation logic, including the established regular-team
+`sort` and `_id` tie-breakers.
+
+This repair changes no event field, response field, permission, validation,
+team status, or UI flow. Activities whose matching team set fits in one page
+retain identical behavior. The only externally observable change is correction
+of previously truncated results after the first page.
+
 ## Version 0.9.4 Compatibility
 
 The following functions already exist in tag `0.9.4` and are shared by V1 and
@@ -269,6 +295,12 @@ Required coverage:
 - participant and manager notifications beyond 100 subscriptions;
 - scoped Web Admin reads do not request unrelated registrations or users;
 - activity and notification log enrichment remains complete;
+- stale self-signup and proxy-signup bench requests find a regular-team vacancy
+  placed after the first 100 activity-team documents;
+- activity copy drafts include regular and bench settings placed after the
+  first 100 activity-team documents;
+- activity editing reconciles existing teams placed after the first 100
+  activity-team documents;
 - existing V0.9.4 event and response contracts do not change.
 
 ## Delivery
@@ -281,7 +313,8 @@ Implementation is split into independently testable local commits:
 4. joined activities, activity statistics, and notifications;
 5. Web Admin user and activity list scoping;
 6. statistics and log scoping;
-7. final regression and documentation update.
+7. final regression and documentation update;
+8. residual activity-team query pagination and follow-up regression.
 
 Changed cloud functions must be redeployed to the test environment only after
 local verification. This goal does not push commits or deploy to production.

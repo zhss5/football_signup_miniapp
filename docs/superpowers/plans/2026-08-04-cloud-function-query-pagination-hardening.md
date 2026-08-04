@@ -407,3 +407,69 @@ git commit -m "docs: record cloud query hardening"
 ```
 
 Only stage the SQL readiness and bootstrap files if they actually changed.
+
+---
+
+### Task 8: Complete Activity-Team Matching Sets
+
+**Files:**
+- Modify: `tests/cloudfunctions/joinActivity.test.js`
+- Modify: `tests/cloudfunctions/addProxyRegistration.test.js`
+- Modify: `tests/cloudfunctions/getActivityCopyDraft.test.js`
+- Modify: `tests/cloudfunctions/updateActivity.test.js`
+- Modify: `cloudfunctions/joinActivity/index.js`
+- Modify: `cloudfunctions/addProxyRegistration/index.js`
+- Modify: `cloudfunctions/getActivityCopyDraft/index.js`
+- Modify: `cloudfunctions/updateActivity/index.js`
+- Modify: `docs/superpowers/progress/football-signup-miniapp-v2-progress.md`
+- Modify: `docs/development-log-v2.md`
+
+**Interfaces:**
+- Consumes: existing `activityId`, requested team, activity-copy, and
+  activity-update events.
+- Produces: unchanged public responses after complete activity-team loading.
+
+- [ ] **Step 1: Add failing multi-page activity-team tests**
+
+Use fake CloudBase query windows of 100 documents. Place the only available
+regular team, copied team/bench settings, or existing edited team after the
+first page. Assert the current implementation omits that team or setting.
+
+- [ ] **Step 2: Verify RED**
+
+```powershell
+npx jest --runInBand tests/cloudfunctions/joinActivity.test.js tests/cloudfunctions/addProxyRegistration.test.js tests/cloudfunctions/getActivityCopyDraft.test.js tests/cloudfunctions/updateActivity.test.js
+```
+
+Expected: the new tests fail because each function performs one
+`activity_teams.where({ activityId }).get()` call.
+
+- [ ] **Step 3: Implement complete activity-team loading**
+
+Add a private helper in each cloud function that queries only the selected
+`activityId`, orders by `_id` ascending, reads at most 100 documents, continues
+with `_id: command.gt(lastId)`, and deduplicates by `_id`. Transactional signup
+paths use the transaction collection and the database command object. Copy and
+update paths use the regular database collection. Preserve all existing final
+team sorting, validation, synchronization, events, responses, and errors.
+
+- [ ] **Step 4: Verify GREEN and V0.9.4 compatibility**
+
+```powershell
+npx jest --runInBand tests/cloudfunctions/joinActivity.test.js tests/cloudfunctions/addProxyRegistration.test.js tests/cloudfunctions/getActivityCopyDraft.test.js tests/cloudfunctions/updateActivity.test.js
+npm test -- --runInBand
+git diff --check
+```
+
+Expected: all focused and repository suites pass with no formatting errors.
+
+- [ ] **Step 5: Record and commit the follow-up**
+
+Document RED/GREEN evidence, the four-function deployment set, and the
+unchanged UI/API/MySQL boundaries in the V2 progress and development logs.
+
+```powershell
+git add -- tests/cloudfunctions/joinActivity.test.js tests/cloudfunctions/addProxyRegistration.test.js tests/cloudfunctions/getActivityCopyDraft.test.js tests/cloudfunctions/updateActivity.test.js cloudfunctions/joinActivity/index.js cloudfunctions/addProxyRegistration/index.js cloudfunctions/getActivityCopyDraft/index.js cloudfunctions/updateActivity/index.js docs/superpowers/progress/football-signup-miniapp-v2-progress.md docs/development-log-v2.md
+git diff --cached --check
+git commit -m "fix: complete activity team queries"
+```
