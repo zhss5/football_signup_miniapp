@@ -6,15 +6,23 @@ function matchesQuery(item, query) {
   }
 
   return Object.entries(query).every(([key, expected]) => {
+    if (expected && Array.isArray(expected.values)) {
+      return expected.values.includes(item[key]);
+    }
+
     if (expected && expected.gt !== undefined) {
       return String(item[key] || '') > String(expected.gt);
+    }
+
+    if (Array.isArray(item[key])) {
+      return item[key].includes(expected);
     }
 
     return item[key] === expected;
   });
 }
 
-function createCollectionQuery(source, state = {}) {
+function createCollectionQuery(source, state = {}, queryLog = null, collectionName = '') {
   const queryState = {
     query: null,
     order: [],
@@ -24,18 +32,31 @@ function createCollectionQuery(source, state = {}) {
 
   return {
     where(query) {
-      return createCollectionQuery(source, { ...queryState, query });
+      return createCollectionQuery(
+        source,
+        { ...queryState, query },
+        queryLog,
+        collectionName
+      );
     },
     orderBy(field, direction) {
       return createCollectionQuery(source, {
         ...queryState,
         order: queryState.order.concat({ field, direction })
-      });
+      }, queryLog, collectionName);
     },
     limit(count) {
-      return createCollectionQuery(source, { ...queryState, limit: Number(count) || 0 });
+      return createCollectionQuery(
+        source,
+        { ...queryState, limit: Number(count) || 0 },
+        queryLog,
+        collectionName
+      );
     },
     async get() {
+      if (queryLog) {
+        queryLog.push({ collectionName, query: queryState.query });
+      }
       let data = source.filter(item => matchesQuery(item, queryState.query));
 
       queryState.order.forEach(({ field, direction }) => {
@@ -53,6 +74,7 @@ function createCollectionQuery(source, state = {}) {
 }
 
 function createFakeDb(options = {}) {
+  const queryLog = [];
   const state = {
     users: {
       openid_root: {
@@ -94,14 +116,18 @@ function createFakeDb(options = {}) {
 
   return {
     state,
+    queryLog,
     command: {
+      in(values) {
+        return { values };
+      },
       gt(value) {
         return { gt: value };
       }
     },
     collection(name) {
       const source = Object.values(state[name] || {});
-      const query = createCollectionQuery(source);
+      const query = createCollectionQuery(source, {}, queryLog, name);
 
       return {
         ...query,
@@ -379,4 +405,48 @@ test('listUsers reads all cursor batches before filtering and paginating with ex
     'bulk_user_039'
   ]);
   expect(result.items[0].avatarUrl).toBe('cloud://test-env/user-avatars/020.jpg');
+});
+
+test('listUsers limits registration avatar lookup to users on the returned page', async () => {
+  const users = Object.fromEntries(
+    Array.from({ length: 30 }, (_, index) => {
+      const suffix = String(index).padStart(3, '0');
+      return [`page_user_${suffix}`, {
+        _id: `page_user_${suffix}`,
+        preferredName: `Page User ${index}`,
+        roles: ['user'],
+        createdAt: '2026-07-01T00:00:00.000Z',
+        lastActiveAt: '2026-07-02T00:00:00.000Z'
+      }];
+    })
+  );
+  const registrations = Object.fromEntries(
+    Array.from({ length: 125 }, (_, index) => {
+      const suffix = String(index).padStart(3, '0');
+      return [`page_registration_${suffix}`, {
+        _id: `page_registration_${suffix}`,
+        userOpenId: `page_user_${String(index % 30).padStart(3, '0')}`,
+        avatarUrl: `cloud://test-env/user-avatars/page-${suffix}.jpg`,
+        updatedAt: `2026-07-03T00:${String(index % 60).padStart(2, '0')}:00.000Z`
+      }];
+    })
+  );
+  const db = createFakeDb({ users, registrations });
+
+  const result = await listUsers.main(
+    { keyword: 'page user', limit: 20, skip: 0 },
+    { OPENID: 'openid_admin' },
+    { db }
+  );
+
+  expect(result.items).toHaveLength(20);
+  const registrationQueries = db.queryLog.filter(entry => entry.collectionName === 'registrations');
+  expect(registrationQueries.length).toBeGreaterThan(0);
+  expect(
+    registrationQueries.every(entry => Array.isArray(entry.query?.userOpenId?.values))
+  ).toBe(true);
+  const queriedOpenIds = new Set(
+    registrationQueries.flatMap(entry => entry.query.userOpenId.values)
+  );
+  expect(queriedOpenIds).toEqual(new Set(result.items.map(item => item._id)));
 });

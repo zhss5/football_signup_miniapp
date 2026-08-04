@@ -26,6 +26,22 @@ function matchesQuery(item, query) {
       return String(item[key] || '') > String(expected.gt);
     }
 
+    if (expected && expected.gte !== undefined && String(item[key] || '') < String(expected.gte)) {
+      return false;
+    }
+
+    if (expected && expected.lte !== undefined && String(item[key] || '') > String(expected.lte)) {
+      return false;
+    }
+
+    if (expected && expected.neq !== undefined) {
+      return item[key] !== expected.neq;
+    }
+
+    if (expected && (expected.gte !== undefined || expected.lte !== undefined)) {
+      return true;
+    }
+
     return item[key] === expected;
   });
 }
@@ -37,7 +53,7 @@ function compareValues(left, right, direction) {
   return direction === 'desc' ? -result : result;
 }
 
-function createCollectionQuery(source, state = {}) {
+function createCollectionQuery(source, state = {}, queryLog = null, collectionName = '') {
   const queryState = {
     query: null,
     order: [],
@@ -51,27 +67,30 @@ function createCollectionQuery(source, state = {}) {
       return createCollectionQuery(source, {
         ...queryState,
         query
-      });
+      }, queryLog, collectionName);
     },
     orderBy(field, direction) {
       return createCollectionQuery(source, {
         ...queryState,
         order: queryState.order.concat({ field, direction })
-      });
+      }, queryLog, collectionName);
     },
     skip(count) {
       return createCollectionQuery(source, {
         ...queryState,
         skip: Number(count) || 0
-      });
+      }, queryLog, collectionName);
     },
     limit(count) {
       return createCollectionQuery(source, {
         ...queryState,
         limit: Number(count) || 0
-      });
+      }, queryLog, collectionName);
     },
     async get() {
+      if (queryLog) {
+        queryLog.push({ collectionName, query: queryState.query });
+      }
       let data = source.filter(item => matchesQuery(item, queryState.query));
 
       queryState.order.forEach(({ field, direction }) => {
@@ -90,17 +109,34 @@ function createCollectionQuery(source, state = {}) {
 }
 
 function createFakeDb(collections) {
+  const queryLog = [];
+
   return {
+    queryLog,
     command: {
       in(values) {
         return { values };
       },
       gt(value) {
         return { gt: value };
+      },
+      gte(value) {
+        return {
+          gte: value,
+          and(other) {
+            return { gte: value, ...other };
+          }
+        };
+      },
+      lte(value) {
+        return { lte: value };
+      },
+      neq(value) {
+        return { neq: value };
       }
     },
     collection(name) {
-      const query = createCollectionQuery(collections[name] || []);
+      const query = createCollectionQuery(collections[name] || [], {}, queryLog, name);
 
       return {
         ...query,
@@ -518,4 +554,45 @@ test('web-admin scope reads all cursor batches before filtering and paginating w
     'bulk_activity_086',
     'bulk_activity_085'
   ]);
+});
+
+test('web-admin scope applies organizer status and date criteria before loading activities', async () => {
+  const db = createFakeDb({
+    users: [
+      { _id: 'openid_admin', roles: ['user', 'admin'] },
+      { _id: 'openid_owner', preferredName: 'Owner', roles: ['user', 'organizer'] }
+    ],
+    activities: [
+      {
+        _id: 'activity_scoped',
+        title: 'Scoped Match',
+        organizerOpenId: 'openid_owner',
+        startAt: '2026-07-10T20:00:00.000Z',
+        status: 'published'
+      }
+    ]
+  });
+  cloud.database.mockReturnValue(db);
+
+  await listActivities.main(
+    {
+      scope: 'web-admin',
+      status: 'published',
+      organizerOpenId: 'openid_owner',
+      startAtFrom: '2026-07-01T00:00:00.000Z',
+      startAtTo: '2026-07-31T23:59:59.999Z'
+    },
+    { OPENID: 'openid_admin' }
+  );
+
+  const activityQueries = db.queryLog.filter(entry => entry.collectionName === 'activities');
+  expect(activityQueries.length).toBeGreaterThan(0);
+  expect(activityQueries[0].query).toMatchObject({
+    organizerOpenId: 'openid_owner',
+    status: 'published',
+    startAt: {
+      gte: '2026-07-01T00:00:00.000Z',
+      lte: '2026-07-31T23:59:59.999Z'
+    }
+  });
 });

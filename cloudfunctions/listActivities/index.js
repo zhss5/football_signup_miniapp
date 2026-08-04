@@ -189,6 +189,48 @@ function matchesDateRange(activity, startAtFrom, startAtTo) {
   return true;
 }
 
+function buildStartAtCriterion(command, startAtFrom, startAtTo) {
+  const rangeStart = parseTimestamp(startAtFrom) === null ? '' : startAtFrom;
+  const rangeEnd = parseTimestamp(startAtTo) === null ? '' : startAtTo;
+
+  if (rangeStart && rangeEnd) {
+    return command.gte(rangeStart).and(command.lte(rangeEnd));
+  }
+
+  if (rangeStart) {
+    return command.gte(rangeStart);
+  }
+
+  if (rangeEnd) {
+    return command.lte(rangeEnd);
+  }
+
+  return null;
+}
+
+function buildWebAdminActivityCriteria(command, payload, openid, callerIsAdmin) {
+  const criteria = {
+    status: payload.status ? String(payload.status).trim() : command.neq('deleted')
+  };
+  const organizerOpenId = String(payload.organizerOpenId || '').trim();
+  const effectiveOrganizerOpenId = callerIsAdmin ? organizerOpenId : openid;
+  const startAtCriterion = buildStartAtCriterion(
+    command,
+    payload.startAtFrom || payload.startAt,
+    payload.startAtTo || payload.endAt
+  );
+
+  if (effectiveOrganizerOpenId) {
+    criteria.organizerOpenId = effectiveOrganizerOpenId;
+  }
+
+  if (startAtCriterion) {
+    criteria.startAt = startAtCriterion;
+  }
+
+  return criteria;
+}
+
 async function listWebAdminActivities(db, command, payload, openid, limit, skip) {
   const caller = await loadUser(db, openid);
   const callerIsAdmin = isAdmin(caller);
@@ -197,7 +239,13 @@ async function listWebAdminActivities(db, command, payload, openid, limit, skip)
     throw businessError('Only organizers or admins can list web admin activities');
   }
 
-  const activities = await loadCollection(db, command, COLLECTIONS.ACTIVITIES);
+  const activityCriteria = buildWebAdminActivityCriteria(command, payload, openid, callerIsAdmin);
+  const activities = await loadCollection(
+    db,
+    command,
+    COLLECTIONS.ACTIVITIES,
+    activityCriteria
+  );
   const keyword = String(payload.keyword || '').trim().toLowerCase();
   const status = String(payload.status || '').trim();
   const organizerOpenId = String(payload.organizerOpenId || '').trim();

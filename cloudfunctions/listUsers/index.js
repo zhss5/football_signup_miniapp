@@ -33,15 +33,15 @@ async function loadUser(db, openid) {
   return res && res.data ? res.data : null;
 }
 
-async function loadCollection(db, command, collectionName) {
+async function loadCollection(db, command, collectionName, criteria = {}) {
   const items = [];
   let lastId = '';
 
   while (true) {
-    const criteria = lastId ? { _id: command.gt(lastId) } : {};
+    const pageCriteria = lastId ? { ...criteria, _id: command.gt(lastId) } : criteria;
     const result = await db
       .collection(collectionName)
-      .where(criteria)
+      .where(pageCriteria)
       .orderBy('_id', 'asc')
       .limit(COLLECTION_BATCH_SIZE)
       .get();
@@ -80,9 +80,16 @@ function getRegistrationAvatarTimestamp(registration) {
   );
 }
 
-async function loadRegistrationAvatarUrlsByUser(db, command) {
+async function loadRegistrationAvatarUrlsByUser(db, command, userOpenIds) {
+  const normalizedOpenIds = Array.from(new Set(userOpenIds.filter(Boolean)));
+  if (normalizedOpenIds.length === 0) {
+    return {};
+  }
+
   try {
-    const registrations = await loadCollection(db, command, COLLECTIONS.REGISTRATIONS);
+    const registrations = await loadCollection(db, command, COLLECTIONS.REGISTRATIONS, {
+      userOpenId: command.in(normalizedOpenIds)
+    });
     return registrations.reduce((acc, registration) => {
       const userOpenId = String(registration.userOpenId || '').trim();
       const avatarUrl = String(registration.avatarUrl || '').trim();
@@ -170,16 +177,29 @@ async function main(event, context = cloud.getWXContext(), deps = {}) {
   const skip = normalizeSkip(payload.skip);
   const limit = normalizeLimit(payload.limit);
   const command = deps.command || db.command;
-  const users = await loadCollection(db, command, COLLECTIONS.USERS);
-  const registrationAvatarsByUser = await loadRegistrationAvatarUrlsByUser(db, command);
+  const users = await loadCollection(
+    db,
+    command,
+    COLLECTIONS.USERS,
+    role ? { roles: role } : {}
+  );
   const filtered = users
-    .map(user => toSafeUser(user, registrationAvatarsByUser))
+    .map(user => toSafeUser(user))
     .filter(user => userMatchesKeyword(user, keyword))
     .filter(user => (role ? hasRole(user, role) : true))
     .sort(compareUsers);
+  const pageUsers = filtered.slice(skip, skip + limit);
+  const fallbackAvatarOpenIds = pageUsers
+    .filter(user => !user.avatarUrl)
+    .map(user => user._id);
+  const registrationAvatarsByUser = await loadRegistrationAvatarUrlsByUser(
+    db,
+    command,
+    fallbackAvatarOpenIds
+  );
 
   return {
-    items: filtered.slice(skip, skip + limit),
+    items: pageUsers.map(user => toSafeUser(user, registrationAvatarsByUser)),
     total: filtered.length,
     limit,
     skip,
