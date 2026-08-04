@@ -1847,3 +1847,57 @@ Verification and deployment:
 - CloudBase static hosting uploaded `29/29` files under `/admin/`.
 - browser smoke for `测试07221933` improved from about 29 seconds to about 4.9 seconds and rendered `3` roster rows plus `22` activity-log rows.
 - no runtime MySQL migration, dual-write, or self-hosted HTTP API switch was introduced.
+
+## 2026-08-04 - Cloud Function Query Pagination Hardening
+
+Documented and repaired the audited CloudBase query paths that either stopped
+at the first 100 documents or loaded unrelated complete collections before
+filtering.
+
+Design and compatibility boundaries:
+
+- wrote the design and stepwise TDD plan before changing business code;
+- kept every existing cloud-function name, event field, response shape,
+  permission boundary, status enum, document ID, and timestamp contract;
+- kept the five functions shared with V0.9.4 client builds backward
+  compatible;
+- introduced no stored field, collection, destructive migration, runtime
+  MySQL access, dual-write, or self-hosted HTTP endpoint.
+
+Implemented milestones:
+
+- `25b3499`: exact active-registration lookup for participant manager aliases
+  and database-side super-admin counting;
+- `ec61ce6`: complete deterministic bench candidate reads in
+  `cancelRegistration` and `removeRegistration`;
+- `1704e3b`: complete joined activities, activity statistics, participant
+  subscription recipients, and manager subscription recipients;
+- `838cf6f`: page-scoped user avatar fallback and database-scoped Web Admin
+  activity filters;
+- `38a81f0`: activity-first attendance/cancellation statistics, organizer-
+  scoped activity and notification log reads, and page-reference-only log
+  enrichment.
+
+TDD evidence:
+
+- RED tests placed valid targets and recipients beyond the first 100-document
+  query window and recorded unscoped collection criteria;
+- focused V0.9.4 regression passed with `5` suites and `38` tests;
+- all cloud-function tests passed with `36` suites and `352` tests;
+- full repository regression passed with `85` suites and `888` tests;
+- `node --check` passed for `getAttendanceStats`, `listActivityLogs`, and
+  `listNotificationLogs`;
+- `git diff --check` passed.
+
+Deployment readiness:
+
+- redeploy `updateParticipantManagerAlias`, `updateUserRoles`,
+  `cancelRegistration`, `removeRegistration`, `listActivities`,
+  `getActivityStats`, `notifyActivityParticipants`, `joinActivity`,
+  `listUsers`, `getAttendanceStats`, `listActivityLogs`, and
+  `listNotificationLogs` to the target CloudBase environment;
+- create or verify the compound indexes listed under `Filtered Cursor Queries`
+  in `docs/cloudbase/indexes.md` before smoke testing;
+- Web Admin static files and mini-program source did not change, so this goal
+  does not require static hosting or a mini-program upload;
+- no deployment or push was performed by this goal.

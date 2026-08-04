@@ -275,3 +275,46 @@ Deployment readiness tasks remain:
 - Smoke: the same `测试07221933` detail improved from about 29 seconds to about 4.9 seconds and returned `3` roster rows plus `22` activity-log rows.
 - Commit: `9e26c65`.
 - Architecture boundary: the repair changes API query scope and client resilience only; no MySQL runtime migration, dual-write, or self-hosted HTTP API cutover was made.
+
+## 2026-08-04 Cloud Function Query Pagination Hardening
+
+- Added the approved design and executable plan in
+  `docs/superpowers/specs/2026-08-04-cloud-function-query-pagination-hardening-design.md`
+  and
+  `docs/superpowers/plans/2026-08-04-cloud-function-query-pagination-hardening.md`.
+- Replaced first-page-only manager-alias registration lookup with an exact
+  `activityId + userOpenId + status` query, and replaced full-user loading in
+  the last-super-admin guard with a database-side role count.
+- Made cancellation/removal bench promotion traverse every matching bench
+  registration in deterministic `_id` cursor batches while preserving the
+  existing `joinedAt` plus registration-ID queue order.
+- Made joined-activity lists, one-activity statistics, participant notices,
+  and manager notices complete beyond one 100-document CloudBase response.
+- Scoped Web Admin user avatar fallback to users on the returned page and
+  applied activity ownership, status, organizer, and date criteria before
+  loading activity batches.
+- Scoped attendance/cancellation statistics to eligible activities before
+  loading registrations, then loaded only referenced real users.
+- Scoped organizer activity/notification log queries by allowed activity IDs
+  and changed activity-log enrichment to exact activity, registration, team,
+  and user document reads referenced by the visible page.
+- Preserved V0.9.4 event/response contracts for `cancelRegistration`,
+  `removeRegistration`, `listActivities`, `getActivityStats`, and
+  `notifyActivityParticipants`; the focused compatibility gate passed with
+  `5` suites and `38` tests.
+- Verification passed: all cloud-function tests (`36` suites, `352` tests),
+  full repository regression (`85` suites, `888` tests), JavaScript syntax
+  checks for the three largest scoped-query functions, and `git diff --check`.
+- Local milestone commits: `836c208`, `25b3499`, `ec61ce6`, `1704e3b`,
+  `838cf6f`, and `38a81f0`; the final documentation commit follows this entry.
+- Test-environment deployment requires `updateParticipantManagerAlias`,
+  `updateUserRoles`, `cancelRegistration`, `removeRegistration`,
+  `listActivities`, `getActivityStats`, `notifyActivityParticipants`,
+  `joinActivity`, `listUsers`, `getAttendanceStats`, `listActivityLogs`, and
+  `listNotificationLogs`, plus the filtered-cursor indexes in
+  `docs/cloudbase/indexes.md`.
+- No Web Admin static-hosting change or mini-program upload is required for
+  this backend-only repair. No function or index was deployed by this goal.
+- The runtime remains CloudBase-only: no runtime MySQL migration, dual-write,
+  self-hosted HTTP API cutover, collection migration, or data backfill was
+  introduced.

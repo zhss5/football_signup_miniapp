@@ -134,6 +134,12 @@ CREATE TABLE activities (
   PRIMARY KEY (activity_id),
   KEY idx_activities_status_start_at (status, start_at),
   KEY idx_activities_organizer_start_at (organizer_openid, start_at),
+  KEY idx_activities_org_status_type_start_at (
+    organizer_openid,
+    status,
+    activity_type,
+    start_at
+  ),
   KEY idx_activities_confirm_status_end_at (confirm_status, end_at),
   CONSTRAINT chk_activities_late_cancellation_notice_window_hours
     CHECK (late_cancellation_notice_window_hours BETWEEN 0 AND 168)
@@ -255,7 +261,13 @@ CREATE TABLE activity_logs (
   KEY idx_activity_logs_activity_created_at (activity_id, created_at),
   KEY idx_activity_logs_registration_created_at (registration_id, created_at),
   KEY idx_activity_logs_user_created_at (user_openid, created_at),
-  KEY idx_activity_logs_action_created_at (action, created_at)
+  KEY idx_activity_logs_action_created_at (action, created_at),
+  KEY idx_activity_logs_activity_action_user_created_at (
+    activity_id,
+    action,
+    user_openid,
+    created_at
+  )
 );
 ```
 
@@ -342,6 +354,12 @@ CREATE TABLE notification_logs (
     notification_type,
     recipient_openid,
     status
+  ),
+  KEY idx_notification_logs_activity_type_status_created_at (
+    activity_id,
+    notification_type,
+    status,
+    created_at
   ),
   KEY idx_notification_logs_recipient_created_at (recipient_openid, created_at)
 );
@@ -466,6 +484,7 @@ All timestamp fields should be stored in UTC. The current CloudBase values are I
 34. Keep roster file generation client-side, but require the Web Admin to obtain each CSV/XLSX roster dataset from `exportActivityRoster.rows` at export time. Activity-detail rows are presentation state, not an export data source. Apply the current roster keyword filter only after receiving the backend rows, and abort without a partial file if the API fails.
 35. Before each Web Admin static hosting deployment, advance every versioned CSS and JavaScript asset query token together so CloudBase/CDN caches cannot serve an old `app.js` against the new pagination contract.
 36. Keep activity-detail log reads scoped by `activityId` before loading enrichment data. `listActivityLogs` must read only the selected activity's registrations and teams and only user documents referenced by those registrations or logs. The SQL implementation should use equivalent indexed joins rather than table-wide enrichment scans. The Web Admin applies a bounded activity-detail timeout and exposes a retry action; this resilience behavior adds no CloudBase field or SQL column.
+37. Apply permission, organizer, activity state/type/date, log action/type/status, and participant filters before traversing complete result sets. CloudBase uses bounded `IN` groups and `_id` keyset batches; a future MySQL implementation must use the equivalent indexed `WHERE` predicates, primary-key keyset traversal, and joins limited to IDs referenced by the filtered page. Keep existing API `limit`/`skip`, exact totals, legacy log-field fallbacks, and stable final ordering unchanged during the storage migration.
 
 ## Migration Validation Checklist
 
