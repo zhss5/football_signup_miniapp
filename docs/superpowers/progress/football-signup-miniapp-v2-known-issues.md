@@ -121,3 +121,98 @@ omitted from both the acceptance matrix and the implementation.
   remain authoritative.
 - This repair must not introduce runtime MySQL migration, dual-write, or a
   self-hosted HTTP API cutover.
+
+### V2-ATTENDANCE-001: Proxy attendance can be selected but not saved
+
+- Status: Open
+- First confirmed: 2026-08-05
+- Priority: P1 for the V2 stabilization pass
+- Affected flow: Mini-program activity detail -> proxy participant dialog
+- Affected runtime: Mini-program client only
+- Data migration required: No
+
+#### Reproduction
+
+1. Open an activity as its organizer, an admin, or a super admin.
+2. Tap a joined proxy registration.
+3. Select `present` or `absent` in the participant dialog.
+4. Observe that the dialog exposes only the Close action and no Save action.
+5. Close and reopen the dialog.
+
+The selected attendance value is discarded and the
+`setRegistrationAttendance` cloud function is not called.
+
+#### Expected Behavior
+
+Managers should be able to save `present` or `absent` for both real-user and
+proxy registrations. A proxy registration does not need a real WeChat
+`userOpenId`; its stable registration document ID is sufficient for attendance
+mutation.
+
+#### Root Cause
+
+The participant dialog correctly exposes attendance controls for a proxy
+registration when `attendanceActionVisible`, `registrationId`, and
+`attendanceActionStatus` are present. However, the Save button is rendered only
+when `participantDialogAliasEditable` is true. The shared save handler also
+returns early unless alias editing is enabled and the participant has a real
+`userOpenId`.
+
+Proxy registrations intentionally have no real-user `userOpenId` and cannot
+have a user-level manager alias, so they can change the pending attendance
+selection but cannot enter the save path.
+
+The backend is not the blocker. `setRegistrationAttendance` validates and
+updates by `activityId + registrationId`, accepts joined proxy registrations,
+and already writes an `attendance_update` activity log with an empty
+`userOpenId` when appropriate.
+
+#### Current Data Impact
+
+- No incorrect attendance value is written; the pending UI selection is simply
+  lost when the dialog closes.
+- Real-user attendance editing remains functional because managers can also
+  edit those users' manager aliases and therefore receive the Save action.
+- Web Admin attendance mutation is not affected because it calls
+  `setRegistrationAttendance` directly by registration ID.
+- Proxy attendance statistics remain incomplete when operators rely only on
+  the mini-program activity-detail workflow.
+
+#### Planned Repair Scope
+
+1. Add failing mini-program activity-detail tests before changing behavior.
+2. Show the Save action when either manager-alias editing or attendance editing
+   is available.
+3. Allow the save handler to persist an attendance-only change without a real
+   `userOpenId`.
+4. Keep the `userOpenId` requirement only around the manager-alias update path.
+5. Call `setRegistrationAttendance(activityId, registrationId, status)` for a
+   changed proxy attendance selection.
+6. Preserve the current staged interaction: selecting a status changes local
+   dialog state, and Save performs the backend mutation.
+7. Keep ordinary users in the existing read-only participant dialog without
+   attendance controls.
+
+#### Required Tests
+
+- A manager opening a proxy participant sees the attendance selector and Save
+  action.
+- Changing proxy attendance and pressing Save calls
+  `setRegistrationAttendance` with the proxy registration ID.
+- Proxy attendance save does not call `updateParticipantManagerAlias`.
+- Closing without saving does not call either mutation API.
+- The dialog reloads activity details after a successful proxy attendance
+  update.
+- Existing combined real-user alias and attendance save behavior remains
+  unchanged.
+- Ordinary users cannot mutate proxy or real-user attendance.
+
+#### Deployment And Architecture Notes
+
+- Expected deployment scope: upload a new mini-program build only.
+- No cloud-function redeployment, Web Admin static deployment, collection,
+  index, stored field, enum, or SQL mapping change is required.
+- The existing `attendanceStatus`, `attendanceMarkedAt`,
+  `attendanceMarkedBy`, and `attendance_update` contracts remain authoritative.
+- This repair must not introduce runtime MySQL migration, dual-write, or a
+  self-hosted HTTP API cutover.
